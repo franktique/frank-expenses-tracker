@@ -36,7 +36,7 @@ export function BudgetsView() {
   const selectedPeriod = periods.find((p) => p.id === selectedPeriodId)
 
   // Filter budgets for the selected period
-  const periodBudgets = selectedPeriod ? budgets.filter((budget) => budget.periodId === selectedPeriod.id) : []
+  const periodBudgets = selectedPeriod ? budgets.filter((budget) => budget.period_id === selectedPeriod.id) : []
 
   const handleEditBudget = () => {
     if (!editCategory || !selectedPeriod) return
@@ -133,13 +133,13 @@ export function BudgetsView() {
               <TableBody>
                 {categories.map((category) => {
                   // Find budget for this category in selected period
-                  const budget = periodBudgets.find((b) => b.categoryId === category.id)
+                  const budget = periodBudgets.find((b) => b.category_id === category.id)
 
                   return (
                     <TableRow key={category.id}>
                       <TableCell className="font-medium">{category.name}</TableCell>
                       <TableCell className="text-right">
-                        {budget ? formatCurrency(budget.expectedAmount) : formatCurrency(0)}
+                        {budget ? formatCurrency(budget.expected_amount) : formatCurrency(0)}
                       </TableCell>
                       <TableCell className="text-right">
                         <Button
@@ -150,7 +150,7 @@ export function BudgetsView() {
                               id: category.id,
                               name: category.name,
                               budgetId: budget?.id,
-                              amount: budget ? budget.expectedAmount.toString() : "0",
+                              amount: budget ? budget.expected_amount.toString() : "0",
                             })
                             setIsEditOpen(true)
                           }}

@@ -88,6 +88,7 @@ export async function GET() {
       await sql`
         CREATE TABLE IF NOT EXISTS incomes (
           id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          period_id UUID REFERENCES periods(id),
           date DATE NOT NULL,
           description VARCHAR(255) NOT NULL,
           amount DECIMAL(15, 2) NOT NULL

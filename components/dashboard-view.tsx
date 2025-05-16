@@ -10,6 +10,7 @@ import {
   ExternalLink,
   PiggyBank,
   Wallet,
+  CreditCardIcon,
 } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -173,6 +174,9 @@ export function DashboardView() {
   }
 
   const { totalIncome, totalExpenses, budgetSummary } = dashboardData
+  
+  // Calculate total credit card purchases
+  const totalCreditCardPurchases = budgetSummary.reduce((sum, item) => sum + item.credit_amount, 0)
 
   return (
     <div className="space-y-6">
@@ -181,7 +185,7 @@ export function DashboardView() {
         <p className="text-muted-foreground">Periodo activo: {dashboardData.activePeriod.name}</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Ingresos Totales</CardTitle>
@@ -222,6 +226,17 @@ export function DashboardView() {
             <div className="text-2xl font-bold">{budgetSummary.length}</div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Total Tarjeta Crédito</CardTitle>
+            <CreditCard className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{formatCurrency(totalCreditCardPurchases)}</div>
+            <p className="text-xs text-muted-foreground">Periodo actual</p>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
@@ -240,25 +255,34 @@ export function DashboardView() {
                 <TableHead className="text-right">Tarjeta Débito</TableHead>
                 <TableHead className="text-right">Efectivo</TableHead>
                 <TableHead className="text-right">Restante</TableHead>
+                <TableHead className="text-right">Saldo</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {budgetSummary.map((item) => (
-                <TableRow key={item.category_id}>
-                  <TableCell className="font-medium">{item.category_name}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.expected_amount)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.total_amount)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.credit_amount)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.debit_amount)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(item.cash_amount)}</TableCell>
-                  <TableCell className={`text-right ${item.remaining < 0 ? "text-destructive" : ""}`}>
-                    {formatCurrency(item.remaining)}
-                  </TableCell>
-                </TableRow>
-              ))}
+              {budgetSummary.map((item) => {
+                // Calculate the balance after deducting only debit and cash expenses
+                const effectiveExpense = item.debit_amount + item.cash_amount;
+                const remainingIncome = totalIncome - effectiveExpense;
+                return (
+                  <TableRow key={item.category_id}>
+                    <TableCell className="font-medium">{item.category_name}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.expected_amount)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.total_amount)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.credit_amount)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.debit_amount)}</TableCell>
+                    <TableCell className="text-right">{formatCurrency(item.cash_amount)}</TableCell>
+                    <TableCell className={`text-right ${item.remaining < 0 ? "text-destructive" : ""}`}>
+                      {formatCurrency(item.remaining)}
+                    </TableCell>
+                    <TableCell className={`text-right ${remainingIncome < 0 ? "text-destructive" : ""}`}>
+                      {formatCurrency(remainingIncome)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
               {budgetSummary.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-4 text-muted-foreground">
+                  <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">
                     No hay datos para mostrar. Agrega categorías y presupuestos.
                   </TableCell>
                 </TableRow>

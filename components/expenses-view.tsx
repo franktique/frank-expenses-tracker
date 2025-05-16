@@ -185,7 +185,7 @@ export function ExpensesView() {
 
   // Filter expenses by active period if available
   const filteredExpenses = activePeriod
-    ? sortedExpenses.filter((expense) => expense.periodId === activePeriod.id)
+    ? sortedExpenses.filter((expense) => expense.period_id === activePeriod.id)
     : sortedExpenses
 
   return (
@@ -345,7 +345,7 @@ export function ExpensesView() {
             </TableHeader>
             <TableBody>
               {filteredExpenses.map((expense) => {
-                const category = getCategoryById(expense.categoryId)
+                const category = getCategoryById(expense.category_id)
                 return (
                   <TableRow key={expense.id}>
                     <TableCell>{formatDate(new Date(expense.date))}</TableCell>
@@ -357,9 +357,9 @@ export function ExpensesView() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {expense.paymentMethod === "credit" && "Crédito"}
-                      {expense.paymentMethod === "debit" && "Débito"}
-                      {expense.paymentMethod === "cash" && "Efectivo"}
+                      {expense.payment_method === "credit" && "Crédito"}
+                      {expense.payment_method === "debit" && "Débito"}
+                      {expense.payment_method === "cash" && "Efectivo"}
                     </TableCell>
                     <TableCell className="text-right">{formatCurrency(expense.amount)}</TableCell>
                     <TableCell className="text-right">
@@ -369,10 +369,10 @@ export function ExpensesView() {
                         onClick={() => {
                           setEditExpense({
                             id: expense.id,
-                            categoryId: expense.categoryId,
+                            categoryId: expense.category_id,
                             date: new Date(expense.date),
                             event: expense.event || "",
-                            paymentMethod: expense.paymentMethod,
+                            paymentMethod: expense.payment_method,
                             description: expense.description,
                             amount: expense.amount.toString(),
                           })

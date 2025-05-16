@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { CalendarIcon, PlusCircle } from "lucide-react"
+import { useState, useEffect } from "react"
+import { CalendarIcon, PlusCircle, RefreshCw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -23,8 +23,10 @@ import { useBudget } from "@/context/budget-context"
 import { cn, formatDate } from "@/lib/utils"
 
 export function PeriodsView() {
-  const { periods, addPeriod, updatePeriod, deletePeriod, openPeriod } = useBudget()
+  const { periods, addPeriod, updatePeriod, deletePeriod, openPeriod, refreshData } = useBudget()
   const { toast } = useToast()
+  
+  const [isLoading, setIsLoading] = useState(false)
 
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
@@ -141,67 +143,104 @@ export function PeriodsView() {
       setIsActivating(null)
     }
   }
+  
+  // Función para recargar los datos
+  const handleRefresh = async () => {
+    try {
+      setIsLoading(true)
+      await refreshData()
+      toast({
+        title: "Datos actualizados",
+        description: "Los períodos han sido actualizados correctamente",
+      })
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: `No se pudieron actualizar los datos: ${(error as Error).message}`,
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+  
+  // Cargar datos cuando el componente se inicia
+  useEffect(() => {
+    handleRefresh()
+  }, [])
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Periodos</h1>
-        <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Nuevo Periodo
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Agregar Periodo</DialogTitle>
-              <DialogDescription>Ingresa los detalles del nuevo periodo presupuestario</DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <Label htmlFor="name">Nombre</Label>
-                <Input
-                  id="name"
-                  value={newPeriodName}
-                  onChange={(e) => setNewPeriodName(e.target.value)}
-                  placeholder="Ej: Enero 2024"
-                />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="date">Mes y Año</Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      id="date"
-                      variant={"outline"}
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !newPeriodDate && "text-muted-foreground",
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {newPeriodDate ? (
-                        formatDate(newPeriodDate, { month: "long", year: "numeric" })
-                      ) : (
-                        <span>Selecciona un mes</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar mode="single" selected={newPeriodDate} onSelect={setNewPeriodDate} initialFocus />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddOpen(false)}>
-                Cancelar
+        
+        <div className="flex space-x-2">
+          <Button 
+            variant="outline" 
+            onClick={handleRefresh} 
+            disabled={isLoading}
+          >
+            <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            {isLoading ? 'Actualizando...' : 'Actualizar'}
+          </Button>
+          
+          <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Nuevo Periodo
               </Button>
-              <Button onClick={handleAddPeriod}>Guardar</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Agregar Periodo</DialogTitle>
+                <DialogDescription>Ingresa los detalles del nuevo periodo presupuestario</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="name">Nombre</Label>
+                  <Input
+                    id="name"
+                    value={newPeriodName}
+                    onChange={(e) => setNewPeriodName(e.target.value)}
+                    placeholder="Ej: Enero 2024"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="date">Mes y Año</Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="date"
+                        variant={"outline"}
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !newPeriodDate && "text-muted-foreground",
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {newPeriodDate ? (
+                          formatDate(newPeriodDate, { month: "long", year: "numeric" })
+                        ) : (
+                          <span>Selecciona un mes</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0">
+                      <Calendar mode="single" selected={newPeriodDate} onSelect={setNewPeriodDate} initialFocus />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleAddPeriod}>Guardar</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>

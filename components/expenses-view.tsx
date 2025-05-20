@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { CalendarIcon, FileUp, PlusCircle } from "lucide-react"
+import { CalendarIcon, FileUp, PlusCircle, Download } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CSVImportDialog } from "@/components/csv-import-dialog"
+import { ExportExpensesButton } from "@/components/export-expenses-button"
 import {
   Dialog,
   DialogContent,
@@ -199,8 +200,15 @@ export function ExpensesView() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Gastos</h1>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Gastos</h1>
+          <p className="text-muted-foreground mt-1">
+            {filteredExpenses.length} {filteredExpenses.length === 1 ? "registro" : "registros"} 
+            {categoryFilter !== "all" && categoryFilter ? " en la categoría seleccionada" : ""}
+          </p>
+        </div>
         <div className="flex gap-2">
+          <ExportExpensesButton />
           <Button variant="outline" onClick={() => setIsImportOpen(true)}>
             <FileUp className="mr-2 h-4 w-4" />
             Importar CSV

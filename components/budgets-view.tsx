@@ -131,36 +131,39 @@ export function BudgetsView() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {categories.map((category) => {
-                  // Find budget for this category in selected period
-                  const budget = periodBudgets.find((b) => b.category_id === category.id)
+                {categories
+                  .slice() // Create a copy of the array to avoid mutating the original
+                  .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically by name
+                  .map((category) => {
+                    // Find budget for this category in selected period
+                    const budget = periodBudgets.find((b) => b.category_id === category.id)
 
-                  return (
-                    <TableRow key={category.id}>
-                      <TableCell className="font-medium">{category.name}</TableCell>
-                      <TableCell className="text-right">
-                        {budget ? formatCurrency(budget.expected_amount) : formatCurrency(0)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setEditCategory({
-                              id: category.id,
-                              name: category.name,
-                              budgetId: budget?.id,
-                              amount: budget ? budget.expected_amount.toString() : "0",
-                            })
-                            setIsEditOpen(true)
-                          }}
-                        >
-                          {budget ? "Editar" : "Establecer"}
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  )
-                })}
+                    return (
+                      <TableRow key={category.id}>
+                        <TableCell className="font-medium">{category.name}</TableCell>
+                        <TableCell className="text-right">
+                          {budget ? formatCurrency(budget.expected_amount) : formatCurrency(0)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditCategory({
+                                id: category.id,
+                                name: category.name,
+                                budgetId: budget?.id,
+                                amount: budget ? budget.expected_amount.toString() : "0",
+                              })
+                              setIsEditOpen(true)
+                            }}
+                          >
+                            {budget ? "Editar" : "Establecer"}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
                 {categories.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">

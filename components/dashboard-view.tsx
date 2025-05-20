@@ -259,27 +259,36 @@ export function DashboardView() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {budgetSummary.map((item) => {
-                // Calculate the balance after deducting only debit and cash expenses
-                const effectiveExpense = item.debit_amount + item.cash_amount;
-                const remainingIncome = totalIncome - effectiveExpense;
-                return (
-                  <TableRow key={item.category_id}>
-                    <TableCell className="font-medium">{item.category_name}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.expected_amount)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.total_amount)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.credit_amount)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.debit_amount)}</TableCell>
-                    <TableCell className="text-right">{formatCurrency(item.cash_amount)}</TableCell>
-                    <TableCell className={`text-right ${item.remaining < 0 ? "text-destructive" : ""}`}>
-                      {formatCurrency(item.remaining)}
-                    </TableCell>
-                    <TableCell className={`text-right ${remainingIncome < 0 ? "text-destructive" : ""}`}>
-                      {formatCurrency(remainingIncome)}
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+              {(() => {
+                // Initialize running balance with total income
+                let runningBalance = totalIncome;
+                
+                // Return the mapped array
+                return budgetSummary.map((item) => {
+                  // Calculate the effective expense for this row (debit + cash only)
+                  const effectiveExpense = item.debit_amount + item.cash_amount;
+                  
+                  // Update the running balance by subtracting this row's expenses
+                  runningBalance -= effectiveExpense;
+                  
+                  return (
+                    <TableRow key={item.category_id}>
+                      <TableCell className="font-medium">{item.category_name}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.expected_amount)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.total_amount)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.credit_amount)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.debit_amount)}</TableCell>
+                      <TableCell className="text-right">{formatCurrency(item.cash_amount)}</TableCell>
+                      <TableCell className={`text-right ${item.remaining < 0 ? "text-destructive" : ""}`}>
+                        {formatCurrency(item.remaining)}
+                      </TableCell>
+                      <TableCell className={`text-right ${runningBalance < 0 ? "text-destructive" : ""}`}>
+                        {formatCurrency(runningBalance)}
+                      </TableCell>
+                    </TableRow>
+                  );
+                });
+              })()}
               {budgetSummary.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">

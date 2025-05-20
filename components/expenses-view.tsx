@@ -43,8 +43,10 @@ export function ExpensesView() {
   const [isEditOpen, setIsEditOpen] = useState(false)
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isImportOpen, setIsImportOpen] = useState(false)
+  const [categoryFilter, setCategoryFilter] = useState<string>("")
 
   const [newExpenseCategory, setNewExpenseCategory] = useState("")
+  const [categorySearch, setCategorySearch] = useState("")
   const [newExpensePeriod, setNewExpensePeriod] = useState(activePeriod?.id || "")
   const [newExpenseDate, setNewExpenseDate] = useState<Date | undefined>(new Date())
   const [newExpenseEvent, setNewExpenseEvent] = useState("")
@@ -72,6 +74,7 @@ export function ExpensesView() {
     setNewExpensePaymentMethod("credit")
     setNewExpenseDescription("")
     setNewExpenseAmount("")
+    setCategorySearch("")
   }
 
   const handleAddExpense = () => {
@@ -180,13 +183,18 @@ export function ExpensesView() {
     }
   }
 
-  // Sort expenses by date (newest first)
-  const sortedExpenses = [...expenses].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  // Sort expenses by date (oldest first)
+  const sortedExpenses = [...expenses].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
-  // Filter expenses by active period if available
-  const filteredExpenses = activePeriod
-    ? sortedExpenses.filter((expense) => expense.period_id === activePeriod.id)
-    : sortedExpenses
+  // Filter expenses by active period and selected category if available
+  const filteredExpenses = sortedExpenses.filter(expense => {
+    // Filter by period
+    const periodMatch = activePeriod ? expense.period_id === activePeriod.id : true;
+    // Filter by category
+    const categoryMatch = categoryFilter === "all" || !categoryFilter ? true : expense.category_id === categoryFilter;
+    
+    return periodMatch && categoryMatch;
+  })
 
   return (
     <div className="space-y-6">
@@ -217,11 +225,25 @@ export function ExpensesView() {
                       <SelectValue placeholder="Selecciona una categoría" />
                     </SelectTrigger>
                     <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.id} value={category.id}>
-                          {category.name}
-                        </SelectItem>
-                      ))}
+                      <div className="p-2">
+                        <Input
+                          placeholder="Buscar categoría..."
+                          value={categorySearch}
+                          onChange={(e) => setCategorySearch(e.target.value)}
+                          className="mb-2"
+                        />
+                      </div>
+                      {categories
+                        .slice()
+                        .sort((a, b) => a.name.localeCompare(b.name))
+                        .filter(category => 
+                          category.name.toLowerCase().includes(categorySearch.toLowerCase())
+                        )
+                        .map((category) => (
+                          <SelectItem key={category.id} value={category.id}>
+                            {category.name}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -330,6 +352,25 @@ export function ExpensesView() {
           <CardDescription>
             {activePeriod ? `Gastos del periodo: ${activePeriod.name}` : "Historial de todos los gastos registrados"}
           </CardDescription>
+          <div className="mt-4">
+            <Label htmlFor="category-filter">Filtrar por categoría</Label>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger id="category-filter" className="mt-1">
+                <SelectValue placeholder="Todas las categorías" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas las categorías</SelectItem>
+                {categories
+                  .slice()
+                  .sort((a, b) => a.name.localeCompare(b.name))
+                  .map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+          </div>
         </CardHeader>
         <CardContent>
           <Table>
@@ -426,11 +467,25 @@ export function ExpensesView() {
                   <SelectValue placeholder="Selecciona una categoría" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
+                  <div className="p-2">
+                    <Input
+                      placeholder="Buscar categoría..."
+                      value={categorySearch}
+                      onChange={(e) => setCategorySearch(e.target.value)}
+                      className="mb-2"
+                    />
+                  </div>
+                  {categories
+                    .slice()
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .filter(category =>
+                      category.name.toLowerCase().includes(categorySearch.toLowerCase())
+                    )
+                    .map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

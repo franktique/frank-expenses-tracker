@@ -7,6 +7,7 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { Toaster } from "@/components/ui/toaster"
 import { BudgetProvider } from "@/context/budget-context"
+import { AuthProvider } from "@/lib/auth-context"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -25,15 +26,17 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <BudgetProvider>
-            <SidebarProvider>
-              <div className="flex min-h-screen">
-                <AppSidebar />
-                <main className="flex-1 p-6">{children}</main>
-              </div>
-              <Toaster />
-            </SidebarProvider>
-          </BudgetProvider>
+          <AuthProvider>
+            <BudgetProvider>
+              <SidebarProvider>
+                <div className="flex min-h-screen">
+                  <AppSidebar />
+                  <main className="flex-1 p-6">{children}</main>
+                </div>
+                <Toaster />
+              </SidebarProvider>
+            </BudgetProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>

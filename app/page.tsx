@@ -1,5 +1,10 @@
 import { DashboardView } from "@/components/dashboard-view"
+import { ProtectedRoute } from "@/components/protected-route"
 
 export default function Home() {
-  return <DashboardView />
+  return (
+    <ProtectedRoute>
+      <DashboardView />
+    </ProtectedRoute>
+  )
 }

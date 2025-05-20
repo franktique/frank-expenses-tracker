@@ -1,5 +1,10 @@
 import { ExpensesView } from "@/components/expenses-view"
+import { ProtectedRoute } from "@/components/protected-route"
 
 export default function ExpensesPage() {
-  return <ExpensesView />
+  return (
+    <ProtectedRoute>
+      <ExpensesView />
+    </ProtectedRoute>
+  )
 }

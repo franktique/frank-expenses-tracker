@@ -3,8 +3,20 @@ import { sql } from "@/lib/db"
 
 export async function GET() {
   try {
+    // Using PostgreSQL's AT TIME ZONE to handle dates consistently
     const expenses = await sql`
-      SELECT e.*, c.name as category_name, p.name as period_name
+      SELECT 
+        e.id,
+        e.category_id,
+        e.period_id,
+        e.payment_method,
+        e.description,
+        e.amount,
+        e.event,
+        -- Convert date to Colombia time zone and format as YYYY-MM-DD
+        TO_CHAR(e.date AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD') as date,
+        c.name as category_name, 
+        p.name as period_name
       FROM expenses e
       JOIN categories c ON e.category_id = c.id
       JOIN periods p ON e.period_id = p.id

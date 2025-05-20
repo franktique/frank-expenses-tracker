@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
-import { AppSidebar } from "@/components/app-sidebar"
+import { ConditionalLayout } from "@/components/conditional-layout"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { Toaster } from "@/components/ui/toaster"
 import { BudgetProvider } from "@/context/budget-context"
@@ -29,10 +29,9 @@ export default function RootLayout({
           <AuthProvider>
             <BudgetProvider>
               <SidebarProvider>
-                <div className="flex min-h-screen">
-                  <AppSidebar />
-                  <main className="flex-1 p-6">{children}</main>
-                </div>
+                <ConditionalLayout>
+                  {children}
+                </ConditionalLayout>
                 <Toaster />
               </SidebarProvider>
             </BudgetProvider>

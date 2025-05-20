@@ -3,7 +3,7 @@ import { sql } from "@/lib/db"
 
 export async function GET() {
   try {
-    // Using PostgreSQL's AT TIME ZONE to handle dates consistently
+    // Simplificando para usar directamente las fechas almacenadas
     const expenses = await sql`
       SELECT 
         e.id,
@@ -13,8 +13,8 @@ export async function GET() {
         e.description,
         e.amount,
         e.event,
-        -- Convert date to Colombia time zone and format as YYYY-MM-DD
-        TO_CHAR(e.date AT TIME ZONE 'America/Bogota', 'YYYY-MM-DD') as date,
+        -- Usar directamente el valor de fecha sin conversiones
+        e.date,
         c.name as category_name, 
         p.name as period_name
       FROM expenses e

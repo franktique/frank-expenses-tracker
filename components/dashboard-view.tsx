@@ -3,11 +3,14 @@
 import { useEffect, useState } from "react"
 import {
   AlertCircle,
+  BarChart3,
   CalendarRange,
   CreditCard,
   Database,
   DollarSign,
   ExternalLink,
+  LineChart,
+  PieChart,
   PiggyBank,
   Wallet,
   CreditCardIcon,
@@ -15,9 +18,11 @@ import {
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useBudget } from "@/context/budget-context"
 import { formatCurrency } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { CategoryExpensesChart, CumulativeExpensesChart, DailyExpensesChart } from "./dashboard-charts"
 import { useRouter } from "next/navigation"
 
 type DashboardData = {
@@ -184,6 +189,16 @@ export function DashboardView() {
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">Periodo activo: {dashboardData.activePeriod.name}</p>
       </div>
+      
+      <Tabs defaultValue="summary" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="summary">Resumen</TabsTrigger>
+          <TabsTrigger value="daily">Gastos Diarios</TabsTrigger>
+          <TabsTrigger value="cumulative">Gastos Acumulados</TabsTrigger>
+          <TabsTrigger value="categories">Por Categoría</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="summary" className="mt-6">
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
         <Card>
@@ -300,6 +315,20 @@ export function DashboardView() {
           </Table>
         </CardContent>
       </Card>
+        </TabsContent>
+        
+        <TabsContent value="daily" className="mt-6">
+          <DailyExpensesChart periodId={dashboardData.activePeriod.id} />
+        </TabsContent>
+        
+        <TabsContent value="cumulative" className="mt-6">
+          <CumulativeExpensesChart periodId={dashboardData.activePeriod.id} />
+        </TabsContent>
+        
+        <TabsContent value="categories" className="mt-6">
+          <CategoryExpensesChart periodId={dashboardData.activePeriod.id} />
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

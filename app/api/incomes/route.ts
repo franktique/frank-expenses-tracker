@@ -49,10 +49,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Estandarizar la fecha para asegurar que sea consistente con horario de Colombia
+    let dateToSave = date;
+    
+    // Si es un string ISO, asegurarse de que use solo la parte de fecha
+    if (typeof date === 'string' && date.includes('T')) {
+      // Extraer solo la parte de la fecha (YYYY-MM-DD)
+      dateToSave = date.split('T')[0];
+    }
+    
     // Insertar el ingreso con el periodo
     const [newIncome] = await sql`
       INSERT INTO incomes (period_id, date, description, amount)
-      VALUES (${actualPeriodId}, ${date}, ${description}, ${amount})
+      VALUES (${actualPeriodId}, ${dateToSave}, ${description}, ${amount})
       RETURNING *
     `
 

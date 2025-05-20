@@ -28,10 +28,19 @@ export async function POST(request: NextRequest) {
     if (amount <= 0) {
       return NextResponse.json({ error: "Amount must be a positive number" }, { status: 400 })
     }
+    
+    // Estandarizar la fecha para asegurar que sea consistente con horario de Colombia
+    let dateToSave = date;
+    
+    // Si es un string ISO, asegurarse de que use solo la parte de fecha
+    if (typeof date === 'string' && date.includes('T')) {
+      // Extraer solo la parte de la fecha (YYYY-MM-DD)
+      dateToSave = date.split('T')[0];
+    }
 
     const [newExpense] = await sql`
       INSERT INTO expenses (category_id, period_id, date, event, payment_method, description, amount)
-      VALUES (${categoryId}, ${periodId}, ${date}, ${event || null}, ${paymentMethod}, ${description}, ${amount})
+      VALUES (${categoryId}, ${periodId}, ${dateToSave}, ${event || null}, ${paymentMethod}, ${description}, ${amount})
       RETURNING *
     `
 

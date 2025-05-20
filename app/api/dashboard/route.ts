@@ -17,10 +17,11 @@ export async function GET() {
       })
     }
 
-    // Get total income
+    // Get total income for active period
     const [incomeSummary] = await sql`
       SELECT COALESCE(SUM(amount), 0) as total_income
       FROM incomes
+      WHERE period_id = ${activePeriod.id}
     `
 
     // Get total expenses for active period

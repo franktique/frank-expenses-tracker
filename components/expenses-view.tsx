@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { CSVImportDialog } from "@/components/csv-import-dialog"
+import { CSVImportDialogEnhanced } from "@/components/csv-import-dialog-enhanced"
 import { ExportExpensesButton } from "@/components/export-expenses-button"
 import {
   Dialog,
@@ -611,7 +612,7 @@ export function ExpensesView() {
       </Dialog>
 
       {/* CSV Import Dialog */}
-      <CSVImportDialog open={isImportOpen} onOpenChange={setIsImportOpen} />
+      <CSVImportDialogEnhanced open={isImportOpen} onOpenChange={setIsImportOpen} />
     </div>
   )
 }

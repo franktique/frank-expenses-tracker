@@ -316,7 +316,14 @@ export function IncomesView() {
                 const period = periods.find((p) => p.id === income.period_id)
                 return (
                   <TableRow key={income.id}>
-                    <TableCell>{formatDate(new Date(income.date))}</TableCell>
+                    <TableCell>
+                      {/* Forzar visualización correcta de fechas sin desplazamiento de zona horaria */}
+                      {income.date && typeof income.date === 'string' ? 
+                        // Si es string, usar método manual para evitar conversiones automáticas de zona horaria
+                        formatDate(new Date(income.date.split('T')[0] + 'T12:00:00Z')) : 
+                        formatDate(new Date(income.date))
+                      }
+                    </TableCell>
                     <TableCell>{income.description}</TableCell>
                     <TableCell>{period?.name || "Desconocido"}</TableCell>
                     <TableCell className="text-right">{formatCurrency(income.amount)}</TableCell>

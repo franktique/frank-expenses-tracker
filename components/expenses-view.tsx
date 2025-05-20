@@ -389,7 +389,14 @@ export function ExpensesView() {
                 const category = getCategoryById(expense.category_id)
                 return (
                   <TableRow key={expense.id}>
-                    <TableCell>{formatDate(new Date(expense.date))}</TableCell>
+                    <TableCell>
+                      {/* Forzar visualización correcta de fechas sin desplazamiento de zona horaria */}
+                      {expense.date && typeof expense.date === 'string' ? 
+                        // Si es string, usar método manual para evitar conversiones automáticas de zona horaria
+                        formatDate(new Date(expense.date.split('T')[0] + 'T12:00:00Z')) : 
+                        formatDate(new Date(expense.date))
+                      }
+                    </TableCell>
                     <TableCell>{category?.name || "Desconocida"}</TableCell>
                     <TableCell>
                       {expense.description}

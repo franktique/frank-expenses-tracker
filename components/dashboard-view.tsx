@@ -64,6 +64,46 @@ export function DashboardView() {
           throw new Error("Failed to fetch dashboard data")
         }
         const data = await response.json()
+        
+        // Debug log para identificar problemas con los valores
+        console.log('Dashboard data received:', {
+          totalIncome: data.totalIncome,
+          totalIncome_type: typeof data.totalIncome,
+          totalExpenses: data.totalExpenses,
+          totalExpenses_type: typeof data.totalExpenses,
+          activePeriodName: data.activePeriod?.name
+        })
+        
+        // Asegurar que los valores son números válidos
+        if (data.totalIncome !== undefined && (isNaN(data.totalIncome) || data.totalIncome === null)) {
+          data.totalIncome = 0
+        }
+        
+        if (data.totalExpenses !== undefined && (isNaN(data.totalExpenses) || data.totalExpenses === null)) {
+          data.totalExpenses = 0
+        }
+        
+        // Asegurar que los valores en budgetSummary también son números válidos
+        if (data.budgetSummary && Array.isArray(data.budgetSummary)) {
+          data.budgetSummary = data.budgetSummary.map((item: {
+            total_amount: number,
+            credit_amount: number,
+            debit_amount: number,
+            cash_amount: number,
+            expected_amount: number,
+            remaining: number,
+            [key: string]: any
+          }) => ({
+            ...item,
+            total_amount: isNaN(Number(item.total_amount)) ? 0 : Number(item.total_amount),
+            credit_amount: isNaN(Number(item.credit_amount)) ? 0 : Number(item.credit_amount),
+            debit_amount: isNaN(Number(item.debit_amount)) ? 0 : Number(item.debit_amount),
+            cash_amount: isNaN(Number(item.cash_amount)) ? 0 : Number(item.cash_amount),
+            expected_amount: isNaN(Number(item.expected_amount)) ? 0 : Number(item.expected_amount),
+            remaining: isNaN(Number(item.remaining)) ? 0 : Number(item.remaining)
+          }))
+        }
+        
         setDashboardData(data)
       } catch (error) {
         console.error("Error fetching dashboard data:", error)

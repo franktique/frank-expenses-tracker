@@ -27,6 +27,8 @@ type ChartData = {
     date: string
     total_amount: number
     payment_method: string
+    category_id: string
+    category_name: string
   }>
   expensesByCategory: Array<{
     category_id: string
@@ -41,7 +43,10 @@ type DailyExpensesProps = {
 
 // Daily Expenses Bar Chart Component
 export function DailyExpensesChart({ periodId }: DailyExpensesProps) {
-  const [chartData, setChartData] = useState<Array<{date: string, total: number}>>([])
+  const [rawData, setRawData] = useState<ChartData['expensesByDate']>([]) 
+  const [chartData, setChartData] = useState<Array<{date: string, total: number}>>([])  
+  const [categories, setCategories] = useState<Array<{id: string, name: string}>>([])  
+  const [excludedCategories, setExcludedCategories] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -60,23 +65,24 @@ export function DailyExpensesChart({ periodId }: DailyExpensesProps) {
         }
         const data = await response.json() as ChartData
         
-        // Process data for the daily expenses chart
-        const processedData = data.expensesByDate.reduce((acc, item) => {
-          const date = format(parseISO(item.date), 'dd/MM/yyyy')
-          const existingDay = acc.find(d => d.date === date)
-          
-          if (existingDay) {
-            existingDay.total += Number(item.total_amount)
-          } else {
-            acc.push({
-              date,
-              total: Number(item.total_amount)
-            })
-          }
-          return acc
-        }, [] as Array<{date: string, total: number}>)
+        // Store raw data for filtering
+        setRawData(data.expensesByDate)
         
-        setChartData(processedData)
+        // Extract unique categories
+        const uniqueCategories = Array.from(new Set(data.expensesByDate.map(item => item.category_id)))
+          .map(categoryId => {
+            const categoryItem = data.expensesByDate.find(item => item.category_id === categoryId)
+            return {
+              id: categoryId,
+              name: categoryItem?.category_name || 'Unknown'
+            }
+          })
+          .sort((a, b) => a.name.localeCompare(b.name))
+        
+        setCategories(uniqueCategories)
+        
+        // Process data for the daily expenses chart
+        processChartData(data.expensesByDate, [])
       } catch (error) {
         console.error("Error fetching chart data:", error)
         setError((error as Error).message)
@@ -87,6 +93,56 @@ export function DailyExpensesChart({ periodId }: DailyExpensesProps) {
 
     fetchChartData()
   }, [periodId])
+  
+  // Process chart data whenever filters change
+  useEffect(() => {
+    if (rawData.length > 0) {
+      processChartData(rawData, excludedCategories)
+    }
+  }, [rawData, excludedCategories])
+  
+  // Process chart data with filters
+  const processChartData = (data: ChartData['expensesByDate'], excluded: string[]) => {
+    // Filter out excluded categories
+    const filteredData = excluded.length > 0 
+      ? data.filter(item => !excluded.includes(item.category_id))
+      : data
+    
+    // Group by date
+    const processedData = filteredData.reduce((acc, item) => {
+      const date = format(parseISO(item.date), 'dd/MM/yyyy')
+      const existingDay = acc.find(d => d.date === date)
+      
+      if (existingDay) {
+        existingDay.total += Number(item.total_amount)
+      } else {
+        acc.push({
+          date,
+          total: Number(item.total_amount)
+        })
+      }
+      return acc
+    }, [] as Array<{date: string, total: number}>)
+    
+    // Sort by date
+    processedData.sort((a, b) => {
+      const datePartsA = a.date.split('/').reverse().join('')
+      const datePartsB = b.date.split('/').reverse().join('')
+      return datePartsA.localeCompare(datePartsB)
+    })
+    
+    setChartData(processedData)
+  }
+  
+  const toggleCategory = (categoryId: string) => {
+    setExcludedCategories(prev => {
+      if (prev.includes(categoryId)) {
+        return prev.filter(id => id !== categoryId)
+      } else {
+        return [...prev, categoryId]
+      }
+    })
+  }
 
   if (isLoading) {
     return (
@@ -119,6 +175,25 @@ export function DailyExpensesChart({ periodId }: DailyExpensesProps) {
         <CardDescription>Total de gastos por fecha</CardDescription>
       </CardHeader>
       <CardContent>
+        {categories.length > 0 && (
+          <div className="mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {categories.map((category) => (
+              <div key={category.id} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`daily-category-${category.id}`} 
+                  checked={!excludedCategories.includes(category.id)}
+                  onCheckedChange={() => toggleCategory(category.id)}
+                />
+                <Label 
+                  htmlFor={`daily-category-${category.id}`}
+                  className="text-sm truncate"
+                >
+                  {category.name}
+                </Label>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -156,7 +231,10 @@ export function DailyExpensesChart({ periodId }: DailyExpensesProps) {
 
 // Cumulative Expenses Line Chart Component
 export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
-  const [chartData, setChartData] = useState<Array<{date: string, total: number, cumulative: number}>>([])
+  const [rawData, setRawData] = useState<ChartData['expensesByDate']>([]) 
+  const [chartData, setChartData] = useState<Array<{date: string, total: number, cumulative: number}>>([])  
+  const [categories, setCategories] = useState<Array<{id: string, name: string}>>([])  
+  const [excludedCategories, setExcludedCategories] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -175,38 +253,24 @@ export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
         }
         const data = await response.json() as ChartData
         
-        // First reduce to get daily totals
-        const dailyTotals = data.expensesByDate.reduce((acc, item) => {
-          const date = format(parseISO(item.date), 'dd/MM/yyyy')
-          const existingDay = acc.find(d => d.date === date)
-          
-          if (existingDay) {
-            existingDay.total += Number(item.total_amount)
-          } else {
-            acc.push({
-              date,
-              total: Number(item.total_amount),
-              cumulative: 0 // Will be calculated next
-            })
-          }
-          return acc
-        }, [] as Array<{date: string, total: number, cumulative: number}>)
+        // Store raw data for filtering
+        setRawData(data.expensesByDate)
         
-        // Sort by date
-        dailyTotals.sort((a, b) => {
-          const datePartsA = a.date.split('/').reverse().join('');
-          const datePartsB = b.date.split('/').reverse().join('');
-          return datePartsA.localeCompare(datePartsB);
-        });
+        // Extract unique categories
+        const uniqueCategories = Array.from(new Set(data.expensesByDate.map(item => item.category_id)))
+          .map(categoryId => {
+            const categoryItem = data.expensesByDate.find(item => item.category_id === categoryId)
+            return {
+              id: categoryId,
+              name: categoryItem?.category_name || 'Unknown'
+            }
+          })
+          .sort((a, b) => a.name.localeCompare(b.name))
         
-        // Calculate cumulative values
-        let cumulativeTotal = 0
-        dailyTotals.forEach(item => {
-          cumulativeTotal += item.total
-          item.cumulative = cumulativeTotal
-        })
+        setCategories(uniqueCategories)
         
-        setChartData(dailyTotals)
+        // Process data for the cumulative expenses chart
+        processChartData(data.expensesByDate, [])
       } catch (error) {
         console.error("Error fetching chart data:", error)
         setError((error as Error).message)
@@ -217,6 +281,64 @@ export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
 
     fetchChartData()
   }, [periodId])
+  
+  // Process chart data whenever filters change
+  useEffect(() => {
+    if (rawData.length > 0) {
+      processChartData(rawData, excludedCategories)
+    }
+  }, [rawData, excludedCategories])
+  
+  // Process chart data with filters
+  const processChartData = (data: ChartData['expensesByDate'], excluded: string[]) => {
+    // Filter out excluded categories
+    const filteredData = excluded.length > 0 
+      ? data.filter(item => !excluded.includes(item.category_id))
+      : data
+    
+    // First reduce to get daily totals
+    const dailyTotals = filteredData.reduce((acc, item) => {
+      const date = format(parseISO(item.date), 'dd/MM/yyyy')
+      const existingDay = acc.find(d => d.date === date)
+      
+      if (existingDay) {
+        existingDay.total += Number(item.total_amount)
+      } else {
+        acc.push({
+          date,
+          total: Number(item.total_amount),
+          cumulative: 0 // Will be calculated next
+        })
+      }
+      return acc
+    }, [] as Array<{date: string, total: number, cumulative: number}>)
+    
+    // Sort by date
+    dailyTotals.sort((a, b) => {
+      const datePartsA = a.date.split('/').reverse().join('')
+      const datePartsB = b.date.split('/').reverse().join('')
+      return datePartsA.localeCompare(datePartsB)
+    })
+    
+    // Calculate cumulative values
+    let cumulativeTotal = 0
+    dailyTotals.forEach(item => {
+      cumulativeTotal += item.total
+      item.cumulative = cumulativeTotal
+    })
+    
+    setChartData(dailyTotals)
+  }
+  
+  const toggleCategory = (categoryId: string) => {
+    setExcludedCategories(prev => {
+      if (prev.includes(categoryId)) {
+        return prev.filter(id => id !== categoryId)
+      } else {
+        return [...prev, categoryId]
+      }
+    })
+  }
 
   if (isLoading) {
     return (
@@ -249,6 +371,25 @@ export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
         <CardDescription>Gastos acumulados a lo largo del tiempo</CardDescription>
       </CardHeader>
       <CardContent>
+        {categories.length > 0 && (
+          <div className="mb-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+            {categories.map((category) => (
+              <div key={category.id} className="flex items-center space-x-2">
+                <Checkbox 
+                  id={`cumulative-category-${category.id}`} 
+                  checked={!excludedCategories.includes(category.id)}
+                  onCheckedChange={() => toggleCategory(category.id)}
+                />
+                <Label 
+                  htmlFor={`cumulative-category-${category.id}`}
+                  className="text-sm truncate"
+                >
+                  {category.name}
+                </Label>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart

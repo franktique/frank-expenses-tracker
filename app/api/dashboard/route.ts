@@ -67,10 +67,25 @@ export async function GET() {
       ORDER BY ce.category_name
     `
 
+    // Log values for debugging
+    console.log("API Dashboard Data:", {
+      activePeriodId: activePeriod.id,
+      activePeriodName: activePeriod.name,
+      totalIncome: incomeSummary.total_income,
+      totalIncome_type: typeof incomeSummary.total_income,
+      totalExpenses: expenseSummary.total_expenses,
+      totalExpenses_type: typeof expenseSummary.total_expenses,
+      budgetSummaryCount: budgetSummary.length
+    })
+
+    // Ensure values are numbers before returning
+    const totalIncome = parseFloat(incomeSummary.total_income) || 0
+    const totalExpenses = parseFloat(expenseSummary.total_expenses) || 0
+
     return NextResponse.json({
       activePeriod,
-      totalIncome: incomeSummary.total_income,
-      totalExpenses: expenseSummary.total_expenses,
+      totalIncome,
+      totalExpenses,
       budgetSummary,
     })
   } catch (error) {

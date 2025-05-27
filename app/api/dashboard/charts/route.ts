@@ -10,16 +10,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Period ID is required" }, { status: 400 })
     }
 
-    // Get expenses by date for the selected period
+    // Get expenses by date and category for the selected period
     const expensesByDate = await sql`
       SELECT 
-        date, 
-        SUM(amount) as total_amount,
-        payment_method
-      FROM expenses
-      WHERE period_id = ${periodId}
-      GROUP BY date, payment_method
-      ORDER BY date ASC
+        e.date, 
+        SUM(e.amount) as total_amount,
+        e.payment_method,
+        c.id as category_id,
+        c.name as category_name
+      FROM expenses e
+      JOIN categories c ON e.category_id = c.id
+      WHERE e.period_id = ${periodId}
+      GROUP BY e.date, e.payment_method, c.id, c.name
+      ORDER BY e.date ASC
     `
 
     // Get expenses by category for the selected period

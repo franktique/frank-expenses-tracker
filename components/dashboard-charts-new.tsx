@@ -25,8 +25,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { Button } from "@/components/ui/button"
 import { ChevronDown, ChevronUp, Filter, X } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { CumulativeExpensesTooltip } from "@/components/cumulative-expenses-tooltip"
-import { DailyExpensesTooltip } from "@/components/daily-expenses-tooltip"
 
 type ChartData = {
   expensesByDate: Array<{
@@ -306,7 +304,10 @@ export function DailyExpensesChart({ periodId }: DailyExpensesProps) {
               <YAxis 
                 tickFormatter={(value) => formatCurrency(value)}
               />
-              <Tooltip content={CumulativeExpensesTooltip} />
+              <Tooltip 
+                formatter={(value) => [formatCurrency(value as number), "Total"]}
+                labelFormatter={(value) => `Fecha: ${value}`}
+              />
               <Legend />
               <Bar dataKey="total" name="Total Gastado" fill="#8884d8" />
             </BarChart>
@@ -322,9 +323,7 @@ export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
   const [rawData, setRawData] = useState<ChartData['expensesByDate']>([]) 
   const [chartData, setChartData] = useState<Array<{date: string, total: number, cumulative: number}>>([])  
   const [categories, setCategories] = useState<Array<{id: string, name: string}>>([])  
-  const [paymentMethods, setPaymentMethods] = useState<Array<string>>([])  
   const [excludedCategories, setExcludedCategories] = useState<string[]>([])
-  const [excludedPaymentMethods, setExcludedPaymentMethods] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -357,16 +356,10 @@ export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
           })
           .sort((a, b) => a.name.localeCompare(b.name))
         
-        // Extract unique payment methods
-        const uniquePaymentMethods = Array.from(new Set(data.expensesByDate.map(item => item.payment_method)))
-          .filter(method => method) // Filter out any null/undefined values
-          .sort()
-        
         setCategories(uniqueCategories)
-        setPaymentMethods(uniquePaymentMethods)
         
         // Process data for the cumulative expenses chart
-        processChartData(data.expensesByDate, [], [])
+        processChartData(data.expensesByDate, [])
       } catch (error) {
         console.error("Error fetching chart data:", error)
         setError((error as Error).message)
@@ -381,24 +374,16 @@ export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
   // Process chart data whenever filters change
   useEffect(() => {
     if (rawData.length > 0) {
-      processChartData(rawData, excludedCategories, excludedPaymentMethods)
+      processChartData(rawData, excludedCategories)
     }
-  }, [rawData, excludedCategories, excludedPaymentMethods])
+  }, [rawData, excludedCategories])
   
   // Process chart data with filters
-  const processChartData = (data: ChartData['expensesByDate'], excludedCats: string[], excludedMethods: string[]) => {
-    // Apply both category and payment method filters
-    let filteredData = data
-    
+  const processChartData = (data: ChartData['expensesByDate'], excluded: string[]) => {
     // Filter out excluded categories
-    if (excludedCats.length > 0) {
-      filteredData = filteredData.filter(item => !excludedCats.includes(item.category_id))
-    }
-    
-    // Filter out excluded payment methods
-    if (excludedMethods.length > 0) {
-      filteredData = filteredData.filter(item => !excludedMethods.includes(item.payment_method))
-    }
+    const filteredData = excluded.length > 0 
+      ? data.filter(item => !excluded.includes(item.category_id))
+      : data
     
     // First reduce to get daily totals
     const dailyTotals = filteredData.reduce((acc, item) => {
@@ -475,84 +460,54 @@ export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
         <CardDescription>Gastos acumulados a lo largo del tiempo</CardDescription>
       </CardHeader>
       <CardContent>
-        <Collapsible className="mb-4 space-y-2" defaultOpen={false}>
-          <div className="flex items-center justify-between">
-            <CollapsibleTrigger className="flex items-center gap-1 hover:text-primary">
-              <Filter className="h-4 w-4" />
-              <span className="text-sm font-medium">Filtros</span>
-              {(excludedCategories.length > 0 || excludedPaymentMethods.length > 0) && (
-                <Badge variant="secondary" className="ml-2">
-                  {(categories.length - excludedCategories.length) + (paymentMethods.length - excludedPaymentMethods.length)}/
-                  {categories.length + paymentMethods.length}
-                </Badge>
+        {categories.length > 0 && (
+          <Collapsible className="mb-4 space-y-2" defaultOpen={false}>
+            <div className="flex items-center justify-between">
+              <CollapsibleTrigger className="flex items-center gap-1 hover:text-primary">
+                <Filter className="h-4 w-4" />
+                <span className="text-sm font-medium">Filtros</span>
+                {excludedCategories.length > 0 && (
+                  <Badge variant="secondary" className="ml-2">
+                    {categories.length - excludedCategories.length}/{categories.length}
+                  </Badge>
+                )}
+                <ChevronDown className="h-4 w-4 transition-transform ui-open:rotate-180" />
+              </CollapsibleTrigger>
+              
+              {excludedCategories.length > 0 && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 px-2 text-xs" 
+                  onClick={() => setExcludedCategories([])}
+                >
+                  <X className="mr-1 h-3 w-3" />
+                  Limpiar filtros
+                </Button>
               )}
-              <ChevronDown className="h-4 w-4 transition-transform ui-open:rotate-180" />
-            </CollapsibleTrigger>
+            </div>
             
-            {(excludedCategories.length > 0 || excludedPaymentMethods.length > 0) && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-8 px-2 text-xs" 
-                onClick={() => {
-                  setExcludedCategories([])
-                  setExcludedPaymentMethods([])
-                }}
-              >
-                <X className="mr-1 h-3 w-3" />
-                Limpiar filtros
-              </Button>
-            )}
-          </div>
-          
-          <CollapsibleContent>
-            {categories.length > 0 && (
-              <div className="pt-2 border-t">
-                <h4 className="text-sm font-medium mb-2">Categorías</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                  {categories.map((category) => (
-                    <div key={category.id} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`cumulative-category-${category.id}`} 
-                        checked={!excludedCategories.includes(category.id)}
-                        onCheckedChange={() => toggleCategory(category.id)}
-                      />
-                      <Label 
-                        htmlFor={`cumulative-category-${category.id}`}
-                        className="text-sm truncate"
-                      >
-                        {category.name}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
+            <CollapsibleContent>
+              <div className="pt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 border-t">
+                {categories.map((category) => (
+                  <div key={category.id} className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={`cumulative-category-${category.id}`} 
+                      checked={!excludedCategories.includes(category.id)}
+                      onCheckedChange={() => toggleCategory(category.id)}
+                    />
+                    <Label 
+                      htmlFor={`cumulative-category-${category.id}`}
+                      className="text-sm truncate"
+                    >
+                      {category.name}
+                    </Label>
+                  </div>
+                ))}
               </div>
-            )}
-            
-            {paymentMethods.length > 0 && (
-              <div className="pt-4 mt-2 border-t">
-                <h4 className="text-sm font-medium mb-2">Medio de Pago</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                  {paymentMethods.map((method) => (
-                    <div key={method} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`cumulative-payment-${method}`} 
-                        checked={!excludedPaymentMethods.includes(method)}
-                        onCheckedChange={() => togglePaymentMethod(method)}
-                      />
-                      <Label 
-                        htmlFor={`cumulative-payment-${method}`}
-                        className="text-sm truncate"
-                      >
-                        {method}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-          </CollapsibleContent>
-        </Collapsible>
+            </CollapsibleContent>
+          </Collapsible>
+        )}
         <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart
@@ -574,7 +529,10 @@ export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
               <YAxis 
                 tickFormatter={(value) => formatCurrency(value)}
               />
-              <Tooltip content={CumulativeExpensesTooltip} />
+              <Tooltip 
+                formatter={(value) => [formatCurrency(value as number), "Total"]}
+                labelFormatter={(value) => `Fecha: ${value}`}
+              />
               <Legend />
               <Area 
                 type="monotone" 
@@ -595,12 +553,9 @@ export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
 
 // Category Expenses Bar Chart Component
 export function CategoryExpensesChart({ periodId }: DailyExpensesProps) {
-  const [rawData, setRawData] = useState<ChartData['expensesByDate']>([]) 
-  const [chartData, setChartData] = useState<Array<{category: string, total: number, id: string}>>([])  
-  const [filteredData, setFilteredData] = useState<Array<{category: string, total: number, id: string}>>([])  
-  const [paymentMethods, setPaymentMethods] = useState<Array<string>>([])  
+  const [chartData, setChartData] = useState<Array<{category: string, total: number, id: string}>>([])
+  const [filteredData, setFilteredData] = useState<Array<{category: string, total: number, id: string}>>([])
   const [excludedCategories, setExcludedCategories] = useState<string[]>([])
-  const [excludedPaymentMethods, setExcludedPaymentMethods] = useState<string[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -618,16 +573,6 @@ export function CategoryExpensesChart({ periodId }: DailyExpensesProps) {
           throw new Error("Failed to fetch chart data")
         }
         const data = await response.json() as ChartData
-        
-        // Store raw data for filtering by payment method
-        setRawData(data.expensesByDate)
-        
-        // Extract unique payment methods
-        const uniquePaymentMethods = Array.from(new Set(data.expensesByDate.map(item => item.payment_method)))
-          .filter(method => method) // Filter out any null/undefined values
-          .sort()
-        
-        setPaymentMethods(uniquePaymentMethods)
         
         // Process data for the category chart
         const processedData = data.expensesByCategory.map(item => ({
@@ -649,40 +594,11 @@ export function CategoryExpensesChart({ periodId }: DailyExpensesProps) {
     fetchChartData()
   }, [periodId])
 
-  // Filter data when excluded categories or payment methods change
+  // Filter data when excluded categories change
   useEffect(() => {
-    if (excludedPaymentMethods.length === 0) {
-      // If no payment method filters, just filter by categories
-      const filtered = chartData.filter(item => !excludedCategories.includes(item.id))
-      setFilteredData(filtered)
-    } else {
-      // If payment method filters are active, we need to recalculate totals from raw data
-      if (rawData.length > 0) {
-        // Filter raw data by payment methods
-        const filteredRawData = rawData.filter(item => !excludedPaymentMethods.includes(item.payment_method))
-        
-        // Group by category and sum amounts
-        const categoryTotals = filteredRawData.reduce((acc, item) => {
-          const categoryId = item.category_id
-          if (!excludedCategories.includes(categoryId)) {
-            if (!acc[categoryId]) {
-              acc[categoryId] = {
-                category: item.category_name,
-                total: 0,
-                id: categoryId
-              }
-            }
-            acc[categoryId].total += Number(item.total_amount)
-          }
-          return acc
-        }, {} as Record<string, {category: string, total: number, id: string}>)
-        
-        // Convert to array
-        const newFilteredData = Object.values(categoryTotals)
-        setFilteredData(newFilteredData)
-      }
-    }
-  }, [excludedCategories, excludedPaymentMethods, chartData, rawData])
+    const filtered = chartData.filter(item => !excludedCategories.includes(item.id))
+    setFilteredData(filtered)
+  }, [excludedCategories, chartData])
 
   const toggleCategory = (categoryId: string) => {
     setExcludedCategories(prev => {
@@ -730,24 +646,20 @@ export function CategoryExpensesChart({ periodId }: DailyExpensesProps) {
             <CollapsibleTrigger className="flex items-center gap-1 hover:text-primary">
               <Filter className="h-4 w-4" />
               <span className="text-sm font-medium">Filtros</span>
-              {(excludedCategories.length > 0 || excludedPaymentMethods.length > 0) && (
+              {excludedCategories.length > 0 && (
                 <Badge variant="secondary" className="ml-2">
-                  {(chartData.length - excludedCategories.length) + (paymentMethods.length - excludedPaymentMethods.length)}/
-                  {chartData.length + paymentMethods.length}
+                  {chartData.length - excludedCategories.length}/{chartData.length}
                 </Badge>
               )}
               <ChevronDown className="h-4 w-4 transition-transform ui-open:rotate-180" />
             </CollapsibleTrigger>
             
-            {(excludedCategories.length > 0 || excludedPaymentMethods.length > 0) && (
+            {excludedCategories.length > 0 && (
               <Button 
                 variant="outline" 
                 size="sm" 
                 className="h-8 px-2 text-xs" 
-                onClick={() => {
-                  setExcludedCategories([])
-                  setExcludedPaymentMethods([])
-                }}
+                onClick={() => setExcludedCategories([])}
               >
                 <X className="mr-1 h-3 w-3" />
                 Limpiar filtros
@@ -756,49 +668,23 @@ export function CategoryExpensesChart({ periodId }: DailyExpensesProps) {
           </div>
           
           <CollapsibleContent>
-            <div className="pt-2 border-t">
-              <h4 className="text-sm font-medium mb-2">Categorías</h4>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                {chartData.map((item) => (
-                  <div key={item.id} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`category-${item.id}`} 
-                      checked={!excludedCategories.includes(item.id)}
-                      onCheckedChange={() => toggleCategory(item.id)}
-                    />
-                    <Label 
-                      htmlFor={`category-${item.id}`}
-                      className="text-sm truncate"
-                    >
-                      {item.category}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            {paymentMethods.length > 0 && (
-              <div className="pt-4 mt-2 border-t">
-                <h4 className="text-sm font-medium mb-2">Medio de Pago</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
-                  {paymentMethods.map((method) => (
-                    <div key={method} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`category-payment-${method}`} 
-                        checked={!excludedPaymentMethods.includes(method)}
-                        onCheckedChange={() => togglePaymentMethod(method)}
-                      />
-                      <Label 
-                        htmlFor={`category-payment-${method}`}
-                        className="text-sm truncate"
-                      >
-                        {method}
-                      </Label>
-                    </div>
-                  ))}
+            <div className="pt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 border-t">
+              {chartData.map((item) => (
+                <div key={item.id} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`category-${item.id}`} 
+                    checked={!excludedCategories.includes(item.id)}
+                    onCheckedChange={() => toggleCategory(item.id)}
+                  />
+                  <Label 
+                    htmlFor={`category-${item.id}`}
+                    className="text-sm truncate"
+                  >
+                    {item.category}
+                  </Label>
                 </div>
-              </div>
-            )}
+              ))}
+            </div>
           </CollapsibleContent>
         </Collapsible>
         <div className="h-[400px]">

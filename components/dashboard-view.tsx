@@ -328,7 +328,18 @@ export function DashboardView() {
                   
                   return (
                     <TableRow key={item.category_id}>
-                      <TableCell className="font-medium">{item.category_name}</TableCell>
+                      <TableCell className={`font-medium ${
+                        // Green: remaining is equal to or less than 0
+                        item.remaining <= 0 ? 
+                          // Red: remaining is less than 0 and absolute value is >= 30% of budget
+                          (item.remaining < 0 && Math.abs(item.remaining) >= item.expected_amount * 0.3) ? 
+                            'bg-red-100 dark:bg-red-950/50' : 
+                          // Yellow: remaining is less than 0 and absolute value is > 10% of budget
+                          (item.remaining < 0 && Math.abs(item.remaining) > item.expected_amount * 0.1) ? 
+                            'bg-yellow-100 dark:bg-yellow-950/50' : 
+                            'bg-green-100 dark:bg-green-950/50' 
+                        : ''
+                      }`}>{item.category_name}</TableCell>
                       <TableCell className="text-right">{formatCurrency(item.expected_amount)}</TableCell>
                       <TableCell className="text-right">{formatCurrency(item.total_amount)}</TableCell>
                       <TableCell className="text-right">{formatCurrency(item.credit_amount)}</TableCell>

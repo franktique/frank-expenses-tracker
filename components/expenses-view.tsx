@@ -46,6 +46,7 @@ export function ExpensesView() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false)
   const [isImportOpen, setIsImportOpen] = useState(false)
   const [categoryFilter, setCategoryFilter] = useState<string>("")
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>("")
 
   const [newExpenseCategory, setNewExpenseCategory] = useState("")
   const [categorySearch, setCategorySearch] = useState("")
@@ -188,14 +189,16 @@ export function ExpensesView() {
   // Sort expenses by date (oldest first)
   const sortedExpenses = [...expenses].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
-  // Filter expenses by active period and selected category if available
+  // Filter expenses by active period, selected category and payment method if available
   const filteredExpenses = sortedExpenses.filter(expense => {
     // Filter by period
     const periodMatch = activePeriod ? expense.period_id === activePeriod.id : true;
     // Filter by category
     const categoryMatch = categoryFilter === "all" || !categoryFilter ? true : expense.category_id === categoryFilter;
+    // Filter by payment method
+    const paymentMethodMatch = paymentMethodFilter === "all" || !paymentMethodFilter ? true : expense.payment_method === paymentMethodFilter;
     
-    return periodMatch && categoryMatch;
+    return periodMatch && categoryMatch && paymentMethodMatch;
   })
 
   return (
@@ -205,7 +208,7 @@ export function ExpensesView() {
           <h1 className="text-3xl font-bold tracking-tight">Gastos</h1>
           <p className="text-muted-foreground mt-1">
             {filteredExpenses.length} {filteredExpenses.length === 1 ? "registro" : "registros"} 
-            {categoryFilter !== "all" && categoryFilter ? " en la categoría seleccionada" : ""}
+            {(categoryFilter !== "all" && categoryFilter) || (paymentMethodFilter !== "all" && paymentMethodFilter) ? " con los filtros aplicados" : ""}
           </p>
         </div>
         <div className="flex gap-2">
@@ -361,24 +364,41 @@ export function ExpensesView() {
           <CardDescription>
             {activePeriod ? `Gastos del periodo: ${activePeriod.name}` : "Historial de todos los gastos registrados"}
           </CardDescription>
-          <div className="mt-4">
-            <Label htmlFor="category-filter">Filtrar por categoría</Label>
-            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-              <SelectTrigger id="category-filter" className="mt-1">
-                <SelectValue placeholder="Todas las categorías" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas las categorías</SelectItem>
-                {categories
-                  .slice()
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+          <div className="mt-4 space-y-4">
+            <div>
+              <Label htmlFor="category-filter">Filtrar por categoría</Label>
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger id="category-filter" className="mt-1">
+                  <SelectValue placeholder="Todas las categorías" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las categorías</SelectItem>
+                  {categories
+                    .slice()
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="payment-method-filter">Filtrar por medio de pago</Label>
+              <Select value={paymentMethodFilter} onValueChange={setPaymentMethodFilter}>
+                <SelectTrigger id="payment-method-filter" className="mt-1">
+                  <SelectValue placeholder="Todos los medios de pago" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los medios de pago</SelectItem>
+                  <SelectItem value="credit">Tarjeta de crédito</SelectItem>
+                  <SelectItem value="debit">Tarjeta de débito</SelectItem>
+                  <SelectItem value="cash">Efectivo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </CardHeader>
         <CardContent>

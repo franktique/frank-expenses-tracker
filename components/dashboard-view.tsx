@@ -224,14 +224,14 @@ export function DashboardView() {
   const totalCreditCardPurchases = budgetSummary.reduce((sum, item) => sum + item.credit_amount, 0)
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-full max-w-full">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">Periodo activo: {dashboardData.activePeriod.name}</p>
       </div>
       
-      <Tabs defaultValue="summary" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+      <Tabs defaultValue="summary" className="mt-6 w-full max-w-full">
+        <TabsList className="grid w-full grid-cols-4 max-w-full">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
           <TabsTrigger value="daily">Gastos Diarios</TabsTrigger>
           <TabsTrigger value="cumulative">Gastos Acumulados</TabsTrigger>
@@ -368,16 +368,22 @@ export function DashboardView() {
       </Card>
         </TabsContent>
         
-        <TabsContent value="daily" className="mt-6">
-          <DailyExpensesChart periodId={dashboardData.activePeriod.id} />
+        <TabsContent value="daily" className="mt-6 w-full max-w-full overflow-x-hidden p-0">
+          <div className="w-full max-w-full p-0">
+            <DailyExpensesChart periodId={dashboardData.activePeriod.id} />
+          </div>
         </TabsContent>
         
-        <TabsContent value="cumulative" className="mt-6">
-          <CumulativeExpensesChart periodId={dashboardData.activePeriod.id} />
+        <TabsContent value="cumulative" className="mt-6 w-full max-w-full overflow-x-hidden p-0">
+          <div className="w-full max-w-full p-0">
+            <CumulativeExpensesChart periodId={dashboardData.activePeriod.id} />
+          </div>
         </TabsContent>
         
-        <TabsContent value="categories" className="mt-6">
-          <CategoryExpensesChart periodId={dashboardData.activePeriod.id} />
+        <TabsContent value="categories" className="mt-6 w-full max-w-full overflow-x-hidden p-0">
+          <div className="w-full max-w-full p-0">
+            <CategoryExpensesChart periodId={dashboardData.activePeriod.id} />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

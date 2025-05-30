@@ -206,8 +206,8 @@ export function DailyExpensesChart({ periodId }: DailyExpensesProps) {
         <CardTitle>Gastos por Día</CardTitle>
         <CardDescription>Total de gastos por fecha</CardDescription>
       </CardHeader>
-      <CardContent>
-        <Collapsible className="mb-4 space-y-2" defaultOpen={false}>
+      <CardContent className="p-0 sm:p-6">
+        <Collapsible className="mb-4 space-y-2 px-6 pt-6" defaultOpen={false}>
           <div className="flex items-center justify-between">
             <CollapsibleTrigger className="flex items-center gap-1 hover:text-primary">
               <Filter className="h-4 w-4" />
@@ -285,14 +285,14 @@ export function DailyExpensesChart({ periodId }: DailyExpensesProps) {
             )}
           </CollapsibleContent>
         </Collapsible>
-        <div className="h-[400px]">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="min-h-[400px] h-[60vh] max-h-[900px] w-full overflow-hidden">
+          <ResponsiveContainer width="100%" height="100%" minHeight={350} className="w-full">
             <BarChart
               data={chartData}
               margin={{
                 top: 20,
-                right: 30,
-                left: 20,
+                right: 5,
+                left: 0,
                 bottom: 60,
               }}
             >
@@ -474,8 +474,8 @@ export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
         <CardTitle>Gastos Acumulados</CardTitle>
         <CardDescription>Gastos acumulados a lo largo del tiempo</CardDescription>
       </CardHeader>
-      <CardContent>
-        <Collapsible className="mb-4 space-y-2" defaultOpen={false}>
+      <CardContent className="p-0 sm:p-6">
+        <Collapsible className="mb-4 space-y-2 px-6 pt-6" defaultOpen={false}>
           <div className="flex items-center justify-between">
             <CollapsibleTrigger className="flex items-center gap-1 hover:text-primary">
               <Filter className="h-4 w-4" />
@@ -553,14 +553,14 @@ export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
             )}
           </CollapsibleContent>
         </Collapsible>
-        <div className="h-[400px]">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="min-h-[400px] h-[60vh] max-h-[900px] w-full overflow-hidden">
+          <ResponsiveContainer width="100%" height="100%" minHeight={350} className="w-full">
             <AreaChart
               data={chartData}
               margin={{
                 top: 20,
-                right: 30,
-                left: 20,
+                right: 5,
+                left: 0,
                 bottom: 60,
               }}
             >
@@ -724,8 +724,8 @@ export function CategoryExpensesChart({ periodId }: DailyExpensesProps) {
         <CardTitle>Gastos por Categoría</CardTitle>
         <CardDescription>Distribución de gastos por categoría</CardDescription>
       </CardHeader>
-      <CardContent>
-        <Collapsible className="mb-4 space-y-2" defaultOpen={false}>
+      <CardContent className="p-0 sm:p-6">
+        <Collapsible className="mb-4 space-y-2 px-6 pt-6" defaultOpen={false}>
           <div className="flex items-center justify-between">
             <CollapsibleTrigger className="flex items-center gap-1 hover:text-primary">
               <Filter className="h-4 w-4" />
@@ -801,8 +801,8 @@ export function CategoryExpensesChart({ periodId }: DailyExpensesProps) {
             )}
           </CollapsibleContent>
         </Collapsible>
-        <div className="h-[400px]">
-          <ResponsiveContainer width="100%" height="100%">
+        <div className="min-h-[400px] h-[60vh] max-h-[900px] w-full overflow-hidden">
+          <ResponsiveContainer width="100%" height="100%" minHeight={350} className="w-full">
             <BarChart
               data={filteredData}
               layout="vertical"

@@ -13,10 +13,11 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useToast } from "@/components/ui/use-toast"
-import { useBudget } from "@/context/budget-context"
+import { useBudget, PaymentMethod } from "@/context/budget-context"
 import { formatCurrency } from "@/lib/utils"
 
 export function BudgetsView() {
@@ -30,6 +31,7 @@ export function BudgetsView() {
     name: string
     budgetId?: string
     amount: string
+    paymentMethod: PaymentMethod
   } | null>(null)
 
   // Get the selected period object
@@ -53,10 +55,10 @@ export function BudgetsView() {
 
     if (editCategory.budgetId) {
       // Update existing budget
-      updateBudget(editCategory.budgetId, amount)
+      updateBudget(editCategory.budgetId, amount, editCategory.paymentMethod)
     } else {
       // Create new budget
-      addBudget(editCategory.id, selectedPeriod.id, amount)
+      addBudget(editCategory.id, selectedPeriod.id, amount, editCategory.paymentMethod)
     }
 
     setEditCategory(null)
@@ -117,6 +119,47 @@ export function BudgetsView() {
           </div>
         </CardHeader>
         <CardContent>
+          {selectedPeriod && (
+            <div className="mb-6">
+              <Card>
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Total Presupuestado</CardTitle>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    className="h-4 w-4 text-muted-foreground"
+                  >
+                    <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                  </svg>
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">
+                    {formatCurrency(periodBudgets.reduce((sum, budget) => sum + Number(budget.expected_amount), 0))}
+                  </div>
+                  <div className="mt-2 flex justify-between text-xs text-muted-foreground">
+                    <div>
+                      <span className="font-medium">Efectivo:</span> {formatCurrency(periodBudgets
+                        .filter(b => b.payment_method === "cash")
+                        .reduce((sum, budget) => sum + Number(budget.expected_amount), 0))}
+                    </div>
+                    <div>
+                      <span className="font-medium">Crédito:</span> {formatCurrency(periodBudgets
+                        .filter(b => b.payment_method === "credit")
+                        .reduce((sum, budget) => sum + Number(budget.expected_amount), 0))}
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {periodBudgets.filter(b => b.expected_amount > 0).length} categorías con presupuesto
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          )}
           {!selectedPeriod ? (
             <div className="text-center py-4 text-muted-foreground">
               Selecciona un periodo para ver y configurar los presupuestos
@@ -126,7 +169,9 @@ export function BudgetsView() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Categoría</TableHead>
-                  <TableHead className="text-right">Monto Presupuestado</TableHead>
+                  <TableHead className="text-right">Efectivo</TableHead>
+                  <TableHead className="text-right">Crédito</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -135,14 +180,65 @@ export function BudgetsView() {
                   .slice() // Create a copy of the array to avoid mutating the original
                   .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically by name
                   .map((category) => {
-                    // Find budget for this category in selected period
-                    const budget = periodBudgets.find((b) => b.category_id === category.id)
+                    // Find budgets for this category in selected period for different payment methods
+                    const cashBudget = periodBudgets.find(
+                      (b) => b.category_id === category.id && b.payment_method === "cash"
+                    )
+                    const creditBudget = periodBudgets.find(
+                      (b) => b.category_id === category.id && b.payment_method === "credit"
+                    )
+                    
+                    const totalAmount = 
+                      (cashBudget ? Number(cashBudget.expected_amount) : 0) + 
+                      (creditBudget ? Number(creditBudget.expected_amount) : 0)
 
                     return (
                       <TableRow key={category.id}>
                         <TableCell className="font-medium">{category.name}</TableCell>
                         <TableCell className="text-right">
-                          {budget ? formatCurrency(budget.expected_amount) : formatCurrency(0)}
+                          {cashBudget ? formatCurrency(cashBudget.expected_amount) : formatCurrency(0)}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="ml-2 h-6 w-6 p-0"
+                            onClick={() => {
+                              setEditCategory({
+                                id: category.id,
+                                name: category.name,
+                                budgetId: cashBudget?.id,
+                                amount: cashBudget ? cashBudget.expected_amount.toString() : "0",
+                                paymentMethod: "cash"
+                              })
+                              setIsEditOpen(true)
+                            }}
+                          >
+                            <span className="sr-only">Editar efectivo</span>
+                            ✏️
+                          </Button>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {creditBudget ? formatCurrency(creditBudget.expected_amount) : formatCurrency(0)}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="ml-2 h-6 w-6 p-0"
+                            onClick={() => {
+                              setEditCategory({
+                                id: category.id,
+                                name: category.name,
+                                budgetId: creditBudget?.id,
+                                amount: creditBudget ? creditBudget.expected_amount.toString() : "0",
+                                paymentMethod: "credit"
+                              })
+                              setIsEditOpen(true)
+                            }}
+                          >
+                            <span className="sr-only">Editar crédito</span>
+                            ✏️
+                          </Button>
+                        </TableCell>
+                        <TableCell className="text-right font-medium">
+                          {formatCurrency(totalAmount)}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
@@ -152,13 +248,13 @@ export function BudgetsView() {
                               setEditCategory({
                                 id: category.id,
                                 name: category.name,
-                                budgetId: budget?.id,
-                                amount: budget ? budget.expected_amount.toString() : "0",
+                                amount: "0",
+                                paymentMethod: "cash"
                               })
                               setIsEditOpen(true)
                             }}
                           >
-                            {budget ? "Editar" : "Establecer"}
+                            Agregar
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -183,7 +279,7 @@ export function BudgetsView() {
           <DialogHeader>
             <DialogTitle>Establecer Presupuesto</DialogTitle>
             <DialogDescription>
-              Define el monto presupuestado para {editCategory?.name} en el periodo {selectedPeriod?.name}
+              Define el monto presupuestado para {editCategory?.name} en el periodo {selectedPeriod?.name} ({editCategory?.paymentMethod === "cash" ? "Efectivo" : "Crédito"})
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -197,6 +293,27 @@ export function BudgetsView() {
                 value={editCategory?.amount || "0"}
                 onChange={(e) => setEditCategory((prev) => (prev ? { ...prev, amount: e.target.value } : null))}
               />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="payment-method">Método de Pago</Label>
+              <RadioGroup
+                id="payment-method"
+                value={editCategory?.paymentMethod || "cash"}
+                onValueChange={(value: PaymentMethod) => 
+                  setEditCategory((prev) => (prev ? { ...prev, paymentMethod: value } : null))
+                }
+                className="flex space-x-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="cash" id="cash" />
+                  <Label htmlFor="cash">Efectivo</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="credit" id="credit" />
+                  <Label htmlFor="credit">Crédito</Label>
+                </div>
+              </RadioGroup>
             </div>
           </div>
           <DialogFooter>

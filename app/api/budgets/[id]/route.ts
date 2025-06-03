@@ -26,18 +26,34 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = params.id
-    const { expectedAmount } = await request.json()
+    const { expectedAmount, paymentMethod } = await request.json()
 
     if (typeof expectedAmount !== "number" || expectedAmount < 0) {
       return NextResponse.json({ error: "Expected amount must be a positive number" }, { status: 400 })
     }
 
-    const [updatedBudget] = await sql`
-      UPDATE budgets
-      SET expected_amount = ${expectedAmount}
-      WHERE id = ${id}
-      RETURNING *
-    `
+    // Use different SQL queries based on whether payment method is provided
+    let updatedBudget;
+    
+    if (paymentMethod) {
+      // Update both expected amount and payment method
+      [updatedBudget] = await sql`
+        UPDATE budgets
+        SET 
+          expected_amount = ${expectedAmount},
+          payment_method = ${paymentMethod}
+        WHERE id = ${id}
+        RETURNING *
+      `;
+    } else {
+      // Only update expected amount
+      [updatedBudget] = await sql`
+        UPDATE budgets
+        SET expected_amount = ${expectedAmount}
+        WHERE id = ${id}
+        RETURNING *
+      `;
+    }
 
     if (!updatedBudget) {
       return NextResponse.json({ error: "Budget not found" }, { status: 404 })

@@ -23,6 +23,7 @@ export type Budget = {
   category_id: string
   period_id: string
   expected_amount: number
+  payment_method: PaymentMethod
 }
 
 export type Income = {
@@ -66,8 +67,8 @@ type BudgetContextType = {
   updatePeriod: (id: string, name: string, month: number, year: number) => Promise<void>
   deletePeriod: (id: string) => Promise<void>
   openPeriod: (id: string) => Promise<void>
-  addBudget: (categoryId: string, periodId: string, expectedAmount: number) => Promise<void>
-  updateBudget: (id: string, expectedAmount: number) => Promise<void>
+  addBudget: (categoryId: string, periodId: string, expectedAmount: number, paymentMethod: PaymentMethod) => Promise<void>
+  updateBudget: (id: string, expectedAmount: number, paymentMethod?: PaymentMethod) => Promise<void>
   deleteBudget: (id: string) => Promise<void>
   addIncome: (periodId: string, date: string, description: string, amount: number) => Promise<void>
   updateIncome: (id: string, periodId: string, date: string, description: string, amount: number) => Promise<void>
@@ -481,7 +482,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   }
 
   // Budget functions
-  const addBudget = async (categoryId: string, periodId: string, expectedAmount: number) => {
+  const addBudget = async (categoryId: string, periodId: string, expectedAmount: number, paymentMethod: PaymentMethod) => {
     try {
       const response = await fetch("/api/budgets", {
         method: "POST",
@@ -492,6 +493,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           categoryId,
           periodId,
           expectedAmount,
+          paymentMethod,
         }),
       })
 
@@ -518,14 +520,17 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const updateBudget = async (id: string, expectedAmount: number) => {
+  const updateBudget = async (id: string, expectedAmount: number, paymentMethod?: PaymentMethod) => {
     try {
       const response = await fetch(`/api/budgets/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ expectedAmount }),
+        body: JSON.stringify({
+          expectedAmount,
+          ...(paymentMethod ? { paymentMethod } : {}),
+        }),
       })
 
       if (!response.ok) {

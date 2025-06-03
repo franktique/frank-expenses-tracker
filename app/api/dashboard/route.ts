@@ -48,9 +48,10 @@ export async function GET() {
       category_budgets AS (
         SELECT 
           c.id as category_id,
-          COALESCE(b.expected_amount, 0) as expected_amount
+          COALESCE(SUM(b.expected_amount), 0) as expected_amount
         FROM categories c
         LEFT JOIN budgets b ON c.id = b.category_id AND b.period_id = ${activePeriod.id}
+        GROUP BY c.id
       )
       SELECT 
         ce.category_id,

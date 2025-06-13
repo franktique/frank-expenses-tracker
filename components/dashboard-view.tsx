@@ -240,7 +240,7 @@ export function DashboardView() {
         
         <TabsContent value="summary" className="mt-6">
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Ingresos Totales</CardTitle>
@@ -290,6 +290,21 @@ export function DashboardView() {
           <CardContent>
             <div className="text-2xl font-bold">{formatCurrency(totalCreditCardPurchases)}</div>
             <p className="text-xs text-muted-foreground">Periodo actual</p>
+          </CardContent>
+        </Card>
+
+        <Card className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={() => router.push("/dashboard/groupers")}>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Dashboard Agrupadores</CardTitle>
+            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <Button variant="secondary" className="w-full" onClick={(e) => {
+              e.stopPropagation();
+              router.push("/dashboard/groupers");
+            }}>
+              Ver gráficos
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -355,6 +370,48 @@ export function DashboardView() {
                   );
                 });
               })()}
+              
+              {/* Totals Row */}
+              {budgetSummary.length > 0 && (
+                <>
+                  <TableRow className="bg-muted/50 font-bold">
+                    <TableCell className="font-bold">TOTAL</TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(budgetSummary.reduce((sum, item) => sum + item.expected_amount, 0))}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(budgetSummary.reduce((sum, item) => sum + item.total_amount, 0))}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(budgetSummary.reduce((sum, item) => sum + item.credit_amount, 0))}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(budgetSummary.reduce((sum, item) => sum + item.debit_amount, 0))}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(budgetSummary.reduce((sum, item) => sum + item.cash_amount, 0))}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(budgetSummary.reduce((sum, item) => sum + item.remaining, 0))}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(totalIncome - budgetSummary.reduce((sum, item) => sum + (item.debit_amount + item.cash_amount), 0))}
+                    </TableCell>
+                  </TableRow>
+                  {/* Column Headers */}
+                  <TableRow className="bg-muted/20">
+                    <TableHead>Categoria</TableHead>
+                    <TableHead className="text-right">Presupuesto</TableHead>
+                    <TableHead className="text-right">Gasto Total</TableHead>
+                    <TableHead className="text-right">Tarjeta Crédito</TableHead>
+                    <TableHead className="text-right">Tarjeta Débito</TableHead>
+                    <TableHead className="text-right">Efectivo</TableHead>
+                    <TableHead className="text-right">Restante</TableHead>
+                    <TableHead className="text-right">Saldo</TableHead>
+                  </TableRow>
+                </>
+              )}
+              
               {budgetSummary.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-4 text-muted-foreground">

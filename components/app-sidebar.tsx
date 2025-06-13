@@ -1,6 +1,6 @@
 "use client"
 
-import { CalendarRange, Calculator, CreditCard, Database, DollarSign, Home, PieChart, TrendingUp } from "lucide-react"
+import { BarChart3, CalendarRange, Calculator, CreditCard, Database, DollarSign, Home, Layers as LayersIcon, PieChart, TrendingUp } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 
@@ -76,6 +76,22 @@ export function AppSidebar() {
               <Link href="/gastos">
                 <CreditCard className="h-4 w-4" />
                 <span>Gastos</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={isActive("/agrupadores")}>
+              <Link href="/agrupadores">
+                <LayersIcon className="h-4 w-4" />
+                <span>Agrupadores</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={isActive("/dashboard/groupers")}>
+              <Link href="/dashboard/groupers">
+                <BarChart3 className="h-4 w-4" />
+                <span>Dashboard Agrupadores</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -88,10 +88,18 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/dashboard/groupers")}>
+            <SidebarMenuButton asChild isActive={isActive("/dashboard/groupers")}> 
               <Link href="/dashboard/groupers">
                 <BarChart3 className="h-4 w-4" />
                 <span>Dashboard Agrupadores</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={isActive("/dashboard/category-bars")}> 
+              <Link href="/dashboard/category-bars">
+                <BarChart3 className="h-4 w-4" />
+                <span>Gastos por Fecha</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

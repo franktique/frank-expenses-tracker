@@ -104,6 +104,22 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={isActive("/dashboard/period-bars")}> 
+              <Link href="/dashboard/period-bars">
+                <BarChart3 className="h-4 w-4" />
+                <span>Gastos por Periodo</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={isActive("/dashboard/overspend")}> 
+              <Link href="/dashboard/overspend">
+                <BarChart3 className="h-4 w-4" />
+                <span>Overspend Actual</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive("/setup")}>
               <Link href="/setup">
                 <Database className="h-4 w-4" />

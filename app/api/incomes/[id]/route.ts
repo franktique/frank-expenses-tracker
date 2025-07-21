@@ -5,7 +5,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   try {
     const id = params.id
     const [income] = await sql`
-      SELECT i.*, p.name as period_name
+      SELECT i.*, p.name as period_name, i.event
       FROM incomes i
       LEFT JOIN periods p ON i.period_id = p.id
       WHERE i.id = ${id}
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   try {
     const id = params.id
-    const { periodId, date, description, amount } = await request.json()
+    const { periodId, date, description, amount, event } = await request.json()
 
     if (!date || !description || typeof amount !== "number") {
       return NextResponse.json({ error: "Date, description, and amount are required" }, { status: 400 })
@@ -58,7 +58,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 
     const [updatedIncome] = await sql`
       UPDATE incomes
-      SET period_id = ${actualPeriodId}, date = ${date}, description = ${description}, amount = ${amount}
+      SET period_id = ${actualPeriodId}, date = ${date}, description = ${description}, amount = ${amount}, event = ${event || null}
       WHERE id = ${id}
       RETURNING *
     `

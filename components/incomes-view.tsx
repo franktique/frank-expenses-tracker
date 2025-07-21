@@ -20,7 +20,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useToast } from "@/components/ui/use-toast"
-import { useBudget } from "@/context/budget-context"
+import { useBudget, Income, Period } from "@/context/budget-context-provider"
 import { cn, formatCurrency, formatDate } from "@/lib/utils"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
@@ -36,6 +36,7 @@ export function IncomesView() {
   const [newIncomeDate, setNewIncomeDate] = useState<Date | undefined>(new Date())
   const [newIncomeDescription, setNewIncomeDescription] = useState("")
   const [newIncomeAmount, setNewIncomeAmount] = useState("")
+  const [newIncomeEvent, setNewIncomeEvent] = useState("")
 
   const [editIncome, setEditIncome] = useState<{
     id: string
@@ -43,6 +44,7 @@ export function IncomesView() {
     date: Date | undefined
     description: string
     amount: string
+    event?: string
   } | null>(null)
 
   const [deleteId, setDeleteId] = useState<string | null>(null)
@@ -80,12 +82,13 @@ export function IncomesView() {
       // Usar el periodo activo si no se seleccionó uno
       const periodId = newIncomePeriod || (activePeriod ? activePeriod.id : "")
 
-      await addIncome(periodId, newIncomeDate.toISOString(), newIncomeDescription, amount)
+      await addIncome(periodId, newIncomeDate.toISOString(), newIncomeDescription, amount, newIncomeEvent.trim() || undefined)
 
       setNewIncomePeriod(activePeriod?.id || "")
       setNewIncomeDate(new Date())
       setNewIncomeDescription("")
       setNewIncomeAmount("")
+      setNewIncomeEvent("")
       setIsAddOpen(false)
 
       toast({
@@ -128,7 +131,7 @@ export function IncomesView() {
       // Usar el periodo activo si no se seleccionó uno
       const periodId = editIncome.periodId || (activePeriod ? activePeriod.id : "")
 
-      await updateIncome(editIncome.id, periodId, editIncome.date.toISOString(), editIncome.description, amount)
+      await updateIncome(editIncome.id, periodId, editIncome.date.toISOString(), editIncome.description, amount, editIncome.event?.trim() || undefined)
 
       setEditIncome(null)
       setIsEditOpen(false)
@@ -173,10 +176,10 @@ export function IncomesView() {
   }
 
   // Filter incomes by active period if available
-  const filteredIncomes = activePeriod ? incomes.filter((income) => income.period_id === activePeriod.id) : incomes
+  const filteredIncomes = activePeriod ? incomes.filter((income: Income) => income.period_id === activePeriod.id) : incomes
 
   // Sort incomes by date (newest first)
-  const sortedIncomes = [...filteredIncomes].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+  const sortedIncomes = [...filteredIncomes].sort((a: Income, b: Income) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   // Check if we have periods
   const hasPeriods = periods.length > 0
@@ -225,7 +228,7 @@ export function IncomesView() {
                     <SelectValue placeholder="Selecciona un periodo" />
                   </SelectTrigger>
                   <SelectContent>
-                    {periods.map((period) => (
+                    {periods.map((period: Period) => (
                       <SelectItem key={period.id} value={period.id}>
                         {period.name} {period.is_open || period.isOpen ? "(Activo)" : ""}
                       </SelectItem>
@@ -278,6 +281,15 @@ export function IncomesView() {
                   placeholder="0.00"
                 />
               </div>
+              <div className="grid gap-2">
+                <Label htmlFor="event">Evento (opcional)</Label>
+                <Input
+                  id="event"
+                  value={newIncomeEvent}
+                  onChange={(e) => setNewIncomeEvent(e.target.value)}
+                  placeholder="Ej: Venta especial, Bono, etc."
+                />
+              </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={() => setIsAddOpen(false)} disabled={isSubmitting}>
@@ -306,14 +318,15 @@ export function IncomesView() {
               <TableRow>
                 <TableHead>Fecha</TableHead>
                 <TableHead>Descripción</TableHead>
+                <TableHead>Evento</TableHead>
                 <TableHead>Periodo</TableHead>
                 <TableHead className="text-right">Monto</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {sortedIncomes.map((income) => {
-                const period = periods.find((p) => p.id === income.period_id)
+              {sortedIncomes.map((income: Income) => {
+                const period = periods.find((p: Period) => p.id === income.period_id)
                 return (
                   <TableRow key={income.id}>
                     <TableCell>
@@ -325,6 +338,7 @@ export function IncomesView() {
                       }
                     </TableCell>
                     <TableCell>{income.description}</TableCell>
+                    <TableCell>{income.event || ""}</TableCell>
                     <TableCell>{period?.name || "Desconocido"}</TableCell>
                     <TableCell className="text-right">{formatCurrency(income.amount)}</TableCell>
                     <TableCell className="text-right">
@@ -338,6 +352,7 @@ export function IncomesView() {
                             date: new Date(income.date),
                             description: income.description,
                             amount: income.amount.toString(),
+                            event: income.event || "",
                           })
                           setIsEditOpen(true)
                         }}
@@ -444,6 +459,15 @@ export function IncomesView() {
                 step="0.01"
                 value={editIncome?.amount || ""}
                 onChange={(e) => setEditIncome((prev) => (prev ? { ...prev, amount: e.target.value } : null))}
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-event">Evento (opcional)</Label>
+              <Input
+                id="edit-event"
+                value={editIncome?.event || ""}
+                onChange={(e) => setEditIncome((prev) => (prev ? { ...prev, event: e.target.value } : null))}
+                placeholder="Ej: Venta especial, Bono, etc."
               />
             </div>
           </div>

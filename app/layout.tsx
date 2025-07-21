@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { ConditionalLayout } from "@/components/conditional-layout"
 import { SidebarProvider } from "@/components/ui/sidebar"
 import { Toaster } from "@/components/ui/toaster"
-import { BudgetProvider } from "@/context/budget-context"
+import { BudgetProvider } from "@/context/budget-context-provider"
 import { AuthProvider } from "@/lib/auth-context"
 
 const inter = Inter({ subsets: ["latin"] })

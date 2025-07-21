@@ -4,7 +4,7 @@ import { useState } from "react"
 import { AlertCircle, Database, ExternalLink } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import { useBudget } from "@/context/budget-context"
+import { useBudget } from "@/context/budget-context-provider"
 import { useToast } from "@/components/ui/use-toast"
 
 export function SetupDatabaseButton() {

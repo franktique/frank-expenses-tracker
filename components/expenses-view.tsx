@@ -24,7 +24,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useToast } from "@/components/ui/use-toast"
-import { useBudget, type PaymentMethod } from "@/context/budget-context"
+import { useBudget, type PaymentMethod } from "@/context/budget-context-provider"
 import { cn, formatCurrency, formatDate } from "@/lib/utils"
 
 export function ExpensesView() {

@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Progress } from "@/components/ui/progress"
-import { useBudget, type PaymentMethod } from "@/context/budget-context"
+import { useBudget, type PaymentMethod } from "@/context/budget-context-provider"
 import { useToast } from "@/components/ui/use-toast"
 
 type CSVExpense = {

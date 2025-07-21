@@ -18,30 +18,37 @@ export async function POST() {
     
     try {
       // Check if period_id column already exists
-      const columnCheck = await sql`
+      const periodIdColumnCheck = await sql`
         SELECT column_name 
         FROM information_schema.columns 
         WHERE table_name = 'incomes' AND column_name = 'period_id'
       `
-      
-      // Only add the column if it doesn't exist
-      if (columnCheck.length === 0) {
+      if (periodIdColumnCheck.length === 0) {
         await sql`
           ALTER TABLE incomes 
           ADD COLUMN period_id UUID REFERENCES periods(id)
         `
         console.log("Added period_id column to incomes table")
-        
-        return NextResponse.json({
-          success: true,
-          message: "Successfully added period_id column to incomes table",
-        })
-      } else {
-        return NextResponse.json({
-          success: true,
-          message: "period_id column already exists in incomes table",
-        })
       }
+
+      // Check if event column already exists
+      const eventColumnCheck = await sql`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'incomes' AND column_name = 'event'
+      `
+      if (eventColumnCheck.length === 0) {
+        await sql`
+          ALTER TABLE incomes 
+          ADD COLUMN event VARCHAR(255)
+        `
+        console.log("Added event column to incomes table")
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: "Ensured period_id and event columns exist in incomes table",
+      })
     } catch (error) {
       console.error("Error adding period_id to incomes table:", error)
       return NextResponse.json(

@@ -143,49 +143,35 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     string | null
   >(null);
 
-  // Check if database is initialized
   useEffect(() => {
     const checkDbStatus = async () => {
       try {
         const response = await fetch("/api/check-db-status");
-
-        // Handle non-OK responses
         if (!response.ok) {
           let errorMessage = `HTTP error ${response.status}`;
-
           try {
-            // Try to parse as JSON first
             const errorData = await response.json();
             errorMessage = errorData.error || errorMessage;
-          } catch (parseError) {
-            // If JSON parsing fails, try to get text
+          } catch {
             try {
               const errorText = await response.text();
               errorMessage = errorText || errorMessage;
-            } catch (textError) {
-              // If all else fails, use the status code
-              console.error("Failed to parse error response:", textError);
-            }
+            } catch {}
           }
-
-          console.error("Database status check failed:", errorMessage);
           setDbConnectionError(true);
           setConnectionErrorDetails(errorMessage);
           setIsLoading(false);
           return;
         }
-
         let data;
         try {
           data = await response.json();
-        } catch (err) {
-          console.error("Error parsing JSON response:", err);
+        } catch {
           setDbConnectionError(true);
           setConnectionErrorDetails("Invalid JSON response from server");
           setIsLoading(false);
           return;
         }
-
         if (!data.connected) {
           setDbConnectionError(true);
           setConnectionErrorDetails(
@@ -194,41 +180,32 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           setIsLoading(false);
           return;
         }
-
         setIsDbInitialized(data.initialized);
         setDbConnectionError(false);
         setConnectionErrorDetails(null);
-
         if (data.initialized) {
           refreshData();
         } else {
           setIsLoading(false);
         }
       } catch (err) {
-        console.error("Error checking database status:", err);
         setDbConnectionError(true);
         setConnectionErrorDetails((err as Error).message);
         setIsLoading(false);
       }
     };
-
     checkDbStatus();
   }, []);
 
-  // Setup database
   const setupDatabase = async () => {
     try {
       setIsLoading(true);
       setError(null);
-
       const response = await fetch("/api/setup-db");
-
-      // Handle non-OK responses
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || `HTTP error ${response.status}`);
       }
-
       const data = await response.json();
       if (data.success) {
         setIsDbInitialized(true);
@@ -250,12 +227,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
       return;
     }
-
     setIsLoading(true);
     setError(null);
-
     try {
-      // Fetch categories
       const categoriesResponse = await fetch("/api/categories");
       if (!categoriesResponse.ok) {
         const errorText = await categoriesResponse.text();
@@ -263,32 +237,16 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       }
       const categoriesData = await categoriesResponse.json();
       setCategories(categoriesData);
-
-      // Fetch periods
       const periodsResponse = await fetch("/api/periods");
       if (!periodsResponse.ok) {
         const errorText = await periodsResponse.text();
         throw new Error(`Failed to fetch periods: ${errorText}`);
       }
       const periodsData = await periodsResponse.json();
-
-      // Normalize period data to ensure consistent property names
-      const normalizedPeriods = periodsData.map((period: any) => ({
-        ...period,
-        // Ensure both properties exist for compatibility
-        is_open: period.is_open || period.isOpen || false,
-        isOpen: period.is_open || period.isOpen || false,
-      }));
-
-      setPeriods(normalizedPeriods);
-
-      // Set active period
-      const active = normalizedPeriods.find(
-        (p: Period) => p.is_open || p.isOpen
-      );
-      if (active) setActivePeriod(active);
-
-      // Fetch budgets
+      setPeriods(periodsData);
+      const openPeriod =
+        periodsData.find((p: Period) => p.is_open || p.isOpen) || null;
+      setActivePeriod(openPeriod);
       const budgetsResponse = await fetch("/api/budgets");
       if (!budgetsResponse.ok) {
         const errorText = await budgetsResponse.text();
@@ -296,8 +254,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       }
       const budgetsData = await budgetsResponse.json();
       setBudgets(budgetsData);
-
-      // Fetch incomes
       const incomesResponse = await fetch("/api/incomes");
       if (!incomesResponse.ok) {
         const errorText = await incomesResponse.text();
@@ -305,8 +261,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       }
       const incomesData = await incomesResponse.json();
       setIncomes(incomesData);
-
-      // Fetch expenses
       const expensesResponse = await fetch("/api/expenses");
       if (!expensesResponse.ok) {
         const errorText = await expensesResponse.text();
@@ -315,7 +269,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       const expensesData = await expensesResponse.json();
       setExpenses(expensesData);
     } catch (err) {
-      console.error("Error refreshing data:", err);
       setError((err as Error).message);
     } finally {
       setIsLoading(false);
@@ -327,17 +280,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch("/api/categories", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
       });
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to add category: ${errorText}`);
       }
-
       const newCategory = await response.json();
       setCategories([...categories, newCategory]);
     } catch (err) {
@@ -345,22 +294,17 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       throw err;
     }
   };
-
   const updateCategory = async (id: string, name: string) => {
     try {
       const response = await fetch(`/api/categories/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name }),
       });
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to update category: ${errorText}`);
       }
-
       const updatedCategory = await response.json();
       setCategories(
         categories.map((cat) => (cat.id === id ? updatedCategory : cat))
@@ -370,20 +314,16 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       throw err;
     }
   };
-
   const deleteCategory = async (id: string) => {
     try {
       const response = await fetch(`/api/categories/${id}`, {
         method: "DELETE",
       });
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to delete category: ${errorText}`);
       }
-
       setCategories(categories.filter((cat) => cat.id !== id));
-      // Budgets and expenses will be deleted by cascade in the database
       setBudgets(budgets.filter((budget) => budget.category_id !== id));
       setExpenses(expenses.filter((expense) => expense.category_id !== id));
     } catch (err) {
@@ -397,17 +337,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch("/api/periods", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, month, year }),
       });
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to add period: ${errorText}`);
       }
-
       const newPeriod = await response.json();
       setPeriods([...periods, newPeriod]);
     } catch (err) {
@@ -415,7 +351,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       throw err;
     }
   };
-
   const updatePeriod = async (
     id: string,
     name: string,
@@ -425,23 +360,17 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch(`/api/periods/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, month, year }),
       });
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to update period: ${errorText}`);
       }
-
       const updatedPeriod = await response.json();
       setPeriods(
         periods.map((period) => (period.id === id ? updatedPeriod : period))
       );
-
-      // Update active period if needed
       if (activePeriod && activePeriod.id === id) {
         setActivePeriod(updatedPeriod);
       }
@@ -450,26 +379,17 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       throw err;
     }
   };
-
   const deletePeriod = async (id: string) => {
     try {
-      const response = await fetch(`/api/periods/${id}`, {
-        method: "DELETE",
-      });
-
+      const response = await fetch(`/api/periods/${id}`, { method: "DELETE" });
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to delete period: ${errorText}`);
       }
-
       setPeriods(periods.filter((period) => period.id !== id));
-
-      // Clear active period if it was deleted
       if (activePeriod && activePeriod.id === id) {
         setActivePeriod(null);
       }
-
-      // Budgets and expenses will be deleted by cascade in the database
       setBudgets(budgets.filter((budget) => budget.period_id !== id));
       setExpenses(expenses.filter((expense) => expense.period_id !== id));
     } catch (err) {
@@ -477,49 +397,36 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       throw err;
     }
   };
-
   const openPeriod = async (id: string) => {
     try {
-      // Optimistic update - update UI immediately
       const periodToOpen = periods.find((p) => p.id === id);
       if (periodToOpen) {
-        // Update all periods in state immediately
         const updatedPeriods = periods.map((period) => ({
           ...period,
           is_open: period.id === id,
           isOpen: period.id === id,
         }));
-
         setPeriods(updatedPeriods);
         setActivePeriod({ ...periodToOpen, is_open: true, isOpen: true });
       }
-
-      // Then send request to server
       const response = await fetch(`/api/periods/open/${id}`, {
         method: "POST",
       });
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to open period: ${errorText}`);
       }
-
       const openedPeriod = await response.json();
-
-      // Update with server response to ensure consistency
       const finalUpdatedPeriods = periods.map((period) => ({
         ...period,
         is_open: period.id === id,
         isOpen: period.id === id,
       }));
-
       setPeriods(finalUpdatedPeriods);
       setActivePeriod(openedPeriod);
-
       return openedPeriod;
     } catch (err) {
       setError((err as Error).message);
-      // Revert optimistic update if there was an error
       refreshData();
       throw err;
     }
@@ -533,84 +440,33 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
       // Optimistic update - update UI immediately
       const periodToClose = periods.find((p) => p.id === id);
-      if (!periodToClose) {
-        throw new Error("Period not found in local state");
-      }
+      if (periodToClose) {
+        // Update the specific period to be closed
+        const updatedPeriods = periods.map((period) =>
+          period.id === id
+            ? { ...period, is_open: false, isOpen: false }
+            : period
+        );
 
-      // Check if period is already inactive
-      if (!periodToClose.is_open && !periodToClose.isOpen) {
-        throw new Error("Period is already inactive");
-      }
+        setPeriods(updatedPeriods);
 
-      // Update the specific period to be closed
-      const updatedPeriods = periods.map((period) =>
-        period.id === id ? { ...period, is_open: false, isOpen: false } : period
-      );
-
-      setPeriods(updatedPeriods);
-
-      // Set activePeriod to null when a period is deactivated
-      if (activePeriod && activePeriod.id === id) {
-        setActivePeriod(null);
+        // Set activePeriod to null when a period is deactivated
+        if (activePeriod && activePeriod.id === id) {
+          setActivePeriod(null);
+        }
       }
 
       // Then send request to server
       const response = await fetch(`/api/periods/close/${id}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
       });
 
-      let responseData;
-      try {
-        responseData = await response.json();
-      } catch (parseError) {
-        throw new Error("Invalid response from server");
-      }
-
       if (!response.ok) {
-        // Handle specific error codes from the API
-        const errorCode = responseData.code;
-        let errorMessage = responseData.error || "Failed to close period";
-
-        switch (errorCode) {
-          case "PERIOD_NOT_FOUND":
-            errorMessage = "El periodo no existe o fue eliminado";
-            break;
-          case "PERIOD_ALREADY_INACTIVE":
-            errorMessage = "El periodo ya está inactivo";
-            break;
-          case "CONCURRENT_MODIFICATION":
-            errorMessage =
-              "El periodo fue modificado por otra operación. Actualizando datos...";
-            // Trigger data refresh for concurrent modifications
-            setTimeout(() => refreshData(), 1000);
-            break;
-          case "DATABASE_CONNECTION_ERROR":
-            errorMessage =
-              "Error de conexión a la base de datos. Intenta nuevamente.";
-            break;
-          case "DATABASE_TIMEOUT":
-            errorMessage = "La operación tardó demasiado. Intenta nuevamente.";
-            break;
-          case "DATABASE_CONSTRAINT_ERROR":
-            errorMessage =
-              "Error de integridad de datos. Actualizando información...";
-            setTimeout(() => refreshData(), 1000);
-            break;
-          default:
-            errorMessage = responseData.details || errorMessage;
-        }
-
-        const error = new Error(errorMessage);
-        (error as any).code = errorCode;
-        (error as any).status = response.status;
-        throw error;
+        const errorText = await response.text();
+        throw new Error(`Failed to close period: ${errorText}`);
       }
 
-      // Successful response - update with server data
-      const closedPeriod = responseData.period || responseData;
+      const closedPeriod = await response.json();
 
       // Update with server response to ensure consistency
       const finalUpdatedPeriods = periods.map((period) =>
@@ -628,21 +484,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
       return closedPeriod;
     } catch (err) {
-      console.error("Error in closePeriod:", err);
-
-      // Set error for global error handling
       setError((err as Error).message);
-
-      // Revert optimistic update by refreshing data
-      try {
-        await refreshData();
-      } catch (refreshError) {
-        console.error("Failed to refresh data after error:", refreshError);
-        // If refresh fails, at least restore the previous state
-        setPeriods(previousPeriods);
-        setActivePeriod(previousActivePeriod);
-      }
-
+      // Revert optimistic update if there was an error
+      refreshData();
       throw err;
     }
   };
@@ -657,9 +501,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch("/api/budgets", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           categoryId,
           periodId,
@@ -667,26 +509,19 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           paymentMethod,
         }),
       });
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to add budget: ${errorText}`);
       }
-
       const newBudget = await response.json();
-
-      // Check if this is an update or a new budget
       const existingIndex = budgets.findIndex(
         (b) => b.category_id === categoryId && b.period_id === periodId
       );
-
       if (existingIndex >= 0) {
-        // Update existing budget
         setBudgets(
           budgets.map((b, i) => (i === existingIndex ? newBudget : b))
         );
       } else {
-        // Add new budget
         setBudgets([...budgets, newBudget]);
       }
     } catch (err) {
@@ -694,7 +529,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       throw err;
     }
   };
-
   const updateBudget = async (
     id: string,
     expectedAmount: number,
@@ -703,20 +537,16 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch(`/api/budgets/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           expectedAmount,
           ...(paymentMethod ? { paymentMethod } : {}),
         }),
       });
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to update budget: ${errorText}`);
       }
-
       const updatedBudget = await response.json();
       setBudgets(
         budgets.map((budget) => (budget.id === id ? updatedBudget : budget))
@@ -726,18 +556,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       throw err;
     }
   };
-
   const deleteBudget = async (id: string) => {
     try {
-      const response = await fetch(`/api/budgets/${id}`, {
-        method: "DELETE",
-      });
-
+      const response = await fetch(`/api/budgets/${id}`, { method: "DELETE" });
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to delete budget: ${errorText}`);
       }
-
       setBudgets(budgets.filter((budget) => budget.id !== id));
     } catch (err) {
       setError((err as Error).message);
@@ -756,17 +581,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch("/api/incomes", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ periodId, date, description, amount, event }),
       });
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to add income: ${errorText}`);
       }
-
       const newIncome = await response.json();
       setIncomes([...incomes, newIncome]);
     } catch (err) {
@@ -774,7 +595,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       throw err;
     }
   };
-
   const updateIncome = async (
     id: string,
     periodId: string,
@@ -786,17 +606,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch(`/api/incomes/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ periodId, date, description, amount, event }),
       });
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to update income: ${errorText}`);
       }
-
       const updatedIncome = await response.json();
       setIncomes(
         incomes.map((income) => (income.id === id ? updatedIncome : income))
@@ -806,18 +622,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       throw err;
     }
   };
-
   const deleteIncome = async (id: string) => {
     try {
-      const response = await fetch(`/api/incomes/${id}`, {
-        method: "DELETE",
-      });
-
+      const response = await fetch(`/api/incomes/${id}`, { method: "DELETE" });
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to delete income: ${errorText}`);
       }
-
       setIncomes(incomes.filter((income) => income.id !== id));
     } catch (err) {
       setError((err as Error).message);
@@ -838,9 +649,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch("/api/expenses", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           categoryId,
           periodId,
@@ -851,12 +660,10 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           amount,
         }),
       });
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to add expense: ${errorText}`);
       }
-
       const newExpense = await response.json();
       setExpenses([...expenses, newExpense]);
     } catch (err) {
@@ -864,7 +671,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       throw err;
     }
   };
-
   const updateExpense = async (
     id: string,
     categoryId: string,
@@ -877,9 +683,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await fetch(`/api/expenses/${id}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           categoryId,
           date,
@@ -889,12 +693,10 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           amount,
         }),
       });
-
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to update expense: ${errorText}`);
       }
-
       const updatedExpense = await response.json();
       setExpenses(
         expenses.map((expense) =>
@@ -906,18 +708,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       throw err;
     }
   };
-
   const deleteExpense = async (id: string) => {
     try {
-      const response = await fetch(`/api/expenses/${id}`, {
-        method: "DELETE",
-      });
-
+      const response = await fetch(`/api/expenses/${id}`, { method: "DELETE" });
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to delete expense: ${errorText}`);
       }
-
       setExpenses(expenses.filter((expense) => expense.id !== id));
     } catch (err) {
       setError((err as Error).message);
@@ -925,14 +722,11 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Helper functions
-  const getCategoryById = (id: string) => {
-    return categories.find((cat) => cat.id === id);
-  };
-
-  const getPeriodById = (id: string) => {
-    return periods.find((period) => period.id === id);
-  };
+  // Helpers
+  const getCategoryById = (id: string) =>
+    categories.find((cat) => cat.id === id);
+  const getPeriodById = (id: string) =>
+    periods.find((period) => period.id === id);
 
   return (
     <BudgetContext.Provider

@@ -10,6 +10,7 @@ export async function GET() {
         i.period_id,
         i.description,
         i.amount,
+        i.event,
         -- Usar directamente el valor de fecha sin conversiones
         i.date,
         p.name as period_name
@@ -26,7 +27,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { periodId, date, description, amount } = await request.json()
+    const { periodId, date, description, amount, event } = await request.json()
 
     if (!date || !description || typeof amount !== "number") {
       return NextResponse.json({ error: "Date, description, and amount are required" }, { status: 400 })
@@ -68,8 +69,8 @@ export async function POST(request: NextRequest) {
     
     // Insertar el ingreso con el periodo
     const [newIncome] = await sql`
-      INSERT INTO incomes (period_id, date, description, amount)
-      VALUES (${actualPeriodId}, ${dateToSave}, ${description}, ${amount})
+      INSERT INTO incomes (period_id, date, description, amount, event)
+      VALUES (${actualPeriodId}, ${dateToSave}, ${description}, ${amount}, ${event || null})
       RETURNING *
     `
 

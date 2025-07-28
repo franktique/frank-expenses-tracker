@@ -92,3 +92,28 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Recharts font overrides - Force professional fonts */
+.recharts-wrapper svg text,
+.recharts-wrapper text,
+.recharts-label-list text,
+.recharts-cartesian-axis-tick text,
+.recharts-text,
+svg text {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important;
+  font-weight: 600 !important;
+  font-style: normal !important;
+}
+
+/* Specific override for chart labels */
+.recharts-label-list text {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important;
+  font-weight: 600 !important;
+  font-style: normal !important;
+}
+
+/* Override any italic budget labels to use normal font */
+.recharts-label-list text[font-style="italic"] {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif !important;
+  font-weight: 600 !important;
+}

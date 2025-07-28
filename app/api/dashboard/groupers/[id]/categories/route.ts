@@ -10,6 +10,7 @@ export async function GET(
     const url = new URL(request.url);
     const periodId = url.searchParams.get("periodId");
     const paymentMethod = url.searchParams.get("paymentMethod");
+    const includeBudgets = url.searchParams.get("includeBudgets") === "true";
 
     if (isNaN(grouperId) || !periodId) {
       return NextResponse.json(
@@ -19,54 +20,110 @@ export async function GET(
     }
 
     // Build SQL query with consistent JOIN structure
-    const periodIdNum = parseInt(periodId);
-
+    // Use periodId as string (UUID) - no need to parse as integer
     let query: string;
     let queryParams: (string | number)[];
 
-    if (paymentMethod && paymentMethod !== "all") {
-      // Query with payment method filter
-      query = `
-        SELECT 
-          c.id as category_id, 
-          c.name as category_name,
-          COALESCE(SUM(e.amount), 0) as total_amount
-        FROM 
-          categories c
-        JOIN grouper_categories gc ON c.id = gc.category_id
-        LEFT JOIN expenses e ON c.id = e.category_id 
-          AND e.period_id = $1
-          AND e.payment_method = $2
-        WHERE 
-          gc.grouper_id = $3
-        GROUP BY 
-          c.id, 
-          c.name
-        ORDER BY 
-          total_amount DESC
-      `;
-      queryParams = [periodIdNum, paymentMethod, grouperId];
+    if (includeBudgets) {
+      // Query with budget data
+      if (paymentMethod && paymentMethod !== "all") {
+        // Query with payment method filter and budget data
+        query = `
+          SELECT 
+            c.id as category_id, 
+            c.name as category_name,
+            COALESCE(SUM(e.amount), 0) as total_amount,
+            COALESCE(b.expected_amount, 0) as budget_amount
+          FROM 
+            categories c
+          JOIN grouper_categories gc ON c.id = gc.category_id
+          LEFT JOIN expenses e ON c.id = e.category_id 
+            AND e.period_id = $1
+            AND e.payment_method = $2
+          LEFT JOIN budgets b ON c.id = b.category_id 
+            AND b.period_id = $1
+          WHERE 
+            gc.grouper_id = $3
+          GROUP BY 
+            c.id, 
+            c.name,
+            b.expected_amount
+          ORDER BY 
+            total_amount DESC
+        `;
+        queryParams = [periodId, paymentMethod, grouperId];
+      } else {
+        // Query without payment method filter but with budget data
+        query = `
+          SELECT 
+            c.id as category_id, 
+            c.name as category_name,
+            COALESCE(SUM(e.amount), 0) as total_amount,
+            COALESCE(b.expected_amount, 0) as budget_amount
+          FROM 
+            categories c
+          JOIN grouper_categories gc ON c.id = gc.category_id
+          LEFT JOIN expenses e ON c.id = e.category_id 
+            AND e.period_id = $1
+          LEFT JOIN budgets b ON c.id = b.category_id 
+            AND b.period_id = $1
+          WHERE 
+            gc.grouper_id = $2
+          GROUP BY 
+            c.id, 
+            c.name,
+            b.expected_amount
+          ORDER BY 
+            total_amount DESC
+        `;
+        queryParams = [periodId, grouperId];
+      }
     } else {
-      // Query without payment method filter
-      query = `
-        SELECT 
-          c.id as category_id, 
-          c.name as category_name,
-          COALESCE(SUM(e.amount), 0) as total_amount
-        FROM 
-          categories c
-        JOIN grouper_categories gc ON c.id = gc.category_id
-        LEFT JOIN expenses e ON c.id = e.category_id 
-          AND e.period_id = $1
-        WHERE 
-          gc.grouper_id = $2
-        GROUP BY 
-          c.id, 
-          c.name
-        ORDER BY 
-          total_amount DESC
-      `;
-      queryParams = [periodIdNum, grouperId];
+      // Original queries without budget data
+      if (paymentMethod && paymentMethod !== "all") {
+        // Query with payment method filter
+        query = `
+          SELECT 
+            c.id as category_id, 
+            c.name as category_name,
+            COALESCE(SUM(e.amount), 0) as total_amount
+          FROM 
+            categories c
+          JOIN grouper_categories gc ON c.id = gc.category_id
+          LEFT JOIN expenses e ON c.id = e.category_id 
+            AND e.period_id = $1
+            AND e.payment_method = $2
+          WHERE 
+            gc.grouper_id = $3
+          GROUP BY 
+            c.id, 
+            c.name
+          ORDER BY 
+            total_amount DESC
+        `;
+        queryParams = [periodId, paymentMethod, grouperId];
+      } else {
+        // Query without payment method filter
+        query = `
+          SELECT 
+            c.id as category_id, 
+            c.name as category_name,
+            COALESCE(SUM(e.amount), 0) as total_amount
+          FROM 
+            categories c
+          JOIN grouper_categories gc ON c.id = gc.category_id
+          LEFT JOIN expenses e ON c.id = e.category_id 
+            AND e.period_id = $1
+          WHERE 
+            gc.grouper_id = $2
+          GROUP BY 
+            c.id, 
+            c.name
+          ORDER BY 
+            total_amount DESC
+        `;
+        queryParams = [periodId, grouperId];
+      }
     }
 
     const categoryStats = await sql.query(query, queryParams);

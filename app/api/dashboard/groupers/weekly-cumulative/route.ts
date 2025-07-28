@@ -7,6 +7,7 @@ export async function GET(request: Request) {
     const periodId = searchParams.get("periodId");
     const paymentMethod = searchParams.get("paymentMethod");
     const grouperIdsParam = searchParams.get("grouperIds");
+    const estudioId = searchParams.get("estudioId");
     const includeBudgets = searchParams.get("includeBudgets") === "true";
 
     // Validate required periodId parameter
@@ -118,7 +119,18 @@ export async function GET(request: Request) {
           g.name as grouper_name,
           COALESCE(SUM(e.amount), 0) as weekly_amount${budgetSelect}
         FROM week_ranges wr
-        CROSS JOIN groupers g
+        CROSS JOIN groupers g`;
+
+    // Add estudio filtering join if estudioId is provided
+    if (estudioId) {
+      query += `
+        INNER JOIN estudio_groupers eg ON eg.grouper_id = g.id
+          AND eg.estudio_id = $${paramIndex}`;
+      queryParams.push(parseInt(estudioId));
+      paramIndex++;
+    }
+
+    query += `
         LEFT JOIN grouper_categories gc ON gc.grouper_id = g.id
         LEFT JOIN categories c ON c.id = gc.category_id
         LEFT JOIN expenses e ON e.category_id = c.id

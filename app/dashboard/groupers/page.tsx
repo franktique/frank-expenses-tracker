@@ -25,6 +25,7 @@ import { toast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AgrupadorFilter } from "@/components/agrupador-filter";
 import { BudgetToggle } from "@/components/budget-toggle";
+import { EstudioFilter } from "@/components/estudio-filter";
 import {
   ResponsiveContainer,
   BarChart,
@@ -89,6 +90,14 @@ type TransformedWeeklyData = {
   [key: `grouper_${number}`]: number;
 }[];
 
+type EstudioData = {
+  id: number;
+  name: string;
+  grouper_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export default function GroupersChartPage() {
   const router = useRouter();
   const { activePeriod } = useBudget();
@@ -102,6 +111,12 @@ export default function GroupersChartPage() {
   const [selectedGroupers, setSelectedGroupers] = useState<number[]>([]);
   const [showBudgets, setShowBudgets] = useState<boolean>(false);
   const [allGroupers, setAllGroupers] = useState<GrouperData[]>([]);
+
+  // Estudio filter state management
+  const [allEstudios, setAllEstudios] = useState<EstudioData[]>([]);
+  const [selectedEstudio, setSelectedEstudio] = useState<number | null>(null);
+  const [isLoadingEstudios, setIsLoadingEstudios] = useState<boolean>(false);
+  const [estudioError, setEstudioError] = useState<string | null>(null);
 
   // Existing state
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -160,13 +175,37 @@ export default function GroupersChartPage() {
 
   // Track filter state for each tab to ensure proper synchronization
   const [lastFilterState, setLastFilterState] = useState<{
-    current: { selectedGroupers: number[]; showBudgets: boolean };
-    periodComparison: { selectedGroupers: number[]; showBudgets: boolean };
-    weeklyCumulative: { selectedGroupers: number[]; showBudgets: boolean };
+    current: {
+      selectedGroupers: number[];
+      showBudgets: boolean;
+      selectedEstudio: number | null;
+    };
+    periodComparison: {
+      selectedGroupers: number[];
+      showBudgets: boolean;
+      selectedEstudio: number | null;
+    };
+    weeklyCumulative: {
+      selectedGroupers: number[];
+      showBudgets: boolean;
+      selectedEstudio: number | null;
+    };
   }>({
-    current: { selectedGroupers: [], showBudgets: false },
-    periodComparison: { selectedGroupers: [], showBudgets: false },
-    weeklyCumulative: { selectedGroupers: [], showBudgets: false },
+    current: {
+      selectedGroupers: [],
+      showBudgets: false,
+      selectedEstudio: null,
+    },
+    periodComparison: {
+      selectedGroupers: [],
+      showBudgets: false,
+      selectedEstudio: null,
+    },
+    weeklyCumulative: {
+      selectedGroupers: [],
+      showBudgets: false,
+      selectedEstudio: null,
+    },
   });
 
   // Define colors for the charts
@@ -189,8 +228,19 @@ export default function GroupersChartPage() {
       setIsLoadingFilters(true);
       setFilterError(null);
 
+      // Build query parameters for groupers
+      const params = new URLSearchParams({
+        periodId: activePeriod?.id?.toString() || "",
+        paymentMethod: "all",
+      });
+
+      // Add estudio filtering if selected
+      if (selectedEstudio) {
+        params.append("estudioId", selectedEstudio.toString());
+      }
+
       const response = await fetch(
-        `/api/dashboard/groupers?periodId=${activePeriod?.id}&paymentMethod=all`
+        `/api/dashboard/groupers?${params.toString()}`
       );
 
       if (!response.ok) {
@@ -216,14 +266,17 @@ export default function GroupersChartPage() {
           current: {
             selectedGroupers: [...allGrouperIds],
             showBudgets: false,
+            selectedEstudio: selectedEstudio,
           },
           periodComparison: {
             selectedGroupers: [...allGrouperIds],
             showBudgets: false,
+            selectedEstudio: selectedEstudio,
           },
           weeklyCumulative: {
             selectedGroupers: [...allGrouperIds],
             showBudgets: false,
+            selectedEstudio: selectedEstudio,
           },
         });
       }
@@ -252,14 +305,250 @@ export default function GroupersChartPage() {
     }
   };
 
+  // Fetch all estudios for filter dropdown
+  const fetchAllEstudios = async () => {
+    try {
+      setIsLoadingEstudios(true);
+      setEstudioError(null);
+
+      const response = await fetch("/api/estudios");
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.error || `HTTP ${response.status}: ${response.statusText}`
+        );
+      }
+
+      const data = await response.json();
+      const sortedData = data.sort((a: EstudioData, b: EstudioData) =>
+        a.name.localeCompare(b.name)
+      );
+      setAllEstudios(sortedData);
+
+      // Auto-select estudio based on URL parameters, session storage, or first available
+      if (selectedEstudio === null && sortedData.length > 0) {
+        // First check URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlEstudioId = urlParams.get("estudioId");
+
+        let estudioToSelect: number | null = null;
+
+        if (urlEstudioId) {
+          const urlEstudio = sortedData.find(
+            (e) => e.id === parseInt(urlEstudioId)
+          );
+          if (urlEstudio) {
+            estudioToSelect = urlEstudio.id;
+          }
+        }
+
+        // Fallback to session storage if URL parameter not found or invalid
+        if (!estudioToSelect) {
+          const savedEstudioId = sessionStorage.getItem("selectedEstudioId");
+          if (savedEstudioId) {
+            const savedEstudio = sortedData.find(
+              (e) => e.id === parseInt(savedEstudioId)
+            );
+            if (savedEstudio) {
+              estudioToSelect = savedEstudio.id;
+            }
+          }
+        }
+
+        // Final fallback to first available estudio
+        if (!estudioToSelect) {
+          estudioToSelect = sortedData[0].id;
+        }
+
+        setSelectedEstudio(estudioToSelect);
+
+        // Ensure both session storage and URL are synchronized
+        sessionStorage.setItem("selectedEstudioId", estudioToSelect.toString());
+        const url = new URL(window.location.href);
+        url.searchParams.set("estudioId", estudioToSelect.toString());
+        window.history.replaceState({}, "", url.toString());
+      }
+    } catch (error) {
+      console.error("Error fetching all estudios:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "Error al cargar los estudios";
+      setEstudioError(errorMessage);
+
+      toast({
+        title: "Error al cargar estudios",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingEstudios(false);
+    }
+  };
+
+  // Retry function for estudio loading
+  const retryEstudioLoad = () => {
+    fetchAllEstudios();
+  };
+
+  // Handle estudio selection change
+  const handleEstudioSelectionChange = (estudioId: number | null) => {
+    setSelectedEstudio(estudioId);
+    // Reset grouper selection when estudio changes
+    setSelectedGroupers([]);
+    setAllGroupers([]);
+    // Reset category view
+    setSelectedGrouper(null);
+    setShowCategoryChart(false);
+
+    // Reset filter state tracking for all tabs when estudio changes
+    setLastFilterState({
+      current: {
+        selectedGroupers: [],
+        showBudgets: false,
+        selectedEstudio: estudioId,
+      },
+      periodComparison: {
+        selectedGroupers: [],
+        showBudgets: false,
+        selectedEstudio: estudioId,
+      },
+      weeklyCumulative: {
+        selectedGroupers: [],
+        showBudgets: false,
+        selectedEstudio: estudioId,
+      },
+    });
+
+    // Reset payment method tracking to force data refresh
+    setLastPaymentMethodUsed({
+      current: "",
+      periodComparison: "",
+      weeklyCumulative: "",
+    });
+
+    // Clear existing data to force refresh
+    setGrouperData([]);
+    setPeriodComparisonData([]);
+    setWeeklyCumulativeData([]);
+
+    // Persist estudio selection in both session storage and URL parameters
+    if (estudioId !== null) {
+      sessionStorage.setItem("selectedEstudioId", estudioId.toString());
+      // Update URL parameters for better persistence
+      const url = new URL(window.location.href);
+      url.searchParams.set("estudioId", estudioId.toString());
+      window.history.replaceState({}, "", url.toString());
+    } else {
+      sessionStorage.removeItem("selectedEstudioId");
+      // Remove from URL parameters
+      const url = new URL(window.location.href);
+      url.searchParams.delete("estudioId");
+      window.history.replaceState({}, "", url.toString());
+    }
+  };
+
   useEffect(() => {
     if (!activePeriod) return;
     fetchAllGroupers();
-  }, [activePeriod]);
+  }, [activePeriod, selectedEstudio]);
+
+  // Fetch estudios on component mount
+  useEffect(() => {
+    fetchAllEstudios();
+  }, []);
+
+  // Handle URL parameter changes for estudio filter persistence
+  useEffect(() => {
+    const handlePopState = () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlEstudioId = urlParams.get("estudioId");
+
+      if (urlEstudioId && allEstudios.length > 0) {
+        const urlEstudio = allEstudios.find(
+          (e) => e.id === parseInt(urlEstudioId)
+        );
+        if (urlEstudio && urlEstudio.id !== selectedEstudio) {
+          setSelectedEstudio(urlEstudio.id);
+          sessionStorage.setItem("selectedEstudioId", urlEstudio.id.toString());
+        }
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [allEstudios, selectedEstudio]);
+
+  // Handle estudio deletion and automatic fallback selection
+  useEffect(() => {
+    if (selectedEstudio !== null && allEstudios.length > 0) {
+      // Check if the selected estudio still exists
+      const estudioExists = allEstudios.some((e) => e.id === selectedEstudio);
+      if (!estudioExists) {
+        // Auto-select the first available estudio
+        const newEstudioId = allEstudios[0].id;
+        setSelectedEstudio(newEstudioId);
+
+        // Update persistence
+        sessionStorage.setItem("selectedEstudioId", newEstudioId.toString());
+        const url = new URL(window.location.href);
+        url.searchParams.set("estudioId", newEstudioId.toString());
+        window.history.replaceState({}, "", url.toString());
+
+        // Reset filter state for all tabs
+        setLastFilterState({
+          current: {
+            selectedGroupers: [],
+            showBudgets: false,
+            selectedEstudio: newEstudioId,
+          },
+          periodComparison: {
+            selectedGroupers: [],
+            showBudgets: false,
+            selectedEstudio: newEstudioId,
+          },
+          weeklyCumulative: {
+            selectedGroupers: [],
+            showBudgets: false,
+            selectedEstudio: newEstudioId,
+          },
+        });
+
+        toast({
+          title: "Estudio eliminado",
+          description: `Se seleccionó automáticamente "${allEstudios[0].name}"`,
+          variant: "default",
+        });
+      }
+    }
+  }, [allEstudios, selectedEstudio]);
+
+  // Utility function to ensure filter state consistency across tabs
+  const syncFilterStateAcrossTabs = () => {
+    const currentState = {
+      selectedGroupers: [...selectedGroupers],
+      showBudgets,
+      selectedEstudio,
+    };
+
+    setLastFilterState({
+      current: { ...currentState },
+      periodComparison: { ...currentState },
+      weeklyCumulative: { ...currentState },
+    });
+  };
+
+  // Ensure filter state consistency when estudio or other filters change
+  useEffect(() => {
+    if (selectedEstudio !== null) {
+      // Sync filter state across all tabs when estudio changes
+      syncFilterStateAcrossTabs();
+    }
+  }, [selectedEstudio, selectedGroupers, showBudgets]);
 
   // Fetch groupers data
   useEffect(() => {
-    if (!activePeriod || activeTab !== "current") return;
+    if (!activePeriod || activeTab !== "current" || selectedEstudio === null)
+      return;
 
     const fetchGrouperData = async () => {
       try {
@@ -270,6 +559,11 @@ export default function GroupersChartPage() {
           periodId: activePeriod.id.toString(),
           paymentMethod: paymentMethod,
         });
+
+        // Add estudio filtering if selected
+        if (selectedEstudio) {
+          params.append("estudioId", selectedEstudio.toString());
+        }
 
         // Add grouper filtering if specific groupers are selected
         if (
@@ -318,7 +612,11 @@ export default function GroupersChartPage() {
           // Update filter state tracking for current tab
           setLastFilterState((prev) => ({
             ...prev,
-            current: { selectedGroupers: [...selectedGroupers], showBudgets },
+            current: {
+              selectedGroupers: [...selectedGroupers],
+              showBudgets,
+              selectedEstudio,
+            },
           }));
 
           // Calculate max amount for chart scaling, considering both expense and budget amounts
@@ -374,6 +672,7 @@ export default function GroupersChartPage() {
     selectedGroupers,
     showBudgets,
     allGroupers.length,
+    selectedEstudio,
   ]);
 
   // Retry function for main data loading
@@ -635,18 +934,21 @@ export default function GroupersChartPage() {
 
   // Fetch period comparison data
   useEffect(() => {
-    if (activeTab !== "period-comparison") return;
+    if (activeTab !== "period-comparison" || selectedEstudio === null) return;
 
     // Check if filter state has changed for this tab
     const currentFilterState = {
       selectedGroupers: [...selectedGroupers],
       showBudgets,
+      selectedEstudio,
     };
     const lastFilterStateForTab = lastFilterState.periodComparison;
     const filterStateChanged =
       JSON.stringify(currentFilterState.selectedGroupers) !==
         JSON.stringify(lastFilterStateForTab.selectedGroupers) ||
-      currentFilterState.showBudgets !== lastFilterStateForTab.showBudgets;
+      currentFilterState.showBudgets !== lastFilterStateForTab.showBudgets ||
+      currentFilterState.selectedEstudio !==
+        lastFilterStateForTab.selectedEstudio;
 
     // Only fetch if payment method changed, filters changed, or data is empty
     const shouldFetch =
@@ -665,6 +967,11 @@ export default function GroupersChartPage() {
         const params = new URLSearchParams({
           paymentMethod: paymentMethod,
         });
+
+        // Add estudio filtering if selected
+        if (selectedEstudio) {
+          params.append("estudioId", selectedEstudio.toString());
+        }
 
         // Add grouper filtering if specific groupers are selected
         if (
@@ -712,6 +1019,7 @@ export default function GroupersChartPage() {
             periodComparison: {
               selectedGroupers: [...selectedGroupers],
               showBudgets,
+              selectedEstudio,
             },
           }));
         } else {
@@ -753,22 +1061,31 @@ export default function GroupersChartPage() {
     showBudgets,
     allGroupers.length,
     lastFilterState.periodComparison,
+    selectedEstudio,
   ]);
 
   // Fetch weekly cumulative data
   useEffect(() => {
-    if (activeTab !== "weekly-cumulative" || !activePeriod) return;
+    if (
+      activeTab !== "weekly-cumulative" ||
+      !activePeriod ||
+      selectedEstudio === null
+    )
+      return;
 
     // Check if filter state has changed for this tab
     const currentFilterState = {
       selectedGroupers: [...selectedGroupers],
       showBudgets,
+      selectedEstudio,
     };
     const lastFilterStateForTab = lastFilterState.weeklyCumulative;
     const filterStateChanged =
       JSON.stringify(currentFilterState.selectedGroupers) !==
         JSON.stringify(lastFilterStateForTab.selectedGroupers) ||
-      currentFilterState.showBudgets !== lastFilterStateForTab.showBudgets;
+      currentFilterState.showBudgets !== lastFilterStateForTab.showBudgets ||
+      currentFilterState.selectedEstudio !==
+        lastFilterStateForTab.selectedEstudio;
 
     // Only fetch if payment method changed, period changed, filters changed, or data is empty
     const shouldFetch =
@@ -788,6 +1105,11 @@ export default function GroupersChartPage() {
           periodId: activePeriod.id.toString(),
           paymentMethod: paymentMethod,
         });
+
+        // Add estudio filtering if selected
+        if (selectedEstudio) {
+          params.append("estudioId", selectedEstudio.toString());
+        }
 
         // Add grouper filtering if specific groupers are selected
         if (
@@ -835,6 +1157,7 @@ export default function GroupersChartPage() {
             weeklyCumulative: {
               selectedGroupers: [...selectedGroupers],
               showBudgets,
+              selectedEstudio,
             },
           }));
         } else {
@@ -877,6 +1200,7 @@ export default function GroupersChartPage() {
     showBudgets,
     allGroupers.length,
     lastFilterState.weeklyCumulative,
+    selectedEstudio,
   ]);
 
   // Handle period changes for weekly cumulative data
@@ -893,7 +1217,7 @@ export default function GroupersChartPage() {
 
   // Fetch budget data when budget toggle is enabled
   useEffect(() => {
-    if (!showBudgets || !activePeriod) {
+    if (!showBudgets || !activePeriod || selectedEstudio === null) {
       setBudgetData({});
       setBudgetError(null);
       return;
@@ -912,6 +1236,11 @@ export default function GroupersChartPage() {
           params.append("periodId", activePeriod.id.toString());
         }
         // For period comparison and weekly cumulative, fetch all periods
+
+        // Add estudio filtering if selected
+        if (selectedEstudio) {
+          params.append("estudioId", selectedEstudio.toString());
+        }
 
         // Add grouper filtering if specific groupers are selected
         if (
@@ -971,6 +1300,7 @@ export default function GroupersChartPage() {
     selectedGroupers,
     allGroupers.length,
     activeTab,
+    selectedEstudio,
   ]);
 
   // Retry function for budget data loading
@@ -1676,6 +2006,7 @@ export default function GroupersChartPage() {
       const currentFilterState = {
         selectedGroupers: [...selectedGroupers],
         showBudgets,
+        selectedEstudio,
       };
 
       switch (tabType) {
@@ -1687,7 +2018,9 @@ export default function GroupersChartPage() {
             // Check if filter state has changed since last fetch for this tab
             JSON.stringify(currentFilterState.selectedGroupers) !==
               JSON.stringify(lastCurrentState.selectedGroupers) ||
-            currentFilterState.showBudgets !== lastCurrentState.showBudgets
+            currentFilterState.showBudgets !== lastCurrentState.showBudgets ||
+            currentFilterState.selectedEstudio !==
+              lastCurrentState.selectedEstudio
           );
         case "period-comparison":
           const lastPeriodState = lastFilterState.periodComparison;
@@ -1697,16 +2030,21 @@ export default function GroupersChartPage() {
             // Data needs refresh if filters changed
             JSON.stringify(currentFilterState.selectedGroupers) !==
               JSON.stringify(lastPeriodState.selectedGroupers) ||
-            currentFilterState.showBudgets !== lastPeriodState.showBudgets
+            currentFilterState.showBudgets !== lastPeriodState.showBudgets ||
+            currentFilterState.selectedEstudio !==
+              lastPeriodState.selectedEstudio
           );
         case "weekly-cumulative":
           const lastWeeklyState = lastFilterState.weeklyCumulative;
           return (
             !weeklyCumulativeData.length ||
             lastPaymentMethodUsed.weeklyCumulative !== paymentMethod ||
-            // Data needs refresh if filters changed (note: weekly cumulative doesn't use showBudgets currently)
+            // Data needs refresh if filters changed
             JSON.stringify(currentFilterState.selectedGroupers) !==
-              JSON.stringify(lastWeeklyState.selectedGroupers)
+              JSON.stringify(lastWeeklyState.selectedGroupers) ||
+            currentFilterState.showBudgets !== lastWeeklyState.showBudgets ||
+            currentFilterState.selectedEstudio !==
+              lastWeeklyState.selectedEstudio
           );
         default:
           return false;
@@ -2585,6 +2923,15 @@ export default function GroupersChartPage() {
           </span>
         </div>
 
+        <EstudioFilter
+          allEstudios={allEstudios}
+          selectedEstudio={selectedEstudio}
+          onSelectionChange={handleEstudioSelectionChange}
+          isLoading={isLoadingEstudios}
+          error={estudioError}
+          onRetry={retryEstudioLoad}
+        />
+
         <AgrupadorFilter
           allGroupers={allGroupers}
           selectedGroupers={selectedGroupers}
@@ -2608,9 +2955,11 @@ export default function GroupersChartPage() {
           />
         )}
 
-        {selectedGroupers.length === 0 && (
+        {(selectedEstudio === null || selectedGroupers.length === 0) && (
           <div className="text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-3 py-1 rounded-md">
-            Selecciona al menos un agrupador para ver los datos
+            {selectedEstudio === null
+              ? "Selecciona un estudio para ver los datos"
+              : "Selecciona al menos un agrupador para ver los datos"}
           </div>
         )}
       </div>

@@ -6,6 +6,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const periodId = searchParams.get("periodId");
     const grouperIds = searchParams.get("grouperIds");
+    const estudioId = searchParams.get("estudioId");
 
     // Parse grouperIds if provided
     let grouperIdArray: number[] | null = null;
@@ -48,17 +49,34 @@ export async function GET(request: Request) {
           p.id as period_id,
           p.name as period_name,
           COALESCE(SUM(b.expected_amount), 0) as total_budget
-        FROM groupers g
+        FROM groupers g`;
+
+      // Add estudio filtering join if estudioId is provided
+      if (estudioId) {
+        query += `
+        INNER JOIN estudio_groupers eg ON eg.grouper_id = g.id
+          AND eg.estudio_id = $${queryParams.length + 1}`;
+        queryParams.push(parseInt(estudioId));
+      }
+
+      query += `
         CROSS JOIN periods p
         LEFT JOIN grouper_categories gc ON gc.grouper_id = g.id
         LEFT JOIN categories c ON c.id = gc.category_id
         LEFT JOIN budgets b ON b.category_id = c.id AND b.period_id = p.id
-        WHERE p.id = $1
-          AND ($2::int[] IS NULL OR g.id = ANY($2::int[]))
+        WHERE p.id = $${queryParams.length + 1}`;
+      queryParams.push(periodId);
+
+      if (grouperIdArray) {
+        query += `
+          AND g.id = ANY($${queryParams.length + 1}::int[])`;
+        queryParams.push(grouperIdArray);
+      }
+
+      query += `
         GROUP BY g.id, g.name, p.id, p.name
         ORDER BY g.name
       `;
-      queryParams = [periodId, grouperIdArray];
     } else {
       // Query for all periods
       query = `
@@ -68,16 +86,33 @@ export async function GET(request: Request) {
           p.id as period_id,
           p.name as period_name,
           COALESCE(SUM(b.expected_amount), 0) as total_budget
-        FROM groupers g
+        FROM groupers g`;
+
+      // Add estudio filtering join if estudioId is provided
+      if (estudioId) {
+        query += `
+        INNER JOIN estudio_groupers eg ON eg.grouper_id = g.id
+          AND eg.estudio_id = $${queryParams.length + 1}`;
+        queryParams.push(parseInt(estudioId));
+      }
+
+      query += `
         CROSS JOIN periods p
         LEFT JOIN grouper_categories gc ON gc.grouper_id = g.id
         LEFT JOIN categories c ON c.id = gc.category_id
         LEFT JOIN budgets b ON b.category_id = c.id AND b.period_id = p.id
-        WHERE ($1::int[] IS NULL OR g.id = ANY($1::int[]))
+        WHERE 1=1`;
+
+      if (grouperIdArray) {
+        query += `
+          AND g.id = ANY($${queryParams.length + 1}::int[])`;
+        queryParams.push(grouperIdArray);
+      }
+
+      query += `
         GROUP BY g.id, g.name, p.id, p.name
         ORDER BY g.name, p.year, p.month
       `;
-      queryParams = [grouperIdArray];
     }
 
     const result = await sql.query(query, queryParams);

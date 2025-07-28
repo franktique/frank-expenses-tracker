@@ -1,8 +1,20 @@
-"use client"
+"use client";
 
-import { BarChart3, CalendarRange, Calculator, CreditCard, Database, DollarSign, Home, Layers as LayersIcon, PieChart, TrendingUp } from "lucide-react"
-import Link from "next/link"
-import { usePathname } from "next/navigation"
+import {
+  BarChart3,
+  BookOpen,
+  CalendarRange,
+  Calculator,
+  CreditCard,
+  Database,
+  DollarSign,
+  Home,
+  Layers as LayersIcon,
+  PieChart,
+  TrendingUp,
+} from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import {
   Sidebar,
@@ -12,14 +24,17 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar"
+} from "@/components/ui/sidebar";
 
 export function AppSidebar() {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   const isActive = (path: string) => {
-    return pathname === path
-  }
+    if (path === "/estudios") {
+      return pathname === "/estudios" || pathname.startsWith("/estudios/");
+    }
+    return pathname === path;
+  };
 
   return (
     <Sidebar>
@@ -88,7 +103,18 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/dashboard/groupers")}> 
+            <SidebarMenuButton asChild isActive={isActive("/estudios")}>
+              <Link href="/estudios">
+                <BookOpen className="h-4 w-4" />
+                <span>Estudios</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive("/dashboard/groupers")}
+            >
               <Link href="/dashboard/groupers">
                 <BarChart3 className="h-4 w-4" />
                 <span>Dashboard Agrupadores</span>
@@ -96,7 +122,10 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/dashboard/category-bars")}> 
+            <SidebarMenuButton
+              asChild
+              isActive={isActive("/dashboard/category-bars")}
+            >
               <Link href="/dashboard/category-bars">
                 <BarChart3 className="h-4 w-4" />
                 <span>Gastos por Fecha</span>
@@ -104,7 +133,10 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/dashboard/period-bars")}> 
+            <SidebarMenuButton
+              asChild
+              isActive={isActive("/dashboard/period-bars")}
+            >
               <Link href="/dashboard/period-bars">
                 <BarChart3 className="h-4 w-4" />
                 <span>Gastos por Periodo</span>
@@ -112,7 +144,10 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/dashboard/overspend")}> 
+            <SidebarMenuButton
+              asChild
+              isActive={isActive("/dashboard/overspend")}
+            >
               <Link href="/dashboard/overspend">
                 <BarChart3 className="h-4 w-4" />
                 <span>Overspend Actual</span>
@@ -133,5 +168,5 @@ export function AppSidebar() {
         <div className="text-xs text-muted-foreground">Budget Tracker v1.0</div>
       </SidebarFooter>
     </Sidebar>
-  )
+  );
 }

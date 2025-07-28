@@ -7,6 +7,7 @@ export async function GET(request: Request) {
     const periodId = searchParams.get("periodId");
     const paymentMethod = searchParams.get("paymentMethod");
     const grouperIds = searchParams.get("grouperIds");
+    const estudioId = searchParams.get("estudioId");
     const includeBudgets = searchParams.get("includeBudgets") === "true";
 
     if (!periodId) {
@@ -57,7 +58,18 @@ export async function GET(request: Request) {
 
     // Base FROM and JOIN clauses
     let fromClause = `
-      FROM groupers g
+      FROM groupers g`;
+
+    // Add estudio filtering join if estudioId is provided
+    if (estudioId) {
+      fromClause += `
+      INNER JOIN estudio_groupers eg ON eg.grouper_id = g.id
+        AND eg.estudio_id = $${paramIndex}`;
+      queryParams.push(parseInt(estudioId));
+      paramIndex++;
+    }
+
+    fromClause += `
       LEFT JOIN grouper_categories gc ON gc.grouper_id = g.id
       LEFT JOIN categories c ON c.id = gc.category_id
       LEFT JOIN expenses e ON e.category_id = c.id 

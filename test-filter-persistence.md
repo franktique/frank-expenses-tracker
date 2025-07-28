@@ -1,88 +1,97 @@
 # Filter State Persistence Test
 
-## Test Scenario: Filter State Persistence Across Tabs
+## Test Cases
 
-### Setup
+### 1. Estudio Selection Persistence
 
-1. Navigate to Dashboard Agrupadores
-2. Ensure there are multiple agrupadores available
-3. Ensure there are multiple tabs available (Vista Actual, Comparación por Períodos, Acumulado Semanal)
+- [x] Estudio selection is saved to session storage
+- [x] Estudio selection is saved to URL parameters
+- [x] Estudio selection persists when switching between tabs
+- [x] Estudio selection is restored from URL parameters on page load
+- [x] Estudio selection is restored from session storage as fallback
 
-### Test Steps
+### 2. Tab Switching Consistency
 
-#### Test 1: Basic Filter Persistence
+- [x] Estudio filter remains the same across all three tabs
+- [x] Filter state is synchronized when switching tabs
+- [x] Data is properly refreshed when tab is switched with different filter state
 
-1. **Initial State**: All agrupadores should be selected by default
-2. **Action**: Select only 2-3 specific agrupadores in the filter
-3. **Action**: Switch to "Comparación por Períodos" tab
-4. **Expected**: The same 2-3 agrupadores should remain selected
-5. **Action**: Switch to "Acumulado Semanal" tab
-6. **Expected**: The same 2-3 agrupadores should remain selected
-7. **Action**: Switch back to "Vista Actual" tab
-8. **Expected**: The same 2-3 agrupadores should remain selected
+### 3. URL Parameter Handling
 
-#### Test 2: Budget Toggle Persistence
+- [x] URL parameters are updated when estudio selection changes
+- [x] Browser back/forward navigation maintains estudio selection
+- [x] Direct URL access with estudioId parameter works correctly
 
-1. **Action**: In "Vista Actual" tab, enable the "Mostrar Presupuestos" toggle
-2. **Expected**: Budget data should be displayed alongside expense data
-3. **Action**: Switch to "Comparación por Períodos" tab
-4. **Expected**: Budget toggle should remain enabled and budget data should be shown
-5. **Action**: Switch to "Acumulado Semanal" tab
-6. **Expected**: Budget toggle should not be visible (as it's not supported in this view)
-7. **Action**: Switch back to "Vista Actual" tab
-8. **Expected**: Budget toggle should remain enabled and budget data should be shown
+### 4. Session Storage Integration
 
-#### Test 3: Combined Filter and Budget State Persistence
+- [x] Session storage is used as fallback when URL parameters are not available
+- [x] Session storage is synchronized with URL parameters
+- [x] Session storage is cleared when estudio is deselected
 
-1. **Action**: Select specific agrupadores (e.g., 2 out of 5)
-2. **Action**: Enable budget toggle in "Vista Actual"
-3. **Action**: Switch to "Comparación por Períodos"
-4. **Expected**: Both filter selection and budget toggle should persist
-5. **Action**: Change payment method filter to "Efectivo"
-6. **Action**: Switch back to "Vista Actual"
-7. **Expected**: Agrupador filter, budget toggle, and payment method should all persist
+### 5. Edge Cases
 
-#### Test 4: Data Refresh on Tab Switch
+- [x] Handles deleted estudio with automatic fallback
+- [x] Handles empty estudios list gracefully
+- [x] Handles invalid estudio IDs in URL parameters
+- [x] Maintains consistency when estudio changes
 
-1. **Action**: Apply filters in "Vista Actual"
-2. **Action**: Switch to "Comparación por Períodos"
-3. **Expected**: Loading state should appear briefly while data is fetched with the applied filters
-4. **Expected**: Chart should display data only for the selected agrupadores
-5. **Action**: Switch back to "Vista Actual"
-6. **Expected**: No loading state should appear if data is already cached with the same filters
+## Implementation Details
 
-### Expected Behavior
+### Enhanced Features Added:
 
-#### Filter State Synchronization
+1. **Dual Persistence Strategy**:
 
-- ✅ Selected agrupadores persist across all tabs
-- ✅ Budget toggle state persists between "Vista Actual" and "Comparación por Períodos"
-- ✅ Payment method filter persists across all tabs
-- ✅ Filter changes trigger appropriate data refresh for the active tab
+   - Primary: URL parameters for better shareability and browser navigation
+   - Fallback: Session storage for reliability
 
-#### Data Loading Behavior
+2. **Cross-Tab State Synchronization**:
 
-- ✅ Switching tabs shows loading state only when data needs to be refetched
-- ✅ Filter changes immediately show loading state for better UX
-- ✅ Data is properly filtered according to the current filter state
+   - Filter state tracking includes estudio selection
+   - State is synchronized across all three dashboard tabs
+   - Data refresh is triggered when filter state changes
 
-#### UI State Management
+3. **Browser Navigation Support**:
 
-- ✅ Filter controls remain accessible during loading states
-- ✅ Current filter selections are always visible in the UI
-- ✅ Budget toggle is only shown for supported tabs
+   - PopState event listener for back/forward navigation
+   - URL parameters are maintained during navigation
+   - Automatic synchronization between URL and session storage
 
-### Implementation Details
+4. **Robust Error Handling**:
+   - Automatic fallback when selected estudio is deleted
+   - Graceful handling of invalid URL parameters
+   - Consistent state management across all scenarios
 
-The implementation uses:
+### Technical Implementation:
 
-1. **Filter State Tracking**: `lastFilterState` object tracks filter state per tab
-2. **Smart Data Fetching**: useEffect hooks check for filter state changes before refetching
-3. **Tab Change Handler**: `handleTabChange` ensures proper state synchronization
-4. **Loading State Management**: Appropriate loading states are set when switching tabs or changing filters
+- Extended `lastFilterState` to include `selectedEstudio` for all tabs
+- Added URL parameter management in `handleEstudioSelectionChange`
+- Implemented `syncFilterStateAcrossTabs` utility function
+- Added PopState event listener for browser navigation
+- Enhanced tab switching logic to consider estudio filter state
+- Improved data refresh logic to include estudio changes
 
-### Requirements Satisfied
+## Testing Instructions
 
-- ✅ Requirement 1.6: Filter selections persist when switching tabs
-- ✅ Requirement 5.4: Filter and budget display settings are maintained across tabs
-- ✅ Requirement 5.5: Filter state synchronization between different chart views
+1. **Basic Persistence Test**:
+
+   - Select an estudio in the dashboard
+   - Switch between tabs - estudio should remain selected
+   - Refresh the page - estudio selection should persist
+   - Check URL parameters and session storage
+
+2. **Browser Navigation Test**:
+
+   - Select different estudios and navigate between tabs
+   - Use browser back/forward buttons
+   - Verify estudio selection is maintained
+
+3. **Direct URL Access Test**:
+
+   - Copy URL with estudioId parameter
+   - Open in new tab/window
+   - Verify estudio is automatically selected
+
+4. **Edge Case Test**:
+   - Delete the currently selected estudio
+   - Verify automatic fallback to first available estudio
+   - Check that all tabs are updated consistently

@@ -25,9 +25,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { LogoutButton } from "@/components/logout-button";
+import { useAuth } from "@/lib/auth-context";
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { isAuthenticated } = useAuth();
 
   const isActive = (path: string) => {
     if (path === "/estudios") {
@@ -165,7 +168,12 @@ export function AppSidebar() {
         </SidebarMenu>
       </SidebarContent>
       <SidebarFooter className="border-t p-4">
-        <div className="text-xs text-muted-foreground">Budget Tracker v1.0</div>
+        <div className="flex flex-col gap-2">
+          {isAuthenticated && <LogoutButton />}
+          <div className="text-xs text-muted-foreground">
+            Budget Tracker v1.0
+          </div>
+        </div>
       </SidebarFooter>
     </Sidebar>
   );

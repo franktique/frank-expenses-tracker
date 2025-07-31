@@ -36,7 +36,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
-import { useBudget } from "@/context/budget-context-provider";
+import { useBudget } from "@/context/budget-context";
 import { cn, formatDate } from "@/lib/utils";
 
 export function PeriodsView() {
@@ -727,7 +727,7 @@ export function PeriodsView() {
                   </TableCell>
                 </TableRow>
               ))}
-              {periods.length === 0 && (
+              {(!periods || periods.length === 0) && (
                 <TableRow>
                   <TableCell
                     colSpan={4}

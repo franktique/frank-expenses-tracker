@@ -12,6 +12,7 @@ import {
   Layers as LayersIcon,
   PieChart,
   TrendingUp,
+  Wallet,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -98,6 +99,14 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={isActive("/fondos")}>
+              <Link href="/fondos">
+                <Wallet className="h-4 w-4" />
+                <span>Fondos</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive("/agrupadores")}>
               <Link href="/agrupadores">
                 <LayersIcon className="h-4 w-4" />
@@ -121,6 +130,14 @@ export function AppSidebar() {
               <Link href="/dashboard/groupers">
                 <BarChart3 className="h-4 w-4" />
                 <span>Dashboard Agrupadores</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={isActive("/dashboard/fondos")}>
+              <Link href="/dashboard/fondos">
+                <BarChart3 className="h-4 w-4" />
+                <span>Dashboard Fondos</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -13,7 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useBudget } from "@/context/budget-context-provider";
+import { useBudget } from "@/context/budget-context";
 import {
   Select,
   SelectContent,

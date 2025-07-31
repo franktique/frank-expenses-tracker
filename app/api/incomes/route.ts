@@ -1,9 +1,10 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { sql } from "@/lib/db"
+import { type NextRequest, NextResponse } from "next/server";
+import { sql } from "@/lib/db";
+import { CreateIncomeSchema, DEFAULT_FUND_NAME } from "@/types/funds";
 
 export async function GET() {
   try {
-    // Simplificando para usar directamente las fechas almacenadas
+    // Include fund information in the response
     const incomes = await sql`
       SELECT 
         i.id,
@@ -11,72 +12,131 @@ export async function GET() {
         i.description,
         i.amount,
         i.event,
-        -- Usar directamente el valor de fecha sin conversiones
         i.date,
-        p.name as period_name
+        i.fund_id,
+        p.name as period_name,
+        f.name as fund_name
       FROM incomes i
       LEFT JOIN periods p ON i.period_id = p.id
+      LEFT JOIN funds f ON i.fund_id = f.id
       ORDER BY i.date DESC
-    `
-    return NextResponse.json(incomes)
+    `;
+    return NextResponse.json(incomes);
   } catch (error) {
-    console.error("Error fetching incomes:", error)
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 })
+    console.error("Error fetching incomes:", error);
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { periodId, date, description, amount, event } = await request.json()
+    const body = await request.json();
 
-    if (!date || !description || typeof amount !== "number") {
-      return NextResponse.json({ error: "Date, description, and amount are required" }, { status: 400 })
+    // Validate request body
+    const validationResult = CreateIncomeSchema.safeParse(body);
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: "Validation failed", details: validationResult.error.errors },
+        { status: 400 }
+      );
     }
 
-    if (amount <= 0) {
-      return NextResponse.json({ error: "Amount must be a positive number" }, { status: 400 })
-    }
+    let { period_id, date, description, amount, event, fund_id } =
+      validationResult.data;
 
-    // Usar un valor predeterminado para periodId si no se proporciona
-    let actualPeriodId = periodId
-
-    if (!actualPeriodId) {
-      // Intentar obtener el periodo activo
-      const [activePeriod] = await sql`SELECT id FROM periods WHERE is_open = true LIMIT 1`
+    // Use default period if not provided
+    if (!period_id) {
+      // Try to get active period
+      const [activePeriod] =
+        await sql`SELECT id FROM periods WHERE is_open = true LIMIT 1`;
 
       if (activePeriod) {
-        actualPeriodId = activePeriod.id
+        period_id = activePeriod.id;
       } else {
-        // Si no hay periodo activo, usar el periodo más reciente
-        const [latestPeriod] = await sql`SELECT id FROM periods ORDER BY year DESC, month DESC LIMIT 1`
+        // If no active period, use the most recent one
+        const [latestPeriod] =
+          await sql`SELECT id FROM periods ORDER BY year DESC, month DESC LIMIT 1`;
 
         if (latestPeriod) {
-          actualPeriodId = latestPeriod.id
+          period_id = latestPeriod.id;
         } else {
-          return NextResponse.json({ error: "No hay periodos disponibles. Crea un periodo primero." }, { status: 400 })
+          return NextResponse.json(
+            { error: "No hay periodos disponibles. Crea un periodo primero." },
+            { status: 400 }
+          );
         }
       }
     }
 
-    // Estandarizar la fecha para asegurar que sea consistente con horario de Colombia
-    let dateToSave = date;
-    
-    // Si es un string ISO, asegurarse de que use solo la parte de fecha
-    if (typeof date === 'string' && date.includes('T')) {
-      // Extraer solo la parte de la fecha (YYYY-MM-DD)
-      dateToSave = date.split('T')[0];
+    // If fund_id is provided, validate that the fund exists
+    if (fund_id) {
+      const [fund] = await sql`SELECT id FROM funds WHERE id = ${fund_id}`;
+      if (!fund) {
+        return NextResponse.json(
+          { error: "El fondo especificado no existe" },
+          { status: 400 }
+        );
+      }
     }
-    
-    // Insertar el ingreso con el periodo
-    const [newIncome] = await sql`
-      INSERT INTO incomes (period_id, date, description, amount, event)
-      VALUES (${actualPeriodId}, ${dateToSave}, ${description}, ${amount}, ${event || null})
-      RETURNING *
-    `
 
-    return NextResponse.json(newIncome)
+    // If no fund_id provided, assign to default fund
+    if (!fund_id) {
+      const [defaultFund] = await sql`
+        SELECT id FROM funds WHERE name = ${DEFAULT_FUND_NAME}
+      `;
+      if (defaultFund) {
+        fund_id = defaultFund.id;
+      }
+    }
+
+    // Standardize date to ensure consistency with Colombia timezone
+    let dateToSave = date;
+
+    // If it's an ISO string, ensure we use only the date part
+    if (typeof date === "string" && date.includes("T")) {
+      // Extract only the date part (YYYY-MM-DD)
+      dateToSave = date.split("T")[0];
+    }
+
+    // Insert the income with fund assignment
+    const [newIncome] = await sql`
+      INSERT INTO incomes (period_id, date, description, amount, event, fund_id)
+      VALUES (${period_id}, ${dateToSave}, ${description}, ${amount}, ${
+      event || null
+    }, ${fund_id})
+      RETURNING *
+    `;
+
+    // Fetch the income with fund information
+    const [incomeWithFund] = await sql`
+      SELECT 
+        i.*,
+        p.name as period_name,
+        f.name as fund_name
+      FROM incomes i
+      LEFT JOIN periods p ON i.period_id = p.id
+      LEFT JOIN funds f ON i.fund_id = f.id
+      WHERE i.id = ${newIncome.id}
+    `;
+
+    // Update fund balance if fund is assigned
+    if (fund_id) {
+      await sql`
+        UPDATE funds 
+        SET current_balance = current_balance + ${amount}
+        WHERE id = ${fund_id}
+      `;
+    }
+
+    return NextResponse.json(incomeWithFund);
   } catch (error) {
-    console.error("Error creating income:", error)
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 })
+    console.error("Error creating income:", error);
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }

@@ -1,10 +1,25 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useBudget } from "@/context/budget-context-provider";
+import { useBudget } from "@/context/budget-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, LabelList } from "recharts";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+  LabelList,
+} from "recharts";
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash: "Efectivo",
@@ -30,7 +45,8 @@ export default function OverspendDashboard() {
     if (!activePeriod) return [];
     const methods = getMethodFilter(methodFilter);
     return expenses.filter(
-      (e) => e.period_id === activePeriod.id && methods.includes(e.payment_method)
+      (e) =>
+        e.period_id === activePeriod.id && methods.includes(e.payment_method)
     );
   }, [expenses, activePeriod, methodFilter]);
 
@@ -51,7 +67,8 @@ export default function OverspendDashboard() {
     const map: Record<string, Record<string, number>> = {};
     filteredExpenses.forEach((e) => {
       if (!map[e.category_id]) map[e.category_id] = {};
-      map[e.category_id][e.payment_method] = (map[e.category_id][e.payment_method] || 0) + Number(e.amount);
+      map[e.category_id][e.payment_method] =
+        (map[e.category_id][e.payment_method] || 0) + Number(e.amount);
     });
     return map;
   }, [filteredExpenses]);
@@ -88,14 +105,20 @@ export default function OverspendDashboard() {
     const map: Record<string, { cash: number; credit: number }> = {};
     categories.forEach((cat) => {
       // Cash/debit
-      let plannedCash = 0, spentCash = 0;
-      let plannedCredit = 0, spentCredit = 0;
+      let plannedCash = 0,
+        spentCash = 0;
+      let plannedCredit = 0,
+        spentCredit = 0;
       if (plannedByCatAndMethod[cat.id]) {
-        plannedCash = Number(plannedByCatAndMethod[cat.id]["cash"] || 0) + Number(plannedByCatAndMethod[cat.id]["debit"] || 0);
+        plannedCash =
+          Number(plannedByCatAndMethod[cat.id]["cash"] || 0) +
+          Number(plannedByCatAndMethod[cat.id]["debit"] || 0);
         plannedCredit = Number(plannedByCatAndMethod[cat.id]["credit"] || 0);
       }
       if (spentByCatAndMethod[cat.id]) {
-        spentCash = Number(spentByCatAndMethod[cat.id]["cash"] || 0) + Number(spentByCatAndMethod[cat.id]["debit"] || 0);
+        spentCash =
+          Number(spentByCatAndMethod[cat.id]["cash"] || 0) +
+          Number(spentByCatAndMethod[cat.id]["debit"] || 0);
         spentCredit = Number(spentByCatAndMethod[cat.id]["credit"] || 0);
       }
       map[cat.id] = {
@@ -110,12 +133,18 @@ export default function OverspendDashboard() {
   // KPIs: always show total overspend for each method for the open period, regardless of filter
   const kpiCash = useMemo(() => {
     if (methodFilter === "credit") return null;
-    return Object.values(overspendByCategory).reduce((sum, v) => sum + (v.cash > 0 ? v.cash : 0), 0);
+    return Object.values(overspendByCategory).reduce(
+      (sum, v) => sum + (v.cash > 0 ? v.cash : 0),
+      0
+    );
   }, [overspendByCategory, methodFilter]);
 
   const kpiCredit = useMemo(() => {
     if (methodFilter === "cash") return null;
-    return Object.values(overspendByCategory).reduce((sum, v) => sum + (v.credit > 0 ? v.credit : 0), 0);
+    return Object.values(overspendByCategory).reduce(
+      (sum, v) => sum + (v.credit > 0 ? v.credit : 0),
+      0
+    );
   }, [overspendByCategory, methodFilter]);
 
   return (
@@ -127,7 +156,13 @@ export default function OverspendDashboard() {
               <CardTitle>Overspend en Efectivo/Débito</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-blue-900">${(!isNaN(kpiCash) && isFinite(kpiCash) ? kpiCash : 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>
+              <div className="text-3xl font-bold text-blue-900">
+                $
+                {(!isNaN(kpiCash) && isFinite(kpiCash)
+                  ? kpiCash
+                  : 0
+                ).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+              </div>
             </CardContent>
           </Card>
         )}
@@ -137,7 +172,13 @@ export default function OverspendDashboard() {
               <CardTitle>Overspend en Tarjeta Crédito</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-red-900">${(!isNaN(kpiCredit) && isFinite(kpiCredit) ? kpiCredit : 0).toLocaleString("es-MX", { minimumFractionDigits: 2 })}</div>
+              <div className="text-3xl font-bold text-red-900">
+                $
+                {(!isNaN(kpiCredit) && isFinite(kpiCredit)
+                  ? kpiCredit
+                  : 0
+                ).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+              </div>
             </CardContent>
           </Card>
         )}
@@ -159,7 +200,9 @@ export default function OverspendDashboard() {
           <CardTitle>Overspend por Categoría</CardTitle>
         </CardHeader>
         <CardContent>
-          <div style={{ width: "100%", height: 60 + overspendRows.length * 48 }}>
+          <div
+            style={{ width: "100%", height: 60 + overspendRows.length * 48 }}
+          >
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 layout="vertical"
@@ -169,13 +212,51 @@ export default function OverspendDashboard() {
               >
                 <XAxis type="number" hide />
                 <YAxis type="category" dataKey="category" width={180} />
-                <Tooltip formatter={(value: number) => `$${value.toLocaleString("es-MX", { minimumFractionDigits: 2 })}`} />
+                <Tooltip
+                  formatter={(value: number) =>
+                    `$${value.toLocaleString("es-MX", {
+                      minimumFractionDigits: 2,
+                    })}`
+                  }
+                />
                 <Legend />
-                <Bar dataKey="planned" fill="#3b82f6" name="Planeado" barSize={18} radius={[8, 8, 8, 8]}>
-                  <LabelList dataKey="planned" position="right" formatter={(v: number | undefined) => (typeof v === "number" && v > 0) ? `$${v.toLocaleString("es-MX", { minimumFractionDigits: 2 })}` : ""} />
+                <Bar
+                  dataKey="planned"
+                  fill="#3b82f6"
+                  name="Planeado"
+                  barSize={18}
+                  radius={[8, 8, 8, 8]}
+                >
+                  <LabelList
+                    dataKey="planned"
+                    position="right"
+                    formatter={(v: number | undefined) =>
+                      typeof v === "number" && v > 0
+                        ? `$${v.toLocaleString("es-MX", {
+                            minimumFractionDigits: 2,
+                          })}`
+                        : ""
+                    }
+                  />
                 </Bar>
-                <Bar dataKey="overspent" fill="#ef4444" name="Excedente" barSize={18} radius={[8, 8, 8, 8]}>
-                  <LabelList dataKey="overspent" position="right" formatter={(v: number | undefined) => (typeof v === "number" && v > 0) ? `$${v.toLocaleString("es-MX", { minimumFractionDigits: 2 })}` : ""} />
+                <Bar
+                  dataKey="overspent"
+                  fill="#ef4444"
+                  name="Excedente"
+                  barSize={18}
+                  radius={[8, 8, 8, 8]}
+                >
+                  <LabelList
+                    dataKey="overspent"
+                    position="right"
+                    formatter={(v: number | undefined) =>
+                      typeof v === "number" && v > 0
+                        ? `$${v.toLocaleString("es-MX", {
+                            minimumFractionDigits: 2,
+                          })}`
+                        : ""
+                    }
+                  />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>

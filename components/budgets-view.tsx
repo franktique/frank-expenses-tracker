@@ -1,8 +1,14 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -10,67 +16,96 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { useToast } from "@/components/ui/use-toast"
-import { useBudget, PaymentMethod } from "@/context/budget-context-provider"
-import { formatCurrency } from "@/lib/utils"
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { useToast } from "@/components/ui/use-toast";
+import { useBudget, PaymentMethod } from "@/context/budget-context";
+import { formatCurrency } from "@/lib/utils";
 
 export function BudgetsView() {
-  const { categories, periods, budgets, activePeriod, addBudget, updateBudget } = useBudget()
-  const { toast } = useToast()
+  const {
+    categories,
+    periods,
+    budgets,
+    activePeriod,
+    addBudget,
+    updateBudget,
+  } = useBudget();
+  const { toast } = useToast();
 
-  const [selectedPeriodId, setSelectedPeriodId] = useState<string>(activePeriod?.id || "")
-  const [isEditOpen, setIsEditOpen] = useState(false)
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string>(
+    activePeriod?.id || ""
+  );
+  const [isEditOpen, setIsEditOpen] = useState(false);
   const [editCategory, setEditCategory] = useState<{
-    id: string
-    name: string
-    budgetId?: string
-    amount: string
-    paymentMethod: PaymentMethod
-  } | null>(null)
+    id: string;
+    name: string;
+    budgetId?: string;
+    amount: string;
+    paymentMethod: PaymentMethod;
+  } | null>(null);
 
   // Get the selected period object
-  const selectedPeriod = periods.find((p) => p.id === selectedPeriodId)
+  const selectedPeriod = periods.find((p) => p.id === selectedPeriodId);
 
   // Filter budgets for the selected period
-  const periodBudgets = selectedPeriod ? budgets.filter((budget) => budget.period_id === selectedPeriod.id) : []
+  const periodBudgets = selectedPeriod
+    ? budgets.filter((budget) => budget.period_id === selectedPeriod.id)
+    : [];
 
   const handleEditBudget = () => {
-    if (!editCategory || !selectedPeriod) return
+    if (!editCategory || !selectedPeriod) return;
 
-    const amount = Number.parseFloat(editCategory.amount)
+    const amount = Number.parseFloat(editCategory.amount);
     if (isNaN(amount) || amount < 0) {
       toast({
         title: "Error",
         description: "El monto debe ser un número positivo",
         variant: "destructive",
-      })
-      return
+      });
+      return;
     }
 
     if (editCategory.budgetId) {
       // Update existing budget
-      updateBudget(editCategory.budgetId, amount, editCategory.paymentMethod)
+      updateBudget(editCategory.budgetId, amount, editCategory.paymentMethod);
     } else {
       // Create new budget
-      addBudget(editCategory.id, selectedPeriod.id, amount, editCategory.paymentMethod)
+      addBudget(
+        editCategory.id,
+        selectedPeriod.id,
+        amount,
+        editCategory.paymentMethod
+      );
     }
 
-    setEditCategory(null)
-    setIsEditOpen(false)
+    setEditCategory(null);
+    setIsEditOpen(false);
 
     toast({
       title: "Presupuesto actualizado",
       description: "El presupuesto ha sido actualizado exitosamente",
-    })
-  }
+    });
+  };
 
-  if (periods.length === 0) {
+  if (!periods || periods.length === 0) {
     return (
       <div className="space-y-6">
         <h1 className="text-3xl font-bold tracking-tight">Presupuestos</h1>
@@ -78,12 +113,13 @@ export function BudgetsView() {
           <CardHeader>
             <CardTitle>No hay periodos disponibles</CardTitle>
             <CardDescription>
-              Para configurar presupuestos, primero debes crear un periodo presupuestario en la sección de Periodos.
+              Para configurar presupuestos, primero debes crear un periodo
+              presupuestario en la sección de Periodos.
             </CardDescription>
           </CardHeader>
         </Card>
       </div>
-    )
+    );
   }
 
   return (
@@ -91,7 +127,8 @@ export function BudgetsView() {
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Presupuestos</h1>
         <p className="text-muted-foreground">
-          Configura los montos presupuestados para cada categoría en el periodo seleccionado
+          Configura los montos presupuestados para cada categoría en el periodo
+          seleccionado
         </p>
       </div>
 
@@ -100,10 +137,15 @@ export function BudgetsView() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <CardTitle>Presupuestos por Categoría</CardTitle>
-              <CardDescription>Establece el monto esperado para cada categoría</CardDescription>
+              <CardDescription>
+                Establece el monto esperado para cada categoría
+              </CardDescription>
             </div>
             <div className="w-full sm:w-64">
-              <Select value={selectedPeriodId} onValueChange={setSelectedPeriodId}>
+              <Select
+                value={selectedPeriodId}
+                onValueChange={setSelectedPeriodId}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Selecciona un periodo" />
                 </SelectTrigger>
@@ -123,7 +165,9 @@ export function BudgetsView() {
             <div className="mb-6">
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Presupuestado</CardTitle>
+                  <CardTitle className="text-sm font-medium">
+                    Total Presupuestado
+                  </CardTitle>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
                     viewBox="0 0 24 24"
@@ -139,22 +183,42 @@ export function BudgetsView() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-2xl font-bold">
-                    {formatCurrency(periodBudgets.reduce((sum, budget) => sum + Number(budget.expected_amount), 0))}
+                    {formatCurrency(
+                      periodBudgets.reduce(
+                        (sum, budget) => sum + Number(budget.expected_amount),
+                        0
+                      )
+                    )}
                   </div>
                   <div className="mt-2 flex justify-between text-xs text-muted-foreground">
                     <div>
-                      <span className="font-medium">Efectivo:</span> {formatCurrency(periodBudgets
-                        .filter(b => b.payment_method === "cash")
-                        .reduce((sum, budget) => sum + Number(budget.expected_amount), 0))}
+                      <span className="font-medium">Efectivo:</span>{" "}
+                      {formatCurrency(
+                        periodBudgets
+                          .filter((b) => b.payment_method === "cash")
+                          .reduce(
+                            (sum, budget) =>
+                              sum + Number(budget.expected_amount),
+                            0
+                          )
+                      )}
                     </div>
                     <div>
-                      <span className="font-medium">Crédito:</span> {formatCurrency(periodBudgets
-                        .filter(b => b.payment_method === "credit")
-                        .reduce((sum, budget) => sum + Number(budget.expected_amount), 0))}
+                      <span className="font-medium">Crédito:</span>{" "}
+                      {formatCurrency(
+                        periodBudgets
+                          .filter((b) => b.payment_method === "credit")
+                          .reduce(
+                            (sum, budget) =>
+                              sum + Number(budget.expected_amount),
+                            0
+                          )
+                      )}
                     </div>
                   </div>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    {periodBudgets.filter(b => b.expected_amount > 0).length} categorías con presupuesto
+                    {periodBudgets.filter((b) => b.expected_amount > 0).length}{" "}
+                    categorías con presupuesto
                   </p>
                 </CardContent>
               </Card>
@@ -182,21 +246,29 @@ export function BudgetsView() {
                   .map((category) => {
                     // Find budgets for this category in selected period for different payment methods
                     const cashBudget = periodBudgets.find(
-                      (b) => b.category_id === category.id && b.payment_method === "cash"
-                    )
+                      (b) =>
+                        b.category_id === category.id &&
+                        b.payment_method === "cash"
+                    );
                     const creditBudget = periodBudgets.find(
-                      (b) => b.category_id === category.id && b.payment_method === "credit"
-                    )
-                    
-                    const totalAmount = 
-                      (cashBudget ? Number(cashBudget.expected_amount) : 0) + 
-                      (creditBudget ? Number(creditBudget.expected_amount) : 0)
+                      (b) =>
+                        b.category_id === category.id &&
+                        b.payment_method === "credit"
+                    );
+
+                    const totalAmount =
+                      (cashBudget ? Number(cashBudget.expected_amount) : 0) +
+                      (creditBudget ? Number(creditBudget.expected_amount) : 0);
 
                     return (
                       <TableRow key={category.id}>
-                        <TableCell className="font-medium">{category.name}</TableCell>
+                        <TableCell className="font-medium">
+                          {category.name}
+                        </TableCell>
                         <TableCell className="text-right">
-                          {cashBudget ? formatCurrency(cashBudget.expected_amount) : formatCurrency(0)}
+                          {cashBudget
+                            ? formatCurrency(cashBudget.expected_amount)
+                            : formatCurrency(0)}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -206,10 +278,12 @@ export function BudgetsView() {
                                 id: category.id,
                                 name: category.name,
                                 budgetId: cashBudget?.id,
-                                amount: cashBudget ? cashBudget.expected_amount.toString() : "0",
-                                paymentMethod: "cash"
-                              })
-                              setIsEditOpen(true)
+                                amount: cashBudget
+                                  ? cashBudget.expected_amount.toString()
+                                  : "0",
+                                paymentMethod: "cash",
+                              });
+                              setIsEditOpen(true);
                             }}
                           >
                             <span className="sr-only">Editar efectivo</span>
@@ -217,7 +291,9 @@ export function BudgetsView() {
                           </Button>
                         </TableCell>
                         <TableCell className="text-right">
-                          {creditBudget ? formatCurrency(creditBudget.expected_amount) : formatCurrency(0)}
+                          {creditBudget
+                            ? formatCurrency(creditBudget.expected_amount)
+                            : formatCurrency(0)}
                           <Button
                             variant="ghost"
                             size="sm"
@@ -227,10 +303,12 @@ export function BudgetsView() {
                                 id: category.id,
                                 name: category.name,
                                 budgetId: creditBudget?.id,
-                                amount: creditBudget ? creditBudget.expected_amount.toString() : "0",
-                                paymentMethod: "credit"
-                              })
-                              setIsEditOpen(true)
+                                amount: creditBudget
+                                  ? creditBudget.expected_amount.toString()
+                                  : "0",
+                                paymentMethod: "credit",
+                              });
+                              setIsEditOpen(true);
                             }}
                           >
                             <span className="sr-only">Editar crédito</span>
@@ -249,21 +327,25 @@ export function BudgetsView() {
                                 id: category.id,
                                 name: category.name,
                                 amount: "0",
-                                paymentMethod: "cash"
-                              })
-                              setIsEditOpen(true)
+                                paymentMethod: "cash",
+                              });
+                              setIsEditOpen(true);
                             }}
                           >
                             Agregar
                           </Button>
                         </TableCell>
                       </TableRow>
-                    )
+                    );
                   })}
-                {categories.length === 0 && (
+                {(!categories || categories.length === 0) && (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-center py-4 text-muted-foreground">
-                      No hay categorías. Agrega categorías en la sección de Categorías.
+                    <TableCell
+                      colSpan={3}
+                      className="text-center py-4 text-muted-foreground"
+                    >
+                      No hay categorías. Agrega categorías en la sección de
+                      Categorías.
                     </TableCell>
                   </TableRow>
                 )}
@@ -279,7 +361,9 @@ export function BudgetsView() {
           <DialogHeader>
             <DialogTitle>Establecer Presupuesto</DialogTitle>
             <DialogDescription>
-              Define el monto presupuestado para {editCategory?.name} en el periodo {selectedPeriod?.name} ({editCategory?.paymentMethod === "cash" ? "Efectivo" : "Crédito"})
+              Define el monto presupuestado para {editCategory?.name} en el
+              periodo {selectedPeriod?.name} (
+              {editCategory?.paymentMethod === "cash" ? "Efectivo" : "Crédito"})
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -291,17 +375,23 @@ export function BudgetsView() {
                 min="0"
                 step="0.01"
                 value={editCategory?.amount || "0"}
-                onChange={(e) => setEditCategory((prev) => (prev ? { ...prev, amount: e.target.value } : null))}
+                onChange={(e) =>
+                  setEditCategory((prev) =>
+                    prev ? { ...prev, amount: e.target.value } : null
+                  )
+                }
               />
             </div>
-            
+
             <div className="grid gap-2">
               <Label htmlFor="payment-method">Método de Pago</Label>
               <RadioGroup
                 id="payment-method"
                 value={editCategory?.paymentMethod || "cash"}
-                onValueChange={(value: PaymentMethod) => 
-                  setEditCategory((prev) => (prev ? { ...prev, paymentMethod: value } : null))
+                onValueChange={(value: PaymentMethod) =>
+                  setEditCategory((prev) =>
+                    prev ? { ...prev, paymentMethod: value } : null
+                  )
                 }
                 className="flex space-x-4"
               >
@@ -325,5 +415,5 @@ export function BudgetsView() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

@@ -15,6 +15,8 @@ import {
   FundOperationResult,
   FundBalanceRecalculationResult,
 } from "@/types/funds";
+import { ActivePeriodStorage } from "@/lib/active-period-storage";
+import { loadActivePeriod } from "@/lib/active-period-service";
 
 type BudgetContextType = {
   categories: Category[];
@@ -124,6 +126,7 @@ type BudgetContextType = {
   getDefaultFund: () => Fund | undefined;
   refreshData: () => Promise<void>;
   refreshFunds: () => Promise<void>;
+  validateActivePeriodCache: () => Promise<boolean>;
 };
 
 const BudgetContext = createContext<BudgetContextType | undefined>(undefined);
@@ -145,6 +148,27 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const [connectionErrorDetails, setConnectionErrorDetails] = useState<
     string | null
   >(null);
+  const [isActivePeriodFromCache, setIsActivePeriodFromCache] = useState(false);
+
+  // Helper function to safely update session storage with active period
+  const updateActivePeriodCache = (
+    period: Period | null,
+    operation: "save" | "clear"
+  ) => {
+    try {
+      if (operation === "save" && period) {
+        ActivePeriodStorage.saveActivePeriod(period);
+        console.log(`Saved active period to cache: ${period.name}`);
+      } else if (operation === "clear") {
+        ActivePeriodStorage.clearActivePeriod();
+        console.log("Cleared active period from cache");
+      }
+    } catch (storageError) {
+      console.warn(`Failed to ${operation} active period cache:`, storageError);
+      // Session storage failure is not critical - the server state is the source of truth
+      // The cache will be synchronized on next page load or background sync
+    }
+  };
 
   // Initialize fund filter with default fund when funds are loaded
   useEffect(() => {
@@ -155,6 +179,54 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, [funds, fundFilter]);
+
+  // Check session storage for cached active period on startup
+  useEffect(() => {
+    const loadCachedActivePeriod = () => {
+      try {
+        const cachedPeriod = ActivePeriodStorage.loadActivePeriod();
+        if (cachedPeriod) {
+          setActivePeriod(cachedPeriod);
+          setIsActivePeriodFromCache(true);
+          console.log("Loaded active period from cache:", cachedPeriod.name);
+        }
+      } catch (error) {
+        console.warn("Failed to load cached active period:", error);
+        // Clear corrupted cache
+        updateActivePeriodCache(null, "clear");
+      }
+    };
+
+    loadCachedActivePeriod();
+  }, []);
+
+  // Background synchronization effect
+  useEffect(() => {
+    if (!isDbInitialized || dbConnectionError) {
+      return;
+    }
+
+    // Set up periodic background sync every 5 minutes
+    const syncInterval = setInterval(() => {
+      syncActivePeriodWithServer();
+    }, 5 * 60 * 1000); // 5 minutes
+
+    // Also sync when the component mounts (after initial data load)
+    if (!isLoading && activePeriod) {
+      const timeoutId = setTimeout(() => {
+        syncActivePeriodWithServer();
+      }, 2000); // Wait 2 seconds after initial load
+
+      return () => {
+        clearInterval(syncInterval);
+        clearTimeout(timeoutId);
+      };
+    }
+
+    return () => {
+      clearInterval(syncInterval);
+    };
+  }, [isDbInitialized, dbConnectionError, isLoading, activePeriod]);
 
   // Check if database is initialized
   useEffect(() => {
@@ -295,11 +367,38 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
       setPeriods(normalizedPeriods);
 
-      // Set active period
-      const active = normalizedPeriods.find(
+      // Set active period with session storage synchronization
+      const serverActivePeriod = normalizedPeriods.find(
         (p: Period) => p.is_open || p.isOpen
       );
-      if (active) setActivePeriod(active);
+
+      // Synchronize with session storage
+      if (serverActivePeriod) {
+        // Check if cached period matches server state
+        if (isActivePeriodFromCache && activePeriod) {
+          if (activePeriod.id !== serverActivePeriod.id) {
+            console.log("Active period changed on server, updating cache");
+            updateActivePeriodCache(serverActivePeriod, "save");
+          } else {
+            // Update cached period with latest server data
+            updateActivePeriodCache(serverActivePeriod, "save");
+          }
+        } else {
+          // No cached period or first load, save to cache
+          updateActivePeriodCache(serverActivePeriod, "save");
+        }
+
+        setActivePeriod(serverActivePeriod);
+        setIsActivePeriodFromCache(false);
+      } else {
+        // No active period on server, clear cache
+        if (isActivePeriodFromCache || activePeriod) {
+          console.log("No active period on server, clearing cache");
+          updateActivePeriodCache(null, "clear");
+          setActivePeriod(null);
+          setIsActivePeriodFromCache(false);
+        }
+      }
 
       // Fetch budgets
       const budgetsResponse = await fetch("/api/budgets");
@@ -578,11 +677,29 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       setPeriods(finalUpdatedPeriods);
       setActivePeriod(openedPeriod);
 
+      // Save new active period to session storage atomically with server state
+      updateActivePeriodCache(openedPeriod, "save");
+
       return openedPeriod;
     } catch (err) {
       setError((err as Error).message);
       // Revert optimistic update if there was an error
-      refreshData();
+      try {
+        await refreshData();
+      } catch (refreshError) {
+        console.error(
+          "Failed to refresh data after openPeriod error:",
+          refreshError
+        );
+        // If refresh fails, ensure session storage is consistent with the previous state
+        // Since the server operation failed, we should restore the previous active period
+        const previousActivePeriod = periods.find((p) => p.is_open || p.isOpen);
+        if (previousActivePeriod) {
+          updateActivePeriodCache(previousActivePeriod, "save");
+        } else {
+          updateActivePeriodCache(null, "clear");
+        }
+      }
       throw err;
     }
   };
@@ -686,6 +803,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       // Ensure activePeriod is null if this was the active period
       if (activePeriod && activePeriod.id === id) {
         setActivePeriod(null);
+
+        // Clear active period from session storage atomically with server state
+        updateActivePeriodCache(null, "clear");
       }
 
       return closedPeriod;
@@ -703,6 +823,14 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         // If refresh fails, at least restore the previous state
         setPeriods(previousPeriods);
         setActivePeriod(previousActivePeriod);
+
+        // Restore cache state atomically with rollback
+        if (previousActivePeriod) {
+          updateActivePeriodCache(previousActivePeriod, "save");
+        } else {
+          // Ensure cache is cleared if there was no previous active period
+          updateActivePeriodCache(null, "clear");
+        }
       }
 
       throw err;
@@ -1284,6 +1412,41 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Validate cached active period against server
+  const validateActivePeriodCache = async (): Promise<boolean> => {
+    try {
+      if (!ActivePeriodStorage.isActivePeriodCached()) {
+        return false;
+      }
+
+      const result = await loadActivePeriod(1, 1000);
+
+      if (result.success) {
+        const serverPeriod = result.period;
+        const cachedPeriod = ActivePeriodStorage.loadActivePeriod();
+
+        if (!cachedPeriod || cachedPeriod.id !== serverPeriod.id) {
+          // Cache is invalid, update it
+          updateActivePeriodCache(serverPeriod, "save");
+          setActivePeriod(serverPeriod);
+          return false;
+        }
+
+        // Cache is valid, but update with latest server data
+        updateActivePeriodCache(serverPeriod, "save");
+        return true;
+      } else {
+        // No active period on server, clear cache
+        updateActivePeriodCache(null, "clear");
+        setActivePeriod(null);
+        return false;
+      }
+    } catch (error) {
+      console.warn("Cache validation failed:", error);
+      return false;
+    }
+  };
+
   // Helper functions
   const getCategoryById = (id: string) => {
     return categories.find((cat) => cat.id === id);
@@ -1299,6 +1462,38 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
   const getDefaultFund = (): Fund | undefined => {
     return funds.find((fund) => fund.name === "Disponible");
+  };
+
+  // Background synchronization for active period
+  const syncActivePeriodWithServer = async () => {
+    try {
+      const result = await loadActivePeriod(1, 500); // Single retry with short delay for background sync
+
+      if (result.success) {
+        const serverPeriod = result.period;
+
+        // Check if current active period matches server
+        if (!activePeriod || activePeriod.id !== serverPeriod.id) {
+          console.log("Background sync: Active period changed on server");
+          setActivePeriod(serverPeriod);
+          updateActivePeriodCache(serverPeriod, "save");
+        } else {
+          // Update cache with latest server data
+          updateActivePeriodCache(serverPeriod, "save");
+        }
+      } else if (result.error.type === "no_active_period") {
+        // No active period on server, clear local state
+        if (activePeriod) {
+          console.log(
+            "Background sync: No active period on server, clearing local state"
+          );
+          setActivePeriod(null);
+          updateActivePeriodCache(null, "clear");
+        }
+      }
+    } catch (error) {
+      console.warn("Background sync failed:", error);
+    }
   };
 
   return (
@@ -1352,6 +1547,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         getDefaultFund,
         refreshData,
         refreshFunds,
+        validateActivePeriodCache,
       }}
     >
       {children}

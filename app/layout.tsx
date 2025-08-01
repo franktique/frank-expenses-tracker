@@ -8,6 +8,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/toaster";
 import { BudgetProvider } from "@/context/budget-context";
 import { AuthProvider } from "@/lib/auth-context";
+import { ActivePeriodErrorBoundary } from "@/components/active-period-error-boundary";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -27,12 +28,14 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <AuthProvider>
-            <BudgetProvider>
-              <SidebarProvider>
-                <ConditionalLayout>{children}</ConditionalLayout>
-                <Toaster />
-              </SidebarProvider>
-            </BudgetProvider>
+            <ActivePeriodErrorBoundary showGlobalErrors={true}>
+              <BudgetProvider>
+                <SidebarProvider>
+                  <ConditionalLayout>{children}</ConditionalLayout>
+                  <Toaster />
+                </SidebarProvider>
+              </BudgetProvider>
+            </ActivePeriodErrorBoundary>
           </AuthProvider>
         </ThemeProvider>
       </body>

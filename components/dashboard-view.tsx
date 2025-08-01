@@ -15,6 +15,9 @@ import {
   Wallet,
   CreditCardIcon,
 } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
+import { ActivePeriodErrorHandler } from "@/components/active-period-error-handler";
+import { NoActivePeriodFallback } from "@/components/no-active-period-fallback";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
   Card,
@@ -66,7 +69,7 @@ type DashboardData = {
 
 export function DashboardView() {
   const {
-    activePeriod,
+    activePeriod: budgetActivePeriod,
     funds,
     isLoading,
     error,
@@ -74,6 +77,13 @@ export function DashboardView() {
     dbConnectionError,
     connectionErrorDetails,
   } = useBudget();
+
+  const {
+    activePeriod: authActivePeriod,
+    isLoadingActivePeriod,
+    activePeriodError,
+    retryActivePeriodLoading,
+  } = useAuth();
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(
     null
   );
@@ -177,7 +187,14 @@ export function DashboardView() {
     if (!isLoading) {
       fetchDashboardData();
     }
-  }, [isLoading, activePeriod, isDbInitialized, dbConnectionError, fundFilter]);
+  }, [
+    isLoading,
+    budgetActivePeriod,
+    authActivePeriod,
+    isDbInitialized,
+    dbConnectionError,
+    fundFilter,
+  ]);
 
   if (isLoading || isLoadingData) {
     return (
@@ -287,15 +304,39 @@ export function DashboardView() {
     );
   }
 
+  // Handle active period error from auth context
+  if (activePeriodError) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <ActivePeriodErrorHandler
+          error={activePeriodError}
+          onRetry={retryActivePeriodLoading}
+          isRetrying={isLoadingActivePeriod}
+          showFullCard={true}
+        />
+      </div>
+    );
+  }
+
+  // Handle no active period scenario
+  if (!budgetActivePeriod && !authActivePeriod && !isLoadingActivePeriod) {
+    return (
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <NoActivePeriodFallback />
+      </div>
+    );
+  }
+
+  // Use the active period from either context (prefer budget context as it's more up-to-date)
+  const activePeriod = budgetActivePeriod || authActivePeriod;
+
   if (!activePeriod || !dashboardData?.activePeriod) {
     return (
-      <div className="flex flex-col items-center justify-center h-[80vh] text-center">
-        <CalendarRange className="h-16 w-16 text-muted-foreground mb-4" />
-        <h2 className="text-2xl font-bold mb-2">No hay periodo activo</h2>
-        <p className="text-muted-foreground max-w-md">
-          Para ver el dashboard, primero debes abrir un periodo presupuestario
-          en la sección de Periodos.
-        </p>
+      <div className="space-y-6">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <NoActivePeriodFallback showCompact={true} />
       </div>
     );
   }

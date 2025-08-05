@@ -1,0 +1,319 @@
+# Design Document
+
+## Overview
+
+The Dashboard Agrupadores Simulate Mode feature adds a "Simulate" checkbox to the existing dashboard that allows users to visualize their budget planning instead of actual expenses. This feature leverages the existing budget data infrastructure and chart components while providing a clear visual distinction between actual and simulated data.
+
+The implementation focuses on minimal code changes by reusing existing API endpoints with budget data inclusion, modifying the UI components to support simulation mode, and ensuring proper state management across the dashboard tabs.
+
+## Architecture
+
+### Component Architecture
+
+The simulate mode feature integrates into the existing dashboard architecture:
+
+```
+Dashboard Groupers Page
+├── Filter Controls (Enhanced)
+│   ├── Estudio Filter
+│   ├── Agrupador Filter
+│   ├── Payment Method Filter
+│   ├── Budget Toggle
+│   └── Simulate Checkbox (NEW)
+├── Tab Navigation
+│   ├── Vista Actual (Simulate-enabled)
+│   ├── Comparación por Períodos (Simulate-disabled)
+│   └── Acumulado Semanal (Simulate-disabled)
+└── Chart Components (Enhanced)
+    ├── Grouper Chart (Modified for simulation)
+    ├── Category Chart (Modified for simulation)
+    └── Chart Tooltips (Enhanced for simulation)
+```
+
+### Data Flow Architecture
+
+```mermaid
+graph TD
+    A[User toggles Simulate] --> B[Update Component State]
+    B --> C{Simulate Mode?}
+    C -->|Yes| D[Request Budget Data]
+    C -->|No| E[Request Expense Data]
+    D --> F[API: includeBudgets=true]
+    E --> G[API: includeBudgets=false]
+    F --> H[Transform Budget Data]
+    G --> I[Transform Expense Data]
+    H --> J[Render Chart with Simulation Styling]
+    I --> K[Render Chart with Normal Styling]
+    J --> L[Update Session Storage]
+    K --> L
+```
+
+## Components and Interfaces
+
+### Enhanced Filter Controls
+
+**Location**: `app/dashboard/groupers/page.tsx`
+
+**New State Variables**:
+
+```typescript
+const [simulateMode, setSimulateMode] = useState<boolean>(false);
+```
+
+**New UI Component**:
+
+```typescript
+// Simulate Mode Checkbox
+<div className="flex items-center space-x-2">
+  <Checkbox
+    id="simulate-mode"
+    checked={simulateMode}
+    onCheckedChange={setSimulateMode}
+    disabled={activeTab !== "current"}
+  />
+  <Label htmlFor="simulate-mode">Simular</Label>
+</div>
+```
+
+### Modified Chart Components
+
+**Grouper Chart Enhancements**:
+
+- Add simulation styling (different opacity/colors)
+- Update chart title to include "(Simulación)" when in simulate mode
+- Modify tooltips to show "Presupuesto: $X" instead of expense amounts
+- Update legend labels for simulation context
+
+**Category Chart Enhancements**:
+
+- Apply same simulation styling as grouper chart
+- Ensure category drill-down maintains simulation state
+- Update category tooltips for budget context
+
+### Data Transformation Layer
+
+**Budget Data Processing**:
+
+```typescript
+const processSimulationData = (data: GrouperData[], isSimulating: boolean) => {
+  return data.map((item) => ({
+    ...item,
+    // Use budget_amount as total_amount when simulating
+    total_amount: isSimulating ? item.budget_amount || 0 : item.total_amount,
+    // Add simulation flag for styling
+    isSimulated: isSimulating,
+  }));
+};
+```
+
+## Data Models
+
+### Enhanced GrouperData Interface
+
+```typescript
+type GrouperData = {
+  grouper_id: number;
+  grouper_name: string;
+  total_amount: number;
+  budget_amount?: number;
+  isSimulated?: boolean; // NEW: Flag for simulation mode
+};
+```
+
+### Enhanced CategoryData Interface
+
+```typescript
+type CategoryData = {
+  category_id: string;
+  category_name: string;
+  total_amount: number;
+  budget_amount?: number;
+  isSimulated?: boolean; // NEW: Flag for simulation mode
+};
+```
+
+### Session Storage Schema
+
+```typescript
+type SimulationState = {
+  simulateMode: boolean;
+  lastUpdated: number;
+};
+```
+
+## Error Handling
+
+### Simulation-Specific Error Cases
+
+1. **No Budget Data Available**:
+
+   - Display zero values with informative tooltips
+   - Show message: "No hay datos de presupuesto disponibles"
+   - Maintain chart structure with empty bars
+
+2. **Partial Budget Data**:
+
+   - Show available budget data
+   - Display zero for missing budget entries
+   - Tooltip indicates "Sin presupuesto asignado"
+
+3. **Filter Conflicts**:
+   - When payment method filters are applied in simulate mode
+   - Show budget data regardless of payment method (budgets are payment-method agnostic)
+   - Display informative message about filter behavior in simulation
+
+### Error Recovery Strategies
+
+```typescript
+const handleSimulationError = (error: Error) => {
+  // Log error for debugging
+  console.error("Simulation mode error:", error);
+
+  // Fallback to actual data
+  setSimulateMode(false);
+
+  // Show user-friendly message
+  toast({
+    title: "Error en modo simulación",
+    description: "Mostrando datos reales en su lugar",
+    variant: "destructive",
+  });
+};
+```
+
+## Testing Strategy
+
+### Unit Tests
+
+1. **Simulate Mode State Management**:
+
+   - Test checkbox toggle functionality
+   - Verify state persistence in session storage
+   - Test state restoration on page reload
+
+2. **Data Transformation**:
+
+   - Test budget data processing
+   - Verify chart data transformation for simulation
+   - Test fallback behavior for missing budget data
+
+3. **UI Component Behavior**:
+   - Test checkbox disable/enable based on active tab
+   - Verify visual styling changes in simulation mode
+   - Test tooltip content changes
+
+### Integration Tests
+
+1. **API Integration**:
+
+   - Test API calls with `includeBudgets=true` parameter
+   - Verify data fetching with different filter combinations
+   - Test error handling for API failures
+
+2. **Chart Rendering**:
+
+   - Test chart updates when toggling simulate mode
+   - Verify category drill-down in simulation mode
+   - Test chart styling and legend updates
+
+3. **Filter Interaction**:
+   - Test simulate mode with estudio filters
+   - Test simulate mode with agrupador filters
+   - Test simulate mode with payment method filters
+
+### End-to-End Tests
+
+1. **User Workflow Tests**:
+
+   - Complete user journey from enabling simulate mode to viewing charts
+   - Test navigation between tabs with simulate mode enabled
+   - Test session persistence across page refreshes
+
+2. **Cross-Browser Compatibility**:
+   - Test simulate mode functionality across different browsers
+   - Verify session storage behavior
+   - Test responsive design with simulate controls
+
+## Implementation Phases
+
+### Phase 1: Core Functionality
+
+- Add simulate mode state management
+- Implement checkbox UI component
+- Add basic data transformation logic
+- Enable simulate mode for Vista Actual tab only
+
+### Phase 2: Visual Enhancements
+
+- Implement simulation styling for charts
+- Update tooltips and legends
+- Add chart title modifications
+- Implement visual indicators for simulation mode
+
+### Phase 3: Advanced Features
+
+- Add session storage persistence
+- Implement error handling and fallbacks
+- Add category drill-down simulation support
+- Optimize performance for large datasets
+
+### Phase 4: Polish and Testing
+
+- Comprehensive testing suite
+- Performance optimization
+- Accessibility improvements
+- Documentation updates
+
+## Performance Considerations
+
+### Data Fetching Optimization
+
+- Reuse existing API endpoints with `includeBudgets=true`
+- Implement client-side caching for budget data
+- Minimize API calls when toggling between modes
+
+### Chart Rendering Optimization
+
+- Use React.memo for chart components to prevent unnecessary re-renders
+- Implement efficient data transformation algorithms
+- Optimize chart animations for mode switching
+
+### Memory Management
+
+- Clean up simulation state on component unmount
+- Implement proper session storage cleanup
+- Monitor memory usage with large datasets
+
+## Security Considerations
+
+### Data Access Control
+
+- Ensure simulate mode respects existing user permissions
+- Validate budget data access through existing authentication
+- Maintain data isolation between different estudios
+
+### Session Storage Security
+
+- Store only non-sensitive simulation preferences
+- Implement proper session cleanup on logout
+- Validate stored simulation state on restoration
+
+## Accessibility
+
+### Keyboard Navigation
+
+- Ensure simulate checkbox is keyboard accessible
+- Maintain proper tab order in filter controls
+- Implement keyboard shortcuts for mode switching
+
+### Screen Reader Support
+
+- Add proper ARIA labels for simulate checkbox
+- Ensure chart accessibility in simulation mode
+- Provide clear announcements when mode changes
+
+### Visual Accessibility
+
+- Maintain sufficient color contrast in simulation mode
+- Provide alternative visual indicators beyond color
+- Ensure simulation mode works with high contrast themes

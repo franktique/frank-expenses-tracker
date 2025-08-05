@@ -11,6 +11,7 @@ export async function GET(
     const periodId = url.searchParams.get("periodId");
     const paymentMethod = url.searchParams.get("paymentMethod");
     const includeBudgets = url.searchParams.get("includeBudgets") === "true";
+    const simulateMode = url.searchParams.get("simulateMode") === "true";
 
     if (isNaN(grouperId) || !periodId) {
       return NextResponse.json(
@@ -128,15 +129,77 @@ export async function GET(
 
     const categoryStats = await sql.query(query, queryParams);
 
+    // Enhanced error handling for category simulate mode
+    if (simulateMode && includeBudgets) {
+      // Check if any budget data exists for categories
+      const hasBudgetData = categoryStats.some(
+        (item) =>
+          item.budget_amount !== null &&
+          item.budget_amount !== undefined &&
+          parseFloat(item.budget_amount.toString()) > 0
+      );
+
+      if (!hasBudgetData) {
+        console.warn(
+          `No budget data found for categories in grouper ${routeParams.id}`
+        );
+        // Return data with warning metadata instead of throwing error
+        return NextResponse.json(categoryStats, {
+          headers: {
+            "X-Budget-Warning":
+              "No budget data available for category simulation",
+          },
+        });
+      }
+
+      // Check for partial budget data in categories
+      const categoriesWithBudget = categoryStats.filter(
+        (item) =>
+          item.budget_amount !== null &&
+          item.budget_amount !== undefined &&
+          parseFloat(item.budget_amount.toString()) > 0
+      );
+
+      if (
+        categoriesWithBudget.length < categoryStats.length &&
+        categoriesWithBudget.length > 0
+      ) {
+        console.warn(
+          `Partial budget data found for categories in grouper ${routeParams.id}`
+        );
+        return NextResponse.json(categoryStats, {
+          headers: {
+            "X-Budget-Warning":
+              "Partial budget data available for category simulation",
+          },
+        });
+      }
+    }
+
     return NextResponse.json(categoryStats);
   } catch (error) {
     console.error(
       `Error fetching category statistics for grouper ${routeParams.id}:`,
       error
     );
-    return NextResponse.json(
-      { error: (error as Error).message },
-      { status: 500 }
-    );
+
+    // Enhanced error handling with simulation context
+    const errorMessage = (error as Error).message;
+    const isSimulationError =
+      simulateMode && errorMessage.toLowerCase().includes("budget");
+
+    if (isSimulationError) {
+      return NextResponse.json(
+        {
+          error: `Error loading category simulation data for grouper ${routeParams.id}: ${errorMessage}`,
+          simulationError: true,
+          categoryError: true,
+          fallbackSuggested: true,
+        },
+        { status: 500 }
+      );
+    }
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

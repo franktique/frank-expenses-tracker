@@ -47,25 +47,15 @@ import { useRouter } from "next/navigation";
 import { FundFilter } from "@/components/fund-filter";
 import { Fund } from "@/types/funds";
 import { Label } from "@/components/ui/label";
+import {
+  DashboardData,
+  BudgetSummaryItem,
+  calculateBudgetTotals,
+  verifyBudgetTotals,
+} from "@/types/dashboard";
+import { getCategoryNameStyle } from "@/lib/category-styling";
 
-type DashboardData = {
-  activePeriod: {
-    id: string;
-    name: string;
-  } | null;
-  totalIncome: number;
-  totalExpenses: number;
-  budgetSummary: Array<{
-    category_id: string;
-    category_name: string;
-    expected_amount: number;
-    total_amount: number;
-    credit_amount: number;
-    debit_amount: number;
-    cash_amount: number;
-    remaining: number;
-  }>;
-};
+// DashboardData type is now imported from @/types/dashboard
 
 export function DashboardView() {
   const {
@@ -144,16 +134,18 @@ export function DashboardView() {
         // Asegurar que los valores en budgetSummary también son números válidos
         if (data.budgetSummary && Array.isArray(data.budgetSummary)) {
           data.budgetSummary = data.budgetSummary.map(
-            (item: {
-              total_amount: number;
-              credit_amount: number;
-              debit_amount: number;
-              cash_amount: number;
-              expected_amount: number;
-              remaining: number;
-              [key: string]: any;
-            }) => ({
-              ...item,
+            (item: any): BudgetSummaryItem => ({
+              category_id: item.category_id || "",
+              category_name: item.category_name || "",
+              credit_budget: isNaN(Number(item.credit_budget))
+                ? 0
+                : Number(item.credit_budget),
+              cash_debit_budget: isNaN(Number(item.cash_debit_budget))
+                ? 0
+                : Number(item.cash_debit_budget),
+              expected_amount: isNaN(Number(item.expected_amount))
+                ? 0
+                : Number(item.expected_amount),
               total_amount: isNaN(Number(item.total_amount))
                 ? 0
                 : Number(item.total_amount),
@@ -166,14 +158,20 @@ export function DashboardView() {
               cash_amount: isNaN(Number(item.cash_amount))
                 ? 0
                 : Number(item.cash_amount),
-              expected_amount: isNaN(Number(item.expected_amount))
-                ? 0
-                : Number(item.expected_amount),
               remaining: isNaN(Number(item.remaining))
                 ? 0
                 : Number(item.remaining),
             })
           );
+
+          // Verify budget totals consistency - Requirement 2.3
+          const verification = verifyBudgetTotals(data.budgetSummary);
+          if (!verification.isValid) {
+            console.warn(
+              "Budget totals verification failed for categories:",
+              verification.discrepancies
+            );
+          }
         }
 
         setDashboardData(data);
@@ -505,7 +503,12 @@ export function DashboardView() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Categoria</TableHead>
-                    <TableHead className="text-right">Presupuesto</TableHead>
+                    <TableHead className="text-right">
+                      Presupuesto Crédito
+                    </TableHead>
+                    <TableHead className="text-right">
+                      Presupuesto Efectivo
+                    </TableHead>
                     <TableHead className="text-right">Gasto Total</TableHead>
                     <TableHead className="text-right">
                       Tarjeta Crédito
@@ -533,7 +536,9 @@ export function DashboardView() {
                       return (
                         <TableRow key={item.category_id}>
                           <TableCell
-                            className={`font-medium ${
+                            className={`font-medium ${getCategoryNameStyle(
+                              item
+                            )} ${
                               // Green: remaining is equal to or less than 0
                               item.remaining <= 0
                                 ? // Red: remaining is less than 0 and absolute value is >= 30% of budget
@@ -553,7 +558,10 @@ export function DashboardView() {
                             {item.category_name}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(item.expected_amount)}
+                            {formatCurrency(item.credit_budget)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {formatCurrency(item.cash_debit_budget)}
                           </TableCell>
                           <TableCell className="text-right">
                             {formatCurrency(item.total_amount)}
@@ -592,52 +600,72 @@ export function DashboardView() {
                       <TableRow className="bg-muted/50 font-bold">
                         <TableCell className="font-bold">TOTAL</TableCell>
                         <TableCell className="text-right">
-                          {formatCurrency(
-                            budgetSummary.reduce(
-                              (sum, item) => sum + item.expected_amount,
-                              0
-                            )
-                          )}
+                          {/* Sum of all credit budgets - Requirement 2.1 */}
+                          {(() => {
+                            const totals = calculateBudgetTotals(budgetSummary);
+                            return formatCurrency(totals.totalCreditBudget);
+                          })()}
                         </TableCell>
                         <TableCell className="text-right">
-                          {formatCurrency(
-                            budgetSummary.reduce(
-                              (sum, item) => sum + item.total_amount,
-                              0
-                            )
-                          )}
+                          {/* Sum of all cash/debit budgets - Requirement 2.2 */}
+                          {(() => {
+                            const totals = calculateBudgetTotals(budgetSummary);
+                            return formatCurrency(totals.totalCashDebitBudget);
+                          })()}
                         </TableCell>
                         <TableCell className="text-right">
-                          {formatCurrency(
-                            budgetSummary.reduce(
-                              (sum, item) => sum + item.credit_amount,
-                              0
-                            )
-                          )}
+                          {(() => {
+                            // Calculate totals using utility function - Requirement 2.3
+                            const totals = calculateBudgetTotals(budgetSummary);
+
+                            // Verify that credit + cash/debit budgets equal total budget
+                            const splitBudgetSum =
+                              totals.totalCreditBudget +
+                              totals.totalCashDebitBudget;
+                            if (
+                              Math.abs(
+                                splitBudgetSum - totals.totalExpectedAmount
+                              ) > 0.01
+                            ) {
+                              console.warn(
+                                "Budget totals verification failed:",
+                                {
+                                  creditBudget: totals.totalCreditBudget,
+                                  cashDebitBudget: totals.totalCashDebitBudget,
+                                  splitSum: splitBudgetSum,
+                                  expectedTotal: totals.totalExpectedAmount,
+                                  difference:
+                                    splitBudgetSum - totals.totalExpectedAmount,
+                                }
+                              );
+                            }
+
+                            return formatCurrency(totals.totalActualAmount);
+                          })()}
                         </TableCell>
                         <TableCell className="text-right">
-                          {formatCurrency(
-                            budgetSummary.reduce(
-                              (sum, item) => sum + item.debit_amount,
-                              0
-                            )
-                          )}
+                          {(() => {
+                            const totals = calculateBudgetTotals(budgetSummary);
+                            return formatCurrency(totals.totalCreditAmount);
+                          })()}
                         </TableCell>
                         <TableCell className="text-right">
-                          {formatCurrency(
-                            budgetSummary.reduce(
-                              (sum, item) => sum + item.cash_amount,
-                              0
-                            )
-                          )}
+                          {(() => {
+                            const totals = calculateBudgetTotals(budgetSummary);
+                            return formatCurrency(totals.totalDebitAmount);
+                          })()}
                         </TableCell>
                         <TableCell className="text-right">
-                          {formatCurrency(
-                            budgetSummary.reduce(
-                              (sum, item) => sum + item.remaining,
-                              0
-                            )
-                          )}
+                          {(() => {
+                            const totals = calculateBudgetTotals(budgetSummary);
+                            return formatCurrency(totals.totalCashAmount);
+                          })()}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {(() => {
+                            const totals = calculateBudgetTotals(budgetSummary);
+                            return formatCurrency(totals.totalRemaining);
+                          })()}
                         </TableCell>
                         <TableCell className="text-right">
                           {formatCurrency(
@@ -654,7 +682,10 @@ export function DashboardView() {
                       <TableRow className="bg-muted/20">
                         <TableHead>Categoria</TableHead>
                         <TableHead className="text-right">
-                          Presupuesto
+                          Presupuesto Crédito
+                        </TableHead>
+                        <TableHead className="text-right">
+                          Presupuesto Efectivo
                         </TableHead>
                         <TableHead className="text-right">
                           Gasto Total
@@ -675,7 +706,7 @@ export function DashboardView() {
                   {budgetSummary.length === 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={8}
+                        colSpan={9}
                         className="text-center py-4 text-muted-foreground"
                       >
                         No hay datos para mostrar. Agrega categorías y
@@ -694,10 +725,7 @@ export function DashboardView() {
           className="mt-6 w-full max-w-full overflow-x-hidden p-0"
         >
           <div className="w-full max-w-full p-0">
-            <DailyExpensesChart
-              periodId={dashboardData.activePeriod.id}
-              fundId={fundFilter?.id}
-            />
+            <DailyExpensesChart periodId={dashboardData.activePeriod.id} />
           </div>
         </TabsContent>
 
@@ -706,10 +734,7 @@ export function DashboardView() {
           className="mt-6 w-full max-w-full overflow-x-hidden p-0"
         >
           <div className="w-full max-w-full p-0">
-            <CumulativeExpensesChart
-              periodId={dashboardData.activePeriod.id}
-              fundId={fundFilter?.id}
-            />
+            <CumulativeExpensesChart periodId={dashboardData.activePeriod.id} />
           </div>
         </TabsContent>
 
@@ -718,10 +743,7 @@ export function DashboardView() {
           className="mt-6 w-full max-w-full overflow-x-hidden p-0"
         >
           <div className="w-full max-w-full p-0">
-            <CategoryExpensesChart
-              periodId={dashboardData.activePeriod.id}
-              fundId={fundFilter?.id}
-            />
+            <CategoryExpensesChart periodId={dashboardData.activePeriod.id} />
           </div>
         </TabsContent>
       </Tabs>

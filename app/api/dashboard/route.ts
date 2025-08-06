@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
+import { DashboardData, BudgetSummaryItem } from "@/types/dashboard";
 
 export async function GET(request: NextRequest) {
   try {
@@ -78,6 +79,8 @@ export async function GET(request: NextRequest) {
         category_budgets AS (
           SELECT 
             c.id as category_id,
+            COALESCE(SUM(CASE WHEN b.payment_method = 'credit' THEN b.expected_amount ELSE 0 END), 0) as credit_budget,
+            COALESCE(SUM(CASE WHEN b.payment_method IN ('cash', 'debit') THEN b.expected_amount ELSE 0 END), 0) as cash_debit_budget,
             COALESCE(SUM(b.expected_amount), 0) as expected_amount
           FROM categories c
           LEFT JOIN budgets b ON c.id = b.category_id AND b.period_id = ${activePeriod.id}
@@ -87,6 +90,8 @@ export async function GET(request: NextRequest) {
         SELECT 
           ce.category_id,
           ce.category_name,
+          cb.credit_budget,
+          cb.cash_debit_budget,
           cb.expected_amount,
           ce.total_amount,
           ce.credit_amount,
@@ -115,6 +120,8 @@ export async function GET(request: NextRequest) {
         category_budgets AS (
           SELECT 
             c.id as category_id,
+            COALESCE(SUM(CASE WHEN b.payment_method = 'credit' THEN b.expected_amount ELSE 0 END), 0) as credit_budget,
+            COALESCE(SUM(CASE WHEN b.payment_method IN ('cash', 'debit') THEN b.expected_amount ELSE 0 END), 0) as cash_debit_budget,
             COALESCE(SUM(b.expected_amount), 0) as expected_amount
           FROM categories c
           LEFT JOIN budgets b ON c.id = b.category_id AND b.period_id = ${activePeriod.id}
@@ -123,6 +130,8 @@ export async function GET(request: NextRequest) {
         SELECT 
           ce.category_id,
           ce.category_name,
+          cb.credit_budget,
+          cb.cash_debit_budget,
           cb.expected_amount,
           ce.total_amount,
           ce.credit_amount,
@@ -153,13 +162,29 @@ export async function GET(request: NextRequest) {
     const totalIncome = parseFloat(incomeSummary.total_income) || 0;
     const totalExpenses = parseFloat(expenseSummary.total_expenses) || 0;
 
-    return NextResponse.json({
+    // Type-safe response construction
+    const response: DashboardData & { fundFilter?: string | null } = {
       activePeriod,
       totalIncome,
       totalExpenses,
-      budgetSummary,
+      budgetSummary: budgetSummary.map(
+        (item: any): BudgetSummaryItem => ({
+          category_id: item.category_id,
+          category_name: item.category_name,
+          credit_budget: parseFloat(item.credit_budget) || 0,
+          cash_debit_budget: parseFloat(item.cash_debit_budget) || 0,
+          expected_amount: parseFloat(item.expected_amount) || 0,
+          total_amount: parseFloat(item.total_amount) || 0,
+          credit_amount: parseFloat(item.credit_amount) || 0,
+          debit_amount: parseFloat(item.debit_amount) || 0,
+          cash_amount: parseFloat(item.cash_amount) || 0,
+          remaining: parseFloat(item.remaining) || 0,
+        })
+      ),
       fundFilter: fundId,
-    });
+    };
+
+    return NextResponse.json(response);
   } catch (error) {
     console.error("Error fetching dashboard data:", error);
     return NextResponse.json(

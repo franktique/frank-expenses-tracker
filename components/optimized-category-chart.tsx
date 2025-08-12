@@ -20,12 +20,12 @@ type CategoryData = {
   category_name: string;
   total_amount: number;
   budget_amount?: number;
-  isSimulated?: boolean;
+  isProjectiond?: boolean;
 };
 
 interface OptimizedCategoryChartProps {
   data: CategoryData[];
-  simulateMode: boolean;
+  projectionMode: boolean;
   showBudgets: boolean;
   maxAmount: number;
   colors: string[];
@@ -48,22 +48,22 @@ const useCategoryChartData = (data: CategoryData[], showBudgets: boolean) => {
 const CategoryBarCells = memo<{
   data: CategoryData[];
   colors: string[];
-  simulateMode: boolean;
-}>(({ data, colors, simulateMode }) => {
+  projectionMode: boolean;
+}>(({ data, colors, projectionMode }) => {
   return (
     <>
       {data.map((_, index) => {
         const baseColor = colors[index % colors.length];
 
-        // Enhanced simulation styling for categories
-        if (simulateMode) {
+        // Enhanced projection styling for categories
+        if (projectionMode) {
           return (
             <Cell
               key={`category-cell-${index}`}
-              fill={`${baseColor}B3`} // 70% opacity in simulate mode
+              fill={`${baseColor}B3`} // 70% opacity in projection mode
               stroke={baseColor}
               strokeWidth={2}
-              strokeDasharray="5 3" // Dashed pattern for simulation
+              strokeDasharray="5 3" // Dashed pattern for projection
             />
           );
         }
@@ -130,15 +130,15 @@ const CategoryBudgetBarCells = memo<{
 CategoryBudgetBarCells.displayName = "CategoryBudgetBarCells";
 
 // Memoized label formatter for categories
-const useCategoryLabelFormatter = (simulateMode: boolean) => {
+const useCategoryLabelFormatter = (projectionMode: boolean) => {
   return useCallback(
     (value: number) => {
-      if (simulateMode) {
+      if (projectionMode) {
         return `Presupuesto: ${formatCurrency(value)}`;
       }
       return `Gastos: ${formatCurrency(value)}`;
     },
-    [simulateMode]
+    [projectionMode]
   );
 };
 
@@ -148,19 +148,19 @@ const categoryBudgetLabelFormatter = (value: number) =>
 
 // Main optimized category chart component with enhanced performance
 export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
-  ({ data, simulateMode, showBudgets, maxAmount, colors, CustomTooltip }) => {
+  ({ data, projectionMode, showBudgets, maxAmount, colors, CustomTooltip }) => {
     const chartData = useCategoryChartData(data, showBudgets);
-    const labelFormatter = useCategoryLabelFormatter(simulateMode);
+    const labelFormatter = useCategoryLabelFormatter(projectionMode);
 
     // Simplified animation configuration for categories
     const animationConfig = useMemo(
       () => ({
-        duration: data.length > 25 || simulateMode ? 0 : 300,
+        duration: data.length > 25 || projectionMode ? 0 : 300,
         easing: "ease-out",
         delay: 0,
         stagger: 0,
       }),
-      [data.length, simulateMode]
+      [data.length, projectionMode]
     );
 
     // Memoized chart configuration with animation optimization
@@ -168,13 +168,13 @@ export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
       () => ({
         layout: "vertical" as const,
         margin: { top: 10, right: 120, left: 120, bottom: 10 },
-        // Disable animations for large datasets or in simulate mode for better performance
+        // Disable animations for large datasets or in projection mode for better performance
         animationBegin: 0,
-        animationDuration: data.length > 15 || simulateMode ? 0 : 300,
+        animationDuration: data.length > 15 || projectionMode ? 0 : 300,
         animationEasing: "ease-out",
-        isAnimationActive: data.length <= 15 && !simulateMode,
+        isAnimationActive: data.length <= 15 && !projectionMode,
       }),
-      [data.length, simulateMode]
+      [data.length, projectionMode]
     );
 
     // Memoized axis configuration
@@ -218,13 +218,13 @@ export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
     const mainBarConfig = useMemo(
       () => ({
         dataKey: "amount",
-        name: simulateMode ? "Presupuesto" : "Gastos",
-        opacity: simulateMode ? 0.7 : 1,
+        name: projectionMode ? "Presupuesto" : "Gastos",
+        opacity: projectionMode ? 0.7 : 1,
         animationBegin: 0,
         animationDuration: animationConfig.duration,
         isAnimationActive: animationConfig.duration > 0,
       }),
-      [simulateMode, animationConfig]
+      [projectionMode, animationConfig]
     );
 
     // Memoized label styles
@@ -242,10 +242,10 @@ export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
       () => ({
         fontSize: "11px",
         fontWeight: "600",
-        fontStyle: simulateMode ? "italic" : "normal",
-        fill: simulateMode ? "#6366f1" : "#374151",
+        fontStyle: projectionMode ? "italic" : "normal",
+        fill: projectionMode ? "#6366f1" : "#374151",
       }),
-      [simulateMode]
+      [projectionMode]
     );
 
     // Memoized grid configuration for performance
@@ -267,8 +267,8 @@ export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
             <YAxis {...yAxisConfig} />
             <Tooltip
               content={<CustomTooltip />}
-              animationDuration={simulateMode ? 0 : 150}
-              isAnimationActive={!simulateMode}
+              animationDuration={projectionMode ? 0 : 150}
+              isAnimationActive={!projectionMode}
             />
 
             {/* Budget bars - shown first so they appear behind expense bars */}
@@ -284,12 +284,12 @@ export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
               </Bar>
             )}
 
-            {/* Main data bars - expenses or simulated budget data */}
+            {/* Main data bars - expenses or projectiond budget data */}
             <Bar {...mainBarConfig}>
               <CategoryBarCells
                 data={data}
                 colors={colors}
-                simulateMode={simulateMode}
+                projectionMode={projectionMode}
               />
               <LabelList
                 dataKey="amount"
@@ -314,7 +314,7 @@ const areCategoryPropsEqual = (
 ): boolean => {
   // Quick reference equality checks first (most common changes)
   if (
-    prevProps.simulateMode !== nextProps.simulateMode ||
+    prevProps.projectionMode !== nextProps.projectionMode ||
     prevProps.showBudgets !== nextProps.showBudgets ||
     prevProps.maxAmount !== nextProps.maxAmount ||
     prevProps.CustomTooltip !== nextProps.CustomTooltip
@@ -361,7 +361,7 @@ const areCategoryPropsEqual = (
         prev.category_name !== next.category_name ||
         prev.total_amount !== next.total_amount ||
         prev.budget_amount !== next.budget_amount ||
-        prev.isSimulated !== next.isSimulated
+        prev.isProjectiond !== next.isProjectiond
       ) {
         return false;
       }

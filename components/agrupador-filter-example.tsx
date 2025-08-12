@@ -17,12 +17,12 @@ export function AgrupadorFilterExample() {
   const [selectedGroupers, setSelectedGroupers] = useState<number[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate fetching groupers data
+  // Projection fetching groupers data
   useEffect(() => {
     const fetchGroupers = async () => {
       setIsLoading(true);
 
-      // Simulate API call
+      // Projection API call
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const mockData: GrouperData[] = [

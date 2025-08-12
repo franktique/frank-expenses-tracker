@@ -17,7 +17,7 @@ type GrouperData = {
   grouper_name: string;
   total_amount: number;
   budget_amount?: number;
-  isSimulated?: boolean;
+  isProjectiond?: boolean;
 };
 
 type CategoryData = {
@@ -25,21 +25,21 @@ type CategoryData = {
   category_name: string;
   total_amount: number;
   budget_amount?: number;
-  isSimulated?: boolean;
+  isProjectiond?: boolean;
 };
 
-describe("Simulate Mode Data Transformation", () => {
+describe("Projection Mode Data Transformation", () => {
   // Data transformation function (extracted from component)
-  const processSimulationData = <T extends GrouperData | CategoryData>(
+  const processProjectionData = <T extends GrouperData | CategoryData>(
     data: T[],
-    isSimulating: boolean
+    isProjecting: boolean
   ): T[] => {
     return data.map((item) => ({
       ...item,
-      // Use budget_amount as total_amount when simulating
-      total_amount: isSimulating ? item.budget_amount || 0 : item.total_amount,
-      // Add simulation flag for styling purposes
-      isSimulated: isSimulating,
+      // Use budget_amount as total_amount when projecting
+      total_amount: isProjecting ? item.budget_amount || 0 : item.total_amount,
+      // Add projection flag for styling purposes
+      isProjectiond: isProjecting,
     }));
   };
 
@@ -73,8 +73,8 @@ describe("Simulate Mode Data Transformation", () => {
       },
     ];
 
-    it("should transform data for simulation mode", () => {
-      const result = processSimulationData(mockGrouperData, true);
+    it("should transform data for projection mode", () => {
+      const result = processProjectionData(mockGrouperData, true);
 
       expect(result).toHaveLength(3);
       expect(result[0]).toEqual({
@@ -82,31 +82,31 @@ describe("Simulate Mode Data Transformation", () => {
         grouper_name: "Alimentación",
         total_amount: 600, // Uses budget_amount
         budget_amount: 600,
-        isSimulated: true,
+        isProjectiond: true,
       });
       expect(result[1]).toEqual({
         grouper_id: 2,
         grouper_name: "Transporte",
         total_amount: 300, // Uses budget_amount
         budget_amount: 300,
-        isSimulated: true,
+        isProjectiond: true,
       });
     });
 
-    it("should handle missing budget amounts in simulation mode", () => {
-      const result = processSimulationData(mockGrouperData, true);
+    it("should handle missing budget amounts in projection mode", () => {
+      const result = processProjectionData(mockGrouperData, true);
 
       expect(result[2]).toEqual({
         grouper_id: 3,
         grouper_name: "Entretenimiento",
         total_amount: 0, // Falls back to 0 when budget_amount is undefined
         budget_amount: undefined,
-        isSimulated: true,
+        isProjectiond: true,
       });
     });
 
-    it("should not transform data when not simulating", () => {
-      const result = processSimulationData(mockGrouperData, false);
+    it("should not transform data when not projecting", () => {
+      const result = processProjectionData(mockGrouperData, false);
 
       expect(result).toHaveLength(3);
       expect(result[0]).toEqual({
@@ -114,14 +114,14 @@ describe("Simulate Mode Data Transformation", () => {
         grouper_name: "Alimentación",
         total_amount: 500, // Uses original total_amount
         budget_amount: 600,
-        isSimulated: false,
+        isProjectiond: false,
       });
       expect(result[1]).toEqual({
         grouper_id: 2,
         grouper_name: "Transporte",
         total_amount: 200, // Uses original total_amount
         budget_amount: 300,
-        isSimulated: false,
+        isProjectiond: false,
       });
     });
 
@@ -135,10 +135,10 @@ describe("Simulate Mode Data Transformation", () => {
         },
       ];
 
-      const result = processSimulationData(dataWithNullBudget, true);
+      const result = processProjectionData(dataWithNullBudget, true);
 
       expect(result[0].total_amount).toBe(0);
-      expect(result[0].isSimulated).toBe(true);
+      expect(result[0].isProjectiond).toBe(true);
     });
 
     it("should handle zero budget amounts", () => {
@@ -151,14 +151,14 @@ describe("Simulate Mode Data Transformation", () => {
         },
       ];
 
-      const result = processSimulationData(dataWithZeroBudget, true);
+      const result = processProjectionData(dataWithZeroBudget, true);
 
       expect(result[0].total_amount).toBe(0);
-      expect(result[0].isSimulated).toBe(true);
+      expect(result[0].isProjectiond).toBe(true);
     });
 
     it("should preserve all original properties", () => {
-      const result = processSimulationData(mockGrouperData, true);
+      const result = processProjectionData(mockGrouperData, true);
 
       result.forEach((item, index) => {
         expect(item.grouper_id).toBe(mockGrouperData[index].grouper_id);
@@ -190,8 +190,8 @@ describe("Simulate Mode Data Transformation", () => {
       },
     ];
 
-    it("should transform category data for simulation mode", () => {
-      const result = processSimulationData(mockCategoryData, true);
+    it("should transform category data for projection mode", () => {
+      const result = processProjectionData(mockCategoryData, true);
 
       expect(result).toHaveLength(3);
       expect(result[0]).toEqual({
@@ -199,36 +199,36 @@ describe("Simulate Mode Data Transformation", () => {
         category_name: "Supermercado",
         total_amount: 400, // Uses budget_amount
         budget_amount: 400,
-        isSimulated: true,
+        isProjectiond: true,
       });
     });
 
     it("should handle missing category budget amounts", () => {
-      const result = processSimulationData(mockCategoryData, true);
+      const result = processProjectionData(mockCategoryData, true);
 
       expect(result[2]).toEqual({
         category_id: "3",
         category_name: "Cafeterías",
         total_amount: 0, // Falls back to 0
         budget_amount: undefined,
-        isSimulated: true,
+        isProjectiond: true,
       });
     });
 
-    it("should not transform category data when not simulating", () => {
-      const result = processSimulationData(mockCategoryData, false);
+    it("should not transform category data when not projecting", () => {
+      const result = processProjectionData(mockCategoryData, false);
 
       expect(result[0]).toEqual({
         category_id: "1",
         category_name: "Supermercado",
         total_amount: 300, // Uses original total_amount
         budget_amount: 400,
-        isSimulated: false,
+        isProjectiond: false,
       });
     });
 
     it("should preserve category IDs as strings", () => {
-      const result = processSimulationData(mockCategoryData, true);
+      const result = processProjectionData(mockCategoryData, true);
 
       result.forEach((item, index) => {
         expect(typeof item.category_id).toBe("string");
@@ -239,7 +239,7 @@ describe("Simulate Mode Data Transformation", () => {
 
   describe("Edge Cases", () => {
     it("should handle empty data array", () => {
-      const result = processSimulationData([], true);
+      const result = processProjectionData([], true);
       expect(result).toEqual([]);
     });
 
@@ -259,13 +259,13 @@ describe("Simulate Mode Data Transformation", () => {
         },
       ];
 
-      const result = processSimulationData(dataWithoutBudgets, true);
+      const result = processProjectionData(dataWithoutBudgets, true);
 
       expect(result).toHaveLength(2);
       expect(result[0].total_amount).toBe(0);
       expect(result[1].total_amount).toBe(0);
-      expect(result[0].isSimulated).toBe(true);
-      expect(result[1].isSimulated).toBe(true);
+      expect(result[0].isProjectiond).toBe(true);
+      expect(result[1].isProjectiond).toBe(true);
     });
 
     it("should handle data with negative budget amounts", () => {
@@ -278,10 +278,10 @@ describe("Simulate Mode Data Transformation", () => {
         },
       ];
 
-      const result = processSimulationData(dataWithNegativeBudget, true);
+      const result = processProjectionData(dataWithNegativeBudget, true);
 
       expect(result[0].total_amount).toBe(-50);
-      expect(result[0].isSimulated).toBe(true);
+      expect(result[0].isProjectiond).toBe(true);
     });
 
     it("should handle data with very large budget amounts", () => {
@@ -294,10 +294,10 @@ describe("Simulate Mode Data Transformation", () => {
         },
       ];
 
-      const result = processSimulationData(dataWithLargeBudget, true);
+      const result = processProjectionData(dataWithLargeBudget, true);
 
       expect(result[0].total_amount).toBe(999999999);
-      expect(result[0].isSimulated).toBe(true);
+      expect(result[0].isProjectiond).toBe(true);
     });
 
     it("should handle mixed data types correctly", () => {
@@ -316,13 +316,13 @@ describe("Simulate Mode Data Transformation", () => {
         } as CategoryData,
       ];
 
-      const result = processSimulationData(mixedData, true);
+      const result = processProjectionData(mixedData, true);
 
       expect(result).toHaveLength(2);
       expect(result[0].total_amount).toBe(150);
       expect(result[1].total_amount).toBe(250);
-      expect(result[0].isSimulated).toBe(true);
-      expect(result[1].isSimulated).toBe(true);
+      expect(result[0].isProjectiond).toBe(true);
+      expect(result[1].isProjectiond).toBe(true);
     });
   });
 
@@ -339,7 +339,7 @@ describe("Simulate Mode Data Transformation", () => {
       );
 
       const startTime = performance.now();
-      const result = processSimulationData(largeDataset, true);
+      const result = processProjectionData(largeDataset, true);
       const endTime = performance.now();
 
       expect(result).toHaveLength(1000);
@@ -357,13 +357,13 @@ describe("Simulate Mode Data Transformation", () => {
       ];
 
       const originalDataCopy = JSON.parse(JSON.stringify(originalData));
-      const result = processSimulationData(originalData, true);
+      const result = processProjectionData(originalData, true);
 
       // Original data should remain unchanged
       expect(originalData).toEqual(originalDataCopy);
       // Result should be different
       expect(result[0].total_amount).toBe(150);
-      expect(result[0].isSimulated).toBe(true);
+      expect(result[0].isProjectiond).toBe(true);
     });
   });
 
@@ -378,13 +378,13 @@ describe("Simulate Mode Data Transformation", () => {
         },
       ];
 
-      const result = processSimulationData(grouperData, true);
+      const result = processProjectionData(grouperData, true);
 
       // TypeScript should ensure these properties exist
       expect(typeof result[0].grouper_id).toBe("number");
       expect(typeof result[0].grouper_name).toBe("string");
       expect(typeof result[0].total_amount).toBe("number");
-      expect(typeof result[0].isSimulated).toBe("boolean");
+      expect(typeof result[0].isProjectiond).toBe("boolean");
     });
 
     it("should maintain type safety for CategoryData", () => {
@@ -397,13 +397,13 @@ describe("Simulate Mode Data Transformation", () => {
         },
       ];
 
-      const result = processSimulationData(categoryData, true);
+      const result = processProjectionData(categoryData, true);
 
       // TypeScript should ensure these properties exist
       expect(typeof result[0].category_id).toBe("string");
       expect(typeof result[0].category_name).toBe("string");
       expect(typeof result[0].total_amount).toBe("number");
-      expect(typeof result[0].isSimulated).toBe("boolean");
+      expect(typeof result[0].isProjectiond).toBe("boolean");
     });
   });
 });

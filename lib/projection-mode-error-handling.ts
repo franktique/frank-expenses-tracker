@@ -1,21 +1,21 @@
 /**
- * Error handling utilities specifically for simulate mode functionality
- * Extends the general error handling with simulation-specific scenarios
+ * Error handling utilities specifically for projection mode functionality
+ * Extends the general error handling with projection-specific scenarios
  */
 
 import { categorizeError, AppError, ERROR_MESSAGES } from "./error-handling";
 import { toast } from "@/components/ui/use-toast";
 
-export type SimulateErrorType =
+export type ProjectionErrorType =
   | "missing_budget_data"
   | "partial_budget_data"
-  | "simulation_api_failure"
+  | "projection_api_failure"
   | "filter_conflict"
   | "session_storage_error"
-  | "category_simulation_failure";
+  | "category_projection_failure";
 
-export interface SimulateError extends AppError {
-  simulateType?: SimulateErrorType;
+export interface ProjectionError extends AppError {
+  projectionType?: ProjectionErrorType;
   context?: {
     selectedEstudio?: number | null;
     selectedGroupers?: number[];
@@ -25,9 +25,9 @@ export interface SimulateError extends AppError {
 }
 
 /**
- * Categorizes simulation-specific errors
+ * Categorizes projection-specific errors
  */
-export function categorizeSimulateError(
+export function categorizeProjectionError(
   error: unknown,
   context?: {
     selectedEstudio?: number | null;
@@ -35,12 +35,12 @@ export function categorizeSimulateError(
     paymentMethod?: string;
     activeTab?: string;
   }
-): SimulateError {
+): ProjectionError {
   // Handle null, undefined, or non-error values
   if (!error) {
     return {
       type: "unknown",
-      message: "Error desconocido en modo simulación",
+      message: "Error desconocido en modo proyección",
       retryable: false,
       context,
     };
@@ -54,7 +54,7 @@ export function categorizeSimulateError(
   ) {
     return {
       type: "unknown",
-      message: `Error en modo simulación: ${String(error)}`,
+      message: `Error en modo proyección: ${String(error)}`,
       retryable: false,
       context,
     };
@@ -69,8 +69,8 @@ export function categorizeSimulateError(
     if (message.includes("no budget") || message.includes("sin presupuesto")) {
       return {
         ...baseError,
-        simulateType: "missing_budget_data",
-        message: "No hay datos de presupuesto disponibles para la simulación",
+        projectionType: "missing_budget_data",
+        message: "No hay datos de presupuesto disponibles para la proyección",
         retryable: false,
         context,
       };
@@ -83,33 +83,33 @@ export function categorizeSimulateError(
     ) {
       return {
         ...baseError,
-        simulateType: "partial_budget_data",
+        projectionType: "partial_budget_data",
         message: "Algunos agrupadores no tienen presupuesto asignado",
         retryable: false,
         context,
       };
     }
 
-    // API failure specific to simulation
-    if (message.includes("simulation") || message.includes("simulación")) {
+    // API failure specific to projection
+    if (message.includes("projection") || message.includes("proyección")) {
       return {
         ...baseError,
-        simulateType: "simulation_api_failure",
-        message: "Error al cargar datos de simulación",
+        projectionType: "projection_api_failure",
+        message: "Error al cargar datos de proyección",
         retryable: true,
         context,
       };
     }
 
-    // Filter conflicts in simulation mode
+    // Filter conflicts in projection mode
     if (
       message.includes("filter conflict") ||
       message.includes("conflicto de filtros")
     ) {
       return {
         ...baseError,
-        simulateType: "filter_conflict",
-        message: "Conflicto entre filtros y modo simulación",
+        projectionType: "filter_conflict",
+        message: "Conflicto entre filtros y modo proyección",
         retryable: false,
         context,
       };
@@ -122,29 +122,29 @@ export function categorizeSimulateError(
     ) {
       return {
         ...baseError,
-        simulateType: "session_storage_error",
-        message: "Error al guardar preferencias de simulación",
+        projectionType: "session_storage_error",
+        message: "Error al guardar preferencias de proyección",
         retryable: true,
         context,
       };
     }
 
-    // Category simulation failures
+    // Category projection failures
     if (
-      message.includes("category simulation") ||
+      message.includes("category projection") ||
       message.includes("categorías")
     ) {
       return {
         ...baseError,
-        simulateType: "category_simulation_failure",
-        message: "Error al simular datos de categorías",
+        projectionType: "category_projection_failure",
+        message: "Error al proyectar datos de categorías",
         retryable: true,
         context,
       };
     }
   }
 
-  // Return base error with simulation context
+  // Return base error with projection context
   return {
     ...baseError,
     context,
@@ -154,7 +154,7 @@ export function categorizeSimulateError(
 /**
  * Handles simulate mode errors with appropriate fallback strategies
  */
-export function handleSimulateModeError(
+export function handleProjectionModeError(
   error: unknown,
   context: {
     selectedEstudio?: number | null;
@@ -163,83 +163,83 @@ export function handleSimulateModeError(
     activeTab?: string;
   },
   fallbackActions: {
-    disableSimulateMode: () => void;
+    disableProjectionMode: () => void;
     refreshData: () => void;
     showActualData: () => void;
   }
-): SimulateError {
+): ProjectionError {
   // Safely handle different error types
-  let simulateError: SimulateError;
+  let projectionError: ProjectionError;
 
   try {
-    // Check if error is already a SimulateError
-    if (error && typeof error === "object" && "simulateType" in error) {
-      simulateError = error as SimulateError;
+    // Check if error is already a ProjectionError
+    if (error && typeof error === "object" && "projectionType" in error) {
+      projectionError = error as ProjectionError;
     } else {
-      // Categorize the error if it's not already a SimulateError
-      simulateError = categorizeSimulateError(error, context);
+      // Categorize the error if it's not already a ProjectionError
+      projectionError = categorizeProjectionError(error, context);
     }
   } catch (categorizationError) {
     // Fallback if categorization fails
     console.warn("Error categorization failed:", categorizationError);
-    simulateError = {
+    projectionError = {
       type: "unknown",
-      message: "Error desconocido en modo simulación",
+      message: "Error desconocido en modo proyección",
       retryable: false,
       context,
     };
   }
 
   console.error("Simulate mode error:", {
-    error: simulateError,
+    error: projectionError,
     context,
     timestamp: new Date().toISOString(),
   });
 
   // Handle different error types with specific strategies
-  switch (simulateError.simulateType) {
+  switch (projectionError.projectionType) {
     case "missing_budget_data":
-      handleMissingBudgetData(simulateError, context, fallbackActions);
+      handleMissingBudgetData(projectionError, context, fallbackActions);
       break;
 
     case "partial_budget_data":
-      handlePartialBudgetData(simulateError, context, fallbackActions);
+      handlePartialBudgetData(projectionError, context, fallbackActions);
       break;
 
-    case "simulation_api_failure":
-      handleSimulationApiFailure(simulateError, context, fallbackActions);
+    case "projection_api_failure":
+      handleProjectionApiFailure(projectionError, context, fallbackActions);
       break;
 
     case "filter_conflict":
-      handleFilterConflict(simulateError, context, fallbackActions);
+      handleFilterConflict(projectionError, context, fallbackActions);
       break;
 
     case "session_storage_error":
-      handleSessionStorageError(simulateError, context, fallbackActions);
+      handleSessionStorageError(projectionError, context, fallbackActions);
       break;
 
-    case "category_simulation_failure":
-      handleCategorySimulationFailure(simulateError, context, fallbackActions);
+    case "category_projection_failure":
+      handleCategoryProjectionFailure(projectionError, context, fallbackActions);
       break;
 
     default:
-      handleGenericSimulateError(simulateError, context, fallbackActions);
+      handleGenericProjectionError(projectionError, context, fallbackActions);
       break;
   }
 
-  return simulateError;
+  return projectionError;
 }
 
 /**
  * Handle missing budget data scenario
  */
 function handleMissingBudgetData(
-  error: SimulateError,
+  error: ProjectionError,
   context: any,
   fallbackActions: any
 ) {
   let description =
-    "No se encontraron datos de presupuesto para mostrar la simulación.";
+    "No se encontraron datos de presupuesto para mostrar la proyección.";
 
   if (context.selectedEstudio) {
     description +=
@@ -258,7 +258,7 @@ function handleMissingBudgetData(
     action: {
       altText: "Ver datos reales",
       onClick: () => {
-        fallbackActions.disableSimulateMode();
+        fallbackActions.disableProjectionMode();
         fallbackActions.showActualData();
       },
     },
@@ -269,7 +269,7 @@ function handleMissingBudgetData(
  * Handle partial budget data scenario
  */
 function handlePartialBudgetData(
-  error: SimulateError,
+  error: ProjectionError,
   context: any,
   fallbackActions: any
 ) {
@@ -285,9 +285,9 @@ function handlePartialBudgetData(
     description,
     variant: "default",
     action: {
-      altText: "Continuar simulación",
+      altText: "Continuar proyección",
       onClick: () => {
-        // Continue with simulation showing zero values for missing budget data
+        // Continue with projection showing zero values for missing budget data
         fallbackActions.refreshData();
       },
     },
@@ -295,19 +295,19 @@ function handlePartialBudgetData(
 }
 
 /**
- * Handle simulation API failure
+ * Handle projection API failure
  */
-function handleSimulationApiFailure(
-  error: SimulateError,
+function handleProjectionApiFailure(
+  error: ProjectionError,
   context: any,
   fallbackActions: any
 ) {
   let description =
-    "Error al cargar datos de simulación. Mostrando datos reales en su lugar.";
+    "Error al cargar datos de proyección. Mostrando datos reales en su lugar.";
 
   if (error.retryable) {
     toast({
-      title: "Error en simulación",
+      title: "Error en proyección",
       description,
       variant: "destructive",
       action: {
@@ -318,11 +318,11 @@ function handleSimulationApiFailure(
       },
     });
   } else {
-    fallbackActions.disableSimulateMode();
+    fallbackActions.disableProjectionMode();
     fallbackActions.showActualData();
 
     toast({
-      title: "Error en simulación",
+      title: "Error en proyección",
       description,
       variant: "destructive",
     });
@@ -330,15 +330,15 @@ function handleSimulationApiFailure(
 }
 
 /**
- * Handle filter conflicts in simulation mode
+ * Handle filter conflicts in projection mode
  */
 function handleFilterConflict(
-  error: SimulateError,
+  error: ProjectionError,
   context: any,
   fallbackActions: any
 ) {
   let description =
-    "Los filtros aplicados no son compatibles con el modo simulación.";
+    "Los filtros aplicados no son compatibles con el modo proyección.";
 
   if (context.paymentMethod && context.paymentMethod !== "all") {
     description +=
@@ -352,7 +352,7 @@ function handleFilterConflict(
     action: {
       altText: "Ajustar filtros",
       onClick: () => {
-        // Continue simulation but inform about filter behavior
+        // Continue projection but inform about filter behavior
         fallbackActions.refreshData();
       },
     },
@@ -363,12 +363,12 @@ function handleFilterConflict(
  * Handle session storage errors
  */
 function handleSessionStorageError(
-  error: SimulateError,
+  error: ProjectionError,
   context: any,
   fallbackActions: any
 ) {
   const description =
-    "No se pudo guardar la preferencia de simulación. El modo simulación funcionará pero no se recordará al recargar la página.";
+    "No se pudo guardar la preferencia de proyección. El modo proyección funcionará pero no se recordará al recargar la página.";
 
   toast({
     title: "Error de almacenamiento",
@@ -376,22 +376,22 @@ function handleSessionStorageError(
     variant: "default",
   });
 
-  // Continue with simulation even if storage fails
+  // Continue with projection even if storage fails
 }
 
 /**
- * Handle category simulation failures
+ * Handle category projection failures
  */
-function handleCategorySimulationFailure(
-  error: SimulateError,
+function handleCategoryProjectionFailure(
+  error: ProjectionError,
   context: any,
   fallbackActions: any
 ) {
   const description =
-    "Error al simular datos de categorías. Mostrando datos reales para el desglose de categorías.";
+    "Error al proyectar datos de categorías. Mostrando datos reales para el desglose de categorías.";
 
   toast({
-    title: "Error en simulación de categorías",
+    title: "Error en proyección de categorías",
     description,
     variant: "destructive",
     action: {
@@ -404,22 +404,22 @@ function handleCategorySimulationFailure(
 }
 
 /**
- * Handle generic simulation errors
+ * Handle generic projection errors
  */
-function handleGenericSimulateError(
-  error: SimulateError,
+function handleGenericProjectionError(
+  error: ProjectionError,
   context: any,
   fallbackActions: any
 ) {
   const description =
     error.message ||
-    "Error desconocido en modo simulación. Mostrando datos reales.";
+    "Error desconocido en modo proyección. Mostrando datos reales.";
 
-  fallbackActions.disableSimulateMode();
+  fallbackActions.disableProjectionMode();
   fallbackActions.showActualData();
 
   toast({
-    title: "Error en simulación",
+    title: "Error en proyección",
     description,
     variant: "destructive",
   });
@@ -434,12 +434,12 @@ export function validateBudgetData(
     selectedEstudio?: number | null;
     selectedGroupers?: number[];
   }
-): { isValid: boolean; error?: SimulateError } {
+): { isValid: boolean; error?: ProjectionError } {
   try {
     if (!data || data.length === 0) {
       return {
         isValid: false,
-        error: categorizeSimulateError(
+        error: categorizeProjectionError(
           new Error("No budget data available"),
           context
         ),
@@ -470,7 +470,7 @@ export function validateBudgetData(
     if (itemsWithBudget.length === 0) {
       return {
         isValid: false,
-        error: categorizeSimulateError(
+        error: categorizeProjectionError(
           new Error("No budget amounts found in data"),
           context
         ),
@@ -481,7 +481,7 @@ export function validateBudgetData(
     if (itemsWithBudget.length < data.length) {
       return {
         isValid: true, // Still valid, but with warning
-        error: categorizeSimulateError(
+        error: categorizeProjectionError(
           new Error("Partial budget data available"),
           context
         ),
@@ -509,7 +509,7 @@ export function validateBudgetData(
 export function createErrorRecoveryStrategies(
   originalFetch: () => Promise<any>,
   fallbackActions: {
-    disableSimulateMode: () => void;
+    disableProjectionMode: () => void;
     refreshData: () => void;
     showActualData: () => void;
   }
@@ -525,10 +525,10 @@ export function createErrorRecoveryStrategies(
         } catch (error) {
           lastError = error;
 
-          const simulateError = categorizeSimulateError(error);
+          const projectionError = categorizeProjectionError(error);
 
           // Don't retry non-retryable errors
-          if (!simulateError.retryable || attempt === maxRetries) {
+          if (!projectionError.retryable || attempt === maxRetries) {
             throw error;
           }
 
@@ -544,7 +544,7 @@ export function createErrorRecoveryStrategies(
     // Fallback to actual data
     fallbackToActualData: async (): Promise<any> => {
       try {
-        fallbackActions.disableSimulateMode();
+        fallbackActions.disableProjectionMode();
         return await originalFetch();
       } catch (error) {
         // If even actual data fails, show error
@@ -568,16 +568,35 @@ export function createErrorRecoveryStrategies(
 /**
  * Simulation-specific error messages
  */
-export const SIMULATE_ERROR_MESSAGES = {
-  NO_BUDGET_DATA: "No hay datos de presupuesto disponibles para la simulación",
+export const PROJECTION_ERROR_MESSAGES = {
+  NO_BUDGET_DATA: "No hay datos de presupuesto disponibles para la proyección",
   PARTIAL_BUDGET_DATA: "Algunos agrupadores no tienen presupuesto asignado",
-  SIMULATION_API_FAILURE: "Error al cargar datos de simulación",
+  PROJECTION_API_FAILURE: "Error al cargar datos de proyección",
   FILTER_CONFLICT:
-    "Los filtros aplicados no son compatibles con el modo simulación",
-  SESSION_STORAGE_ERROR: "Error al guardar preferencias de simulación",
-  CATEGORY_SIMULATION_FAILURE: "Error al simular datos de categorías",
-  FALLBACK_TO_ACTUAL: "Mostrando datos reales en lugar de simulación",
-  RETRY_SIMULATION:
-    "Haz clic en 'Reintentar' para volver a intentar la simulación",
-  CONTINUE_WITH_PARTIAL: "Continuar con simulación parcial",
+    "Los filtros aplicados no son compatibles con el modo proyección",
+  SESSION_STORAGE_ERROR: "Error al guardar preferencias de proyección",
+  CATEGORY_PROJECTION_FAILURE: "Error al proyectar datos de categorías",
+  FALLBACK_TO_ACTUAL: "Mostrando datos reales en lugar de proyección",
+  RETRY_PROJECTION:
+    "Haz clic en 'Reintentar' para volver a intentar la proyección",
+  CONTINUE_WITH_PARTIAL: "Continuar con proyección parcial",
 } as const;
+
+/**
+ * Saves projection validation data to session storage
+ */
+export function saveProjectionValidationToSession(
+  validation: any,
+  context?: any
+): void {
+  try {
+    const data = {
+      validation,
+      context,
+      timestamp: new Date().toISOString(),
+    };
+    sessionStorage.setItem("projection-validation", JSON.stringify(data));
+  } catch (error) {
+    console.warn("Failed to save projection validation to session:", error);
+  }
+}

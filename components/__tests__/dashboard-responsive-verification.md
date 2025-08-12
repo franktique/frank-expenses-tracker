@@ -121,7 +121,7 @@ This document provides comprehensive verification that the dashboard table with 
 
 ### Manual Testing
 
-1. **Viewport Simulation**: Tested at 320px, 768px, 1024px, and 1200px widths
+1. **Viewport Projection**: Tested at 320px, 768px, 1024px, and 1200px widths
 2. **Content Stress Testing**: Tested with long category names and large datasets
 3. **Interaction Testing**: Verified scrolling, filtering, and tab switching
 4. **Cross-Browser Testing**: Verified in Chrome, Firefox, Safari, and Edge

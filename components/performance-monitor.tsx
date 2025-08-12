@@ -19,11 +19,11 @@ interface PerformanceMonitorProps {
   metrics: PerformanceMetrics;
   isVisible?: boolean;
   onToggle?: () => void;
-  simulateMode?: boolean;
+  projectionMode?: boolean;
 }
 
 export const PerformanceMonitor = memo<PerformanceMonitorProps>(
-  ({ metrics, isVisible = false, onToggle, simulateMode = false }) => {
+  ({ metrics, isVisible = false, onToggle, projectionMode = false }) => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     if (!isVisible) {
@@ -70,9 +70,9 @@ export const PerformanceMonitor = memo<PerformanceMonitorProps>(
             <CardTitle className="text-sm flex items-center gap-2">
               <Activity className="h-4 w-4" />
               Performance Monitor
-              {simulateMode && (
+              {projectionMode && (
                 <Badge variant="secondary" className="text-xs">
-                  Simulate Mode
+                  Projection Mode
                 </Badge>
               )}
             </CardTitle>
@@ -165,9 +165,9 @@ export const PerformanceMonitor = memo<PerformanceMonitorProps>(
                       • Low cache hit rate - data might be changing frequently
                     </div>
                   )}
-                  {simulateMode && (
+                  {projectionMode && (
                     <div>
-                      • Simulate mode optimizes animations for better
+                      • Projection mode optimizes animations for better
                       performance
                     </div>
                   )}

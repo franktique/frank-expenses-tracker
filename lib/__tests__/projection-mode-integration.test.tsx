@@ -45,10 +45,10 @@ Object.defineProperty(window, "sessionStorage", {
   writable: true,
 });
 
-describe("Simulate Mode Integration Tests", () => {
-  // Mock integrated component that combines all simulate mode functionality
-  const IntegratedSimulateModeComponent = () => {
-    const [simulateMode, setSimulateMode] = React.useState(false);
+describe("Projection Mode Integration Tests", () => {
+  // Mock integrated component that combines all projection mode functionality
+  const IntegratedProjectionModeComponent = () => {
+    const [projectionMode, setProjectionMode] = React.useState(false);
     const [activeTab, setActiveTab] = React.useState<string>("current");
     const [grouperData, setGrouperData] = React.useState<any[]>([]);
     const [categoryData, setCategoryData] = React.useState<any[]>([]);
@@ -62,61 +62,61 @@ describe("Simulate Mode Integration Tests", () => {
     const [paymentMethod, setPaymentMethod] = React.useState("all");
 
     // Session storage utilities
-    const saveSimulateModeToSession = (mode: boolean) => {
+    const saveProjectionModeToSession = (mode: boolean) => {
       try {
-        const simulationState = {
-          simulateMode: mode,
+        const projectionState = {
+          projectionMode: mode,
           lastUpdated: Date.now(),
         };
         sessionStorage.setItem(
-          "dashboard-simulate-mode",
-          JSON.stringify(simulationState)
+          "dashboard-projection-mode",
+          JSON.stringify(projectionState)
         );
       } catch (error) {
-        console.error("Error saving simulate mode:", error);
+        console.error("Error saving projection mode:", error);
       }
     };
 
-    const loadSimulateModeFromSession = (): boolean => {
+    const loadProjectionModeFromSession = (): boolean => {
       try {
-        const saved = sessionStorage.getItem("dashboard-simulate-mode");
+        const saved = sessionStorage.getItem("dashboard-projection-mode");
         if (saved) {
-          const simulationState = JSON.parse(saved);
-          if (typeof simulationState === "boolean") {
-            return simulationState;
+          const projectionState = JSON.parse(saved);
+          if (typeof projectionState === "boolean") {
+            return projectionState;
           }
           if (
-            simulationState &&
-            typeof simulationState.simulateMode === "boolean"
+            projectionState &&
+            typeof projectionState.projectionMode === "boolean"
           ) {
-            return simulationState.simulateMode;
+            return projectionState.projectionMode;
           }
         }
         return false;
       } catch (error) {
-        console.error("Error loading simulate mode:", error);
+        console.error("Error loading projection mode:", error);
         return false;
       }
     };
 
     // Data transformation
-    const processSimulationData = (data: any[], isSimulating: boolean) => {
+    const processProjectionData = (data: any[], isProjecting: boolean) => {
       return data.map((item) => ({
         ...item,
-        total_amount: isSimulating
+        total_amount: isProjecting
           ? item.budget_amount || 0
           : item.total_amount,
-        isSimulated: isSimulating,
+        isProjectiond: isProjecting,
       }));
     };
 
-    // API call simulation
+    // API call projection
     const fetchData = async () => {
       setIsLoading(true);
       try {
         const params = new URLSearchParams({
           periodId: "1",
-          paymentMethod: simulateMode ? "all" : paymentMethod,
+          paymentMethod: projectionMode ? "all" : paymentMethod,
         });
 
         if (selectedEstudio) {
@@ -127,9 +127,9 @@ describe("Simulate Mode Integration Tests", () => {
           params.append("grouperIds", selectedGroupers.join(","));
         }
 
-        if (simulateMode) {
+        if (projectionMode) {
           params.append("includeBudgets", "true");
-          params.append("simulateMode", "true");
+          params.append("projectionMode", "true");
         }
 
         const response = await fetch(
@@ -141,7 +141,7 @@ describe("Simulate Mode Integration Tests", () => {
         }
 
         const data = await response.json();
-        const processedData = processSimulationData(data, simulateMode);
+        const processedData = processProjectionData(data, projectionMode);
         setGrouperData(processedData);
       } catch (error) {
         console.error("Error fetching data:", error);
@@ -155,20 +155,20 @@ describe("Simulate Mode Integration Tests", () => {
       }
     };
 
-    // Handle simulate mode toggle
-    const handleSimulateModeToggle = (checked: boolean) => {
-      setSimulateMode(checked);
-      saveSimulateModeToSession(checked);
+    // Handle projection mode toggle
+    const handleProjectionModeToggle = (checked: boolean) => {
+      setProjectionMode(checked);
+      saveProjectionModeToSession(checked);
 
       // Clear existing data to force refresh
       setGrouperData([]);
       setCategoryData([]);
     };
 
-    // Load simulate mode on mount
+    // Load projection mode on mount
     React.useEffect(() => {
-      const savedMode = loadSimulateModeFromSession();
-      setSimulateMode(savedMode);
+      const savedMode = loadProjectionModeFromSession();
+      setProjectionMode(savedMode);
     }, []);
 
     // Fetch data when dependencies change
@@ -177,7 +177,7 @@ describe("Simulate Mode Integration Tests", () => {
         fetchData();
       }
     }, [
-      simulateMode,
+      projectionMode,
       selectedEstudio,
       selectedGroupers,
       paymentMethod,
@@ -226,17 +226,17 @@ describe("Simulate Mode Integration Tests", () => {
             <option value="debit">Tarjeta de débito</option>
           </select>
 
-          {/* Simulate Mode Checkbox */}
-          <div data-testid="simulate-mode-container">
+          {/* Projection Mode Checkbox */}
+          <div data-testid="projection-mode-container">
             <input
               type="checkbox"
-              id="simulate-mode"
-              data-testid="simulate-mode"
-              checked={simulateMode}
-              onChange={(e) => handleSimulateModeToggle(e.target.checked)}
+              id="projection-mode"
+              data-testid="projection-mode"
+              checked={projectionMode}
+              onChange={(e) => handleProjectionModeToggle(e.target.checked)}
               disabled={activeTab !== "current"}
             />
-            <label htmlFor="simulate-mode">Simular</label>
+            <label htmlFor="projection-mode">Proyectar</label>
           </div>
         </div>
 
@@ -246,18 +246,18 @@ describe("Simulate Mode Integration Tests", () => {
         {/* Chart */}
         <div data-testid="chart-container">
           <h3 data-testid="chart-title">
-            {simulateMode ? "Gráfico (Simulación)" : "Gráfico"}
+            {projectionMode ? "Gráfico (Proyección)" : "Gráfico"}
           </h3>
           <div data-testid="chart-legend">
-            {simulateMode ? "Presupuesto" : "Gastos"}
+            {projectionMode ? "Presupuesto" : "Gastos"}
           </div>
           {grouperData.map((item, index) => (
             <div
               key={index}
               data-testid={`chart-bar-${index}`}
-              className={item.isSimulated ? "simulated" : "normal"}
+              className={item.isProjectiond ? "projectiond" : "normal"}
               style={{
-                opacity: item.isSimulated ? 0.7 : 1,
+                opacity: item.isProjectiond ? 0.7 : 1,
               }}
             >
               {item.grouper_name}: ${item.total_amount}
@@ -267,7 +267,7 @@ describe("Simulate Mode Integration Tests", () => {
 
         {/* Debug Info */}
         <div data-testid="debug-info" style={{ display: "none" }}>
-          <div data-testid="simulate-mode-state">{simulateMode.toString()}</div>
+          <div data-testid="projection-mode-state">{projectionMode.toString()}</div>
           <div data-testid="active-tab-state">{activeTab}</div>
           <div data-testid="data-count">{grouperData.length}</div>
         </div>
@@ -304,11 +304,11 @@ describe("Simulate Mode Integration Tests", () => {
   });
 
   describe("Complete User Workflow", () => {
-    it("should handle complete simulate mode workflow", async () => {
-      render(<IntegratedSimulateModeComponent />);
+    it("should handle complete projection mode workflow", async () => {
+      render(<IntegratedProjectionModeComponent />);
 
-      // Initial state - simulate mode off
-      const checkbox = screen.getByTestId("simulate-mode");
+      // Initial state - projection mode off
+      const checkbox = screen.getByTestId("projection-mode");
       expect(checkbox).not.toBeChecked();
 
       // Wait for initial data load
@@ -320,18 +320,18 @@ describe("Simulate Mode Integration Tests", () => {
       expect(screen.getByTestId("chart-title")).toHaveTextContent("Gráfico");
       expect(screen.getByTestId("chart-legend")).toHaveTextContent("Gastos");
 
-      // Enable simulate mode
+      // Enable projection mode
       fireEvent.click(checkbox);
       expect(checkbox).toBeChecked();
 
       // Wait for data refresh
       await waitFor(() => {
         expect(screen.getByTestId("chart-title")).toHaveTextContent(
-          "Gráfico (Simulación)"
+          "Gráfico (Proyección)"
         );
       });
 
-      // Verify simulation chart display
+      // Verify projection chart display
       expect(screen.getByTestId("chart-legend")).toHaveTextContent(
         "Presupuesto"
       );
@@ -342,17 +342,17 @@ describe("Simulate Mode Integration Tests", () => {
       expect(bars[1]).toHaveTextContent("Transporte: $400"); // Budget amount
     });
 
-    it("should persist simulate mode across page refresh", async () => {
-      // First render - enable simulate mode
-      const { unmount } = render(<IntegratedSimulateModeComponent />);
+    it("should persist projection mode across page refresh", async () => {
+      // First render - enable projection mode
+      const { unmount } = render(<IntegratedProjectionModeComponent />);
 
-      const checkbox = screen.getByTestId("simulate-mode");
+      const checkbox = screen.getByTestId("projection-mode");
       fireEvent.click(checkbox);
 
       // Verify session storage was called
       expect(mockSessionStorage.setItem).toHaveBeenCalledWith(
-        "dashboard-simulate-mode",
-        expect.stringContaining('"simulateMode":true')
+        "dashboard-projection-mode",
+        expect.stringContaining('"projectionMode":true')
       );
 
       unmount();
@@ -360,25 +360,25 @@ describe("Simulate Mode Integration Tests", () => {
       // Mock session storage return
       mockSessionStorage.getItem.mockReturnValue(
         JSON.stringify({
-          simulateMode: true,
+          projectionMode: true,
           lastUpdated: Date.now(),
         })
       );
 
-      // Second render - should restore simulate mode
-      render(<IntegratedSimulateModeComponent />);
+      // Second render - should restore projection mode
+      render(<IntegratedProjectionModeComponent />);
 
       await waitFor(() => {
-        const restoredCheckbox = screen.getByTestId("simulate-mode");
+        const restoredCheckbox = screen.getByTestId("projection-mode");
         expect(restoredCheckbox).toBeChecked();
       });
     });
 
     it("should handle tab switching correctly", async () => {
-      render(<IntegratedSimulateModeComponent />);
+      render(<IntegratedProjectionModeComponent />);
 
-      // Enable simulate mode on current tab
-      const checkbox = screen.getByTestId("simulate-mode");
+      // Enable projection mode on current tab
+      const checkbox = screen.getByTestId("projection-mode");
       fireEvent.click(checkbox);
       expect(checkbox).toBeChecked();
       expect(checkbox).not.toBeDisabled();
@@ -403,14 +403,14 @@ describe("Simulate Mode Integration Tests", () => {
 
   describe("Filter Integration", () => {
     it("should work with estudio filter", async () => {
-      render(<IntegratedSimulateModeComponent />);
+      render(<IntegratedProjectionModeComponent />);
 
       // Change estudio filter
       const estudioFilter = screen.getByTestId("estudio-filter");
       fireEvent.change(estudioFilter, { target: { value: "2" } });
 
-      // Enable simulate mode
-      const checkbox = screen.getByTestId("simulate-mode");
+      // Enable projection mode
+      const checkbox = screen.getByTestId("projection-mode");
       fireEvent.click(checkbox);
 
       // Wait for API call
@@ -420,37 +420,37 @@ describe("Simulate Mode Integration Tests", () => {
         );
       });
 
-      // Verify simulate mode parameters
+      // Verify projection mode parameters
       expect(global.fetch).toHaveBeenCalledWith(
         expect.stringContaining("includeBudgets=true")
       );
       expect(global.fetch).toHaveBeenCalledWith(
-        expect.stringContaining("simulateMode=true")
+        expect.stringContaining("projectionMode=true")
       );
     });
 
-    it("should handle payment method filter in simulate mode", async () => {
-      render(<IntegratedSimulateModeComponent />);
+    it("should handle payment method filter in projection mode", async () => {
+      render(<IntegratedProjectionModeComponent />);
 
       // Change payment method
       const paymentFilter = screen.getByTestId("payment-method-filter");
       fireEvent.change(paymentFilter, { target: { value: "credit" } });
 
-      // Enable simulate mode
-      const checkbox = screen.getByTestId("simulate-mode");
+      // Enable projection mode
+      const checkbox = screen.getByTestId("projection-mode");
       fireEvent.click(checkbox);
 
       // Wait for API call
       await waitFor(() => {
-        // In simulate mode, payment method should be "all" for budget data
+        // In projection mode, payment method should be "all" for budget data
         expect(global.fetch).toHaveBeenCalledWith(
           expect.stringContaining("paymentMethod=all")
         );
       });
     });
 
-    it("should maintain filter state when toggling simulate mode", async () => {
-      render(<IntegratedSimulateModeComponent />);
+    it("should maintain filter state when toggling projection mode", async () => {
+      render(<IntegratedProjectionModeComponent />);
 
       // Set filters
       const estudioFilter = screen.getByTestId("estudio-filter");
@@ -459,8 +459,8 @@ describe("Simulate Mode Integration Tests", () => {
       fireEvent.change(estudioFilter, { target: { value: "2" } });
       fireEvent.change(paymentFilter, { target: { value: "credit" } });
 
-      // Toggle simulate mode on and off
-      const checkbox = screen.getByTestId("simulate-mode");
+      // Toggle projection mode on and off
+      const checkbox = screen.getByTestId("projection-mode");
       fireEvent.click(checkbox); // On
       fireEvent.click(checkbox); // Off
 
@@ -475,10 +475,10 @@ describe("Simulate Mode Integration Tests", () => {
       // Mock API error
       (global.fetch as jest.Mock).mockRejectedValue(new Error("Network error"));
 
-      render(<IntegratedSimulateModeComponent />);
+      render(<IntegratedProjectionModeComponent />);
 
-      // Enable simulate mode
-      const checkbox = screen.getByTestId("simulate-mode");
+      // Enable projection mode
+      const checkbox = screen.getByTestId("projection-mode");
       fireEvent.click(checkbox);
 
       // Wait for error handling
@@ -497,10 +497,10 @@ describe("Simulate Mode Integration Tests", () => {
         throw new Error("Storage quota exceeded");
       });
 
-      render(<IntegratedSimulateModeComponent />);
+      render(<IntegratedProjectionModeComponent />);
 
-      // Enable simulate mode
-      const checkbox = screen.getByTestId("simulate-mode");
+      // Enable projection mode
+      const checkbox = screen.getByTestId("projection-mode");
       fireEvent.click(checkbox);
 
       // Should still work despite storage error
@@ -521,10 +521,10 @@ describe("Simulate Mode Integration Tests", () => {
         ],
       });
 
-      render(<IntegratedSimulateModeComponent />);
+      render(<IntegratedProjectionModeComponent />);
 
-      // Enable simulate mode
-      const checkbox = screen.getByTestId("simulate-mode");
+      // Enable projection mode
+      const checkbox = screen.getByTestId("projection-mode");
       fireEvent.click(checkbox);
 
       // Wait for data load
@@ -540,11 +540,11 @@ describe("Simulate Mode Integration Tests", () => {
 
   describe("Performance Integration", () => {
     it("should handle rapid toggle changes", async () => {
-      render(<IntegratedSimulateModeComponent />);
+      render(<IntegratedProjectionModeComponent />);
 
-      const checkbox = screen.getByTestId("simulate-mode");
+      const checkbox = screen.getByTestId("projection-mode");
 
-      // Rapidly toggle simulate mode
+      // Rapidly toggle projection mode
       for (let i = 0; i < 5; i++) {
         fireEvent.click(checkbox);
         fireEvent.click(checkbox);
@@ -560,9 +560,9 @@ describe("Simulate Mode Integration Tests", () => {
     });
 
     it("should debounce API calls appropriately", async () => {
-      render(<IntegratedSimulateModeComponent />);
+      render(<IntegratedProjectionModeComponent />);
 
-      const checkbox = screen.getByTestId("simulate-mode");
+      const checkbox = screen.getByTestId("projection-mode");
 
       // Toggle multiple times quickly
       fireEvent.click(checkbox); // On
@@ -581,7 +581,7 @@ describe("Simulate Mode Integration Tests", () => {
 
   describe("Data Consistency", () => {
     it("should maintain data consistency across mode changes", async () => {
-      render(<IntegratedSimulateModeComponent />);
+      render(<IntegratedProjectionModeComponent />);
 
       // Wait for initial load
       await waitFor(() => {
@@ -592,22 +592,22 @@ describe("Simulate Mode Integration Tests", () => {
       let bars = screen.getAllByTestId(/chart-bar-/);
       expect(bars[0]).toHaveTextContent("Alimentación: $500"); // Actual amount
 
-      // Enable simulate mode
-      const checkbox = screen.getByTestId("simulate-mode");
+      // Enable projection mode
+      const checkbox = screen.getByTestId("projection-mode");
       fireEvent.click(checkbox);
 
       // Wait for data refresh
       await waitFor(() => {
         expect(screen.getByTestId("chart-title")).toHaveTextContent(
-          "Gráfico (Simulación)"
+          "Gráfico (Proyección)"
         );
       });
 
-      // Verify simulated data
+      // Verify projectiond data
       bars = screen.getAllByTestId(/chart-bar-/);
       expect(bars[0]).toHaveTextContent("Alimentación: $600"); // Budget amount
 
-      // Disable simulate mode
+      // Disable projection mode
       fireEvent.click(checkbox);
 
       // Wait for data refresh

@@ -65,55 +65,55 @@ jest.mock("@/components/ui/label", () => ({
   Label: MockLabel,
 }));
 
-describe("Simulate Mode UI Behavior", () => {
-  // Mock component that includes simulate mode UI
-  const SimulateModeComponent = ({
+describe("Projection Mode UI Behavior", () => {
+  // Mock component that includes projection mode UI
+  const ProjectionModeComponent = ({
     activeTab = "current",
-    simulateMode = false,
-    onSimulateModeChange = jest.fn(),
+    projectionMode = false,
+    onProjectionModeChange = jest.fn(),
   }: {
     activeTab?: string;
-    simulateMode?: boolean;
-    onSimulateModeChange?: (checked: boolean) => void;
+    projectionMode?: boolean;
+    onProjectionModeChange?: (checked: boolean) => void;
   }) => {
     return (
-      <div data-testid="simulate-mode-container">
+      <div data-testid="projection-mode-container">
         <div className="flex items-center space-x-2">
           <MockCheckbox
-            id="simulate-mode"
-            checked={simulateMode}
-            onCheckedChange={onSimulateModeChange}
+            id="projection-mode"
+            checked={projectionMode}
+            onCheckedChange={onProjectionModeChange}
             disabled={activeTab !== "current"}
           />
-          <MockLabel htmlFor="simulate-mode">Simular</MockLabel>
+          <MockLabel htmlFor="projection-mode">Proyectar</MockLabel>
         </div>
       </div>
     );
   };
 
-  // Mock chart component with simulation styling
+  // Mock chart component with projection styling
   const MockChart = ({
     data,
-    isSimulating = false,
+    isProjecting = false,
   }: {
-    data: Array<{ name: string; value: number; isSimulated?: boolean }>;
-    isSimulating?: boolean;
+    data: Array<{ name: string; value: number; isProjectiond?: boolean }>;
+    isProjecting?: boolean;
   }) => {
-    const title = isSimulating ? "Gráfico (Simulación)" : "Gráfico";
+    const title = isProjecting ? "Gráfico (Proyección)" : "Gráfico";
 
     return (
       <div data-testid="mock-chart">
         <h3 data-testid="chart-title">{title}</h3>
         <div data-testid="chart-legend">
-          {isSimulating ? "Presupuesto" : "Gastos"}
+          {isProjecting ? "Presupuesto" : "Gastos"}
         </div>
         {data.map((item, index) => (
           <div
             key={index}
             data-testid={`chart-bar-${index}`}
-            className={item.isSimulated ? "simulated-bar" : "normal-bar"}
+            className={item.isProjectiond ? "projectiond-bar" : "normal-bar"}
             style={{
-              opacity: item.isSimulated ? 0.7 : 1,
+              opacity: item.isProjectiond ? 0.7 : 1,
             }}
           >
             {item.name}: ${item.value}
@@ -125,15 +125,15 @@ describe("Simulate Mode UI Behavior", () => {
 
   // Mock tooltip component
   const MockTooltip = ({
-    isSimulating,
+    isProjecting,
     value,
     label,
   }: {
-    isSimulating: boolean;
+    isProjecting: boolean;
     value: number;
     label: string;
   }) => {
-    const tooltipText = isSimulating
+    const tooltipText = isProjecting
       ? `Presupuesto: $${value}`
       : `Gastos: $${value}`;
 
@@ -154,119 +154,119 @@ describe("Simulate Mode UI Behavior", () => {
   });
 
   describe("Checkbox UI Behavior", () => {
-    it("should render simulate mode checkbox", () => {
-      render(<SimulateModeComponent />);
+    it("should render projection mode checkbox", () => {
+      render(<ProjectionModeComponent />);
 
-      const checkbox = screen.getByTestId("simulate-mode");
-      const label = screen.getByTestId("simulate-mode-label");
+      const checkbox = screen.getByTestId("projection-mode");
+      const label = screen.getByTestId("projection-mode-label");
 
       expect(checkbox).toBeInTheDocument();
       expect(label).toBeInTheDocument();
-      expect(label).toHaveTextContent("Simular");
+      expect(label).toHaveTextContent("Proyectar");
     });
 
     it("should be enabled on current tab", () => {
-      render(<SimulateModeComponent activeTab="current" />);
+      render(<ProjectionModeComponent activeTab="current" />);
 
-      const checkbox = screen.getByTestId("simulate-mode");
+      const checkbox = screen.getByTestId("projection-mode");
       expect(checkbox).not.toBeDisabled();
     });
 
     it("should be disabled on period comparison tab", () => {
-      render(<SimulateModeComponent activeTab="period-comparison" />);
+      render(<ProjectionModeComponent activeTab="period-comparison" />);
 
-      const checkbox = screen.getByTestId("simulate-mode");
+      const checkbox = screen.getByTestId("projection-mode");
       expect(checkbox).toBeDisabled();
     });
 
     it("should be disabled on weekly cumulative tab", () => {
-      render(<SimulateModeComponent activeTab="weekly-cumulative" />);
+      render(<ProjectionModeComponent activeTab="weekly-cumulative" />);
 
-      const checkbox = screen.getByTestId("simulate-mode");
+      const checkbox = screen.getByTestId("projection-mode");
       expect(checkbox).toBeDisabled();
     });
 
     it("should toggle when clicked", () => {
       const mockOnChange = jest.fn();
       render(
-        <SimulateModeComponent
+        <ProjectionModeComponent
           activeTab="current"
-          onSimulateModeChange={mockOnChange}
+          onProjectionModeChange={mockOnChange}
         />
       );
 
-      const checkbox = screen.getByTestId("simulate-mode");
+      const checkbox = screen.getByTestId("projection-mode");
       fireEvent.click(checkbox);
 
       expect(mockOnChange).toHaveBeenCalledWith(true);
     });
 
     it("should reflect checked state", () => {
-      render(<SimulateModeComponent simulateMode={true} />);
+      render(<ProjectionModeComponent projectionMode={true} />);
 
-      const checkbox = screen.getByTestId("simulate-mode") as HTMLInputElement;
+      const checkbox = screen.getByTestId("projection-mode") as HTMLInputElement;
       expect(checkbox.checked).toBe(true);
     });
 
     it("should reflect unchecked state", () => {
-      render(<SimulateModeComponent simulateMode={false} />);
+      render(<ProjectionModeComponent projectionMode={false} />);
 
-      const checkbox = screen.getByTestId("simulate-mode") as HTMLInputElement;
+      const checkbox = screen.getByTestId("projection-mode") as HTMLInputElement;
       expect(checkbox.checked).toBe(false);
     });
   });
 
   describe("Chart Visual Indicators", () => {
     const mockData = [
-      { name: "Alimentación", value: 500, isSimulated: false },
-      { name: "Transporte", value: 300, isSimulated: false },
+      { name: "Alimentación", value: 500, isProjectiond: false },
+      { name: "Transporte", value: 300, isProjectiond: false },
     ];
 
-    const mockSimulatedData = [
-      { name: "Alimentación", value: 600, isSimulated: true },
-      { name: "Transporte", value: 400, isSimulated: true },
+    const mockProjectiondData = [
+      { name: "Alimentación", value: 600, isProjectiond: true },
+      { name: "Transporte", value: 400, isProjectiond: true },
     ];
 
-    it("should show normal chart title when not simulating", () => {
-      render(<MockChart data={mockData} isSimulating={false} />);
+    it("should show normal chart title when not projecting", () => {
+      render(<MockChart data={mockData} isProjecting={false} />);
 
       const title = screen.getByTestId("chart-title");
       expect(title).toHaveTextContent("Gráfico");
     });
 
-    it("should show simulation indicator in chart title", () => {
-      render(<MockChart data={mockSimulatedData} isSimulating={true} />);
+    it("should show projection indicator in chart title", () => {
+      render(<MockChart data={mockProjectiondData} isProjecting={true} />);
 
       const title = screen.getByTestId("chart-title");
-      expect(title).toHaveTextContent("Gráfico (Simulación)");
+      expect(title).toHaveTextContent("Gráfico (Proyección)");
     });
 
-    it("should show 'Gastos' in legend when not simulating", () => {
-      render(<MockChart data={mockData} isSimulating={false} />);
+    it("should show 'Gastos' in legend when not projecting", () => {
+      render(<MockChart data={mockData} isProjecting={false} />);
 
       const legend = screen.getByTestId("chart-legend");
       expect(legend).toHaveTextContent("Gastos");
     });
 
-    it("should show 'Presupuesto' in legend when simulating", () => {
-      render(<MockChart data={mockSimulatedData} isSimulating={true} />);
+    it("should show 'Presupuesto' in legend when projecting", () => {
+      render(<MockChart data={mockProjectiondData} isProjecting={true} />);
 
       const legend = screen.getByTestId("chart-legend");
       expect(legend).toHaveTextContent("Presupuesto");
     });
 
-    it("should apply simulation styling to chart bars", () => {
-      render(<MockChart data={mockSimulatedData} isSimulating={true} />);
+    it("should apply projection styling to chart bars", () => {
+      render(<MockChart data={mockProjectiondData} isProjecting={true} />);
 
       const bars = screen.getAllByTestId(/chart-bar-/);
       bars.forEach((bar) => {
-        expect(bar).toHaveClass("simulated-bar");
+        expect(bar).toHaveClass("projectiond-bar");
         expect(bar).toHaveStyle({ opacity: "0.7" });
       });
     });
 
-    it("should apply normal styling to chart bars when not simulating", () => {
-      render(<MockChart data={mockData} isSimulating={false} />);
+    it("should apply normal styling to chart bars when not projecting", () => {
+      render(<MockChart data={mockData} isProjecting={false} />);
 
       const bars = screen.getAllByTestId(/chart-bar-/);
       bars.forEach((bar) => {
@@ -277,18 +277,18 @@ describe("Simulate Mode UI Behavior", () => {
   });
 
   describe("Tooltip Behavior", () => {
-    it("should show expense format in tooltip when not simulating", () => {
+    it("should show expense format in tooltip when not projecting", () => {
       render(
-        <MockTooltip isSimulating={false} value={500} label="Alimentación" />
+        <MockTooltip isProjecting={false} value={500} label="Alimentación" />
       );
 
       const tooltipValue = screen.getByTestId("tooltip-value");
       expect(tooltipValue).toHaveTextContent("Gastos: $500");
     });
 
-    it("should show budget format in tooltip when simulating", () => {
+    it("should show budget format in tooltip when projecting", () => {
       render(
-        <MockTooltip isSimulating={true} value={600} label="Alimentación" />
+        <MockTooltip isProjecting={true} value={600} label="Alimentación" />
       );
 
       const tooltipValue = screen.getByTestId("tooltip-value");
@@ -297,7 +297,7 @@ describe("Simulate Mode UI Behavior", () => {
 
     it("should include proper label in tooltip", () => {
       render(
-        <MockTooltip isSimulating={true} value={600} label="Alimentación" />
+        <MockTooltip isProjecting={true} value={600} label="Alimentación" />
       );
 
       const tooltipLabel = screen.getByTestId("tooltip-label");
@@ -307,30 +307,30 @@ describe("Simulate Mode UI Behavior", () => {
 
   describe("Accessibility", () => {
     it("should have proper ARIA attributes", () => {
-      render(<SimulateModeComponent />);
+      render(<ProjectionModeComponent />);
 
-      const checkbox = screen.getByTestId("simulate-mode");
+      const checkbox = screen.getByTestId("projection-mode");
       expect(checkbox).toHaveAttribute("type", "checkbox");
-      expect(checkbox).toHaveAttribute("id", "simulate-mode");
+      expect(checkbox).toHaveAttribute("id", "projection-mode");
     });
 
     it("should associate label with checkbox", () => {
-      render(<SimulateModeComponent />);
+      render(<ProjectionModeComponent />);
 
-      const label = screen.getByTestId("simulate-mode-label");
-      expect(label).toHaveAttribute("for", "simulate-mode");
+      const label = screen.getByTestId("projection-mode-label");
+      expect(label).toHaveAttribute("for", "projection-mode");
     });
 
     it("should be keyboard accessible", () => {
       const mockOnChange = jest.fn();
       render(
-        <SimulateModeComponent
+        <ProjectionModeComponent
           activeTab="current"
-          onSimulateModeChange={mockOnChange}
+          onProjectionModeChange={mockOnChange}
         />
       );
 
-      const checkbox = screen.getByTestId("simulate-mode");
+      const checkbox = screen.getByTestId("projection-mode");
 
       // Focus the checkbox
       checkbox.focus();
@@ -346,7 +346,7 @@ describe("Simulate Mode UI Behavior", () => {
 
     it("should have proper tooltip role", () => {
       render(
-        <MockTooltip isSimulating={true} value={600} label="Alimentación" />
+        <MockTooltip isProjecting={true} value={600} label="Alimentación" />
       );
 
       const tooltip = screen.getByTestId("mock-tooltip");
@@ -354,9 +354,9 @@ describe("Simulate Mode UI Behavior", () => {
     });
 
     it("should indicate disabled state visually", () => {
-      render(<SimulateModeComponent activeTab="period-comparison" />);
+      render(<ProjectionModeComponent activeTab="period-comparison" />);
 
-      const checkbox = screen.getByTestId("simulate-mode");
+      const checkbox = screen.getByTestId("projection-mode");
       expect(checkbox).toBeDisabled();
     });
   });
@@ -365,14 +365,14 @@ describe("Simulate Mode UI Behavior", () => {
     it("should handle complete toggle flow", async () => {
       const mockOnChange = jest.fn();
       const { rerender } = render(
-        <SimulateModeComponent
+        <ProjectionModeComponent
           activeTab="current"
-          simulateMode={false}
-          onSimulateModeChange={mockOnChange}
+          projectionMode={false}
+          onProjectionModeChange={mockOnChange}
         />
       );
 
-      const checkbox = screen.getByTestId("simulate-mode");
+      const checkbox = screen.getByTestId("projection-mode");
 
       // Initial state
       expect(checkbox).not.toBeChecked();
@@ -383,10 +383,10 @@ describe("Simulate Mode UI Behavior", () => {
 
       // Rerender with new state
       rerender(
-        <SimulateModeComponent
+        <ProjectionModeComponent
           activeTab="current"
-          simulateMode={true}
-          onSimulateModeChange={mockOnChange}
+          projectionMode={true}
+          onProjectionModeChange={mockOnChange}
         />
       );
 
@@ -400,13 +400,13 @@ describe("Simulate Mode UI Behavior", () => {
     it("should prevent interaction when disabled", () => {
       const mockOnChange = jest.fn();
       render(
-        <SimulateModeComponent
+        <ProjectionModeComponent
           activeTab="period-comparison"
-          onSimulateModeChange={mockOnChange}
+          onProjectionModeChange={mockOnChange}
         />
       );
 
-      const checkbox = screen.getByTestId("simulate-mode");
+      const checkbox = screen.getByTestId("projection-mode");
 
       // Try to click disabled checkbox
       fireEvent.click(checkbox);
@@ -418,40 +418,40 @@ describe("Simulate Mode UI Behavior", () => {
     it("should maintain state across tab switches", () => {
       const mockOnChange = jest.fn();
       const { rerender } = render(
-        <SimulateModeComponent
+        <ProjectionModeComponent
           activeTab="current"
-          simulateMode={true}
-          onSimulateModeChange={mockOnChange}
+          projectionMode={true}
+          onProjectionModeChange={mockOnChange}
         />
       );
 
-      let checkbox = screen.getByTestId("simulate-mode");
+      let checkbox = screen.getByTestId("projection-mode");
       expect(checkbox).toBeChecked();
       expect(checkbox).not.toBeDisabled();
 
       // Switch to period comparison tab
       rerender(
-        <SimulateModeComponent
+        <ProjectionModeComponent
           activeTab="period-comparison"
-          simulateMode={true}
-          onSimulateModeChange={mockOnChange}
+          projectionMode={true}
+          onProjectionModeChange={mockOnChange}
         />
       );
 
-      checkbox = screen.getByTestId("simulate-mode");
+      checkbox = screen.getByTestId("projection-mode");
       expect(checkbox).toBeChecked(); // State preserved
       expect(checkbox).toBeDisabled(); // But disabled
 
       // Switch back to current tab
       rerender(
-        <SimulateModeComponent
+        <ProjectionModeComponent
           activeTab="current"
-          simulateMode={true}
-          onSimulateModeChange={mockOnChange}
+          projectionMode={true}
+          onProjectionModeChange={mockOnChange}
         />
       );
 
-      checkbox = screen.getByTestId("simulate-mode");
+      checkbox = screen.getByTestId("projection-mode");
       expect(checkbox).toBeChecked(); // State still preserved
       expect(checkbox).not.toBeDisabled(); // And enabled again
     });
@@ -459,13 +459,13 @@ describe("Simulate Mode UI Behavior", () => {
 
   describe("Error States", () => {
     it("should handle missing data gracefully", () => {
-      render(<MockChart data={[]} isSimulating={true} />);
+      render(<MockChart data={[]} isProjecting={true} />);
 
       const chart = screen.getByTestId("mock-chart");
       expect(chart).toBeInTheDocument();
 
       const title = screen.getByTestId("chart-title");
-      expect(title).toHaveTextContent("Gráfico (Simulación)");
+      expect(title).toHaveTextContent("Gráfico (Proyección)");
 
       // Should not crash with empty data
       const bars = screen.queryAllByTestId(/chart-bar-/);
@@ -474,11 +474,11 @@ describe("Simulate Mode UI Behavior", () => {
 
     it("should handle undefined values in data", () => {
       const dataWithUndefined = [
-        { name: "Test", value: undefined as any, isSimulated: true },
+        { name: "Test", value: undefined as any, isProjectiond: true },
       ];
 
       expect(() => {
-        render(<MockChart data={dataWithUndefined} isSimulating={true} />);
+        render(<MockChart data={dataWithUndefined} isProjecting={true} />);
       }).not.toThrow();
     });
   });

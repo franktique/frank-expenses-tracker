@@ -81,6 +81,16 @@ export interface Category {
   name: string;
   fund_id?: string;
   fund_name?: string; // Populated in joins
+  associated_funds?: Fund[]; // New field for multiple fund relationships
+}
+
+// Category-Fund relationship interface
+export interface CategoryFundRelationship {
+  id: string;
+  category_id: string;
+  fund_id: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export const CategorySchema = z.object({
@@ -100,6 +110,7 @@ export const CreateCategorySchema = z.object({
     .min(1, "El nombre de la categoría es obligatorio")
     .max(255, "El nombre de la categoría es demasiado largo"),
   fund_id: z.string().uuid().optional(),
+  fund_ids: z.array(z.string().uuid()).optional(), // New field for multiple fund relationships
 });
 
 // Category update schema
@@ -110,6 +121,20 @@ export const UpdateCategorySchema = z.object({
     .max(255, "El nombre de la categoría es demasiado largo")
     .optional(),
   fund_id: z.string().uuid().optional(),
+  fund_ids: z.array(z.string().uuid()).optional(), // New field for multiple fund relationships
+});
+
+// Category-Fund relationship schemas
+export const CategoryFundRelationshipSchema = z.object({
+  id: z.string().uuid(),
+  category_id: z.string().uuid(),
+  fund_id: z.string().uuid(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export const UpdateCategoryFundsSchema = z.object({
+  fund_ids: z.array(z.string().uuid()).min(0, "Fund IDs array is required"),
 });
 
 // Enhanced Income interface with fund support
@@ -178,6 +203,8 @@ export interface Expense {
   payment_method: PaymentMethod;
   description: string;
   amount: number;
+  source_fund_id: string; // Required source fund field
+  source_fund_name?: string; // Populated in joins
   destination_fund_id?: string;
   destination_fund_name?: string; // Populated in joins
 }
@@ -194,6 +221,8 @@ export const ExpenseSchema = z.object({
     .min(1, "La descripción es obligatoria")
     .max(500, "La descripción es demasiado larga"),
   amount: z.number().positive("El monto debe ser positivo"),
+  source_fund_id: z.string().uuid(), // Required source fund field
+  source_fund_name: z.string().optional(),
   destination_fund_id: z.string().uuid().optional(),
   destination_fund_name: z.string().optional(),
 });
@@ -210,6 +239,7 @@ export const CreateExpenseSchema = z.object({
     .min(1, "La descripción es obligatoria")
     .max(500, "La descripción es demasiado larga"),
   amount: z.number().positive("El monto debe ser positivo"),
+  source_fund_id: z.string().uuid(), // Required source fund field
   destination_fund_id: z.string().uuid().optional(),
 });
 
@@ -228,6 +258,7 @@ export const UpdateExpenseSchema = z.object({
     .max(500, "La descripción es demasiado larga")
     .optional(),
   amount: z.number().positive("El monto debe ser positivo").optional(),
+  source_fund_id: z.string().uuid().optional(), // Optional source fund field for updates
   destination_fund_id: z.string().uuid().optional(),
 });
 
@@ -411,4 +442,29 @@ export const FUND_ERROR_MESSAGES = {
   FUND_INITIAL_BALANCE_NEGATIVE: "El balance inicial no puede ser negativo",
   FUND_NAME_TOO_LONG: "El nombre del fondo es demasiado largo",
   FUND_DESCRIPTION_TOO_LONG: "La descripción del fondo es demasiado larga",
+} as const;
+
+// Category-Fund relationship error messages
+export const CATEGORY_FUND_ERROR_MESSAGES = {
+  RELATIONSHIP_EXISTS: "La relación entre esta categoría y fondo ya existe",
+  EXPENSES_EXIST:
+    "No se puede eliminar la relación porque existen {count} gastos registrados",
+  INVALID_FUND_FOR_CATEGORY:
+    "El fondo seleccionado no está asociado con esta categoría",
+  MIGRATION_FAILED: "Error durante la migración de relaciones categoría-fondo",
+  CATEGORY_NOT_FOUND: "La categoría especificada no existe",
+  RELATIONSHIP_NOT_FOUND: "La relación categoría-fondo no existe",
+  CANNOT_DELETE_LAST_RELATIONSHIP:
+    "No se puede eliminar la última relación de fondo para una categoría con gastos",
+  SOME_FUNDS_NOT_EXIST: "Algunos fondos especificados no existen",
+} as const;
+
+// Source fund validation error messages
+export const SOURCE_FUND_ERROR_MESSAGES = {
+  SOURCE_FUND_REQUIRED: "Debe seleccionar un fondo origen para el gasto",
+  SOURCE_FUND_INVALID_FOR_CATEGORY:
+    "El fondo origen seleccionado no está asociado con esta categoría",
+  SOURCE_FUND_NOT_FOUND: "El fondo origen especificado no existe",
+  MIGRATION_SOURCE_FUND_MISSING:
+    "No se pudo determinar el fondo origen para el gasto",
 } as const;

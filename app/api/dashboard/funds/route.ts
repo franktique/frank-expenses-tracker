@@ -44,22 +44,22 @@ export async function GET() {
       ) transfer_in_totals ON f.id = transfer_in_totals.fund_id
       LEFT JOIN (
         SELECT 
-          c.fund_id,
-          SUM(e.amount) as total
+          source_fund_id as fund_id,
+          SUM(amount) as total
         FROM expenses e
-        JOIN categories c ON e.category_id = c.id
-        WHERE c.fund_id IS NOT NULL
-        GROUP BY c.fund_id
+        WHERE source_fund_id IS NOT NULL
+        GROUP BY source_fund_id
       ) expense_totals ON f.id = expense_totals.fund_id
       LEFT JOIN (
         SELECT 
-          e.destination_fund_id,
-          SUM(e.amount) as total
+          source_fund_id as fund_id,
+          SUM(amount) as total
         FROM expenses e
-        JOIN categories c ON e.category_id = c.id
-        WHERE e.destination_fund_id IS NOT NULL
-        GROUP BY e.destination_fund_id
-      ) transfer_out_totals ON f.id = transfer_out_totals.destination_fund_id
+        WHERE source_fund_id IS NOT NULL
+          AND destination_fund_id IS NOT NULL
+          AND destination_fund_id != source_fund_id
+        GROUP BY source_fund_id
+      ) transfer_out_totals ON f.id = transfer_out_totals.fund_id
       LEFT JOIN (
         SELECT 
           fund_id,

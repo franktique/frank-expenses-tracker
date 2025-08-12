@@ -64,8 +64,7 @@ export async function GET(request: NextRequest) {
               e.date::date as expense_date,
               SUM(e.amount) as expense_amount
             FROM expenses e
-            JOIN categories c ON e.category_id = c.id
-            WHERE c.fund_id = ${fundId}
+            WHERE e.source_fund_id = ${fundId}
               AND e.date >= ${startDateStr}
               AND e.date <= ${endDateStr}
             GROUP BY e.date::date
@@ -132,8 +131,8 @@ export async function GET(request: NextRequest) {
               e.date::date as expense_date,
               SUM(e.amount) as expense_amount
             FROM expenses e
-            JOIN categories c ON e.category_id = c.id
-            WHERE e.date >= ${startDateStr}
+            WHERE e.source_fund_id IS NOT NULL
+              AND e.date >= ${startDateStr}
               AND e.date <= ${endDateStr}
             GROUP BY e.date::date
           ) expenses ON ds.series_date = expenses.expense_date

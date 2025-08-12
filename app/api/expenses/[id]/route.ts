@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
-import { UpdateExpenseSchema } from "@/types/funds";
+import { UpdateExpenseSchema, SOURCE_FUND_ERROR_MESSAGES } from "@/types/funds";
+import { validateSourceFundUpdate } from "@/lib/source-fund-validation";
 
 export async function GET(
   request: NextRequest,
@@ -12,14 +13,13 @@ export async function GET(
       SELECT 
         e.*,
         c.name as category_name,
-        c.fund_id as category_fund_id,
         p.name as period_name,
-        cf.name as category_fund_name,
+        sf.name as source_fund_name,
         df.name as destination_fund_name
       FROM expenses e
       JOIN categories c ON e.category_id = c.id
       JOIN periods p ON e.period_id = p.id
-      LEFT JOIN funds cf ON c.fund_id = cf.id
+      LEFT JOIN funds sf ON e.source_fund_id = sf.id
       LEFT JOIN funds df ON e.destination_fund_id = df.id
       WHERE e.id = ${id}
     `;
@@ -57,11 +57,8 @@ export async function PUT(
 
     // Get existing expense to calculate balance changes
     const [existingExpense] = await sql`
-      SELECT 
-        e.*,
-        c.fund_id as category_fund_id
+      SELECT e.*
       FROM expenses e
-      JOIN categories c ON e.category_id = c.id
       WHERE e.id = ${id}
     `;
 
@@ -76,6 +73,7 @@ export async function PUT(
       payment_method,
       description,
       amount,
+      source_fund_id,
       destination_fund_id,
     } = validationResult.data;
 
@@ -86,57 +84,52 @@ export async function PUT(
     payment_method = payment_method || existingExpense.payment_method;
     description = description || existingExpense.description;
     amount = amount !== undefined ? amount : existingExpense.amount;
+    source_fund_id = source_fund_id || existingExpense.source_fund_id;
     destination_fund_id =
       destination_fund_id !== undefined
         ? destination_fund_id
         : existingExpense.destination_fund_id;
 
-    // Validate that new category exists and get its fund
-    const [newCategory] = await sql`
-      SELECT c.*, f.id as fund_id, f.name as fund_name
-      FROM categories c
-      LEFT JOIN funds f ON c.fund_id = f.id
-      WHERE c.id = ${category_id}
-    `;
+    // Enhanced validation for expense updates
+    const validation = await validateSourceFundUpdate(
+      id,
+      category_id !== existingExpense.category_id ? category_id : undefined,
+      source_fund_id !== existingExpense.source_fund_id
+        ? source_fund_id
+        : undefined,
+      destination_fund_id !== existingExpense.destination_fund_id
+        ? destination_fund_id
+        : undefined,
+      amount !== existingExpense.amount ? amount : undefined
+    );
 
-    if (!newCategory) {
+    if (!validation.isValid) {
       return NextResponse.json(
-        { error: "La categoría especificada no existe" },
+        {
+          error: "Validation failed",
+          details: validation.errors,
+          warnings: validation.warnings,
+        },
         { status: 400 }
       );
     }
 
-    // If destination_fund_id is provided, validate it exists and is different from source fund
-    if (destination_fund_id) {
-      const [destinationFund] =
-        await sql`SELECT id FROM funds WHERE id = ${destination_fund_id}`;
-      if (!destinationFund) {
-        return NextResponse.json(
-          { error: "El fondo de destino especificado no existe" },
-          { status: 400 }
-        );
-      }
-
-      // Prevent transfer to the same fund
-      if (newCategory.fund_id === destination_fund_id) {
-        return NextResponse.json(
-          { error: "No se puede transferir dinero al mismo fondo" },
-          { status: 400 }
-        );
-      }
+    // Log warnings if any
+    if (validation.warnings.length > 0) {
+      console.warn("Expense update warnings:", validation.warnings);
     }
 
     // Revert old fund balance changes
-    const oldCategoryFundId = existingExpense.category_fund_id;
+    const oldSourceFundId = existingExpense.source_fund_id;
     const oldDestinationFundId = existingExpense.destination_fund_id;
     const oldAmount = existingExpense.amount;
 
     // Revert old source fund balance (add back the amount)
-    if (oldCategoryFundId) {
+    if (oldSourceFundId) {
       await sql`
         UPDATE funds 
         SET current_balance = current_balance + ${oldAmount}
-        WHERE id = ${oldCategoryFundId}
+        WHERE id = ${oldSourceFundId}
       `;
     }
 
@@ -159,6 +152,7 @@ export async function PUT(
         payment_method = ${payment_method},
         description = ${description},
         amount = ${amount},
+        source_fund_id = ${source_fund_id},
         destination_fund_id = ${destination_fund_id || null}
       WHERE id = ${id}
       RETURNING *
@@ -169,14 +163,12 @@ export async function PUT(
     }
 
     // Apply new fund balance changes
-    // Decrease new source fund balance (new category's fund)
-    if (newCategory.fund_id) {
-      await sql`
-        UPDATE funds 
-        SET current_balance = current_balance - ${amount}
-        WHERE id = ${newCategory.fund_id}
-      `;
-    }
+    // Decrease new source fund balance
+    await sql`
+      UPDATE funds 
+      SET current_balance = current_balance - ${amount}
+      WHERE id = ${source_fund_id}
+    `;
 
     // Increase new destination fund balance if specified (fund transfer)
     if (destination_fund_id) {
@@ -192,14 +184,13 @@ export async function PUT(
       SELECT 
         e.*,
         c.name as category_name,
-        c.fund_id as category_fund_id,
         p.name as period_name,
-        cf.name as category_fund_name,
+        sf.name as source_fund_name,
         df.name as destination_fund_name
       FROM expenses e
       JOIN categories c ON e.category_id = c.id
       JOIN periods p ON e.period_id = p.id
-      LEFT JOIN funds cf ON c.fund_id = cf.id
+      JOIN funds sf ON e.source_fund_id = sf.id
       LEFT JOIN funds df ON e.destination_fund_id = df.id
       WHERE e.id = ${id}
     `;
@@ -223,11 +214,8 @@ export async function DELETE(
 
     // Get the expense before deleting to update fund balances
     const [expenseToDelete] = await sql`
-      SELECT 
-        e.*,
-        c.fund_id as category_fund_id
+      SELECT e.*
       FROM expenses e
-      JOIN categories c ON e.category_id = c.id
       WHERE e.id = ${id}
     `;
 
@@ -246,12 +234,12 @@ export async function DELETE(
     }
 
     // Revert fund balance changes
-    // Add back the amount to source fund (category's fund)
-    if (expenseToDelete.category_fund_id) {
+    // Add back the amount to source fund
+    if (expenseToDelete.source_fund_id) {
       await sql`
         UPDATE funds 
         SET current_balance = current_balance + ${expenseToDelete.amount}
-        WHERE id = ${expenseToDelete.category_fund_id}
+        WHERE id = ${expenseToDelete.source_fund_id}
       `;
     }
 

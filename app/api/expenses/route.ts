@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
-import { CreateExpenseSchema } from "@/types/funds";
+import { CreateExpenseSchema, SOURCE_FUND_ERROR_MESSAGES } from "@/types/funds";
+import { validateExpenseSourceFunds } from "@/lib/source-fund-validation";
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +11,7 @@ export async function GET(request: NextRequest) {
     let expenses;
 
     if (fundFilter) {
-      // Filter expenses by fund (through category fund assignment)
+      // Filter expenses by fund (through source fund or category fund relationships)
       expenses = await sql`
         SELECT 
           e.id,
@@ -21,18 +22,23 @@ export async function GET(request: NextRequest) {
           e.amount,
           e.event,
           e.date,
+          e.source_fund_id,
           e.destination_fund_id,
           c.name as category_name,
-          c.fund_id as category_fund_id,
           p.name as period_name,
-          cf.name as category_fund_name,
+          sf.name as source_fund_name,
           df.name as destination_fund_name
         FROM expenses e
         JOIN categories c ON e.category_id = c.id
         JOIN periods p ON e.period_id = p.id
-        LEFT JOIN funds cf ON c.fund_id = cf.id
+        LEFT JOIN funds sf ON e.source_fund_id = sf.id
         LEFT JOIN funds df ON e.destination_fund_id = df.id
-        WHERE c.fund_id = ${fundFilter}
+        WHERE e.source_fund_id = ${fundFilter}
+           OR EXISTS (
+             SELECT 1 FROM category_fund_relationships cfr 
+             WHERE cfr.category_id = e.category_id AND cfr.fund_id = ${fundFilter}
+           )
+           OR c.fund_id = ${fundFilter}
         ORDER BY e.date DESC
       `;
     } else {
@@ -47,16 +53,16 @@ export async function GET(request: NextRequest) {
           e.amount,
           e.event,
           e.date,
+          e.source_fund_id,
           e.destination_fund_id,
           c.name as category_name,
-          c.fund_id as category_fund_id,
           p.name as period_name,
-          cf.name as category_fund_name,
+          sf.name as source_fund_name,
           df.name as destination_fund_name
         FROM expenses e
         JOIN categories c ON e.category_id = c.id
         JOIN periods p ON e.period_id = p.id
-        LEFT JOIN funds cf ON c.fund_id = cf.id
+        LEFT JOIN funds sf ON e.source_fund_id = sf.id
         LEFT JOIN funds df ON e.destination_fund_id = df.id
         ORDER BY e.date DESC
       `;
@@ -93,42 +99,32 @@ export async function POST(request: NextRequest) {
       payment_method,
       description,
       amount,
+      source_fund_id,
       destination_fund_id,
     } = validationResult.data;
 
-    // Validate that category exists and get its fund
-    const [category] = await sql`
-      SELECT c.*, f.id as fund_id, f.name as fund_name
-      FROM categories c
-      LEFT JOIN funds f ON c.fund_id = f.id
-      WHERE c.id = ${category_id}
-    `;
+    // Enhanced validation using the validation library
+    const validation = await validateExpenseSourceFunds(
+      category_id,
+      source_fund_id,
+      destination_fund_id,
+      amount
+    );
 
-    if (!category) {
+    if (!validation.isValid) {
       return NextResponse.json(
-        { error: "La categoría especificada no existe" },
+        {
+          error: "Validation failed",
+          details: validation.errors,
+          warnings: validation.warnings,
+        },
         { status: 400 }
       );
     }
 
-    // If destination_fund_id is provided, validate it exists and is different from source fund
-    if (destination_fund_id) {
-      const [destinationFund] =
-        await sql`SELECT id FROM funds WHERE id = ${destination_fund_id}`;
-      if (!destinationFund) {
-        return NextResponse.json(
-          { error: "El fondo de destino especificado no existe" },
-          { status: 400 }
-        );
-      }
-
-      // Prevent transfer to the same fund
-      if (category.fund_id === destination_fund_id) {
-        return NextResponse.json(
-          { error: "No se puede transferir dinero al mismo fondo" },
-          { status: 400 }
-        );
-      }
+    // Log warnings if any
+    if (validation.warnings.length > 0) {
+      console.warn("Expense creation warnings:", validation.warnings);
     }
 
     // Standardize date to ensure consistency with Colombia timezone
@@ -142,24 +138,22 @@ export async function POST(request: NextRequest) {
 
     // Insert the expense
     const [newExpense] = await sql`
-      INSERT INTO expenses (category_id, period_id, date, event, payment_method, description, amount, destination_fund_id)
+      INSERT INTO expenses (category_id, period_id, date, event, payment_method, description, amount, source_fund_id, destination_fund_id)
       VALUES (${category_id}, ${period_id}, ${dateToSave}, ${
       event || null
-    }, ${payment_method}, ${description}, ${amount}, ${
+    }, ${payment_method}, ${description}, ${amount}, ${source_fund_id}, ${
       destination_fund_id || null
     })
       RETURNING *
     `;
 
     // Update fund balances
-    // Decrease source fund balance (category's fund)
-    if (category.fund_id) {
-      await sql`
-        UPDATE funds 
-        SET current_balance = current_balance - ${amount}
-        WHERE id = ${category.fund_id}
-      `;
-    }
+    // Decrease source fund balance
+    await sql`
+      UPDATE funds 
+      SET current_balance = current_balance - ${amount}
+      WHERE id = ${source_fund_id}
+    `;
 
     // Increase destination fund balance if specified (fund transfer)
     if (destination_fund_id) {
@@ -175,14 +169,13 @@ export async function POST(request: NextRequest) {
       SELECT 
         e.*,
         c.name as category_name,
-        c.fund_id as category_fund_id,
         p.name as period_name,
-        cf.name as category_fund_name,
+        sf.name as source_fund_name,
         df.name as destination_fund_name
       FROM expenses e
       JOIN categories c ON e.category_id = c.id
       JOIN periods p ON e.period_id = p.id
-      LEFT JOIN funds cf ON c.fund_id = cf.id
+      JOIN funds sf ON e.source_fund_id = sf.id
       LEFT JOIN funds df ON e.destination_fund_id = df.id
       WHERE e.id = ${newExpense.id}
     `;

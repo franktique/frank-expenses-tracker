@@ -14,9 +14,16 @@ import {
   FundBalance,
   FundOperationResult,
   FundBalanceRecalculationResult,
+  CategoryFundRelationship,
 } from "@/types/funds";
 import { ActivePeriodStorage } from "@/lib/active-period-storage";
 import { loadActivePeriod } from "@/lib/active-period-service";
+import {
+  categoryFundCache,
+  invalidateCategoryFundCache,
+  warmCategoryFundCache,
+} from "@/lib/category-fund-cache";
+import { CategoryFundFallback } from "@/lib/category-fund-fallback";
 
 type BudgetContextType = {
   categories: Category[];
@@ -34,9 +41,33 @@ type BudgetContextType = {
   dbConnectionError: boolean;
   connectionErrorDetails: string | null;
   setupDatabase: () => Promise<void>;
-  addCategory: (name: string, fundId?: string) => Promise<void>;
-  updateCategory: (id: string, name: string, fundId?: string) => Promise<void>;
+  addCategory: (
+    name: string,
+    fundId?: string,
+    fundIds?: string[]
+  ) => Promise<void>;
+  updateCategory: (
+    id: string,
+    name: string,
+    fundId?: string,
+    fundIds?: string[]
+  ) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
+  getCategoryFunds: (categoryId: string) => Promise<Fund[]>;
+  updateCategoryFunds: (categoryId: string, fundIds: string[]) => Promise<void>;
+  deleteCategoryFundRelationship: (
+    categoryId: string,
+    fundId: string
+  ) => Promise<void>;
+  getAvailableFundsForCategory: (categoryId: string) => Fund[];
+  getDefaultFundForCategory: (
+    categoryId: string,
+    currentFilterFund?: Fund | null
+  ) => Fund | null;
+  refreshCategoryFundRelationships: () => Promise<void>;
+  batchUpdateCategoryFunds: (
+    updates: Array<{ categoryId: string; fundIds: string[] }>
+  ) => Promise<void>;
   addPeriod: (name: string, month: number, year: number) => Promise<void>;
   updatePeriod: (
     id: string,
@@ -85,6 +116,7 @@ type BudgetContextType = {
     paymentMethod: PaymentMethod,
     description: string,
     amount: number,
+    sourceFundId: string,
     destinationFundId?: string
   ) => Promise<void>;
   updateExpense: (
@@ -95,6 +127,7 @@ type BudgetContextType = {
     paymentMethod: PaymentMethod,
     description: string,
     amount: number,
+    sourceFundId?: string,
     destinationFundId?: string
   ) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
@@ -150,6 +183,11 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   >(null);
   const [isActivePeriodFromCache, setIsActivePeriodFromCache] = useState(false);
 
+  // Category-Fund relationship cache state
+  const [categoryFundsCache, setCategoryFundsCache] = useState<
+    Map<string, Fund[]>
+  >(new Map());
+
   // Helper function to safely update session storage with active period
   const updateActivePeriodCache = (
     period: Period | null,
@@ -179,6 +217,14 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       }
     }
   }, [funds, fundFilter]);
+
+  // Cleanup cache when component unmounts
+  useEffect(() => {
+    return () => {
+      // Clear local cache on unmount
+      setCategoryFundsCache(new Map());
+    };
+  }, []);
 
   // Check session storage for cached active period on startup
   useEffect(() => {
@@ -340,7 +386,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     setError(null);
 
     try {
-      // Fetch categories
+      // Fetch categories with associated funds
       const categoriesResponse = await fetch("/api/categories");
       if (!categoriesResponse.ok) {
         const errorText = await categoriesResponse.text();
@@ -348,6 +394,28 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       }
       const categoriesData = await categoriesResponse.json();
       setCategories(categoriesData);
+
+      // Clear category funds cache when categories are refreshed
+      setCategoryFundsCache(new Map());
+
+      // Preload category funds for frequently accessed categories
+      if (categoriesData.length > 0) {
+        const categoryIds = categoriesData
+          .slice(0, 10)
+          .map((cat: Category) => cat.id); // Preload first 10 categories
+        warmCategoryFundCache(categoryIds, async (categoryId: string) => {
+          try {
+            const response = await fetch(`/api/categories/${categoryId}/funds`);
+            if (response.ok) {
+              const data = await response.json();
+              return data.funds || [];
+            }
+            return [];
+          } catch {
+            return [];
+          }
+        });
+      }
 
       // Fetch periods
       const periodsResponse = await fetch("/api/periods");
@@ -460,6 +528,10 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         const fundsData = await fundsResponse.json();
         setFunds(fundsData);
       }
+
+      // Clear category-fund cache when funds are updated during data refresh
+      categoryFundCache.clear();
+      setCategoryFundsCache(new Map());
     } catch (err) {
       console.error("Error refreshing data:", err);
       setError((err as Error).message);
@@ -469,18 +541,35 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Category functions
-  const addCategory = async (name: string, fundId?: string) => {
+  const addCategory = async (
+    name: string,
+    fundId?: string,
+    fundIds?: string[]
+  ) => {
     try {
-      // If no fund is specified, assign to default fund
-      const defaultFund = getDefaultFund();
-      const finalFundId = fundId || defaultFund?.id;
+      // Prepare request body with support for multiple funds
+      const requestBody: any = { name };
+
+      if (fundIds && fundIds.length > 0) {
+        // Use multiple fund relationships
+        requestBody.fund_ids = fundIds;
+      } else if (fundId) {
+        // Use single fund (backward compatibility)
+        requestBody.fund_id = fundId;
+      } else {
+        // If no fund is specified, assign to default fund
+        const defaultFund = getDefaultFund();
+        if (defaultFund) {
+          requestBody.fund_id = defaultFund.id;
+        }
+      }
 
       const response = await fetch("/api/categories", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, fund_id: finalFundId }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -490,24 +579,45 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
       const newCategory = await response.json();
       setCategories([...categories, newCategory]);
+
+      // Clear category funds cache for the new category
+      invalidateCategoryFundCache(newCategory.id);
     } catch (err) {
       setError((err as Error).message);
       throw err;
     }
   };
 
-  const updateCategory = async (id: string, name: string, fundId?: string) => {
+  const updateCategory = async (
+    id: string,
+    name: string,
+    fundId?: string,
+    fundIds?: string[]
+  ) => {
     try {
-      // If no fund is specified, assign to default fund
-      const defaultFund = getDefaultFund();
-      const finalFundId = fundId || defaultFund?.id;
+      // Prepare request body with support for multiple funds
+      const requestBody: any = { name };
+
+      if (fundIds && fundIds.length > 0) {
+        // Use multiple fund relationships
+        requestBody.fund_ids = fundIds;
+      } else if (fundId) {
+        // Use single fund (backward compatibility)
+        requestBody.fund_id = fundId;
+      } else {
+        // If no fund is specified, assign to default fund
+        const defaultFund = getDefaultFund();
+        if (defaultFund) {
+          requestBody.fund_id = defaultFund.id;
+        }
+      }
 
       const response = await fetch(`/api/categories/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name, fund_id: finalFundId }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -519,6 +629,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       setCategories(
         categories.map((cat) => (cat.id === id ? updatedCategory : cat))
       );
+
+      // Clear category funds cache for the updated category
+      invalidateCategoryFundCache(id);
 
       // Refresh funds to update balances if fund assignment changed
       await refreshFunds();
@@ -545,6 +658,213 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       setExpenses(
         (expenses || []).filter((expense) => expense.category_id !== id)
       );
+
+      // Clear category funds cache for the deleted category
+      invalidateCategoryFundCache(id);
+    } catch (err) {
+      setError((err as Error).message);
+      throw err;
+    }
+  };
+
+  // Category-Fund relationship functions
+  const getCategoryFunds = async (categoryId: string): Promise<Fund[]> => {
+    try {
+      // Check local state cache first
+      const localCached = categoryFundsCache.get(categoryId);
+      if (localCached) {
+        return localCached;
+      }
+
+      // Check centralized cache
+      const cached = categoryFundCache.getCategoryFunds(categoryId);
+      if (cached !== null) {
+        // Update local state cache
+        setCategoryFundsCache((prev) => new Map(prev).set(categoryId, cached));
+        return cached;
+      }
+
+      const response = await fetch(`/api/categories/${categoryId}/funds`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to fetch category funds: ${errorText}`);
+      }
+
+      const data = await response.json();
+      const categoryFunds = data.funds || [];
+
+      // Update both caches
+      categoryFundCache.setCategoryFunds(categoryId, categoryFunds);
+      setCategoryFundsCache((prev) =>
+        new Map(prev).set(categoryId, categoryFunds)
+      );
+
+      return categoryFunds;
+    } catch (err) {
+      setError((err as Error).message);
+      throw err;
+    }
+  };
+
+  const updateCategoryFunds = async (
+    categoryId: string,
+    fundIds: string[]
+  ): Promise<void> => {
+    try {
+      const response = await fetch(`/api/categories/${categoryId}/funds`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ fund_ids: fundIds }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update category funds: ${errorText}`);
+      }
+
+      // Clear cache for this category using the centralized cache
+      invalidateCategoryFundCache(categoryId);
+
+      // Also clear local state cache
+      setCategoryFundsCache((prev) => {
+        const newCache = new Map(prev);
+        newCache.delete(categoryId);
+        return newCache;
+      });
+
+      // Refresh categories to get updated associated_funds
+      const categoriesResponse = await fetch("/api/categories");
+      if (categoriesResponse.ok) {
+        const categoriesData = await categoriesResponse.json();
+        setCategories(categoriesData);
+      }
+    } catch (err) {
+      setError((err as Error).message);
+      throw err;
+    }
+  };
+
+  const deleteCategoryFundRelationship = async (
+    categoryId: string,
+    fundId: string
+  ): Promise<void> => {
+    try {
+      const response = await fetch(
+        `/api/categories/${categoryId}/funds/${fundId}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to delete category-fund relationship: ${errorText}`
+        );
+      }
+
+      // Clear cache for this category using the centralized cache
+      invalidateCategoryFundCache(categoryId);
+
+      // Also clear local state cache
+      setCategoryFundsCache((prev) => {
+        const newCache = new Map(prev);
+        newCache.delete(categoryId);
+        return newCache;
+      });
+
+      // Refresh categories to get updated associated_funds
+      const categoriesResponse = await fetch("/api/categories");
+      if (categoriesResponse.ok) {
+        const categoriesData = await categoriesResponse.json();
+        setCategories(categoriesData);
+      }
+    } catch (err) {
+      setError((err as Error).message);
+      throw err;
+    }
+  };
+
+  const getAvailableFundsForCategory = (categoryId: string): Fund[] => {
+    return CategoryFundFallback.getAvailableFundsForCategory(
+      categoryId,
+      categories,
+      funds
+    );
+  };
+
+  const getDefaultFundForCategory = (
+    categoryId: string,
+    currentFilterFund?: Fund | null
+  ): Fund | null => {
+    return CategoryFundFallback.getDefaultFundForCategory(
+      categoryId,
+      categories,
+      funds,
+      currentFilterFund,
+      fundFilter
+    );
+  };
+
+  // Enhanced data refresh function for category-fund relationships
+  const refreshCategoryFundRelationships = async (): Promise<void> => {
+    try {
+      // Clear all caches
+      categoryFundCache.clear();
+      setCategoryFundsCache(new Map());
+
+      // Refresh categories to get updated associated_funds
+      const categoriesResponse = await fetch("/api/categories");
+      if (categoriesResponse.ok) {
+        const categoriesData = await categoriesResponse.json();
+        setCategories(categoriesData);
+
+        // Preload category funds for active categories
+        const activeCategories = categoriesData.filter(
+          (cat: Category) =>
+            expenses.some((expense) => expense.category_id === cat.id) ||
+            budgets.some((budget) => budget.category_id === cat.id)
+        );
+
+        if (activeCategories.length > 0) {
+          const categoryIds = activeCategories.map((cat: Category) => cat.id);
+          warmCategoryFundCache(categoryIds, async (categoryId: string) => {
+            try {
+              const response = await fetch(
+                `/api/categories/${categoryId}/funds`
+              );
+              if (response.ok) {
+                const data = await response.json();
+                return data.funds || [];
+              }
+              return [];
+            } catch {
+              return [];
+            }
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Error refreshing category-fund relationships:", err);
+      setError((err as Error).message);
+    }
+  };
+
+  // Batch update category funds for multiple categories
+  const batchUpdateCategoryFunds = async (
+    updates: Array<{ categoryId: string; fundIds: string[] }>
+  ): Promise<void> => {
+    try {
+      const updatePromises = updates.map(({ categoryId, fundIds }) =>
+        updateCategoryFunds(categoryId, fundIds)
+      );
+
+      await Promise.allSettled(updatePromises);
+
+      // Refresh all category-fund relationships after batch update
+      await refreshCategoryFundRelationships();
     } catch (err) {
       setError((err as Error).message);
       throw err;
@@ -1057,15 +1377,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     paymentMethod: PaymentMethod,
     description: string,
     amount: number,
+    sourceFundId: string,
     destinationFundId?: string
   ) => {
     try {
       // Validate fund transfer - prevent same fund transfers
-      if (destinationFundId) {
-        const category = getCategoryById(categoryId);
-        if (category && category.fund_id === destinationFundId) {
-          throw new Error("No se puede transferir dinero al mismo fondo");
-        }
+      if (destinationFundId && sourceFundId === destinationFundId) {
+        throw new Error("No se puede transferir dinero al mismo fondo");
       }
 
       const response = await fetch("/api/expenses", {
@@ -1081,6 +1399,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           payment_method: paymentMethod,
           description,
           amount,
+          source_fund_id: sourceFundId,
           destination_fund_id: destinationFundId,
         }),
       });
@@ -1109,15 +1428,17 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     paymentMethod: PaymentMethod,
     description: string,
     amount: number,
+    sourceFundId?: string,
     destinationFundId?: string
   ) => {
     try {
       // Validate fund transfer - prevent same fund transfers
-      if (destinationFundId) {
-        const category = getCategoryById(categoryId);
-        if (category && category.fund_id === destinationFundId) {
-          throw new Error("No se puede transferir dinero al mismo fondo");
-        }
+      if (
+        destinationFundId &&
+        sourceFundId &&
+        sourceFundId === destinationFundId
+      ) {
+        throw new Error("No se puede transferir dinero al mismo fondo");
       }
 
       const response = await fetch(`/api/expenses/${id}`, {
@@ -1132,6 +1453,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           payment_method: paymentMethod,
           description,
           amount,
+          source_fund_id: sourceFundId,
           destination_fund_id: destinationFundId,
         }),
       });
@@ -1322,7 +1644,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     if (!fundId || fundId === "all") {
       return categories;
     }
-    return categories.filter((cat) => cat.fund_id === fundId);
+
+    const fund = funds.find((f) => f.id === fundId);
+    return CategoryFundFallback.getFilteredCategories(categories, fund || null);
   };
 
   const getFilteredIncomes = (fundId?: string): Income[] => {
@@ -1342,10 +1666,15 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     if (!fundId || fundId === "all") {
       return expenses;
     }
-    // Filter expenses by categories that belong to the fund
-    const fundCategoryIds = categories
-      .filter((cat) => cat.fund_id === fundId)
-      .map((cat) => cat.id);
+
+    // Use the enhanced filtering logic
+    const fund = funds.find((f) => f.id === fundId);
+    const filteredCategories = CategoryFundFallback.getFilteredCategories(
+      categories,
+      fund || null
+    );
+    const fundCategoryIds = filteredCategories.map((cat) => cat.id);
+
     return expenses.filter((expense) =>
       fundCategoryIds.includes(expense.category_id)
     );
@@ -1405,6 +1734,11 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         const fundsData = await fundsResponse.json();
         setFunds(fundsData);
       }
+
+      // Clear category-fund cache when funds are updated
+      // as fund changes might affect category-fund relationships
+      categoryFundCache.clear();
+      setCategoryFundsCache(new Map());
     } catch (err) {
       console.error("Error refreshing funds:", err);
       setError((err as Error).message);
@@ -1517,6 +1851,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         addCategory,
         updateCategory,
         deleteCategory,
+        getCategoryFunds,
+        updateCategoryFunds,
+        deleteCategoryFundRelationship,
+        getAvailableFundsForCategory,
+        getDefaultFundForCategory,
+        refreshCategoryFundRelationships,
+        batchUpdateCategoryFunds,
         addPeriod,
         updatePeriod,
         deletePeriod,

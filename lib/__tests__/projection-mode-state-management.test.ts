@@ -39,17 +39,17 @@ Object.defineProperty(window, "sessionStorage", {
   writable: true,
 });
 
-describe("Simulate Mode State Management", () => {
+describe("Projection Mode State Management", () => {
   // Mock state management functions (extracted from component)
-  let simulateMode = false;
+  let projectionMode = false;
   let activePeriod = { id: 1, name: "Test Period" };
   let selectedEstudio = 1;
   let selectedGroupers = [1, 2, 3];
   let paymentMethod = "all";
   let activeTab = "current";
 
-  const setSimulateMode = jest.fn((mode: boolean) => {
-    simulateMode = mode;
+  const setProjectionMode = jest.fn((mode: boolean) => {
+    projectionMode = mode;
   });
 
   const setGrouperData = jest.fn();
@@ -58,60 +58,60 @@ describe("Simulate Mode State Management", () => {
   const setShowCategoryChart = jest.fn();
 
   // Session storage utilities (extracted from component)
-  const saveSimulateModeToSession = (mode: boolean) => {
+  const saveProjectionModeToSession = (mode: boolean) => {
     try {
       if (typeof window !== "undefined" && window.sessionStorage) {
-        const simulationState = {
-          simulateMode: mode,
+        const projectionState = {
+          projectionMode: mode,
           lastUpdated: Date.now(),
         };
         sessionStorage.setItem(
-          "dashboard-simulate-mode",
-          JSON.stringify(simulationState)
+          "dashboard-projection-mode",
+          JSON.stringify(projectionState)
         );
       }
     } catch (error) {
-      console.error("Error saving simulate mode to session storage:", error);
+      console.error("Error saving projection mode to session storage:", error);
     }
   };
 
-  const loadSimulateModeFromSession = (): boolean => {
+  const loadProjectionModeFromSession = (): boolean => {
     try {
       if (typeof window !== "undefined" && window.sessionStorage) {
-        const saved = sessionStorage.getItem("dashboard-simulate-mode");
+        const saved = sessionStorage.getItem("dashboard-projection-mode");
         if (saved) {
-          const simulationState = JSON.parse(saved);
+          const projectionState = JSON.parse(saved);
 
           // Handle legacy format (direct boolean)
-          if (typeof simulationState === "boolean") {
-            return simulationState;
+          if (typeof projectionState === "boolean") {
+            return projectionState;
           }
 
           // Handle new format with metadata
           if (
-            simulationState &&
-            typeof simulationState.simulateMode === "boolean"
+            projectionState &&
+            typeof projectionState.projectionMode === "boolean"
           ) {
             const maxAge = 24 * 60 * 60 * 1000; // 24 hours
             const isExpired =
-              simulationState.lastUpdated &&
-              Date.now() - simulationState.lastUpdated > maxAge;
+              projectionState.lastUpdated &&
+              Date.now() - projectionState.lastUpdated > maxAge;
 
             if (isExpired) {
-              sessionStorage.removeItem("dashboard-simulate-mode");
+              sessionStorage.removeItem("dashboard-projection-mode");
               return false;
             }
 
-            return simulationState.simulateMode;
+            return projectionState.projectionMode;
           }
         }
       }
       return false;
     } catch (error) {
-      console.error("Error loading simulate mode from session storage:", error);
+      console.error("Error loading projection mode from session storage:", error);
       try {
         if (typeof window !== "undefined" && window.sessionStorage) {
-          sessionStorage.removeItem("dashboard-simulate-mode");
+          sessionStorage.removeItem("dashboard-projection-mode");
         }
       } catch (clearError) {
         console.error("Error clearing corrupted session storage:", clearError);
@@ -120,24 +120,24 @@ describe("Simulate Mode State Management", () => {
     }
   };
 
-  const setSimulateModeWithPersistence = (mode: boolean) => {
+  const setProjectionModeWithPersistence = (mode: boolean) => {
     try {
-      setSimulateMode(mode);
-      saveSimulateModeToSession(mode);
+      setProjectionMode(mode);
+      saveProjectionModeToSession(mode);
     } catch (error) {
-      console.error("Error setting simulate mode with persistence:", error);
-      setSimulateMode(mode);
+      console.error("Error setting projection mode with persistence:", error);
+      setProjectionMode(mode);
       mockToast({
         title: "Advertencia",
         description:
-          "El modo simulación se activó pero no se pudo guardar la preferencia",
+          "El modo proyección se activó pero no se pudo guardar la preferencia",
         variant: "default",
       });
     }
   };
 
-  const handleSimulateModeToggle = (checked: boolean) => {
-    setSimulateModeWithPersistence(checked);
+  const handleProjectionModeToggle = (checked: boolean) => {
+    setProjectionModeWithPersistence(checked);
 
     // Force data refresh by clearing existing data
     if (activeTab === "current") {
@@ -152,7 +152,7 @@ describe("Simulate Mode State Management", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockSessionStorage.clear();
-    simulateMode = false;
+    projectionMode = false;
   });
 
   afterEach(() => {
@@ -160,24 +160,24 @@ describe("Simulate Mode State Management", () => {
   });
 
   describe("Basic State Management", () => {
-    it("should initialize simulate mode as false", () => {
-      expect(simulateMode).toBe(false);
+    it("should initialize projection mode as false", () => {
+      expect(projectionMode).toBe(false);
     });
 
-    it("should toggle simulate mode on", () => {
-      handleSimulateModeToggle(true);
-      expect(setSimulateMode).toHaveBeenCalledWith(true);
+    it("should toggle projection mode on", () => {
+      handleProjectionModeToggle(true);
+      expect(setProjectionMode).toHaveBeenCalledWith(true);
     });
 
-    it("should toggle simulate mode off", () => {
-      simulateMode = true;
-      handleSimulateModeToggle(false);
-      expect(setSimulateMode).toHaveBeenCalledWith(false);
+    it("should toggle projection mode off", () => {
+      projectionMode = true;
+      handleProjectionModeToggle(false);
+      expect(setProjectionMode).toHaveBeenCalledWith(false);
     });
 
-    it("should clear data when toggling simulate mode", () => {
+    it("should clear data when toggling projection mode", () => {
       activeTab = "current";
-      handleSimulateModeToggle(true);
+      handleProjectionModeToggle(true);
 
       expect(setGrouperData).toHaveBeenCalledWith([]);
       expect(setCategoryData).toHaveBeenCalledWith([]);
@@ -187,7 +187,7 @@ describe("Simulate Mode State Management", () => {
 
     it("should not clear data when not on current tab", () => {
       activeTab = "period-comparison";
-      handleSimulateModeToggle(true);
+      handleProjectionModeToggle(true);
 
       expect(setGrouperData).not.toHaveBeenCalled();
       expect(setCategoryData).not.toHaveBeenCalled();
@@ -195,60 +195,60 @@ describe("Simulate Mode State Management", () => {
   });
 
   describe("Session Storage Integration", () => {
-    it("should save simulate mode to session storage", () => {
-      handleSimulateModeToggle(true);
+    it("should save projection mode to session storage", () => {
+      handleProjectionModeToggle(true);
 
       expect(mockSessionStorage.setItem).toHaveBeenCalledWith(
-        "dashboard-simulate-mode",
-        expect.stringContaining('"simulateMode":true')
+        "dashboard-projection-mode",
+        expect.stringContaining('"projectionMode":true')
       );
     });
 
-    it("should load simulate mode from session storage", () => {
-      const simulationState = {
-        simulateMode: true,
+    it("should load projection mode from session storage", () => {
+      const projectionState = {
+        projectionMode: true,
         lastUpdated: Date.now(),
       };
       mockSessionStorage.setItem(
-        "dashboard-simulate-mode",
-        JSON.stringify(simulationState)
+        "dashboard-projection-mode",
+        JSON.stringify(projectionState)
       );
 
-      const result = loadSimulateModeFromSession();
+      const result = loadProjectionModeFromSession();
       expect(result).toBe(true);
     });
 
     it("should handle legacy boolean format in session storage", () => {
-      mockSessionStorage.setItem("dashboard-simulate-mode", "true");
+      mockSessionStorage.setItem("dashboard-projection-mode", "true");
 
-      const result = loadSimulateModeFromSession();
+      const result = loadProjectionModeFromSession();
       expect(result).toBe(true);
     });
 
     it("should handle expired session storage data", () => {
       const expiredState = {
-        simulateMode: true,
+        projectionMode: true,
         lastUpdated: Date.now() - 25 * 60 * 60 * 1000, // 25 hours ago
       };
       mockSessionStorage.setItem(
-        "dashboard-simulate-mode",
+        "dashboard-projection-mode",
         JSON.stringify(expiredState)
       );
 
-      const result = loadSimulateModeFromSession();
+      const result = loadProjectionModeFromSession();
       expect(result).toBe(false);
       expect(mockSessionStorage.removeItem).toHaveBeenCalledWith(
-        "dashboard-simulate-mode"
+        "dashboard-projection-mode"
       );
     });
 
     it("should handle corrupted session storage data", () => {
-      mockSessionStorage.setItem("dashboard-simulate-mode", "invalid-json");
+      mockSessionStorage.setItem("dashboard-projection-mode", "invalid-json");
 
-      const result = loadSimulateModeFromSession();
+      const result = loadProjectionModeFromSession();
       expect(result).toBe(false);
       expect(mockSessionStorage.removeItem).toHaveBeenCalledWith(
-        "dashboard-simulate-mode"
+        "dashboard-projection-mode"
       );
     });
 
@@ -257,25 +257,25 @@ describe("Simulate Mode State Management", () => {
         throw new Error("Storage quota exceeded");
       });
 
-      handleSimulateModeToggle(true);
+      handleProjectionModeToggle(true);
 
-      expect(setSimulateMode).toHaveBeenCalledWith(true);
+      expect(setProjectionMode).toHaveBeenCalledWith(true);
       expect(mockToast).toHaveBeenCalledWith({
         title: "Advertencia",
         description:
-          "El modo simulación se activó pero no se pudo guardar la preferencia",
+          "El modo proyección se activó pero no se pudo guardar la preferencia",
         variant: "default",
       });
     });
   });
 
   describe("Filter State Management", () => {
-    it("should maintain filter state when toggling simulate mode", () => {
+    it("should maintain filter state when toggling projection mode", () => {
       const initialEstudio = selectedEstudio;
       const initialGroupers = [...selectedGroupers];
       const initialPaymentMethod = paymentMethod;
 
-      handleSimulateModeToggle(true);
+      handleProjectionModeToggle(true);
 
       // Filters should remain unchanged
       expect(selectedEstudio).toBe(initialEstudio);
@@ -285,25 +285,25 @@ describe("Simulate Mode State Management", () => {
 
     it("should work with estudio filter", () => {
       selectedEstudio = 2;
-      handleSimulateModeToggle(true);
+      handleProjectionModeToggle(true);
 
-      expect(setSimulateMode).toHaveBeenCalledWith(true);
+      expect(setProjectionMode).toHaveBeenCalledWith(true);
       expect(selectedEstudio).toBe(2);
     });
 
     it("should work with grouper filter", () => {
       selectedGroupers = [1, 3];
-      handleSimulateModeToggle(true);
+      handleProjectionModeToggle(true);
 
-      expect(setSimulateMode).toHaveBeenCalledWith(true);
+      expect(setProjectionMode).toHaveBeenCalledWith(true);
       expect(selectedGroupers).toEqual([1, 3]);
     });
 
     it("should work with payment method filter", () => {
       paymentMethod = "credit";
-      handleSimulateModeToggle(true);
+      handleProjectionModeToggle(true);
 
-      expect(setSimulateMode).toHaveBeenCalledWith(true);
+      expect(setProjectionMode).toHaveBeenCalledWith(true);
       expect(paymentMethod).toBe("credit");
     });
   });
@@ -311,35 +311,35 @@ describe("Simulate Mode State Management", () => {
   describe("Tab State Management", () => {
     it("should only be available on current tab", () => {
       activeTab = "current";
-      const isSimulateAvailable = activeTab === "current";
-      expect(isSimulateAvailable).toBe(true);
+      const isProjectionAvailable = activeTab === "current";
+      expect(isProjectionAvailable).toBe(true);
     });
 
     it("should not be available on period comparison tab", () => {
       activeTab = "period-comparison";
-      const isSimulateAvailable = activeTab === "current";
-      expect(isSimulateAvailable).toBe(false);
+      const isProjectionAvailable = activeTab === "current";
+      expect(isProjectionAvailable).toBe(false);
     });
 
     it("should not be available on weekly cumulative tab", () => {
       activeTab = "weekly-cumulative";
-      const isSimulateAvailable = activeTab === "current";
-      expect(isSimulateAvailable).toBe(false);
+      const isProjectionAvailable = activeTab === "current";
+      expect(isProjectionAvailable).toBe(false);
     });
 
-    it("should maintain simulate mode preference when switching tabs", () => {
+    it("should maintain projection mode preference when switching tabs", () => {
       activeTab = "current";
-      handleSimulateModeToggle(true);
+      handleProjectionModeToggle(true);
 
       // Switch to another tab
       activeTab = "period-comparison";
-      // Simulate mode state should be preserved
-      expect(simulateMode).toBe(true);
+      // Projection mode state should be preserved
+      expect(projectionMode).toBe(true);
 
       // Switch back to current tab
       activeTab = "current";
-      // Simulate mode should still be active
-      expect(simulateMode).toBe(true);
+      // Projection mode should still be active
+      expect(projectionMode).toBe(true);
     });
   });
 
@@ -350,8 +350,8 @@ describe("Simulate Mode State Management", () => {
         writable: true,
       });
 
-      expect(() => handleSimulateModeToggle(true)).not.toThrow();
-      expect(setSimulateMode).toHaveBeenCalledWith(true);
+      expect(() => handleProjectionModeToggle(true)).not.toThrow();
+      expect(setProjectionMode).toHaveBeenCalledWith(true);
 
       // Restore session storage
       Object.defineProperty(window, "sessionStorage", {
@@ -363,41 +363,41 @@ describe("Simulate Mode State Management", () => {
     it("should handle JSON parse errors", () => {
       mockSessionStorage.getItem.mockReturnValue("invalid-json");
 
-      const result = loadSimulateModeFromSession();
+      const result = loadProjectionModeFromSession();
       expect(result).toBe(false);
     });
 
     it("should handle missing lastUpdated field", () => {
       const stateWithoutTimestamp = {
-        simulateMode: true,
+        projectionMode: true,
         // missing lastUpdated
       };
       mockSessionStorage.setItem(
-        "dashboard-simulate-mode",
+        "dashboard-projection-mode",
         JSON.stringify(stateWithoutTimestamp)
       );
 
-      const result = loadSimulateModeFromSession();
+      const result = loadProjectionModeFromSession();
       expect(result).toBe(true); // Should still work without timestamp
     });
   });
 
   describe("Component Lifecycle", () => {
-    it("should restore simulate mode on component mount", () => {
-      const simulationState = {
-        simulateMode: true,
+    it("should restore projection mode on component mount", () => {
+      const projectionState = {
+        projectionMode: true,
         lastUpdated: Date.now(),
       };
       mockSessionStorage.setItem(
-        "dashboard-simulate-mode",
-        JSON.stringify(simulationState)
+        "dashboard-projection-mode",
+        JSON.stringify(projectionState)
       );
 
-      // Simulate component mount
-      const savedSimulateMode = loadSimulateModeFromSession();
-      setSimulateMode(savedSimulateMode);
+      // Projection component mount
+      const savedProjectionMode = loadProjectionModeFromSession();
+      setProjectionMode(savedProjectionMode);
 
-      expect(setSimulateMode).toHaveBeenCalledWith(true);
+      expect(setProjectionMode).toHaveBeenCalledWith(true);
     });
 
     it("should handle restoration errors gracefully", () => {
@@ -405,11 +405,11 @@ describe("Simulate Mode State Management", () => {
         throw new Error("Storage error");
       });
 
-      // Simulate component mount with error
-      const savedSimulateMode = loadSimulateModeFromSession();
-      setSimulateMode(savedSimulateMode);
+      // Projection component mount with error
+      const savedProjectionMode = loadProjectionModeFromSession();
+      setProjectionMode(savedProjectionMode);
 
-      expect(setSimulateMode).toHaveBeenCalledWith(false); // Fallback to default
+      expect(setProjectionMode).toHaveBeenCalledWith(false); // Fallback to default
     });
   });
 });

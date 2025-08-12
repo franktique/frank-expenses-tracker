@@ -29,11 +29,11 @@ import { AgrupadorFilter } from "@/components/agrupador-filter";
 import { BudgetToggle } from "@/components/budget-toggle";
 import { EstudioFilter } from "@/components/estudio-filter";
 import {
-  handleSimulateModeError as handleSimulateError,
+  handleProjectionModeError as handleProjectionError,
   validateBudgetData,
   createErrorRecoveryStrategies,
-  categorizeSimulateError,
-} from "@/lib/simulate-mode-error-handling";
+  categorizeProjectionError,
+} from "@/lib/projection-mode-error-handling";
 import {
   ResponsiveContainer,
   BarChart,
@@ -64,7 +64,7 @@ type GrouperData = {
   grouper_name: string;
   total_amount: number;
   budget_amount?: number;
-  isSimulated?: boolean;
+  isProjected?: boolean;
 };
 
 type CategoryData = {
@@ -72,7 +72,7 @@ type CategoryData = {
   category_name: string;
   total_amount: number;
   budget_amount?: number;
-  isSimulated?: boolean;
+  isProjected?: boolean;
 };
 
 type PeriodComparisonData = {
@@ -118,17 +118,17 @@ type EstudioData = {
   updated_at: string;
 };
 
-// Data transformation function for simulation mode
-const processSimulationData = <T extends GrouperData | CategoryData>(
+// Data transformation function for projection mode
+const processProjectionData = <T extends GrouperData | CategoryData>(
   data: T[],
-  isSimulating: boolean
+  isProjecting: boolean
 ): T[] => {
   return data.map((item) => ({
     ...item,
-    // Use budget_amount as total_amount when simulating
-    total_amount: isSimulating ? item.budget_amount || 0 : item.total_amount,
-    // Add simulation flag for styling purposes
-    isSimulated: isSimulating,
+    // Use budget_amount as total_amount when projecting
+    total_amount: isProjecting ? item.budget_amount || 0 : item.total_amount,
+    // Add projection flag for styling purposes
+    isProjected: isProjecting,
   }));
 };
 
@@ -160,23 +160,23 @@ export default function GroupersChartPage() {
 
   // Simulate mode state management
   // Integrates with all existing filters: Estudio, Agrupador, and Payment Method
-  // Note: Budgets are payment-method agnostic, so simulate mode uses "all" for payment method
-  const [simulateMode, setSimulateMode] = useState<boolean>(false);
+  // Note: Budgets are payment-method agnostic, so projection mode uses "all" for payment method
+  const [projectionMode, setProjectionMode] = useState<boolean>(false);
 
-  // Session storage utilities for simulate mode persistence
-  const saveSimulateModeToSession = (mode: boolean) => {
+  // Session storage utilities for projection mode persistence
+  const saveProjectionModeToSession = (mode: boolean) => {
     try {
       // Check if sessionStorage is available (browser environment)
       if (!isSessionStorageAvailable()) {
         console.warn(
-          "Session storage is not available, simulate mode will not persist"
+          "Session storage is not available, projection mode will not persist"
         );
 
-        // Handle session storage error using simulation error handling
+        // Handle session storage error using projection error handling
         const sessionError = new Error("Session storage is not available");
         sessionError.name = "SessionStorageError";
 
-        handleSimulateError(
+        handleProjectionError(
           sessionError,
           {
             selectedEstudio,
@@ -185,8 +185,8 @@ export default function GroupersChartPage() {
             activeTab,
           },
           {
-            disableSimulateMode: () => {
-              // Don't disable simulate mode just because storage failed
+            disableProjectionMode: () => {
+              // Don't disable projection mode just because storage failed
               console.log(
                 "Session storage unavailable, continuing without persistence"
               );
@@ -198,24 +198,24 @@ export default function GroupersChartPage() {
         return;
       }
 
-      const simulationState = {
-        simulateMode: mode,
+      const projectionState = {
+        projectionMode: mode,
         lastUpdated: Date.now(),
       };
 
       sessionStorage.setItem(
-        "dashboard-simulate-mode",
-        JSON.stringify(simulationState)
+        "dashboard-projection-mode",
+        JSON.stringify(projectionState)
       );
     } catch (error) {
-      console.error("Error saving simulate mode to session storage:", error);
+      console.error("Error saving projection mode to session storage:", error);
 
-      // Use simulation-specific error handling
+      // Use projection-specific error handling
       const sessionError =
         error instanceof Error ? error : new Error("Session storage error");
       sessionError.name = error?.name || "SessionStorageError";
 
-      handleSimulateError(
+      handleProjectionError(
         sessionError,
         {
           selectedEstudio,
@@ -224,8 +224,8 @@ export default function GroupersChartPage() {
           activeTab,
         },
         {
-          disableSimulateMode: () => {
-            // Don't disable simulate mode just because storage failed
+          disableProjectionMode: () => {
+            // Don't disable projection mode just because storage failed
             console.log(
               "Session storage failed, continuing without persistence"
             );
@@ -237,35 +237,35 @@ export default function GroupersChartPage() {
     }
   };
 
-  const loadSimulateModeFromSession = (): boolean => {
+  const loadProjectionModeFromSession = (): boolean => {
     try {
       // Check if sessionStorage is available (browser environment)
       if (!isSessionStorageAvailable()) {
         console.warn(
-          "Session storage is not available, using default simulate mode"
+          "Session storage is not available, using default projection mode"
         );
         return false;
       }
 
-      const saved = sessionStorage.getItem("dashboard-simulate-mode");
+      const saved = sessionStorage.getItem("dashboard-projection-mode");
       if (saved) {
-        const simulationState = JSON.parse(saved);
+        const projectionState = JSON.parse(saved);
 
         // Handle legacy format (direct boolean) for backward compatibility
-        if (typeof simulationState === "boolean") {
-          return simulationState;
+        if (typeof projectionState === "boolean") {
+          return projectionState;
         }
 
         // Handle new format with metadata
         if (
-          simulationState &&
-          typeof simulationState.simulateMode === "boolean"
+          projectionState &&
+          typeof projectionState.projectionMode === "boolean"
         ) {
           // Optional: Check if the stored state is not too old (e.g., older than 24 hours)
           const maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
           const isExpired =
-            simulationState.lastUpdated &&
-            Date.now() - simulationState.lastUpdated > maxAge;
+            projectionState.lastUpdated &&
+            Date.now() - projectionState.lastUpdated > maxAge;
 
           if (isExpired) {
             // Clear expired state
@@ -274,14 +274,14 @@ export default function GroupersChartPage() {
             return false;
           }
 
-          return simulationState.simulateMode;
+          return projectionState.projectionMode;
         }
       }
       return false;
     } catch (error) {
-      console.error("Error loading simulate mode from session storage:", error);
+      console.error("Error loading projection mode from session storage:", error);
 
-      // Use simulation-specific error handling for loading errors
+      // Use projection-specific error handling for loading errors
       const loadError =
         error instanceof Error
           ? error
@@ -293,22 +293,22 @@ export default function GroupersChartPage() {
 
       // Log the error but don't show toast during component initialization
       console.warn(
-        "Session storage corrupted, cleared and using default simulate mode"
+        "Session storage corrupted, cleared and using default projection mode"
       );
 
       return false;
     }
   };
 
-  // Clear simulate mode from session storage
+  // Clear projection mode from session storage
   const clearSimulateModeFromSession = () => {
     try {
       if (typeof window !== "undefined" && window.sessionStorage) {
-        sessionStorage.removeItem("dashboard-simulate-mode");
+        sessionStorage.removeItem("dashboard-projection-mode");
       }
     } catch (error) {
       console.error(
-        "Error clearing simulate mode from session storage:",
+        "Error clearing projection mode from session storage:",
         error
       );
     }
@@ -332,15 +332,15 @@ export default function GroupersChartPage() {
     }
   };
 
-  // Enhanced simulate mode setter with session storage persistence
-  const setSimulateModeWithPersistence = useCallback((mode: boolean) => {
+  // Enhanced projection mode setter with session storage persistence
+  const setProjectionModeWithPersistence = useCallback((mode: boolean) => {
     try {
-      setSimulateMode(mode);
-      saveSimulateModeToSession(mode);
+      setProjectionMode(mode);
+      saveProjectionModeToSession(mode);
     } catch (error) {
-      console.error("Error setting simulate mode with persistence:", error);
+      console.error("Error setting projection mode with persistence:", error);
       // Still set the mode even if persistence fails
-      setSimulateMode(mode);
+      setProjectionMode(mode);
 
       toast({
         title: "Advertencia",
@@ -363,11 +363,11 @@ export default function GroupersChartPage() {
   const [maxGrouperAmount, setMaxGrouperAmount] = useState<number>(0);
   const [maxCategoryAmount, setMaxCategoryAmount] = useState<number>(0);
 
-  // Handle simulate mode toggle with enhanced filter state management
+  // Handle projection mode toggle with enhanced filter state management
   const handleSimulateModeToggle = useCallback(
     (checked: boolean) => {
       // Set the mode with persistence
-      setSimulateModeWithPersistence(checked);
+      setProjectionModeWithPersistence(checked);
 
       // Force data refresh by clearing existing data when mode changes
       if (activeTab === "current") {
@@ -380,7 +380,7 @@ export default function GroupersChartPage() {
         }
       }
     },
-    [setSimulateModeWithPersistence, activeTab, showCategoryChart]
+    [setProjectionModeWithPersistence, activeTab, showCategoryChart]
   );
 
   // Simplified chart optimization
@@ -402,8 +402,8 @@ export default function GroupersChartPage() {
 
   // Simplified chart optimization without the complex hook
   const shouldAnimate = useMemo(() => {
-    return grouperData.length < 20 && !simulateMode;
-  }, [grouperData.length, simulateMode]);
+    return grouperData.length < 20 && !projectionMode;
+  }, [grouperData.length, projectionMode]);
 
   // Period comparison state
   const [periodComparisonData, setPeriodComparisonData] =
@@ -728,23 +728,23 @@ export default function GroupersChartPage() {
     fetchAllEstudios();
   }, []);
 
-  // Load simulate mode from session storage on component mount
+  // Load projection mode from session storage on component mount
   useEffect(() => {
     try {
-      const savedSimulateMode = loadSimulateModeFromSession();
-      setSimulateMode(savedSimulateMode);
+      const savedSimulateMode = loadProjectionModeFromSession();
+      setProjectionMode(savedSimulateMode);
 
-      // Optional: Show a subtle notification if simulate mode was restored
+      // Optional: Show a subtle notification if projection mode was restored
       if (savedSimulateMode) {
         console.log("Simulate mode restored from session storage");
       }
     } catch (error) {
       console.error(
-        "Error restoring simulate mode from session storage:",
+        "Error restoring projection mode from session storage:",
         error
       );
       // Fallback to default state
-      setSimulateMode(false);
+      setProjectionMode(false);
     }
   }, []);
 
@@ -754,11 +754,11 @@ export default function GroupersChartPage() {
 
     return () => {
       // Simplified cleanup without complex dependencies
-      // Save current simulate mode state before cleanup
+      // Save current projection mode state before cleanup
       try {
-        saveSimulateModeToSession(simulateMode);
+        saveProjectionModeToSession(projectionMode);
       } catch (error) {
-        console.warn("Failed to save simulate mode during cleanup:", error);
+        console.warn("Failed to save projection mode during cleanup:", error);
       }
     };
   }, [activePeriod, selectedEstudio]);
@@ -768,12 +768,12 @@ export default function GroupersChartPage() {
     const handleVisibilityChange = () => {
       if (document.visibilityState === "hidden") {
         // Page is being hidden (user switching tabs, minimizing, etc.)
-        // Ensure current simulate mode state is saved
+        // Ensure current projection mode state is saved
         try {
-          saveSimulateModeToSession(simulateMode);
+          saveProjectionModeToSession(projectionMode);
         } catch (error) {
           console.error(
-            "Error saving simulate mode on visibility change:",
+            "Error saving projection mode on visibility change:",
             error
           );
         }
@@ -782,11 +782,11 @@ export default function GroupersChartPage() {
 
     const handleBeforeUnload = () => {
       // Page is being unloaded (refresh, navigation, close)
-      // Ensure current simulate mode state is saved
+      // Ensure current projection mode state is saved
       try {
-        saveSimulateModeToSession(simulateMode);
+        saveProjectionModeToSession(projectionMode);
       } catch (error) {
-        console.error("Error saving simulate mode before unload:", error);
+        console.error("Error saving projection mode before unload:", error);
       }
     };
 
@@ -799,7 +799,7 @@ export default function GroupersChartPage() {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
-  }, [simulateMode]);
+  }, [projectionMode]);
 
   // Handle URL parameter changes for estudio filter persistence
   useEffect(() => {
@@ -904,17 +904,17 @@ export default function GroupersChartPage() {
         // Build query parameters
         const params = new URLSearchParams({
           periodId: activePeriod.id.toString(),
-          // In simulate mode, budgets are payment-method agnostic, so we use "all"
+          // In projection mode, budgets are payment-method agnostic, so we use "all"
           // to get complete budget data, but still apply payment method for expense data
-          paymentMethod: simulateMode ? "all" : paymentMethod,
+          paymentMethod: projectionMode ? "all" : paymentMethod,
         });
 
-        // Add estudio filtering if selected - works with simulate mode
+        // Add estudio filtering if selected - works with projection mode
         if (selectedEstudio) {
           params.append("estudioId", selectedEstudio.toString());
         }
 
-        // Add grouper filtering if specific groupers are selected - works with simulate mode
+        // Add grouper filtering if specific groupers are selected - works with projection mode
         if (
           selectedGroupers.length > 0 &&
           selectedGroupers.length < allGroupers.length
@@ -922,30 +922,30 @@ export default function GroupersChartPage() {
           params.append("grouperIds", selectedGroupers.join(","));
         }
 
-        // Add budget parameter if budget display is enabled or simulate mode is active
-        if (showBudgets || simulateMode) {
+        // Add budget parameter if budget display is enabled or projection mode is active
+        if (showBudgets || projectionMode) {
           params.append("includeBudgets", "true");
         }
 
-        // Add simulate mode flag to help API understand the context
-        if (simulateMode) {
-          params.append("simulateMode", "true");
+        // Add projection mode flag to help API understand the context
+        if (projectionMode) {
+          params.append("projectionMode", "true");
         }
 
         // Create error recovery strategies for this fetch operation
         const fallbackActions = {
-          disableSimulateMode: () => {
-            setSimulateMode(false);
-            saveSimulateModeToSession(false);
+          disableProjectionMode: () => {
+            setProjectionMode(false);
+            saveProjectionModeToSession(false);
           },
           refreshData: () => {
             // Trigger a data refresh by clearing current data
             setGrouperData([]);
           },
           showActualData: () => {
-            // Force showing actual data by disabling simulate mode and refreshing
-            setSimulateMode(false);
-            saveSimulateModeToSession(false);
+            // Force showing actual data by disabling projection mode and refreshing
+            setProjectionMode(false);
+            saveProjectionModeToSession(false);
             setGrouperData([]);
           },
         };
@@ -976,8 +976,8 @@ export default function GroupersChartPage() {
           // Try with retry mechanism first
           data = await recoveryStrategies.retryWithBackoff(2);
         } catch (retryError) {
-          if (simulateMode) {
-            // If simulation fails, try fallback to actual data
+          if (projectionMode) {
+            // If projection fails, try fallback to actual data
             console.warn(
               "Simulation failed, falling back to actual data:",
               retryError
@@ -987,7 +987,7 @@ export default function GroupersChartPage() {
             } catch (fallbackError) {
               // If even fallback fails, use graceful degradation
               console.error(
-                "Both simulation and fallback failed:",
+                "Both projection and fallback failed:",
                 fallbackError
               );
               data = await recoveryStrategies.gracefulDegradation();
@@ -1002,15 +1002,15 @@ export default function GroupersChartPage() {
           ...item,
           // Ensure budget_amount is a number or undefined, handle null/undefined cases
           budget_amount:
-            showBudgets || simulateMode
+            showBudgets || projectionMode
               ? item.budget_amount != null
                 ? parseFloat(item.budget_amount.toString()) || 0
                 : 0
               : undefined,
         }));
 
-        // Validate budget data if in simulate mode
-        if (simulateMode) {
+        // Validate budget data if in projection mode
+        if (projectionMode) {
           const validation = validateBudgetData(processedData, {
             selectedEstudio,
             selectedGroupers,
@@ -1020,7 +1020,7 @@ export default function GroupersChartPage() {
             // Handle specific budget data validation errors
             // Add safety check to ensure validation.error is valid
             if (validation.error && typeof validation.error === "object") {
-              handleSimulateError(
+              handleProjectionError(
                 validation.error,
                 {
                   selectedEstudio,
@@ -1037,7 +1037,7 @@ export default function GroupersChartPage() {
               );
               // Create a fallback error
               const fallbackError = new Error("Budget data validation failed");
-              handleSimulateError(
+              handleProjectionError(
                 fallbackError,
                 {
                   selectedEstudio,
@@ -1055,10 +1055,10 @@ export default function GroupersChartPage() {
               return; // Exit early to trigger re-fetch with actual data
             }
           } else if (validation.error?.simulateType === "partial_budget_data") {
-            // Show warning but continue with simulation
+            // Show warning but continue with projection
             // Add safety check to ensure validation.error is valid
             if (validation.error && typeof validation.error === "object") {
-              handleSimulateError(
+              handleProjectionError(
                 validation.error,
                 {
                   selectedEstudio,
@@ -1075,7 +1075,7 @@ export default function GroupersChartPage() {
               );
               // Create a fallback error
               const fallbackError = new Error("Partial budget data available");
-              handleSimulateError(
+              handleProjectionError(
                 fallbackError,
                 {
                   selectedEstudio,
@@ -1089,27 +1089,25 @@ export default function GroupersChartPage() {
           }
         }
 
-        // Apply simulation transformation first
-        const simulatedData = processSimulationData(
+        // Apply projection transformation first
+        const projectedData = processProjectionData(
           processedData,
-          simulateMode
+          projectionMode
         );
 
-        // In simulate mode, show all groupers even with zero budget amounts
+        // In projection mode, show all groupers even with zero budget amounts
         // to provide clear feedback about missing budget data
-        const sortedData = simulateMode
-          ? simulatedData.sort(
-              (a: GrouperData, b: GrouperData) =>
-                b.total_amount - a.total_amount
+        const sortedData = projectionMode
+          ? projectedData.sort(
+              (a, b) => b.total_amount - a.total_amount
             )
-          : simulatedData
-              .filter((item: GrouperData) => item.total_amount > 0)
+          : projectedData
+              .filter((item) => item.total_amount > 0)
               .sort(
-                (a: GrouperData, b: GrouperData) =>
-                  b.total_amount - a.total_amount
+                (a, b) => b.total_amount - a.total_amount
               );
 
-        const finalData = sortedData;
+        const finalData = sortedData as GrouperData[];
         setGrouperData(finalData);
 
         // Update tracking for current tab
@@ -1131,12 +1129,12 @@ export default function GroupersChartPage() {
         // Calculate max amount for chart scaling, considering both expense and budget amounts
         if (sortedData.length > 0) {
           const maxExpenseAmount = Math.max(
-            ...sortedData.map((item: GrouperData) => item.total_amount)
+            ...sortedData.map((item) => item.total_amount)
           );
           const maxBudgetAmount = showBudgets
             ? Math.max(
                 ...sortedData.map(
-                  (item: GrouperData) => item.budget_amount || 0
+                  (item) => item.budget_amount || 0
                 )
               )
             : 0;
@@ -1146,8 +1144,8 @@ export default function GroupersChartPage() {
       } catch (error) {
         console.error("Error fetching grouper data:", error);
 
-        // Use simulation-specific error handling
-        if (simulateMode) {
+        // Use projection-specific error handling
+        if (projectionMode) {
           const context = {
             selectedEstudio,
             selectedGroupers,
@@ -1156,21 +1154,21 @@ export default function GroupersChartPage() {
           };
 
           const fallbackActions = {
-            disableSimulateMode: () => {
-              setSimulateMode(false);
-              saveSimulateModeToSession(false);
+            disableProjectionMode: () => {
+              setProjectionMode(false);
+              saveProjectionModeToSession(false);
             },
             refreshData: () => {
               setGrouperData([]);
             },
             showActualData: () => {
-              setSimulateMode(false);
-              saveSimulateModeToSession(false);
+              setProjectionMode(false);
+              saveProjectionModeToSession(false);
               setGrouperData([]);
             },
           };
 
-          handleSimulateError(error, context, fallbackActions);
+          handleProjectionError(error, context, fallbackActions);
         } else {
           // Handle regular errors
           const errorMessage =
@@ -1199,7 +1197,7 @@ export default function GroupersChartPage() {
     showBudgets,
     allGroupers.length,
     selectedEstudio,
-    simulateMode,
+    projectionMode,
   ]);
 
   // Retry function for main data loading
@@ -1244,17 +1242,17 @@ export default function GroupersChartPage() {
         const categoryPromises = selectedGroupers.map(async (grouperId) => {
           const params = new URLSearchParams({
             periodId: activePeriod.id.toString(),
-            // In simulate mode, budgets are payment-method agnostic
-            paymentMethod: simulateMode ? "all" : paymentMethod,
+            // In projection mode, budgets are payment-method agnostic
+            paymentMethod: projectionMode ? "all" : paymentMethod,
           });
 
-          if (showBudgets || simulateMode) {
+          if (showBudgets || projectionMode) {
             params.append("includeBudgets", "true");
           }
 
-          // Add simulate mode flag for category data
-          if (simulateMode) {
-            params.append("simulateMode", "true");
+          // Add projection mode flag for category data
+          if (projectionMode) {
+            params.append("projectionMode", "true");
           }
 
           const response = await fetch(
@@ -1270,7 +1268,7 @@ export default function GroupersChartPage() {
             return data.map((item: CategoryData) => ({
               ...item,
               budget_amount:
-                showBudgets || simulateMode
+                showBudgets || projectionMode
                   ? item.budget_amount != null
                     ? parseFloat(item.budget_amount.toString()) || 0
                     : 0
@@ -1315,15 +1313,15 @@ export default function GroupersChartPage() {
           }
         });
 
-        // Apply simulation transformation first
-        const simulatedCategoryData = processSimulationData(
+        // Apply projection transformation first
+        const simulatedCategoryData = processProjectionData(
           Array.from(categoryMap.values()),
-          simulateMode
+          projectionMode
         );
 
-        // In simulate mode, show all categories even with zero budget amounts
+        // In projection mode, show all categories even with zero budget amounts
         // to provide clear feedback about missing budget data
-        const aggregatedData = simulateMode
+        const aggregatedData = projectionMode
           ? simulatedCategoryData.sort(
               (a: CategoryData, b: CategoryData) =>
                 b.total_amount - a.total_amount
@@ -1376,7 +1374,7 @@ export default function GroupersChartPage() {
     allGroupers.length,
     selectedGrouper,
     showCategoryChart,
-    simulateMode,
+    projectionMode,
   ]);
 
   // Fetch category data when a grouper is selected
@@ -1399,32 +1397,32 @@ export default function GroupersChartPage() {
         // Build query parameters
         const params = new URLSearchParams({
           periodId: activePeriod.id.toString(),
-          // In simulate mode, budgets are payment-method agnostic
-          paymentMethod: simulateMode ? "all" : paymentMethod,
+          // In projection mode, budgets are payment-method agnostic
+          paymentMethod: projectionMode ? "all" : paymentMethod,
         });
 
-        // Add budget parameter if budget display is enabled or simulate mode is active
-        if (showBudgets || simulateMode) {
+        // Add budget parameter if budget display is enabled or projection mode is active
+        if (showBudgets || projectionMode) {
           params.append("includeBudgets", "true");
         }
 
-        // Add simulate mode flag for single grouper category data
-        if (simulateMode) {
-          params.append("simulateMode", "true");
+        // Add projection mode flag for single grouper category data
+        if (projectionMode) {
+          params.append("projectionMode", "true");
         }
 
         // Create error recovery strategies for category data
         const fallbackActions = {
-          disableSimulateMode: () => {
-            setSimulateMode(false);
-            saveSimulateModeToSession(false);
+          disableProjectionMode: () => {
+            setProjectionMode(false);
+            saveProjectionModeToSession(false);
           },
           refreshData: () => {
             setCategoryData([]);
           },
           showActualData: () => {
-            setSimulateMode(false);
-            saveSimulateModeToSession(false);
+            setProjectionMode(false);
+            saveProjectionModeToSession(false);
             setCategoryData([]);
           },
         };
@@ -1458,10 +1456,10 @@ export default function GroupersChartPage() {
           // Try with retry mechanism first
           data = await recoveryStrategies.retryWithBackoff(2);
         } catch (retryError) {
-          if (simulateMode) {
-            // If category simulation fails, try fallback to actual data
+          if (projectionMode) {
+            // If category projection fails, try fallback to actual data
             console.warn(
-              "Category simulation failed, falling back to actual data:",
+              "Category projection failed, falling back to actual data:",
               retryError
             );
             try {
@@ -1469,7 +1467,7 @@ export default function GroupersChartPage() {
             } catch (fallbackError) {
               // If even fallback fails, use graceful degradation
               console.error(
-                "Both category simulation and fallback failed:",
+                "Both category projection and fallback failed:",
                 fallbackError
               );
               data = await recoveryStrategies.gracefulDegradation();
@@ -1486,15 +1484,15 @@ export default function GroupersChartPage() {
           total_amount: parseFloat(item.total_amount.toString()) || 0,
           // Ensure budget_amount is a number or undefined, handle null/undefined cases
           budget_amount:
-            showBudgets || simulateMode
+            showBudgets || projectionMode
               ? item.budget_amount != null
                 ? parseFloat(item.budget_amount.toString()) || 0
                 : 0
               : undefined,
         }));
 
-        // Validate budget data for categories if in simulate mode
-        if (simulateMode) {
+        // Validate budget data for categories if in projection mode
+        if (projectionMode) {
           const validation = validateBudgetData(processedData, {
             selectedEstudio,
             selectedGroupers: [selectedGrouper.grouper_id],
@@ -1504,11 +1502,11 @@ export default function GroupersChartPage() {
             // Handle category-specific budget data validation errors
             const categoryError = {
               ...validation.error,
-              simulateType: "category_simulation_failure" as const,
+              simulateType: "category_projection_failure" as const,
               message: "Error al simular datos de categorías",
             };
 
-            handleSimulateError(
+            handleProjectionError(
               categoryError,
               {
                 selectedEstudio,
@@ -1525,13 +1523,13 @@ export default function GroupersChartPage() {
               return; // Exit early to trigger re-fetch with actual data
             }
           } else if (validation.error?.simulateType === "partial_budget_data") {
-            // Show warning but continue with category simulation
+            // Show warning but continue with category projection
             const partialError = {
               ...validation.error,
               message: "Algunas categorías no tienen presupuesto asignado",
             };
 
-            handleSimulateError(
+            handleProjectionError(
               partialError,
               {
                 selectedEstudio,
@@ -1544,39 +1542,37 @@ export default function GroupersChartPage() {
           }
         }
 
-        // Apply simulation transformation first
-        const simulatedData = processSimulationData(
+        // Apply projection transformation first
+        const projectedData = processProjectionData(
           processedData,
-          simulateMode
+          projectionMode
         );
 
-        // In simulate mode, show all categories even with zero budget amounts
+        // In projection mode, show all categories even with zero budget amounts
         // to provide clear feedback about missing budget data
-        const sortedData = simulateMode
-          ? simulatedData.sort(
-              (a: CategoryData, b: CategoryData) =>
-                b.total_amount - a.total_amount
+        const sortedData = projectionMode
+          ? projectedData.sort(
+              (a, b) => b.total_amount - a.total_amount
             )
-          : simulatedData
-              .filter((item: CategoryData) => item.total_amount > 0)
+          : projectedData
+              .filter((item) => item.total_amount > 0)
               .sort(
-                (a: CategoryData, b: CategoryData) =>
-                  b.total_amount - a.total_amount
+                (a, b) => b.total_amount - a.total_amount
               );
 
-        const finalCategoryData = sortedData;
+        const finalCategoryData = sortedData as CategoryData[];
         setCategoryData(finalCategoryData);
         setShowCategoryChart(true);
 
         // Calculate max amount for chart scaling, considering both expense and budget amounts
         if (sortedData.length > 0) {
           const maxExpenseAmount = Math.max(
-            ...sortedData.map((item: CategoryData) => item.total_amount)
+            ...sortedData.map((item) => item.total_amount)
           );
           const maxBudgetAmount = showBudgets
             ? Math.max(
                 ...sortedData.map(
-                  (item: CategoryData) => item.budget_amount || 0
+                  (item) => item.budget_amount || 0
                 )
               )
             : 0;
@@ -1586,8 +1582,8 @@ export default function GroupersChartPage() {
       } catch (error) {
         console.error("Error fetching category data:", error);
 
-        // Use simulation-specific error handling for categories
-        if (simulateMode) {
+        // Use projection-specific error handling for categories
+        if (projectionMode) {
           const context = {
             selectedEstudio,
             selectedGroupers: [selectedGrouper.grouper_id],
@@ -1596,27 +1592,27 @@ export default function GroupersChartPage() {
           };
 
           const fallbackActions = {
-            disableSimulateMode: () => {
-              setSimulateMode(false);
-              saveSimulateModeToSession(false);
+            disableProjectionMode: () => {
+              setProjectionMode(false);
+              saveProjectionModeToSession(false);
             },
             refreshData: () => {
               setCategoryData([]);
             },
             showActualData: () => {
-              setSimulateMode(false);
-              saveSimulateModeToSession(false);
+              setProjectionMode(false);
+              saveProjectionModeToSession(false);
               setCategoryData([]);
             },
           };
 
           const categoryError = {
-            ...categorizeSimulateError(error, context),
-            simulateType: "category_simulation_failure" as const,
+            ...categorizeProjectionError(error, context),
+            simulateType: "category_projection_failure" as const,
             message: "Error al cargar datos de categorías en modo simulación",
           };
 
-          handleSimulateError(categoryError, context, fallbackActions);
+          handleProjectionError(categoryError, context, fallbackActions);
         } else {
           // Handle regular category errors
           toast({
@@ -1636,7 +1632,7 @@ export default function GroupersChartPage() {
     activeTab,
     showBudgets,
     selectedGroupers,
-    simulateMode,
+    projectionMode,
   ]);
 
   // Fetch period comparison data
@@ -2360,7 +2356,7 @@ export default function GroupersChartPage() {
         return (
           <OptimizedGrouperTooltip
             {...props}
-            simulateMode={simulateMode}
+            projectionMode={projectionMode}
             showBudgets={showBudgets}
           />
         );
@@ -2368,7 +2364,7 @@ export default function GroupersChartPage() {
         return (
           <OptimizedCategoryTooltip
             {...props}
-            simulateMode={simulateMode}
+            projectionMode={projectionMode}
             showBudgets={showBudgets}
           />
         );
@@ -2378,17 +2374,17 @@ export default function GroupersChartPage() {
       return (
         <OptimizedGenericTooltip
           {...props}
-          simulateMode={simulateMode}
+          projectionMode={projectionMode}
           formatLabel={(label: string) => label}
           formatValue={(value: number, name: string) =>
-            `${simulateMode ? "Presupuesto" : "Gastos"}: ${formatCurrency(
+            `${projectionMode ? "Presupuesto" : "Gastos"}: ${formatCurrency(
               value
             )}`
           }
         />
       );
     },
-    [simulateMode, showBudgets]
+    [projectionMode, showBudgets]
   );
 
   // Custom tooltip for period comparison chart
@@ -2845,8 +2841,8 @@ export default function GroupersChartPage() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>
-              Total de {simulateMode ? "presupuesto" : "gastos"} por agrupador
-              {simulateMode && " (Simulación)"}
+              Total de {projectionMode ? "presupuesto" : "gastos"} por agrupador
+              {projectionMode && " (Simulación)"}
               {paymentMethod !== "all" &&
                 ` (${paymentMethod === "cash" ? "Efectivo" : "Crédito"})`}
               {activePeriod && ` - ${activePeriod.name}`}
@@ -2856,18 +2852,18 @@ export default function GroupersChartPage() {
             {grouperData.length === 0 ? (
               <EmptyState
                 title={
-                  simulateMode
+                  projectionMode
                     ? "Sin datos de presupuesto"
                     : "Sin datos de gastos"
                 }
                 description={`No hay ${
-                  simulateMode ? "presupuestos asignados" : "gastos registrados"
+                  projectionMode ? "presupuestos asignados" : "gastos registrados"
                 } para ${
                   selectedGroupers.length === 1
                     ? "el agrupador seleccionado"
                     : "los agrupadores seleccionados"
                 } en este período${selectedEstudio ? " y estudio" : ""}${
-                  simulateMode && paymentMethod !== "all"
+                  projectionMode && paymentMethod !== "all"
                     ? " (los presupuestos no dependen del método de pago)"
                     : paymentMethod !== "all"
                     ? ` con el método de pago ${
@@ -2881,7 +2877,7 @@ export default function GroupersChartPage() {
                 action={
                   <div className="space-y-2">
                     <p className="text-sm text-muted-foreground">
-                      {simulateMode
+                      {projectionMode
                         ? `Intenta cambiar los filtros${
                             selectedEstudio
                               ? " de agrupadores"
@@ -2949,7 +2945,7 @@ export default function GroupersChartPage() {
 
                     <Bar
                       dataKey="amount"
-                      name={simulateMode ? "Presupuesto" : "Gastos"}
+                      name={projectionMode ? "Presupuesto" : "Gastos"}
                       onClick={handleGrouperClick}
                       cursor="pointer"
                     >
@@ -3015,7 +3011,7 @@ export default function GroupersChartPage() {
                       )?.grouper_name || "Desconocido"
                     }`
                   : `Categorías agregadas (${selectedGroupers.length} agrupadores)`}
-                {simulateMode && " (Simulación)"}
+                {projectionMode && " (Simulación)"}
               </CardTitle>
               <Button
                 variant="outline"
@@ -3031,14 +3027,14 @@ export default function GroupersChartPage() {
               {categoryData.length === 0 ? (
                 <EmptyState
                   title={
-                    simulateMode
+                    projectionMode
                       ? "Sin datos de presupuesto por categorías"
                       : "Sin datos de categorías"
                   }
                   description={
                     selectedGrouper
                       ? `No hay ${
-                          simulateMode
+                          projectionMode
                             ? "presupuestos asignados"
                             : "gastos registrados"
                         } en las categorías del agrupador "${
@@ -3046,24 +3042,24 @@ export default function GroupersChartPage() {
                         }" para este período${
                           selectedEstudio ? " y estudio" : ""
                         }${
-                          simulateMode && paymentMethod !== "all"
+                          projectionMode && paymentMethod !== "all"
                             ? " (los presupuestos no dependen del método de pago)"
                             : ""
                         }.`
                       : selectedGroupers.length === 1
                       ? `No hay ${
-                          simulateMode
+                          projectionMode
                             ? "presupuestos asignados"
                             : "gastos registrados"
                         } en las categorías del agrupador seleccionado para este período${
                           selectedEstudio ? " y estudio" : ""
                         }${
-                          simulateMode && paymentMethod !== "all"
+                          projectionMode && paymentMethod !== "all"
                             ? " (los presupuestos no dependen del método de pago)"
                             : ""
                         }.`
                       : `No hay ${
-                          simulateMode
+                          projectionMode
                             ? "presupuestos asignados"
                             : "gastos registrados"
                         } en las categorías de los ${
@@ -3071,7 +3067,7 @@ export default function GroupersChartPage() {
                         } agrupadores seleccionados para este período${
                           selectedEstudio ? " y estudio" : ""
                         }${
-                          simulateMode && paymentMethod !== "all"
+                          projectionMode && paymentMethod !== "all"
                             ? " (los presupuestos no dependen del método de pago)"
                             : ""
                         }.`
@@ -3187,22 +3183,22 @@ export default function GroupersChartPage() {
                       {/* Main data bars for categories - expenses or simulated budget data */}
                       <Bar
                         dataKey="amount"
-                        name={simulateMode ? "Presupuesto" : "Gastos"}
-                        opacity={simulateMode ? 0.7 : 1}
+                        name={projectionMode ? "Presupuesto" : "Gastos"}
+                        opacity={projectionMode ? 0.7 : 1}
                       >
                         {categoryData.map((entry, index) => {
                           const baseColor =
                             chartColors[index % chartColors.length];
 
-                          // Enhanced simulation styling for categories
-                          if (simulateMode) {
+                          // Enhanced projection styling for categories
+                          if (projectionMode) {
                             return (
                               <Cell
                                 key={`main-category-cell-${index}`}
-                                fill={`${baseColor}B3`} // 70% opacity in simulate mode
+                                fill={`${baseColor}B3`} // 70% opacity in projection mode
                                 stroke={baseColor}
                                 strokeWidth={2}
-                                strokeDasharray="5 3" // Dashed pattern for simulation
+                                strokeDasharray="5 3" // Dashed pattern for projection
                               />
                             );
                           }
@@ -3218,15 +3214,15 @@ export default function GroupersChartPage() {
                           dataKey="amount"
                           position="right"
                           formatter={(value: number) =>
-                            simulateMode
+                            projectionMode
                               ? `Presupuesto: ${formatCurrency(value)}`
                               : `Gastos: ${formatCurrency(value)}`
                           }
                           style={{
                             fontSize: "11px",
                             fontWeight: "600",
-                            fontStyle: simulateMode ? "italic" : "normal",
-                            fill: simulateMode ? "#6366f1" : "#374151",
+                            fontStyle: projectionMode ? "italic" : "normal",
+                            fill: projectionMode ? "#6366f1" : "#374151",
                           }}
                         />
                       </Bar>
@@ -3666,7 +3662,7 @@ export default function GroupersChartPage() {
           <div className="flex items-center space-x-2">
             <Checkbox
               id="simulate-mode"
-              checked={simulateMode}
+              checked={projectionMode}
               onCheckedChange={handleSimulateModeToggle}
               disabled={activeTab !== "current"}
               aria-label="Activar modo simulación para mostrar datos de presupuesto"
@@ -3674,12 +3670,12 @@ export default function GroupersChartPage() {
             <Label
               htmlFor="simulate-mode"
               className={`text-sm font-medium cursor-pointer ${
-                simulateMode ? "text-blue-600 dark:text-blue-400" : ""
+                projectionMode ? "text-blue-600 dark:text-blue-400" : ""
               }`}
             >
-              Simular
+              Proyectar
             </Label>
-            {simulateMode && (
+            {projectionMode && (
               <div className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20 px-2 py-1 rounded">
                 Modo activo
               </div>
@@ -3695,8 +3691,8 @@ export default function GroupersChartPage() {
           </div>
         )}
 
-        {/* Information about simulate mode and payment method interaction */}
-        {simulateMode && paymentMethod !== "all" && activeTab === "current" && (
+        {/* Information about projection mode and payment method interaction */}
+        {projectionMode && paymentMethod !== "all" && activeTab === "current" && (
           <div className="text-sm text-blue-600 bg-blue-50 dark:bg-blue-950/20 px-3 py-1 rounded-md">
             ℹ️ En modo simulación, se muestran todos los presupuestos
             (independiente del método de pago seleccionado)

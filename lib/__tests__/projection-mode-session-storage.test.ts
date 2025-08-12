@@ -38,7 +38,7 @@ Object.defineProperty(window, "sessionStorage", {
 // Mock toast function (not needed for these tests)
 const mockToast = jest.fn();
 
-describe("Simulate Mode Session Storage", () => {
+describe("Projection Mode Session Storage", () => {
   beforeEach(() => {
     // Clear all mocks and storage before each test
     jest.clearAllMocks();
@@ -52,64 +52,64 @@ describe("Simulate Mode Session Storage", () => {
 
   describe("Session Storage Utilities", () => {
     // These functions would be extracted from the component for testing
-    const saveSimulateModeToSession = (mode: boolean) => {
+    const saveProjectionModeToSession = (mode: boolean) => {
       try {
         if (typeof window !== "undefined" && window.sessionStorage) {
-          const simulationState = {
-            simulateMode: mode,
+          const projectionState = {
+            projectionMode: mode,
             lastUpdated: Date.now(),
           };
           sessionStorage.setItem(
-            "dashboard-simulate-mode",
-            JSON.stringify(simulationState)
+            "dashboard-projection-mode",
+            JSON.stringify(projectionState)
           );
         }
       } catch (error) {
-        console.error("Error saving simulate mode to session storage:", error);
+        console.error("Error saving projection mode to session storage:", error);
       }
     };
 
-    const loadSimulateModeFromSession = (): boolean => {
+    const loadProjectionModeFromSession = (): boolean => {
       try {
         if (typeof window !== "undefined" && window.sessionStorage) {
-          const saved = sessionStorage.getItem("dashboard-simulate-mode");
+          const saved = sessionStorage.getItem("dashboard-projection-mode");
           if (saved) {
-            const simulationState = JSON.parse(saved);
+            const projectionState = JSON.parse(saved);
 
             // Handle legacy format (direct boolean) for backward compatibility
-            if (typeof simulationState === "boolean") {
-              return simulationState;
+            if (typeof projectionState === "boolean") {
+              return projectionState;
             }
 
             // Handle new format with metadata
             if (
-              simulationState &&
-              typeof simulationState.simulateMode === "boolean"
+              projectionState &&
+              typeof projectionState.projectionMode === "boolean"
             ) {
               // Check if the stored state is not too old (e.g., older than 24 hours)
               const maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
               const isExpired =
-                simulationState.lastUpdated &&
-                Date.now() - simulationState.lastUpdated > maxAge;
+                projectionState.lastUpdated &&
+                Date.now() - projectionState.lastUpdated > maxAge;
 
               if (isExpired) {
-                sessionStorage.removeItem("dashboard-simulate-mode");
+                sessionStorage.removeItem("dashboard-projection-mode");
                 return false;
               }
 
-              return simulationState.simulateMode;
+              return projectionState.projectionMode;
             }
           }
         }
         return false;
       } catch (error) {
         console.error(
-          "Error loading simulate mode from session storage:",
+          "Error loading projection mode from session storage:",
           error
         );
         try {
           if (typeof window !== "undefined" && window.sessionStorage) {
-            sessionStorage.removeItem("dashboard-simulate-mode");
+            sessionStorage.removeItem("dashboard-projection-mode");
           }
         } catch (clearError) {
           console.error(
@@ -121,14 +121,14 @@ describe("Simulate Mode Session Storage", () => {
       }
     };
 
-    const clearSimulateModeFromSession = () => {
+    const clearProjectionModeFromSession = () => {
       try {
         if (typeof window !== "undefined" && window.sessionStorage) {
-          sessionStorage.removeItem("dashboard-simulate-mode");
+          sessionStorage.removeItem("dashboard-projection-mode");
         }
       } catch (error) {
         console.error(
-          "Error clearing simulate mode from session storage:",
+          "Error clearing projection mode from session storage:",
           error
         );
       }
@@ -151,39 +151,39 @@ describe("Simulate Mode Session Storage", () => {
       }
     };
 
-    it("should save simulate mode to session storage", () => {
-      saveSimulateModeToSession(true);
+    it("should save projection mode to session storage", () => {
+      saveProjectionModeToSession(true);
 
       expect(mockSessionStorage.setItem).toHaveBeenCalledWith(
-        "dashboard-simulate-mode",
-        expect.stringContaining('"simulateMode":true')
+        "dashboard-projection-mode",
+        expect.stringContaining('"projectionMode":true')
       );
     });
 
-    it("should load simulate mode from session storage", () => {
+    it("should load projection mode from session storage", () => {
       // Set up mock data
-      const simulationState = {
-        simulateMode: true,
+      const projectionState = {
+        projectionMode: true,
         lastUpdated: Date.now(),
       };
       mockSessionStorage.setItem(
-        "dashboard-simulate-mode",
-        JSON.stringify(simulationState)
+        "dashboard-projection-mode",
+        JSON.stringify(projectionState)
       );
 
-      const result = loadSimulateModeFromSession();
+      const result = loadProjectionModeFromSession();
 
       expect(result).toBe(true);
       expect(mockSessionStorage.getItem).toHaveBeenCalledWith(
-        "dashboard-simulate-mode"
+        "dashboard-projection-mode"
       );
     });
 
     it("should handle legacy boolean format", () => {
       // Set up legacy format (direct boolean)
-      mockSessionStorage.setItem("dashboard-simulate-mode", "true");
+      mockSessionStorage.setItem("dashboard-projection-mode", "true");
 
-      const result = loadSimulateModeFromSession();
+      const result = loadProjectionModeFromSession();
 
       expect(result).toBe(true);
     });
@@ -191,39 +191,39 @@ describe("Simulate Mode Session Storage", () => {
     it("should handle expired state", () => {
       // Set up expired state (older than 24 hours)
       const expiredState = {
-        simulateMode: true,
+        projectionMode: true,
         lastUpdated: Date.now() - 25 * 60 * 60 * 1000, // 25 hours ago
       };
       mockSessionStorage.setItem(
-        "dashboard-simulate-mode",
+        "dashboard-projection-mode",
         JSON.stringify(expiredState)
       );
 
-      const result = loadSimulateModeFromSession();
+      const result = loadProjectionModeFromSession();
 
       expect(result).toBe(false);
       expect(mockSessionStorage.removeItem).toHaveBeenCalledWith(
-        "dashboard-simulate-mode"
+        "dashboard-projection-mode"
       );
     });
 
     it("should return false for corrupted data", () => {
       // Set up corrupted data
-      mockSessionStorage.setItem("dashboard-simulate-mode", "invalid-json");
+      mockSessionStorage.setItem("dashboard-projection-mode", "invalid-json");
 
-      const result = loadSimulateModeFromSession();
+      const result = loadProjectionModeFromSession();
 
       expect(result).toBe(false);
       expect(mockSessionStorage.removeItem).toHaveBeenCalledWith(
-        "dashboard-simulate-mode"
+        "dashboard-projection-mode"
       );
     });
 
-    it("should clear simulate mode from session storage", () => {
-      clearSimulateModeFromSession();
+    it("should clear projection mode from session storage", () => {
+      clearProjectionModeFromSession();
 
       expect(mockSessionStorage.removeItem).toHaveBeenCalledWith(
-        "dashboard-simulate-mode"
+        "dashboard-projection-mode"
       );
     });
 
@@ -249,7 +249,7 @@ describe("Simulate Mode Session Storage", () => {
       });
 
       // This would normally show a toast, but we're testing the error handling
-      expect(() => saveSimulateModeToSession(true)).not.toThrow();
+      expect(() => saveProjectionModeToSession(true)).not.toThrow();
     });
 
     it("should return false when session storage is not available", () => {
@@ -277,25 +277,25 @@ describe("Simulate Mode Session Storage", () => {
         throw new Error("Session storage error");
       });
 
-      const loadSimulateModeFromSession = (): boolean => {
+      const loadProjectionModeFromSession = (): boolean => {
         try {
           if (typeof window !== "undefined" && window.sessionStorage) {
-            const saved = sessionStorage.getItem("dashboard-simulate-mode");
+            const saved = sessionStorage.getItem("dashboard-projection-mode");
             if (saved) {
-              return JSON.parse(saved).simulateMode || false;
+              return JSON.parse(saved).projectionMode || false;
             }
           }
           return false;
         } catch (error) {
           console.error(
-            "Error loading simulate mode from session storage:",
+            "Error loading projection mode from session storage:",
             error
           );
           return false;
         }
       };
 
-      const result = loadSimulateModeFromSession();
+      const result = loadProjectionModeFromSession();
       expect(result).toBe(false);
     });
   });

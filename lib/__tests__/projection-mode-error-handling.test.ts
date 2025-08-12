@@ -12,13 +12,13 @@ import {
 } from "@jest/globals";
 
 import {
-  categorizeSimulateError,
+  categorizeProjectionError,
   validateBudgetData,
   createErrorRecoveryStrategies,
-  SIMULATE_ERROR_MESSAGES,
-} from "../simulate-mode-error-handling";
+  PROJECTION_ERROR_MESSAGES,
+} from "../projection-mode-error-handling";
 
-describe("Simulate Mode Error Handling", () => {
+describe("Projection Mode Error Handling", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -27,64 +27,64 @@ describe("Simulate Mode Error Handling", () => {
     jest.clearAllMocks();
   });
 
-  describe("categorizeSimulateError", () => {
+  describe("categorizeProjectionError", () => {
     it("should categorize missing budget data error", () => {
       const error = new Error("No budget data available");
-      const result = categorizeSimulateError(error);
+      const result = categorizeProjectionError(error);
 
-      expect(result.simulateType).toBe("missing_budget_data");
+      expect(result.projectionType).toBe("missing_budget_data");
       expect(result.message).toBe(
-        "No hay datos de presupuesto disponibles para la simulación"
+        "No hay datos de presupuesto disponibles para la proyección"
       );
       expect(result.retryable).toBe(false);
     });
 
     it("should categorize partial budget data error", () => {
       const error = new Error("Partial budget data available");
-      const result = categorizeSimulateError(error);
+      const result = categorizeProjectionError(error);
 
-      expect(result.simulateType).toBe("partial_budget_data");
+      expect(result.projectionType).toBe("partial_budget_data");
       expect(result.message).toBe(
         "Algunos agrupadores no tienen presupuesto asignado"
       );
       expect(result.retryable).toBe(false);
     });
 
-    it("should categorize simulation API failure", () => {
-      const error = new Error("Simulation API failed");
-      const result = categorizeSimulateError(error);
+    it("should categorize projection API failure", () => {
+      const error = new Error("Projection API failed");
+      const result = categorizeProjectionError(error);
 
-      expect(result.simulateType).toBe("simulation_api_failure");
-      expect(result.message).toBe("Error al cargar datos de simulación");
+      expect(result.projectionType).toBe("projection_api_failure");
+      expect(result.message).toBe("Error al cargar datos de proyección");
       expect(result.retryable).toBe(true);
     });
 
     it("should categorize filter conflict error", () => {
       const error = new Error("Filter conflict detected");
-      const result = categorizeSimulateError(error);
+      const result = categorizeProjectionError(error);
 
-      expect(result.simulateType).toBe("filter_conflict");
-      expect(result.message).toBe("Conflicto entre filtros y modo simulación");
+      expect(result.projectionType).toBe("filter_conflict");
+      expect(result.message).toBe("Conflicto entre filtros y modo proyección");
       expect(result.retryable).toBe(false);
     });
 
     it("should categorize session storage error", () => {
       const error = new Error("Session storage failed");
-      const result = categorizeSimulateError(error);
+      const result = categorizeProjectionError(error);
 
-      expect(result.simulateType).toBe("session_storage_error");
+      expect(result.projectionType).toBe("session_storage_error");
       expect(result.message).toBe(
-        "Error al guardar preferencias de simulación"
+        "Error al guardar preferencias de proyección"
       );
       expect(result.retryable).toBe(true);
     });
 
-    it("should categorize category simulation failure", () => {
-      const error = new Error("Error al simular datos de categorías");
-      const result = categorizeSimulateError(error);
+    it("should categorize category projection failure", () => {
+      const error = new Error("Error al proyectar datos de categorías");
+      const result = categorizeProjectionError(error);
 
-      expect(result.simulateType).toBe("category_simulation_failure");
-      expect(result.message).toBe("Error al simular datos de categorías");
+      expect(result.projectionType).toBe("category_projection_failure");
+      expect(result.message).toBe("Error al proyectar datos de categorías");
       expect(result.retryable).toBe(true);
     });
 
@@ -97,17 +97,17 @@ describe("Simulate Mode Error Handling", () => {
         activeTab: "current",
       };
 
-      const result = categorizeSimulateError(error, context);
+      const result = categorizeProjectionError(error, context);
 
       expect(result.context).toEqual(context);
     });
 
     it("should handle non-Error objects", () => {
       const error = "String error";
-      const result = categorizeSimulateError(error);
+      const result = categorizeProjectionError(error);
 
       expect(result.type).toBe("unknown");
-      expect(result.retryable).toBe(true);
+      expect(result.retryable).toBe(false);
     });
   });
 
@@ -116,14 +116,14 @@ describe("Simulate Mode Error Handling", () => {
       const result = validateBudgetData([], {});
 
       expect(result.isValid).toBe(false);
-      expect(result.error?.simulateType).toBe("missing_budget_data");
+      expect(result.error?.projectionType).toBe("missing_budget_data");
     });
 
     it("should validate null data", () => {
       const result = validateBudgetData(null as any, {});
 
       expect(result.isValid).toBe(false);
-      expect(result.error?.simulateType).toBe("missing_budget_data");
+      expect(result.error?.projectionType).toBe("missing_budget_data");
     });
 
     it("should validate data with no budget amounts", () => {
@@ -135,7 +135,7 @@ describe("Simulate Mode Error Handling", () => {
       const result = validateBudgetData(data, {});
 
       expect(result.isValid).toBe(false);
-      expect(result.error?.simulateType).toBe("missing_budget_data");
+      expect(result.error?.projectionType).toBe("missing_budget_data");
     });
 
     it("should validate data with partial budget amounts", () => {
@@ -147,7 +147,7 @@ describe("Simulate Mode Error Handling", () => {
       const result = validateBudgetData(data, {});
 
       expect(result.isValid).toBe(true);
-      expect(result.error?.simulateType).toBe("partial_budget_data");
+      expect(result.error?.projectionType).toBe("partial_budget_data");
     });
 
     it("should validate data with complete budget amounts", () => {
@@ -177,7 +177,7 @@ describe("Simulate Mode Error Handling", () => {
   describe("createErrorRecoveryStrategies", () => {
     let mockOriginalFetch: jest.Mock;
     let mockFallbackActions: {
-      disableSimulateMode: jest.Mock;
+      disableProjectionMode: jest.Mock;
       refreshData: jest.Mock;
       showActualData: jest.Mock;
     };
@@ -185,7 +185,7 @@ describe("Simulate Mode Error Handling", () => {
     beforeEach(() => {
       mockOriginalFetch = jest.fn();
       mockFallbackActions = {
-        disableSimulateMode: jest.fn(),
+        disableProjectionMode: jest.fn(),
         refreshData: jest.fn(),
         showActualData: jest.fn(),
       };
@@ -224,7 +224,7 @@ describe("Simulate Mode Error Handling", () => {
     });
 
     it("should fallback to actual data", async () => {
-      // Set up mock to succeed when called (after disabling simulate mode)
+      // Set up mock to succeed when called (after disabling projection mode)
       mockOriginalFetch.mockResolvedValueOnce({ data: "actual data" });
 
       const strategies = createErrorRecoveryStrategies(
@@ -235,7 +235,7 @@ describe("Simulate Mode Error Handling", () => {
       const result = await strategies.fallbackToActualData();
 
       expect(result).toEqual({ data: "actual data" });
-      expect(mockFallbackActions.disableSimulateMode).toHaveBeenCalled();
+      expect(mockFallbackActions.disableProjectionMode).toHaveBeenCalled();
       expect(mockOriginalFetch).toHaveBeenCalledTimes(1);
     });
 
@@ -265,39 +265,39 @@ describe("Simulate Mode Error Handling", () => {
       await expect(strategies.fallbackToActualData()).rejects.toThrow(
         "Both failed"
       );
-      expect(mockFallbackActions.disableSimulateMode).toHaveBeenCalled();
+      expect(mockFallbackActions.disableProjectionMode).toHaveBeenCalled();
     });
   });
 
   describe("Error Messages", () => {
     it("should have all required error messages", () => {
-      expect(SIMULATE_ERROR_MESSAGES.NO_BUDGET_DATA).toBeDefined();
-      expect(SIMULATE_ERROR_MESSAGES.PARTIAL_BUDGET_DATA).toBeDefined();
-      expect(SIMULATE_ERROR_MESSAGES.SIMULATION_API_FAILURE).toBeDefined();
-      expect(SIMULATE_ERROR_MESSAGES.FILTER_CONFLICT).toBeDefined();
-      expect(SIMULATE_ERROR_MESSAGES.SESSION_STORAGE_ERROR).toBeDefined();
-      expect(SIMULATE_ERROR_MESSAGES.CATEGORY_SIMULATION_FAILURE).toBeDefined();
-      expect(SIMULATE_ERROR_MESSAGES.FALLBACK_TO_ACTUAL).toBeDefined();
-      expect(SIMULATE_ERROR_MESSAGES.RETRY_SIMULATION).toBeDefined();
-      expect(SIMULATE_ERROR_MESSAGES.CONTINUE_WITH_PARTIAL).toBeDefined();
+      expect(PROJECTION_ERROR_MESSAGES.NO_BUDGET_DATA).toBeDefined();
+      expect(PROJECTION_ERROR_MESSAGES.PARTIAL_BUDGET_DATA).toBeDefined();
+      expect(PROJECTION_ERROR_MESSAGES.PROJECTION_API_FAILURE).toBeDefined();
+      expect(PROJECTION_ERROR_MESSAGES.FILTER_CONFLICT).toBeDefined();
+      expect(PROJECTION_ERROR_MESSAGES.SESSION_STORAGE_ERROR).toBeDefined();
+      expect(PROJECTION_ERROR_MESSAGES.CATEGORY_PROJECTION_FAILURE).toBeDefined();
+      expect(PROJECTION_ERROR_MESSAGES.FALLBACK_TO_ACTUAL).toBeDefined();
+      expect(PROJECTION_ERROR_MESSAGES.RETRY_PROJECTION).toBeDefined();
+      expect(PROJECTION_ERROR_MESSAGES.CONTINUE_WITH_PARTIAL).toBeDefined();
     });
 
     it("should have Spanish error messages", () => {
-      expect(SIMULATE_ERROR_MESSAGES.NO_BUDGET_DATA).toContain("presupuesto");
-      expect(SIMULATE_ERROR_MESSAGES.PARTIAL_BUDGET_DATA).toContain(
+      expect(PROJECTION_ERROR_MESSAGES.NO_BUDGET_DATA).toContain("presupuesto");
+      expect(PROJECTION_ERROR_MESSAGES.PARTIAL_BUDGET_DATA).toContain(
         "agrupadores"
       );
-      expect(SIMULATE_ERROR_MESSAGES.SIMULATION_API_FAILURE).toContain(
-        "simulación"
+      expect(PROJECTION_ERROR_MESSAGES.PROJECTION_API_FAILURE).toContain(
+        "proyección"
       );
     });
 
     it("should have user-friendly messages", () => {
-      expect(SIMULATE_ERROR_MESSAGES.RETRY_SIMULATION).toContain("Reintentar");
-      expect(SIMULATE_ERROR_MESSAGES.CONTINUE_WITH_PARTIAL).toContain(
+      expect(PROJECTION_ERROR_MESSAGES.RETRY_PROJECTION).toContain("Reintentar");
+      expect(PROJECTION_ERROR_MESSAGES.CONTINUE_WITH_PARTIAL).toContain(
         "Continuar"
       );
-      expect(SIMULATE_ERROR_MESSAGES.FALLBACK_TO_ACTUAL).toContain(
+      expect(PROJECTION_ERROR_MESSAGES.FALLBACK_TO_ACTUAL).toContain(
         "datos reales"
       );
     });
@@ -305,17 +305,17 @@ describe("Simulate Mode Error Handling", () => {
 
   describe("Edge Cases", () => {
     it("should handle undefined error", () => {
-      const result = categorizeSimulateError(undefined);
+      const result = categorizeProjectionError(undefined);
 
       expect(result.type).toBe("unknown");
-      expect(result.message).toBe("Error desconocido. Intenta nuevamente.");
+      expect(result.message).toBe("Error desconocido en modo proyección");
     });
 
     it("should handle null error", () => {
-      const result = categorizeSimulateError(null);
+      const result = categorizeProjectionError(null);
 
       expect(result.type).toBe("unknown");
-      expect(result.retryable).toBe(true);
+      expect(result.retryable).toBe(false);
     });
 
     it("should validate data with undefined budget_amount", () => {
@@ -330,7 +330,7 @@ describe("Simulate Mode Error Handling", () => {
 
     it("should handle empty context", () => {
       const error = new Error("Test error");
-      const result = categorizeSimulateError(error, {});
+      const result = categorizeProjectionError(error, {});
 
       expect(result.context).toEqual({});
     });

@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     const grouperIds = searchParams.get("grouperIds");
     const estudioId = searchParams.get("estudioId");
     const includeBudgets = searchParams.get("includeBudgets") === "true";
-    const simulateMode = searchParams.get("simulateMode") === "true";
+    const projectionMode = searchParams.get("projectionMode") === "true";
 
     if (!periodId) {
       return NextResponse.json(
@@ -110,8 +110,8 @@ export async function GET(request: Request) {
 
     const result = await sql.query(query, queryParams);
 
-    // Enhanced error handling for simulate mode
-    if (simulateMode && includeBudgets) {
+    // Enhanced error handling for projection mode
+    if (projectionMode && includeBudgets) {
       // Check if any budget data exists
       const hasBudgetData = result.some(
         (item) =>
@@ -121,11 +121,11 @@ export async function GET(request: Request) {
       );
 
       if (!hasBudgetData) {
-        console.warn("No budget data found for simulation mode");
+        console.warn("No budget data found for projection mode");
         // Return data with warning metadata instead of throwing error
         return NextResponse.json(result, {
           headers: {
-            "X-Budget-Warning": "No budget data available for simulation",
+            "X-Budget-Warning": "No budget data available for projection",
           },
         });
       }
@@ -142,10 +142,10 @@ export async function GET(request: Request) {
         itemsWithBudget.length < result.length &&
         itemsWithBudget.length > 0
       ) {
-        console.warn("Partial budget data found for simulation mode");
+        console.warn("Partial budget data found for projection mode");
         return NextResponse.json(result, {
           headers: {
-            "X-Budget-Warning": "Partial budget data available for simulation",
+            "X-Budget-Warning": "Partial budget data available for projection",
           },
         });
       }
@@ -157,14 +157,14 @@ export async function GET(request: Request) {
 
     // Enhanced error handling with context
     const errorMessage = (error as Error).message;
-    const isSimulationError =
-      simulateMode && errorMessage.toLowerCase().includes("budget");
+    const isProjectionError =
+      projectionMode && errorMessage.toLowerCase().includes("budget");
 
-    if (isSimulationError) {
+    if (isProjectionError) {
       return NextResponse.json(
         {
-          error: "Error loading simulation data: " + errorMessage,
-          simulationError: true,
+          error: "Error loading projection data: " + errorMessage,
+          projectionError: true,
           fallbackSuggested: true,
         },
         { status: 500 }

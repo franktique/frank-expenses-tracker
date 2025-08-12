@@ -12,7 +12,7 @@ interface TooltipPayload {
     category_name?: string;
     total_amount: number;
     budget_amount?: number;
-    isSimulated?: boolean;
+    isProjectiond?: boolean;
   };
 }
 
@@ -20,13 +20,13 @@ interface OptimizedTooltipProps {
   active?: boolean;
   payload?: TooltipPayload[];
   label?: string;
-  simulateMode?: boolean;
+  projectionMode?: boolean;
   showBudgets?: boolean;
 }
 
 // Memoized tooltip content for grouper charts with enhanced performance
 export const OptimizedGrouperTooltip = memo<OptimizedTooltipProps>(
-  ({ active, payload, label, simulateMode = false, showBudgets = false }) => {
+  ({ active, payload, label, projectionMode = false, showBudgets = false }) => {
     // Early return for better performance
     if (!active || !payload || payload.length === 0) {
       return null;
@@ -55,7 +55,7 @@ export const OptimizedGrouperTooltip = memo<OptimizedTooltipProps>(
         <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
           <p className="font-semibold text-foreground mb-2">{grouperName}</p>
 
-          {simulateMode ? (
+          {projectionMode ? (
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">
                 <span className="font-medium text-primary">Presupuesto:</span>{" "}
@@ -87,7 +87,7 @@ export const OptimizedGrouperTooltip = memo<OptimizedTooltipProps>(
       );
     }, [
       grouperName,
-      simulateMode,
+      projectionMode,
       showBudgets,
       formattedAmount,
       formattedBudgetAmount,
@@ -100,7 +100,7 @@ export const OptimizedGrouperTooltip = memo<OptimizedTooltipProps>(
     // Quick checks for common changes
     if (
       prevProps.active !== nextProps.active ||
-      prevProps.simulateMode !== nextProps.simulateMode ||
+      prevProps.projectionMode !== nextProps.projectionMode ||
       prevProps.showBudgets !== nextProps.showBudgets ||
       prevProps.label !== nextProps.label
     ) {
@@ -132,7 +132,7 @@ OptimizedGrouperTooltip.displayName = "OptimizedGrouperTooltip";
 
 // Memoized tooltip content for category charts with enhanced performance
 export const OptimizedCategoryTooltip = memo<OptimizedTooltipProps>(
-  ({ active, payload, label, simulateMode = false, showBudgets = false }) => {
+  ({ active, payload, label, projectionMode = false, showBudgets = false }) => {
     // Early return for better performance
     if (!active || !payload || payload.length === 0) {
       return null;
@@ -161,7 +161,7 @@ export const OptimizedCategoryTooltip = memo<OptimizedTooltipProps>(
         <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
           <p className="font-semibold text-foreground mb-2">{categoryName}</p>
 
-          {simulateMode ? (
+          {projectionMode ? (
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">
                 <span className="font-medium text-primary">Presupuesto:</span>{" "}
@@ -193,7 +193,7 @@ export const OptimizedCategoryTooltip = memo<OptimizedTooltipProps>(
       );
     }, [
       categoryName,
-      simulateMode,
+      projectionMode,
       showBudgets,
       formattedAmount,
       formattedBudgetAmount,
@@ -210,7 +210,7 @@ export const OptimizedGenericTooltip = memo<{
   active?: boolean;
   payload?: any[];
   label?: string;
-  simulateMode?: boolean;
+  projectionMode?: boolean;
   formatLabel?: (label: string) => string;
   formatValue?: (value: number, name: string) => string;
 }>(
@@ -218,7 +218,7 @@ export const OptimizedGenericTooltip = memo<{
     active,
     payload,
     label,
-    simulateMode = false,
+    projectionMode = false,
     formatLabel,
     formatValue,
   }) => {
@@ -254,7 +254,7 @@ export const OptimizedGenericTooltip = memo<{
           })}
         </div>
 
-        {simulateMode && (
+        {projectionMode && (
           <p className="text-xs text-blue-600 italic mt-2">
             * Datos simulados basados en presupuesto
           </p>

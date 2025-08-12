@@ -113,7 +113,7 @@ describe("Dashboard Responsive Design - Task 5 Tests", () => {
     );
   };
 
-  // Helper function to simulate different screen sizes
+  // Helper function to projection different screen sizes
   const setViewportSize = (width: number, height: number) => {
     Object.defineProperty(window, "innerWidth", {
       writable: true,

@@ -11,7 +11,7 @@ export async function GET(
     const periodId = url.searchParams.get("periodId");
     const paymentMethod = url.searchParams.get("paymentMethod");
     const includeBudgets = url.searchParams.get("includeBudgets") === "true";
-    const simulateMode = url.searchParams.get("simulateMode") === "true";
+    const projectionMode = url.searchParams.get("projectionMode") === "true";
 
     if (isNaN(grouperId) || !periodId) {
       return NextResponse.json(
@@ -129,8 +129,8 @@ export async function GET(
 
     const categoryStats = await sql.query(query, queryParams);
 
-    // Enhanced error handling for category simulate mode
-    if (simulateMode && includeBudgets) {
+    // Enhanced error handling for category projection mode
+    if (projectionMode && includeBudgets) {
       // Check if any budget data exists for categories
       const hasBudgetData = categoryStats.some(
         (item) =>
@@ -147,7 +147,7 @@ export async function GET(
         return NextResponse.json(categoryStats, {
           headers: {
             "X-Budget-Warning":
-              "No budget data available for category simulation",
+              "No budget data available for category projection",
           },
         });
       }
@@ -170,7 +170,7 @@ export async function GET(
         return NextResponse.json(categoryStats, {
           headers: {
             "X-Budget-Warning":
-              "Partial budget data available for category simulation",
+              "Partial budget data available for category projection",
           },
         });
       }
@@ -183,16 +183,16 @@ export async function GET(
       error
     );
 
-    // Enhanced error handling with simulation context
+    // Enhanced error handling with projection context
     const errorMessage = (error as Error).message;
-    const isSimulationError =
-      simulateMode && errorMessage.toLowerCase().includes("budget");
+    const isProjectionError =
+      projectionMode && errorMessage.toLowerCase().includes("budget");
 
-    if (isSimulationError) {
+    if (isProjectionError) {
       return NextResponse.json(
         {
-          error: `Error loading category simulation data for grouper ${routeParams.id}: ${errorMessage}`,
-          simulationError: true,
+          error: `Error loading category projection data for grouper ${routeParams.id}: ${errorMessage}`,
+          projectionError: true,
           categoryError: true,
           fallbackSuggested: true,
         },

@@ -20,12 +20,12 @@ type GrouperData = {
   grouper_name: string;
   total_amount: number;
   budget_amount?: number;
-  isSimulated?: boolean;
+  isProjectiond?: boolean;
 };
 
 interface OptimizedGrouperChartProps {
   data: GrouperData[];
-  simulateMode: boolean;
+  projectionMode: boolean;
   showBudgets: boolean;
   maxAmount: number;
   colors: string[];
@@ -106,24 +106,24 @@ BudgetBarCells.displayName = "BudgetBarCells";
 const MainBarCells = memo<{
   data: GrouperData[];
   colors: string[];
-  simulateMode: boolean;
+  projectionMode: boolean;
   selectedGrouper: GrouperData | null;
-}>(({ data, colors, simulateMode, selectedGrouper }) => {
+}>(({ data, colors, projectionMode, selectedGrouper }) => {
   return (
     <>
       {data.map((entry, index) => {
         const baseColor = colors[index % colors.length];
         const isSelected = selectedGrouper?.grouper_id === entry.grouper_id;
 
-        // Enhanced simulation styling
-        if (simulateMode) {
+        // Enhanced projection styling
+        if (projectionMode) {
           return (
             <Cell
               key={`main-cell-${index}`}
-              fill={isSelected ? "#ff6361" : `${baseColor}B3`} // 70% opacity in simulate mode
+              fill={isSelected ? "#ff6361" : `${baseColor}B3`} // 70% opacity in projection mode
               stroke={baseColor}
               strokeWidth={2}
-              strokeDasharray="5 3" // Dashed pattern for simulation
+              strokeDasharray="5 3" // Dashed pattern for projection
             />
           );
         }
@@ -142,15 +142,15 @@ const MainBarCells = memo<{
 MainBarCells.displayName = "MainBarCells";
 
 // Memoized label formatter
-const useLabelFormatter = (simulateMode: boolean) => {
+const useLabelFormatter = (projectionMode: boolean) => {
   return useCallback(
     (value: number) => {
-      if (simulateMode) {
+      if (projectionMode) {
         return `Presupuesto: ${formatCurrency(value)}`;
       }
       return `Gastos: ${formatCurrency(value)}`;
     },
-    [simulateMode]
+    [projectionMode]
   );
 };
 
@@ -162,7 +162,7 @@ const budgetLabelFormatter = (value: number) =>
 export const OptimizedGrouperChart = memo<OptimizedGrouperChartProps>(
   ({
     data,
-    simulateMode,
+    projectionMode,
     showBudgets,
     maxAmount,
     colors,
@@ -172,17 +172,17 @@ export const OptimizedGrouperChart = memo<OptimizedGrouperChartProps>(
   }) => {
     const chartData = useChartData(data, showBudgets);
     const budgetColors = useBudgetColors(data, colors);
-    const labelFormatter = useLabelFormatter(simulateMode);
+    const labelFormatter = useLabelFormatter(projectionMode);
 
     // Simplified animation configuration
     const animationConfig = useMemo(
       () => ({
-        duration: data.length > 30 || simulateMode ? 0 : 300,
+        duration: data.length > 30 || projectionMode ? 0 : 300,
         easing: "ease-out",
         delay: 0,
         stagger: 0,
       }),
-      [data.length, simulateMode]
+      [data.length, projectionMode]
     );
 
     // Memoized chart configuration with enhanced animation optimization
@@ -237,15 +237,15 @@ export const OptimizedGrouperChart = memo<OptimizedGrouperChartProps>(
     const mainBarConfig = useMemo(
       () => ({
         dataKey: "amount",
-        name: simulateMode ? "Presupuesto" : "Gastos",
+        name: projectionMode ? "Presupuesto" : "Gastos",
         onClick: onGrouperClick,
         cursor: "pointer" as const,
-        opacity: simulateMode ? 0.7 : 1,
+        opacity: projectionMode ? 0.7 : 1,
         animationBegin: 0,
         animationDuration: animationConfig.duration,
         isAnimationActive: animationConfig.duration > 0,
       }),
-      [simulateMode, onGrouperClick, animationConfig]
+      [projectionMode, onGrouperClick, animationConfig]
     );
 
     // Memoized label styles
@@ -263,10 +263,10 @@ export const OptimizedGrouperChart = memo<OptimizedGrouperChartProps>(
       () => ({
         fontSize: "11px",
         fontWeight: "600",
-        fontStyle: simulateMode ? "italic" : "normal",
-        fill: simulateMode ? "#6366f1" : "#374151",
+        fontStyle: projectionMode ? "italic" : "normal",
+        fill: projectionMode ? "#6366f1" : "#374151",
       }),
-      [simulateMode]
+      [projectionMode]
     );
 
     // Memoized grid configuration for performance
@@ -305,12 +305,12 @@ export const OptimizedGrouperChart = memo<OptimizedGrouperChartProps>(
               </Bar>
             )}
 
-            {/* Main data bars - expenses or simulated budget data */}
+            {/* Main data bars - expenses or projectiond budget data */}
             <Bar {...mainBarConfig}>
               <MainBarCells
                 data={data}
                 colors={colors}
-                simulateMode={simulateMode}
+                projectionMode={projectionMode}
                 selectedGrouper={selectedGrouper}
               />
               <LabelList
@@ -336,7 +336,7 @@ const arePropsEqual = (
 ): boolean => {
   // Quick reference equality checks first (most common changes)
   if (
-    prevProps.simulateMode !== nextProps.simulateMode ||
+    prevProps.projectionMode !== nextProps.projectionMode ||
     prevProps.showBudgets !== nextProps.showBudgets ||
     prevProps.maxAmount !== nextProps.maxAmount ||
     prevProps.CustomTooltip !== nextProps.CustomTooltip ||
@@ -384,7 +384,7 @@ const arePropsEqual = (
         prev.grouper_name !== next.grouper_name ||
         prev.total_amount !== next.total_amount ||
         prev.budget_amount !== next.budget_amount ||
-        prev.isSimulated !== next.isSimulated
+        prev.isProjectiond !== next.isProjectiond
       ) {
         return false;
       }

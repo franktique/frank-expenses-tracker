@@ -27,6 +27,7 @@ interface FundFilterProps {
   className?: string;
   includeAllFunds?: boolean;
   allFundsLabel?: string;
+  availableFunds?: Fund[]; // New prop to filter available funds
 }
 
 export function FundFilter({
@@ -36,13 +37,17 @@ export function FundFilter({
   className,
   includeAllFunds = true,
   allFundsLabel = "Todos los fondos",
+  availableFunds,
 }: FundFilterProps) {
   const { funds, isLoading, error } = useBudget();
   const [open, setOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
 
+  // Use availableFunds if provided, otherwise use all funds
+  const fundsToUse = availableFunds || funds || [];
+
   // Filter funds based on search
-  const filteredFunds = (funds || []).filter((fund) =>
+  const filteredFunds = fundsToUse.filter((fund) =>
     fund.name.toLowerCase().includes(searchValue.toLowerCase())
   );
 
@@ -50,7 +55,7 @@ export function FundFilter({
     if (fundId === null) {
       onFundChange(null);
     } else {
-      const fund = funds.find((f) => f.id === fundId);
+      const fund = fundsToUse.find((f) => f.id === fundId);
       onFundChange(fund || null);
     }
     setOpen(false);
@@ -95,7 +100,7 @@ export function FundFilter({
     );
   }
 
-  if (!funds || funds.length === 0) {
+  if (fundsToUse.length === 0) {
     return (
       <Button
         variant="outline"

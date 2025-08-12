@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,8 +19,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -32,7 +43,21 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { useBudget } from "@/context/budget-context";
 import { FundFilter } from "@/components/fund-filter";
-import { Fund } from "@/types/funds";
+import { MultiFundSelector } from "@/components/multi-fund-selector";
+import {
+  CategoryFundErrorDialog,
+  useCategoryFundErrorDialog,
+} from "@/components/category-fund-error-dialog";
+import {
+  CategoryFundLoadingButton,
+  useCategoryFundLoadingState,
+} from "@/components/category-fund-loading-states";
+import { FundCategoryRelationshipIndicator } from "@/components/fund-category-relationship-indicator";
+import {
+  CategoryFundInfoPanel,
+  CategoryFundInfoCompact,
+} from "@/components/category-fund-info-panel";
+import { Fund, Category } from "@/types/funds";
 
 export function CategoriesView() {
   const { categories, addCategory, updateCategory, deleteCategory, funds } =
@@ -42,17 +67,22 @@ export function CategoriesView() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
-  const [newCategoryFund, setNewCategoryFund] = useState<Fund | null>(null);
-  const [editCategory, setEditCategory] = useState<{
-    id: string;
-    name: string;
-    fund_id?: string;
-    fund_name?: string;
-  } | null>(null);
-  const [editCategoryFund, setEditCategoryFund] = useState<Fund | null>(null);
+  const [newCategoryFunds, setNewCategoryFunds] = useState<Fund[]>([]);
+  const [editCategory, setEditCategory] = useState<Category | null>(null);
+  const [editCategoryFunds, setEditCategoryFunds] = useState<Fund[]>([]);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteValidation, setDeleteValidation] = useState<{
+    hasExpenses: boolean;
+    expenseCount: number;
+    affectedFunds: string[];
+  } | null>(null);
   const [fundFilter, setFundFilter] = useState<Fund | null>(null);
+
+  // Enhanced error handling and loading states
+  const { dialogState, showError, hideError } = useCategoryFundErrorDialog();
+  const loadingState = useCategoryFundLoadingState();
 
   // Filter categories based on selected fund
   const filteredCategories = useMemo(() => {
@@ -62,8 +92,116 @@ export function CategoriesView() {
     if (!fundFilter) {
       return categories;
     }
-    return categories.filter((category) => category.fund_id === fundFilter.id);
+    return categories.filter((category) => {
+      // Check both old fund_id and new associated_funds
+      if (category.fund_id === fundFilter.id) {
+        return true;
+      }
+      if (category.associated_funds) {
+        return category.associated_funds.some(
+          (fund) => fund.id === fundFilter.id
+        );
+      }
+      return false;
+    });
   }, [categories, fundFilter]);
+
+  // Helper function to get category funds for API calls
+  const getCategoryFunds = async (categoryId: string): Promise<Fund[]> => {
+    try {
+      const response = await fetch(`/api/categories/${categoryId}/funds`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch category funds");
+      }
+      const data = await response.json();
+      return data.funds || [];
+    } catch (error) {
+      console.error("Error fetching category funds:", error);
+      return [];
+    }
+  };
+
+  // Helper function to update category funds with enhanced error handling
+  const updateCategoryFunds = async (
+    categoryId: string,
+    fundIds: string[],
+    forceUpdate: boolean = false
+  ): Promise<void> => {
+    try {
+      const url = forceUpdate
+        ? `/api/categories/${categoryId}/funds?force=true`
+        : `/api/categories/${categoryId}/funds`;
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ fund_ids: fundIds }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+
+        // Handle validation conflicts (409 status)
+        if (response.status === 409) {
+          // Show error dialog and wait for user confirmation
+          await showError(
+            errorData,
+            "Confirmar actualización de fondos",
+            async () => {
+              await updateCategoryFunds(categoryId, fundIds, true);
+            }
+          );
+          return;
+        }
+
+        throw new Error(errorData.error || "Failed to update category funds");
+      }
+    } catch (error) {
+      console.error("Error updating category funds:", error);
+      throw error;
+    }
+  };
+
+  // Helper function to validate category deletion
+  const validateCategoryDeletion = async (categoryId: string) => {
+    try {
+      // Check if category has expenses
+      const expensesResponse = await fetch(
+        `/api/expenses?category_id=${categoryId}`
+      );
+      if (expensesResponse.ok) {
+        const expenses = await expensesResponse.json();
+        const expenseCount = expenses.length;
+
+        if (expenseCount > 0) {
+          // Get affected funds
+          const categoryFunds = await getCategoryFunds(categoryId);
+          const affectedFunds = categoryFunds.map((fund) => fund.name);
+
+          return {
+            hasExpenses: true,
+            expenseCount,
+            affectedFunds,
+          };
+        }
+      }
+
+      return {
+        hasExpenses: false,
+        expenseCount: 0,
+        affectedFunds: [],
+      };
+    } catch (error) {
+      console.error("Error validating category deletion:", error);
+      return {
+        hasExpenses: false,
+        expenseCount: 0,
+        affectedFunds: [],
+      };
+    }
+  };
 
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) {
@@ -75,23 +213,58 @@ export function CategoriesView() {
       return;
     }
 
+    loadingState.setLoading("addCategory", true, "Agregando categoría...");
+
     try {
-      await addCategory(newCategoryName, newCategoryFund?.id);
+      // Create category with fund_ids array if funds are selected
+      const fundIds = newCategoryFunds.map((fund) => fund.id);
+
+      const response = await fetch("/api/categories", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: newCategoryName,
+          fund_ids: fundIds.length > 0 ? fundIds : undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+
+        // Show enhanced error dialog for validation errors
+        if (response.status === 400 || response.status === 409) {
+          showError(errorData, "Error al agregar categoría");
+          return;
+        }
+
+        throw new Error(errorData.error || "Failed to add category");
+      }
+
+      // Refresh categories to get updated data
+      window.location.reload(); // Simple refresh for now
+
       setNewCategoryName("");
-      setNewCategoryFund(null);
+      setNewCategoryFunds([]);
       setIsAddOpen(false);
+
+      const fundNames = newCategoryFunds.map((f) => f.name).join(", ");
       toast({
         title: "Categoría agregada",
         description: `La categoría ha sido agregada exitosamente${
-          newCategoryFund ? ` al fondo "${newCategoryFund.name}"` : ""
+          fundNames ? ` con fondos: ${fundNames}` : ""
         }`,
       });
     } catch (error) {
       toast({
         title: "Error",
-        description: "No se pudo agregar la categoría",
+        description:
+          (error as Error).message || "No se pudo agregar la categoría",
         variant: "destructive",
       });
+    } finally {
+      loadingState.setLoading("addCategory", false);
     }
   };
 
@@ -105,56 +278,108 @@ export function CategoriesView() {
       return;
     }
 
+    loadingState.setLoading("editCategory", true, "Actualizando categoría...");
+
     try {
-      await updateCategory(
-        editCategory.id,
-        editCategory.name,
-        editCategoryFund?.id
-      );
+      // Update category name using existing method
+      await updateCategory(editCategory.id, editCategory.name);
+
+      // Update fund relationships separately with enhanced error handling
+      const fundIds = editCategoryFunds.map((fund) => fund.id);
+      await updateCategoryFunds(editCategory.id, fundIds);
+
+      // Refresh categories to get updated data
+      window.location.reload(); // Simple refresh for now
+
       setEditCategory(null);
-      setEditCategoryFund(null);
+      setEditCategoryFunds([]);
       setIsEditOpen(false);
+
       toast({
         title: "Categoría actualizada",
         description: "La categoría ha sido actualizada exitosamente",
       });
     } catch (error) {
+      // Only show error toast for actual errors, not for user cancellations
+      const errorMessage = (error as Error).message;
+      if (errorMessage !== "User cancelled operation") {
+        toast({
+          title: "Error",
+          description: errorMessage || "No se pudo actualizar la categoría",
+          variant: "destructive",
+        });
+      }
+    } finally {
+      loadingState.setLoading("editCategory", false);
+    }
+  };
+
+  const handleDeleteCategory = async () => {
+    if (!deleteId) return;
+
+    try {
+      // Validate deletion first
+      const validation = await validateCategoryDeletion(deleteId);
+      setDeleteValidation(validation);
+
+      if (validation.hasExpenses) {
+        // Show confirmation dialog for categories with expenses
+        setIsDeleteOpen(false);
+        setIsDeleteConfirmOpen(true);
+        return;
+      }
+
+      // Proceed with deletion if no expenses
+      await deleteCategory(deleteId);
+      setDeleteId(null);
+      setIsDeleteOpen(false);
+      toast({
+        title: "Categoría eliminada",
+        description: "La categoría ha sido eliminada exitosamente",
+      });
+    } catch (error) {
       toast({
         title: "Error",
-        description: "No se pudo actualizar la categoría",
+        description:
+          (error as Error).message || "No se pudo eliminar la categoría",
         variant: "destructive",
       });
     }
   };
 
-  const handleDeleteCategory = async () => {
-    if (deleteId) {
-      try {
-        await deleteCategory(deleteId);
-        setDeleteId(null);
-        setIsDeleteOpen(false);
-        toast({
-          title: "Categoría eliminada",
-          description: "La categoría ha sido eliminada exitosamente",
-        });
-      } catch (error) {
-        toast({
-          title: "Error",
-          description: "No se pudo eliminar la categoría",
-          variant: "destructive",
-        });
-      }
+  const handleConfirmDelete = async () => {
+    if (!deleteId) return;
+
+    try {
+      await deleteCategory(deleteId);
+      setDeleteId(null);
+      setIsDeleteConfirmOpen(false);
+      setDeleteValidation(null);
+      toast({
+        title: "Categoría eliminada",
+        description: "La categoría y sus gastos asociados han sido eliminados",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description:
+          (error as Error).message || "No se pudo eliminar la categoría",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleEditClick = (category: (typeof categories)[0]) => {
+  const handleEditClick = (category: Category) => {
     setEditCategory(category);
-    // Find the fund for this category
-    const categoryFund =
-      category.fund_id && funds
-        ? funds.find((f) => f.id === category.fund_id)
-        : null;
-    setEditCategoryFund(categoryFund || null);
+    // Set associated funds or fallback to single fund
+    if (category.associated_funds && category.associated_funds.length > 0) {
+      setEditCategoryFunds(category.associated_funds);
+    } else if (category.fund_id && funds) {
+      const categoryFund = funds.find((f) => f.id === category.fund_id);
+      setEditCategoryFunds(categoryFund ? [categoryFund] : []);
+    } else {
+      setEditCategoryFunds([]);
+    }
     setIsEditOpen(true);
   };
 
@@ -200,30 +425,47 @@ export function CategoriesView() {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="fund">Fondo (opcional)</Label>
-                  <FundFilter
-                    selectedFund={newCategoryFund}
-                    onFundChange={setNewCategoryFund}
-                    placeholder="Seleccionar fondo..."
-                    includeAllFunds={false}
+                  <Label htmlFor="funds">Fondos asociados (opcional)</Label>
+                  <MultiFundSelector
+                    selectedFunds={newCategoryFunds}
+                    onFundsChange={setNewCategoryFunds}
+                    placeholder="Seleccionar fondos..."
                     className="w-full"
                   />
-                  <p className="text-sm text-muted-foreground">
-                    Si no seleccionas un fondo, se asignará al fondo
-                    "Disponible" por defecto
-                  </p>
+                  <CategoryFundInfoCompact className="mt-2" />
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddOpen(false)}>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setIsAddOpen(false);
+                    setNewCategoryName("");
+                    setNewCategoryFunds([]);
+                  }}
+                  disabled={loadingState.isLoading("addCategory")}
+                >
                   Cancelar
                 </Button>
-                <Button onClick={handleAddCategory}>Guardar</Button>
+                <CategoryFundLoadingButton
+                  isLoading={loadingState.isLoading("addCategory")}
+                  loadingText="Guardando..."
+                  onClick={handleAddCategory}
+                >
+                  Guardar
+                </CategoryFundLoadingButton>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
       </div>
+
+      {/* Info Panel */}
+      <CategoryFundInfoPanel
+        showTips={true}
+        showStats={false}
+        className="mb-6"
+      />
 
       <Card>
         <CardHeader>
@@ -255,9 +497,13 @@ export function CategoriesView() {
                       {category.name}
                     </TableCell>
                     <TableCell>
-                      <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                        {category.fund_name || "Disponible"}
-                      </span>
+                      <FundCategoryRelationshipIndicator
+                        associatedFunds={category.associated_funds || []}
+                        fallbackFundName={category.fund_name}
+                        showCount={true}
+                        showTooltip={true}
+                        variant="default"
+                      />
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -321,25 +567,35 @@ export function CategoriesView() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-fund">Fondo (opcional)</Label>
-              <FundFilter
-                selectedFund={editCategoryFund}
-                onFundChange={setEditCategoryFund}
-                placeholder="Seleccionar fondo..."
-                includeAllFunds={false}
+              <Label htmlFor="edit-funds">Fondos asociados (opcional)</Label>
+              <MultiFundSelector
+                selectedFunds={editCategoryFunds}
+                onFundsChange={setEditCategoryFunds}
+                placeholder="Seleccionar fondos..."
                 className="w-full"
               />
-              <p className="text-sm text-muted-foreground">
-                Si no seleccionas un fondo, se asignará al fondo "Disponible"
-                por defecto
-              </p>
+              <CategoryFundInfoCompact className="mt-2" />
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsEditOpen(false);
+                setEditCategory(null);
+                setEditCategoryFunds([]);
+              }}
+              disabled={loadingState.isLoading("editCategory")}
+            >
               Cancelar
             </Button>
-            <Button onClick={handleEditCategory}>Guardar</Button>
+            <CategoryFundLoadingButton
+              isLoading={loadingState.isLoading("editCategory")}
+              loadingText="Guardando..."
+              onClick={handleEditCategory}
+            >
+              Guardar
+            </CategoryFundLoadingButton>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -364,6 +620,66 @@ export function CategoriesView() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete Confirmation Dialog for categories with expenses */}
+      <AlertDialog
+        open={isDeleteConfirmOpen}
+        onOpenChange={setIsDeleteConfirmOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-destructive" />
+              Confirmar eliminación
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>
+                  Esta categoría tiene{" "}
+                  <strong>{deleteValidation?.expenseCount}</strong> gastos
+                  registrados.
+                </p>
+                {deleteValidation?.affectedFunds &&
+                  deleteValidation.affectedFunds.length > 0 && (
+                    <p>
+                      Fondos afectados:{" "}
+                      <strong>
+                        {deleteValidation.affectedFunds.join(", ")}
+                      </strong>
+                    </p>
+                  )}
+                <p className="text-destructive font-medium">
+                  Al eliminar la categoría, también se eliminarán todos los
+                  gastos asociados. Esta acción no se puede deshacer.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                setIsDeleteConfirmOpen(false);
+                setDeleteValidation(null);
+              }}
+            >
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar categoría y gastos
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Enhanced Error Dialog */}
+      <CategoryFundErrorDialog
+        open={dialogState.open}
+        onOpenChange={hideError}
+        {...dialogState.props}
+      />
     </div>
   );
 }

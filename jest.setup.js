@@ -25,6 +25,16 @@ Object.defineProperty(window, "sessionStorage", {
 // Mock fetch globally
 global.fetch = jest.fn();
 
+// Mock ResizeObserver for tests
+global.ResizeObserver = jest.fn().mockImplementation(() => ({
+  observe: jest.fn(),
+  unobserve: jest.fn(),
+  disconnect: jest.fn(),
+}));
+
+// Mock scrollIntoView for tests
+Element.prototype.scrollIntoView = jest.fn();
+
 // Reset mocks before each test
 beforeEach(() => {
   jest.clearAllMocks();

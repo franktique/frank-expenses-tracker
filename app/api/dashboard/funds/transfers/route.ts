@@ -22,20 +22,20 @@ export async function GET(request: NextRequest) {
             e.amount,
             'incoming' as transfer_type,
             c.name as category_name,
-            cf.name as source_fund_name,
-            cf.id as source_fund_id,
+            sf.name as source_fund_name,
+            sf.id as source_fund_id,
             df.name as destination_fund_name,
             df.id as destination_fund_id,
             e.created_at
           FROM expenses e
           JOIN categories c ON e.category_id = c.id
-          JOIN funds cf ON c.fund_id = cf.id
+          LEFT JOIN funds sf ON e.source_fund_id = sf.id
           JOIN funds df ON e.destination_fund_id = df.id
           WHERE e.destination_fund_id = ${fundId}
           
           UNION ALL
           
-          -- Outgoing transfers (expenses from categories in this fund with destination_fund_id)
+          -- Outgoing transfers (expenses with source_fund_id = fundId and destination_fund_id)
           SELECT 
             e.id,
             e.date,
@@ -43,16 +43,16 @@ export async function GET(request: NextRequest) {
             e.amount,
             'outgoing' as transfer_type,
             c.name as category_name,
-            cf.name as source_fund_name,
-            cf.id as source_fund_id,
+            sf.name as source_fund_name,
+            sf.id as source_fund_id,
             df.name as destination_fund_name,
             df.id as destination_fund_id,
             e.created_at
           FROM expenses e
           JOIN categories c ON e.category_id = c.id
-          JOIN funds cf ON c.fund_id = cf.id
-          JOIN funds df ON e.destination_fund_id = df.id
-          WHERE c.fund_id = ${fundId} AND e.destination_fund_id IS NOT NULL
+          JOIN funds sf ON e.source_fund_id = sf.id
+          LEFT JOIN funds df ON e.destination_fund_id = df.id
+          WHERE e.source_fund_id = ${fundId} AND e.destination_fund_id IS NOT NULL
         )
         SELECT *
         FROM fund_transfers
@@ -70,14 +70,14 @@ export async function GET(request: NextRequest) {
           e.amount,
           'transfer' as transfer_type,
           c.name as category_name,
-          cf.name as source_fund_name,
-          cf.id as source_fund_id,
+          sf.name as source_fund_name,
+          sf.id as source_fund_id,
           df.name as destination_fund_name,
           df.id as destination_fund_id,
           e.created_at
         FROM expenses e
         JOIN categories c ON e.category_id = c.id
-        JOIN funds cf ON c.fund_id = cf.id
+        LEFT JOIN funds sf ON e.source_fund_id = sf.id
         JOIN funds df ON e.destination_fund_id = df.id
         WHERE e.destination_fund_id IS NOT NULL
         ORDER BY e.date DESC, e.created_at DESC
@@ -106,8 +106,7 @@ export async function GET(request: NextRequest) {
             COUNT(*) as outgoing_count,
             COALESCE(SUM(e.amount), 0) as outgoing_total
           FROM expenses e
-          JOIN categories c ON e.category_id = c.id
-          WHERE c.fund_id = ${fundId} AND e.destination_fund_id IS NOT NULL
+          WHERE e.source_fund_id = ${fundId} AND e.destination_fund_id IS NOT NULL
         )
         SELECT 
           fts.incoming_count,

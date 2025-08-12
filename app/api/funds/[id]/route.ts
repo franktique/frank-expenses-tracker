@@ -45,12 +45,11 @@ export async function GET(
       ) transfer_in_totals ON f.id = transfer_in_totals.fund_id
       LEFT JOIN (
         SELECT 
-          c.fund_id,
-          SUM(e.amount) as total
+          source_fund_id as fund_id,
+          SUM(amount) as total
         FROM expenses e
-        JOIN categories c ON e.category_id = c.id
-        WHERE c.fund_id = ${id}
-        GROUP BY c.fund_id
+        WHERE source_fund_id = ${id}
+        GROUP BY source_fund_id
       ) expense_totals ON f.id = expense_totals.fund_id
       WHERE f.id = ${id}
     `;
@@ -82,8 +81,7 @@ export async function GET(
         e.date,
         e.description
       FROM expenses e
-      JOIN categories c ON e.category_id = c.id
-      WHERE c.fund_id = ${id}
+      WHERE e.source_fund_id = ${id}
       
       UNION ALL
       
@@ -301,6 +299,18 @@ export async function DELETE(
     `;
 
     if (expensesUsingFund[0].count > 0) {
+      return NextResponse.json(
+        { error: FUND_ERROR_MESSAGES.FUND_DELETE_RESTRICTED },
+        { status: 409 }
+      );
+    }
+
+    // Check for referential integrity - expenses (source fund)
+    const expensesUsingSourceFund = await sql`
+      SELECT COUNT(*) as count FROM expenses WHERE source_fund_id = ${id}
+    `;
+
+    if (expensesUsingSourceFund[0].count > 0) {
       return NextResponse.json(
         { error: FUND_ERROR_MESSAGES.FUND_DELETE_RESTRICTED },
         { status: 409 }

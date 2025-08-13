@@ -3088,41 +3088,43 @@ export default function GroupersChartPage() {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
-                
-                {/* Reference lines legend */}
-                {referenceLineData.length > 0 && (
-                  <div className="mt-4 p-3 bg-muted/30 rounded-lg">
-                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">
-                      Líneas de Referencia (% del Total de Ingresos)
-                    </h4>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                      {referenceLineData.map((refData, index) => {
-                        const color = referenceLineColors[index % referenceLineColors.length];
-                        
-                        return (
-                          <div key={`legend-${refData.grouper_id}`} className="flex items-center space-x-2">
-                            <div className="flex items-center space-x-1">
-                              <div 
-                                className="w-4 h-0.5 border-dashed border-t-2"
-                                style={{ borderColor: color }}
-                              ></div>
-                              <span className="text-xs font-medium" style={{ color }}>
-                                {refData.percentage}%
-                              </span>
-                            </div>
-                            <span className="text-xs text-muted-foreground truncate">
-                              {refData.grouper_name}
-                            </span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Reference lines legend - moved outside main card to prevent overlap */}
+        {activeTab === "current" && referenceLineData.length > 0 && (
+          <Card className="mb-6">
+            <CardContent className="pt-4">
+              <h4 className="text-sm font-semibold text-muted-foreground mb-3">
+                Líneas de Referencia (% del Total de Ingresos)
+              </h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {referenceLineData.map((refData, index) => {
+                  const color = referenceLineColors[index % referenceLineColors.length];
+                  
+                  return (
+                    <div key={`legend-${refData.grouper_id}`} className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-1">
+                        <div 
+                          className="w-4 h-0.5 border-dashed border-t-2"
+                          style={{ borderColor: color }}
+                        ></div>
+                        <span className="text-xs font-medium" style={{ color }}>
+                          {refData.percentage}%
+                        </span>
+                      </div>
+                      <span className="text-xs text-muted-foreground truncate">
+                        {refData.grouper_name}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Show aggregated categories button when groupers are filtered and no specific grouper is selected */}
         {selectedGroupers.length > 0 &&
@@ -3156,7 +3158,7 @@ export default function GroupersChartPage() {
           )}
 
         {showCategoryChart && (
-          <Card>
+          <Card className="mt-6">
             <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle>
                 {selectedGrouper
@@ -3243,8 +3245,19 @@ export default function GroupersChartPage() {
                   }
                 />
               ) : (
-                <div className="w-full h-[400px] mt-4">
-                  <ResponsiveContainer width="100%" height="100%">
+                <div className="w-full mt-4">
+                  {/* Add scrolling container for large datasets */}
+                  <div 
+                    className="overflow-y-auto" 
+                    style={{ 
+                      maxHeight: categoryData.length > 15 ? '600px' : 'auto',
+                      height: categoryData.length <= 15 ? `${Math.max(400, categoryData.length * 35 + 60)}px` : '600px'
+                    }}
+                  >
+                    <ResponsiveContainer 
+                      width="100%" 
+                      height={categoryData.length <= 15 ? '100%' : Math.max(600, categoryData.length * 35 + 60)}
+                    >
                     <BarChart
                       layout="vertical"
                       data={categoryData.map((item) => ({
@@ -3384,7 +3397,8 @@ export default function GroupersChartPage() {
                         />
                       </Bar>
                     </BarChart>
-                  </ResponsiveContainer>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               )}
             </CardContent>

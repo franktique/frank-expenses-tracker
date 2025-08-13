@@ -47,6 +47,7 @@ import {
   LineChart,
   Line,
   Legend,
+  ReferenceLine,
 } from "recharts";
 // Optimized chart components temporarily disabled to fix circular dependencies
 import {
@@ -73,6 +74,19 @@ type CategoryData = {
   total_amount: number;
   budget_amount?: number;
   isProjected?: boolean;
+};
+
+type ReferenceLineData = {
+  grouper_id: number;
+  grouper_name: string;
+  percentage: number;
+  reference_value: number;
+};
+
+type PeriodIncomeData = {
+  period_id: number;
+  period_name: string;
+  total_income: number;
 };
 
 type PeriodComparisonData = {
@@ -360,8 +374,24 @@ export default function GroupersChartPage() {
     null
   );
   const [showCategoryChart, setShowCategoryChart] = useState<boolean>(false);
+  const [referenceLineData, setReferenceLineData] = useState<ReferenceLineData[]>([]);
+  const [periodIncomeData, setPeriodIncomeData] = useState<PeriodIncomeData | null>(null);
   const [maxGrouperAmount, setMaxGrouperAmount] = useState<number>(0);
   const [maxCategoryAmount, setMaxCategoryAmount] = useState<number>(0);
+
+  // Color palette for reference lines
+  const referenceLineColors = [
+    "#ef4444", // Red
+    "#3b82f6", // Blue  
+    "#10b981", // Green
+    "#f59e0b", // Orange
+    "#8b5cf6", // Purple
+    "#06b6d4", // Cyan
+    "#f97316", // Orange-500
+    "#84cc16", // Lime
+    "#ec4899", // Pink
+    "#6b7280", // Gray
+  ];
 
   // Handle projection mode toggle with enhanced filter state management
   const handleSimulateModeToggle = useCallback(
@@ -1207,6 +1237,68 @@ export default function GroupersChartPage() {
       // The useEffect will trigger automatically due to dependency changes
     }
   };
+
+  // Fetch reference line data when estudio is selected and active period is available
+  useEffect(() => {
+    if (!activePeriod || !selectedEstudio || activeTab !== "current") {
+      setReferenceLineData([]);
+      setPeriodIncomeData(null);
+      return;
+    }
+
+    const fetchReferenceLineData = async () => {
+      try {
+        // Fetch period income total
+        const incomeResponse = await fetch(
+          `/api/incomes/period/${activePeriod.id}/total`
+        );
+        
+        if (!incomeResponse.ok) {
+          console.warn('Could not fetch period income data');
+          return;
+        }
+        
+        const incomeData = await incomeResponse.json();
+        setPeriodIncomeData(incomeData);
+
+        // Fetch estudio groupers with percentages
+        const grouperResponse = await fetch(
+          `/api/estudios/${selectedEstudio}/groupers`
+        );
+        
+        if (!grouperResponse.ok) {
+          console.warn('Could not fetch estudio grouper data');
+          return;
+        }
+        
+        const grouperData = await grouperResponse.json();
+        
+        // Calculate reference values for groupers with percentages
+        const referenceData: ReferenceLineData[] = grouperData.assignedGroupers
+          .filter((grouper: any) => grouper.percentage != null && parseFloat(grouper.percentage) > 0)
+          .map((grouper: any) => {
+            const percentage = parseFloat(grouper.percentage);
+            const reference_value = (percentage / 100) * incomeData.total_income;
+            return {
+              grouper_id: grouper.id,
+              grouper_name: grouper.name,
+              percentage: percentage,
+              reference_value: reference_value,
+            };
+          });
+        
+        setReferenceLineData(referenceData);
+        
+      } catch (error) {
+        console.error('Error fetching reference line data:', error);
+        // Don't show toast for reference line errors as they're not critical
+        setReferenceLineData([]);
+        setPeriodIncomeData(null);
+      }
+    };
+
+    fetchReferenceLineData();
+  }, [activePeriod, selectedEstudio, activeTab]);
 
   // Reset category view when agrupador filters change and selected grouper is no longer in filter
   useEffect(() => {
@@ -2847,6 +2939,15 @@ export default function GroupersChartPage() {
                 ` (${paymentMethod === "cash" ? "Efectivo" : "Crédito"})`}
               {activePeriod && ` - ${activePeriod.name}`}
             </CardTitle>
+            {referenceLineData.length > 0 && periodIncomeData && (
+              <div className="mt-2 p-3 bg-muted/50 rounded-lg">
+                <p className="text-sm text-muted-foreground">
+                  <strong>Líneas de referencia:</strong> Las líneas punteadas de colores muestran el {" "}
+                  porcentaje del total de ingresos del período (${periodIncomeData.total_income.toLocaleString()}) {" "}
+                  configurado para cada agrupador. Consulte la leyenda debajo del gráfico para identificar cada línea.
+                </p>
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             {grouperData.length === 0 ? (
@@ -2915,7 +3016,7 @@ export default function GroupersChartPage() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                       type="number"
-                      domain={[0, maxGrouperAmount]}
+                      domain={[0, Math.max(maxGrouperAmount, ...referenceLineData.map(r => r.reference_value), 0)]}
                       tickFormatter={(value) => `$${value.toLocaleString()}`}
                     />
                     <YAxis
@@ -2925,6 +3026,31 @@ export default function GroupersChartPage() {
                       tick={{ fontSize: 12 }}
                     />
                     <Tooltip content={<CustomCurrentViewTooltip />} />
+
+                    {/* Colored reference lines for each grouper */}
+                    {referenceLineData.map((refData, index) => {
+                      const color = referenceLineColors[index % referenceLineColors.length];
+                      
+                      return (
+                        <ReferenceLine
+                          key={`ref-${refData.grouper_id}`}
+                          x={refData.reference_value}
+                          stroke={color}
+                          strokeDasharray="5 5" 
+                          strokeWidth={2}
+                          label={{
+                            value: `${refData.percentage}%`,
+                            position: "top",
+                            offset: 5,
+                            style: {
+                              fontSize: "11px",
+                              fill: color,
+                              fontWeight: "bold",
+                            },
+                          }}
+                        />
+                      );
+                    })}
 
                     {showBudgets && (
                       <Bar
@@ -2962,6 +3088,37 @@ export default function GroupersChartPage() {
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
+                
+                {/* Reference lines legend */}
+                {referenceLineData.length > 0 && (
+                  <div className="mt-4 p-3 bg-muted/30 rounded-lg">
+                    <h4 className="text-sm font-semibold text-muted-foreground mb-2">
+                      Líneas de Referencia (% del Total de Ingresos)
+                    </h4>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                      {referenceLineData.map((refData, index) => {
+                        const color = referenceLineColors[index % referenceLineColors.length];
+                        
+                        return (
+                          <div key={`legend-${refData.grouper_id}`} className="flex items-center space-x-2">
+                            <div className="flex items-center space-x-1">
+                              <div 
+                                className="w-4 h-0.5 border-dashed border-t-2"
+                                style={{ borderColor: color }}
+                              ></div>
+                              <span className="text-xs font-medium" style={{ color }}>
+                                {refData.percentage}%
+                              </span>
+                            </div>
+                            <span className="text-xs text-muted-foreground truncate">
+                              {refData.grouper_name}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </CardContent>

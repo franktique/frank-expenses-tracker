@@ -5,7 +5,9 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const periodId = searchParams.get("periodId");
-    const paymentMethod = searchParams.get("paymentMethod");
+    const paymentMethod = searchParams.get("paymentMethod"); // Legacy parameter for backward compatibility
+    const expensePaymentMethods = searchParams.get("expensePaymentMethods");
+    const budgetPaymentMethods = searchParams.get("budgetPaymentMethods");
     const grouperIds = searchParams.get("grouperIds");
     const estudioId = searchParams.get("estudioId");
     const includeBudgets = searchParams.get("includeBudgets") === "true";
@@ -33,6 +35,53 @@ export async function GET(request: Request) {
         return NextResponse.json(
           {
             error: `Invalid grouperIds parameter: ${(error as Error).message}`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Parse and validate payment method parameters
+    let expensePaymentMethodsArray: string[] | null = null;
+    let budgetPaymentMethodsArray: string[] | null = null;
+
+    // Handle expense payment methods (new parameter or legacy fallback)
+    if (expensePaymentMethods) {
+      try {
+        expensePaymentMethodsArray = expensePaymentMethods.split(",").map((method) => {
+          const trimmed = method.trim();
+          if (!["cash", "credit", "debit"].includes(trimmed)) {
+            throw new Error(`Invalid expense payment method: ${trimmed}`);
+          }
+          return trimmed;
+        });
+      } catch (error) {
+        return NextResponse.json(
+          {
+            error: `Invalid expensePaymentMethods parameter: ${(error as Error).message}`,
+          },
+          { status: 400 }
+        );
+      }
+    } else if (paymentMethod && paymentMethod !== "all") {
+      // Legacy backward compatibility
+      expensePaymentMethodsArray = [paymentMethod];
+    }
+
+    // Handle budget payment methods
+    if (budgetPaymentMethods) {
+      try {
+        budgetPaymentMethodsArray = budgetPaymentMethods.split(",").map((method) => {
+          const trimmed = method.trim();
+          if (!["cash", "credit", "debit"].includes(trimmed)) {
+            throw new Error(`Invalid budget payment method: ${trimmed}`);
+          }
+          return trimmed;
+        });
+      } catch (error) {
+        return NextResponse.json(
+          {
+            error: `Invalid budgetPaymentMethods parameter: ${(error as Error).message}`,
           },
           { status: 400 }
         );
@@ -83,11 +132,19 @@ export async function GET(request: Request) {
         AND b.period_id = $1`;
     }
 
-    // Add payment method filter
-    if (paymentMethod && paymentMethod !== "all") {
+    // Add expense payment method filter
+    if (expensePaymentMethodsArray && expensePaymentMethodsArray.length > 0) {
       fromClause += `
-        AND e.payment_method = $${paramIndex}`;
-      queryParams.push(paymentMethod);
+        AND e.payment_method = ANY($${paramIndex}::text[])`;
+      queryParams.push(expensePaymentMethodsArray);
+      paramIndex++;
+    }
+
+    // Add budget payment method filter
+    if (includeBudgets && budgetPaymentMethodsArray && budgetPaymentMethodsArray.length > 0) {
+      fromClause += `
+        AND b.payment_method = ANY($${paramIndex}::text[])`;
+      queryParams.push(budgetPaymentMethodsArray);
       paramIndex++;
     }
 

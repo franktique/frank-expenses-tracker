@@ -28,6 +28,7 @@ import { Label } from "@/components/ui/label";
 import { AgrupadorFilter } from "@/components/agrupador-filter";
 import { BudgetToggle } from "@/components/budget-toggle";
 import { EstudioFilter } from "@/components/estudio-filter";
+import { PaymentMethodFilter } from "@/components/payment-method-filter";
 import {
   handleProjectionModeError as handleProjectionError,
   validateBudgetData,
@@ -369,7 +370,33 @@ export default function GroupersChartPage() {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [grouperData, setGrouperData] = useState<GrouperData[]>([]);
   const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
-  const [paymentMethod, setPaymentMethod] = useState<string>("all");
+  // Payment method filtering - separate for expenses and budgets
+  const [selectedExpensePaymentMethods, setSelectedExpensePaymentMethods] = useState<string[]>(["cash", "credit", "debit"]);
+  const [selectedBudgetPaymentMethods, setSelectedBudgetPaymentMethods] = useState<string[]>(["cash", "credit", "debit"]);
+  
+  // Helper functions for backward compatibility
+  const getExpensePaymentMethodParam = () => {
+    if (selectedExpensePaymentMethods.length === 3) return "all";
+    return selectedExpensePaymentMethods.join(",");
+  };
+
+  const getBudgetPaymentMethodParam = () => {
+    if (selectedBudgetPaymentMethods.length === 3) return "all";
+    return selectedBudgetPaymentMethods.join(",");
+  };
+
+  // Legacy paymentMethod for backward compatibility (expense-focused)
+  const paymentMethod = selectedExpensePaymentMethods.length === 3 ? "all" : 
+    selectedExpensePaymentMethods.length === 1 ? selectedExpensePaymentMethods[0] : "all";
+  
+  const setPaymentMethod = (method: string) => {
+    if (method === "all") {
+      setSelectedExpensePaymentMethods(["cash", "credit", "debit"]);
+    } else {
+      setSelectedExpensePaymentMethods([method]);
+    }
+  };
+
   const [selectedGrouper, setSelectedGrouper] = useState<GrouperData | null>(
     null
   );
@@ -934,10 +961,17 @@ export default function GroupersChartPage() {
         // Build query parameters
         const params = new URLSearchParams({
           periodId: activePeriod.id.toString(),
-          // In projection mode, budgets are payment-method agnostic, so we use "all"
-          // to get complete budget data, but still apply payment method for expense data
-          paymentMethod: projectionMode ? "all" : paymentMethod,
         });
+
+        // Add expense payment method filtering
+        if (selectedExpensePaymentMethods.length < 3) {
+          params.append("expensePaymentMethods", selectedExpensePaymentMethods.join(","));
+        }
+
+        // Add budget payment method filtering
+        if (selectedBudgetPaymentMethods.length < 3) {
+          params.append("budgetPaymentMethods", selectedBudgetPaymentMethods.join(","));
+        }
 
         // Add estudio filtering if selected - works with projection mode
         if (selectedEstudio) {
@@ -1221,7 +1255,8 @@ export default function GroupersChartPage() {
     fetchGrouperData();
   }, [
     activePeriod,
-    paymentMethod,
+    selectedExpensePaymentMethods,
+    selectedBudgetPaymentMethods,
     activeTab,
     selectedGroupers,
     showBudgets,
@@ -1334,9 +1369,17 @@ export default function GroupersChartPage() {
         const categoryPromises = selectedGroupers.map(async (grouperId) => {
           const params = new URLSearchParams({
             periodId: activePeriod.id.toString(),
-            // In projection mode, budgets are payment-method agnostic
-            paymentMethod: projectionMode ? "all" : paymentMethod,
           });
+
+          // Add expense payment method filtering
+          if (selectedExpensePaymentMethods.length < 3) {
+            params.append("expensePaymentMethods", selectedExpensePaymentMethods.join(","));
+          }
+
+          // Add budget payment method filtering
+          if (selectedBudgetPaymentMethods.length < 3) {
+            params.append("budgetPaymentMethods", selectedBudgetPaymentMethods.join(","));
+          }
 
           if (showBudgets || projectionMode) {
             params.append("includeBudgets", "true");
@@ -1489,9 +1532,17 @@ export default function GroupersChartPage() {
         // Build query parameters
         const params = new URLSearchParams({
           periodId: activePeriod.id.toString(),
-          // In projection mode, budgets are payment-method agnostic
-          paymentMethod: projectionMode ? "all" : paymentMethod,
         });
+
+        // Add expense payment method filtering
+        if (selectedExpensePaymentMethods.length < 3) {
+          params.append("expensePaymentMethods", selectedExpensePaymentMethods.join(","));
+        }
+
+        // Add budget payment method filtering
+        if (selectedBudgetPaymentMethods.length < 3) {
+          params.append("budgetPaymentMethods", selectedBudgetPaymentMethods.join(","));
+        }
 
         // Add budget parameter if budget display is enabled or projection mode is active
         if (showBudgets || projectionMode) {
@@ -1759,9 +1810,17 @@ export default function GroupersChartPage() {
         setPeriodComparisonError(null);
 
         // Build query parameters
-        const params = new URLSearchParams({
-          paymentMethod: paymentMethod,
-        });
+        const params = new URLSearchParams();
+
+        // Add expense payment method filtering
+        if (selectedExpensePaymentMethods.length < 3) {
+          params.append("expensePaymentMethods", selectedExpensePaymentMethods.join(","));
+        }
+
+        // Add budget payment method filtering (for budget data in period comparison)
+        if (selectedBudgetPaymentMethods.length < 3) {
+          params.append("budgetPaymentMethods", selectedBudgetPaymentMethods.join(","));
+        }
 
         // Add estudio filtering if selected
         if (selectedEstudio) {
@@ -1898,8 +1957,17 @@ export default function GroupersChartPage() {
         // Build query parameters
         const params = new URLSearchParams({
           periodId: activePeriod.id.toString(),
-          paymentMethod: paymentMethod,
         });
+
+        // Add expense payment method filtering
+        if (selectedExpensePaymentMethods.length < 3) {
+          params.append("expensePaymentMethods", selectedExpensePaymentMethods.join(","));
+        }
+
+        // Add budget payment method filtering (for budget data in weekly cumulative)
+        if (selectedBudgetPaymentMethods.length < 3) {
+          params.append("budgetPaymentMethods", selectedBudgetPaymentMethods.join(","));
+        }
 
         // Add estudio filtering if selected
         if (selectedEstudio) {
@@ -2032,6 +2100,11 @@ export default function GroupersChartPage() {
         }
         // For period comparison and weekly cumulative, fetch all periods
 
+        // Add budget payment method filtering
+        if (selectedBudgetPaymentMethods.length < 3) {
+          params.append("budgetPaymentMethods", selectedBudgetPaymentMethods.join(","));
+        }
+
         // Add estudio filtering if selected
         if (selectedEstudio) {
           params.append("estudioId", selectedEstudio.toString());
@@ -2096,6 +2169,7 @@ export default function GroupersChartPage() {
     allGroupers.length,
     activeTab,
     selectedEstudio,
+    selectedBudgetPaymentMethods,
   ]);
 
   // Retry function for budget data loading
@@ -3827,6 +3901,21 @@ export default function GroupersChartPage() {
             onRetry={retryBudgetDataLoad}
           />
         )}
+
+        {/* Payment Method Filters */}
+        <PaymentMethodFilter
+          title="Filtros de Gastos"
+          selectedMethods={selectedExpensePaymentMethods}
+          onMethodsChange={setSelectedExpensePaymentMethods}
+          disabled={selectedGroupers.length === 0}
+        />
+
+        <PaymentMethodFilter
+          title="Filtros de Presupuestos"
+          selectedMethods={selectedBudgetPaymentMethods}
+          onMethodsChange={setSelectedBudgetPaymentMethods}
+          disabled={selectedGroupers.length === 0}
+        />
 
         {/* Simulate mode checkbox - only available for Vista Actual */}
         {activeTab === "current" && (

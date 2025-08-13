@@ -4,7 +4,9 @@ import { sql } from "@/lib/db";
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const paymentMethod = searchParams.get("paymentMethod");
+    const paymentMethod = searchParams.get("paymentMethod"); // Legacy parameter for backward compatibility
+    const expensePaymentMethods = searchParams.get("expensePaymentMethods");
+    const budgetPaymentMethods = searchParams.get("budgetPaymentMethods");
     const grouperIdsParam = searchParams.get("grouperIds");
     const estudioId = searchParams.get("estudioId");
     const includeBudgets = searchParams.get("includeBudgets") === "true";
@@ -45,15 +47,68 @@ export async function GET(request: Request) {
       }
     }
 
+    // Parse and validate payment method parameters
+    let expensePaymentMethodsArray: string[] | null = null;
+    let budgetPaymentMethodsArray: string[] | null = null;
+
+    // Handle expense payment methods (new parameter or legacy fallback)
+    if (expensePaymentMethods) {
+      try {
+        expensePaymentMethodsArray = expensePaymentMethods.split(",").map((method) => {
+          const trimmed = method.trim();
+          if (!["cash", "credit", "debit"].includes(trimmed)) {
+            throw new Error(`Invalid expense payment method: ${trimmed}`);
+          }
+          return trimmed;
+        });
+      } catch (error) {
+        return NextResponse.json(
+          {
+            error: `Invalid expensePaymentMethods parameter: ${(error as Error).message}`,
+          },
+          { status: 400 }
+        );
+      }
+    } else if (paymentMethod && paymentMethod !== "all") {
+      // Legacy backward compatibility
+      expensePaymentMethodsArray = [paymentMethod];
+    }
+
+    // Handle budget payment methods
+    if (budgetPaymentMethods) {
+      try {
+        budgetPaymentMethodsArray = budgetPaymentMethods.split(",").map((method) => {
+          const trimmed = method.trim();
+          if (!["cash", "credit", "debit"].includes(trimmed)) {
+            throw new Error(`Invalid budget payment method: ${trimmed}`);
+          }
+          return trimmed;
+        });
+      } catch (error) {
+        return NextResponse.json(
+          {
+            error: `Invalid budgetPaymentMethods parameter: ${(error as Error).message}`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Build the SQL query with dynamic conditions
     let query: string;
     let queryParams: any[] = [];
     let paramIndex = 1;
 
-    // Base query with optional budget data
-    const budgetJoin = includeBudgets
-      ? `LEFT JOIN budgets b ON b.category_id = c.id AND b.period_id = p.id`
-      : "";
+    // Build budget join with payment method filter
+    let budgetJoin = "";
+    if (includeBudgets) {
+      budgetJoin = `LEFT JOIN budgets b ON b.category_id = c.id AND b.period_id = p.id`;
+      if (budgetPaymentMethodsArray && budgetPaymentMethodsArray.length > 0) {
+        budgetJoin += ` AND b.payment_method = ANY($${paramIndex}::text[])`;
+        queryParams.push(budgetPaymentMethodsArray);
+        paramIndex++;
+      }
+    }
 
     const budgetSelect = includeBudgets
       ? `, COALESCE(SUM(b.expected_amount), 0) as budget_amount`
@@ -84,21 +139,19 @@ export async function GET(request: Request) {
       LEFT JOIN grouper_categories gc ON gc.grouper_id = g.id
       LEFT JOIN categories c ON c.id = gc.category_id
       LEFT JOIN expenses e ON e.category_id = c.id
-        AND e.period_id = p.id
-        ${
-          paymentMethod && paymentMethod !== "all"
-            ? `AND e.payment_method = $${paramIndex}`
-            : ""
-        }
+        AND e.period_id = p.id`;
+
+    // Add expense payment method filter
+    if (expensePaymentMethodsArray && expensePaymentMethodsArray.length > 0) {
+      query += ` AND e.payment_method = ANY($${paramIndex}::text[])`;
+      queryParams.push(expensePaymentMethodsArray);
+      paramIndex++;
+    }
+
+    query += `
       ${budgetJoin}
       WHERE 1=1
     `;
-
-    // Add payment method parameter if specified
-    if (paymentMethod && paymentMethod !== "all") {
-      queryParams.push(paymentMethod);
-      paramIndex++;
-    }
 
     // Add grouper filtering if specified
     if (grouperIds && grouperIds.length > 0) {

@@ -7,6 +7,7 @@ export async function GET(request: Request) {
     const periodId = searchParams.get("periodId");
     const grouperIds = searchParams.get("grouperIds");
     const estudioId = searchParams.get("estudioId");
+    const budgetPaymentMethods = searchParams.get("budgetPaymentMethods");
 
     // Parse grouperIds if provided
     let grouperIdArray: number[] | null = null;
@@ -23,6 +24,27 @@ export async function GET(request: Request) {
         return NextResponse.json(
           {
             error: `Invalid grouperIds parameter: ${(error as Error).message}`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Parse and validate budget payment method parameters
+    let budgetPaymentMethodsArray: string[] | null = null;
+    if (budgetPaymentMethods) {
+      try {
+        budgetPaymentMethodsArray = budgetPaymentMethods.split(",").map((method) => {
+          const trimmed = method.trim();
+          if (!["cash", "credit", "debit"].includes(trimmed)) {
+            throw new Error(`Invalid budget payment method: ${trimmed}`);
+          }
+          return trimmed;
+        });
+      } catch (error) {
+        return NextResponse.json(
+          {
+            error: `Invalid budgetPaymentMethods parameter: ${(error as Error).message}`,
           },
           { status: 400 }
         );
@@ -73,6 +95,13 @@ export async function GET(request: Request) {
         queryParams.push(grouperIdArray);
       }
 
+      // Add budget payment method filter
+      if (budgetPaymentMethodsArray && budgetPaymentMethodsArray.length > 0) {
+        query += `
+          AND b.payment_method = ANY($${queryParams.length + 1}::text[])`;
+        queryParams.push(budgetPaymentMethodsArray);
+      }
+
       query += `
         GROUP BY g.id, g.name, p.id, p.name
         ORDER BY g.name
@@ -107,6 +136,13 @@ export async function GET(request: Request) {
         query += `
           AND g.id = ANY($${queryParams.length + 1}::int[])`;
         queryParams.push(grouperIdArray);
+      }
+
+      // Add budget payment method filter
+      if (budgetPaymentMethodsArray && budgetPaymentMethodsArray.length > 0) {
+        query += `
+          AND b.payment_method = ANY($${queryParams.length + 1}::text[])`;
+        queryParams.push(budgetPaymentMethodsArray);
       }
 
       query += `

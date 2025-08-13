@@ -5,7 +5,9 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const periodId = searchParams.get("periodId");
-    const paymentMethod = searchParams.get("paymentMethod");
+    const paymentMethod = searchParams.get("paymentMethod"); // Legacy parameter for backward compatibility
+    const expensePaymentMethods = searchParams.get("expensePaymentMethods");
+    const budgetPaymentMethods = searchParams.get("budgetPaymentMethods");
     const grouperIdsParam = searchParams.get("grouperIds");
     const estudioId = searchParams.get("estudioId");
     const includeBudgets = searchParams.get("includeBudgets") === "true";
@@ -54,6 +56,53 @@ export async function GET(request: Request) {
       }
     }
 
+    // Parse and validate payment method parameters
+    let expensePaymentMethodsArray: string[] | null = null;
+    let budgetPaymentMethodsArray: string[] | null = null;
+
+    // Handle expense payment methods (new parameter or legacy fallback)
+    if (expensePaymentMethods) {
+      try {
+        expensePaymentMethodsArray = expensePaymentMethods.split(",").map((method) => {
+          const trimmed = method.trim();
+          if (!["cash", "credit", "debit"].includes(trimmed)) {
+            throw new Error(`Invalid expense payment method: ${trimmed}`);
+          }
+          return trimmed;
+        });
+      } catch (error) {
+        return NextResponse.json(
+          {
+            error: `Invalid expensePaymentMethods parameter: ${(error as Error).message}`,
+          },
+          { status: 400 }
+        );
+      }
+    } else if (paymentMethod && paymentMethod !== "all") {
+      // Legacy backward compatibility
+      expensePaymentMethodsArray = [paymentMethod];
+    }
+
+    // Handle budget payment methods
+    if (budgetPaymentMethods) {
+      try {
+        budgetPaymentMethodsArray = budgetPaymentMethods.split(",").map((method) => {
+          const trimmed = method.trim();
+          if (!["cash", "credit", "debit"].includes(trimmed)) {
+            throw new Error(`Invalid budget payment method: ${trimmed}`);
+          }
+          return trimmed;
+        });
+      } catch (error) {
+        return NextResponse.json(
+          {
+            error: `Invalid budgetPaymentMethods parameter: ${(error as Error).message}`,
+          },
+          { status: 400 }
+        );
+      }
+    }
+
     // Build the query based on parameters
     let query: string;
     let queryParams: (string | number | number[])[] = [periodId];
@@ -67,17 +116,25 @@ export async function GET(request: Request) {
       paramIndex++;
     }
 
-    // Build payment method filter
-    let paymentMethodFilter = "";
-    if (paymentMethod && paymentMethod !== "all") {
-      paymentMethodFilter = `AND e.payment_method = $${paramIndex}`;
-      queryParams.push(paymentMethod);
+    // Build expense payment method filter
+    let expensePaymentMethodFilter = "";
+    if (expensePaymentMethodsArray && expensePaymentMethodsArray.length > 0) {
+      expensePaymentMethodFilter = `AND e.payment_method = ANY($${paramIndex}::text[])`;
+      queryParams.push(expensePaymentMethodsArray);
+      paramIndex++;
+    }
+
+    // Build budget payment method filter
+    let budgetPaymentMethodFilter = "";
+    if (includeBudgets && budgetPaymentMethodsArray && budgetPaymentMethodsArray.length > 0) {
+      budgetPaymentMethodFilter = `AND b.payment_method = ANY($${paramIndex}::text[])`;
+      queryParams.push(budgetPaymentMethodsArray);
       paramIndex++;
     }
 
     // Build budget join and select if requested
     const budgetJoin = includeBudgets
-      ? `LEFT JOIN budgets b ON b.category_id = c.id AND b.period_id = $1`
+      ? `LEFT JOIN budgets b ON b.category_id = c.id AND b.period_id = $1${budgetPaymentMethodFilter}`
       : "";
 
     const budgetSelect = includeBudgets
@@ -137,7 +194,7 @@ export async function GET(request: Request) {
           AND e.period_id = $1
           AND e.date >= wr.week_start
           AND e.date <= wr.week_end
-          ${paymentMethodFilter}
+          ${expensePaymentMethodFilter}
         ${budgetJoin}
         WHERE 1=1
           ${grouperFilter}

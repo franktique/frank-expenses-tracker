@@ -9,7 +9,9 @@ export async function GET(
     const grouperId = parseInt(routeParams.id);
     const url = new URL(request.url);
     const periodId = url.searchParams.get("periodId");
-    const paymentMethod = url.searchParams.get("paymentMethod");
+    const paymentMethod = url.searchParams.get("paymentMethod"); // Legacy parameter for backward compatibility
+    const expensePaymentMethods = url.searchParams.get("expensePaymentMethods");
+    const budgetPaymentMethods = url.searchParams.get("budgetPaymentMethods");
     const includeBudgets = url.searchParams.get("includeBudgets") === "true";
     const projectionMode = url.searchParams.get("projectionMode") === "true";
 
@@ -20,112 +22,125 @@ export async function GET(
       );
     }
 
-    // Build SQL query with consistent JOIN structure
-    // Use periodId as string (UUID) - no need to parse as integer
-    let query: string;
-    let queryParams: (string | number)[];
+    // Parse and validate payment method parameters
+    let expensePaymentMethodsArray: string[] | null = null;
+    let budgetPaymentMethodsArray: string[] | null = null;
 
-    if (includeBudgets) {
-      // Query with budget data
-      if (paymentMethod && paymentMethod !== "all") {
-        // Query with payment method filter and budget data
-        query = `
-          SELECT 
-            c.id as category_id, 
-            c.name as category_name,
-            COALESCE(SUM(e.amount), 0) as total_amount,
-            COALESCE(b.expected_amount, 0) as budget_amount
-          FROM 
-            categories c
-          JOIN grouper_categories gc ON c.id = gc.category_id
-          LEFT JOIN expenses e ON c.id = e.category_id 
-            AND e.period_id = $1
-            AND e.payment_method = $2
-          LEFT JOIN budgets b ON c.id = b.category_id 
-            AND b.period_id = $1
-          WHERE 
-            gc.grouper_id = $3
-          GROUP BY 
-            c.id, 
-            c.name,
-            b.expected_amount
-          ORDER BY 
-            total_amount DESC
-        `;
-        queryParams = [periodId, paymentMethod, grouperId];
-      } else {
-        // Query without payment method filter but with budget data
-        query = `
-          SELECT 
-            c.id as category_id, 
-            c.name as category_name,
-            COALESCE(SUM(e.amount), 0) as total_amount,
-            COALESCE(b.expected_amount, 0) as budget_amount
-          FROM 
-            categories c
-          JOIN grouper_categories gc ON c.id = gc.category_id
-          LEFT JOIN expenses e ON c.id = e.category_id 
-            AND e.period_id = $1
-          LEFT JOIN budgets b ON c.id = b.category_id 
-            AND b.period_id = $1
-          WHERE 
-            gc.grouper_id = $2
-          GROUP BY 
-            c.id, 
-            c.name,
-            b.expected_amount
-          ORDER BY 
-            total_amount DESC
-        `;
-        queryParams = [periodId, grouperId];
+    // Handle expense payment methods (new parameter or legacy fallback)
+    if (expensePaymentMethods) {
+      try {
+        expensePaymentMethodsArray = expensePaymentMethods.split(",").map((method) => {
+          const trimmed = method.trim();
+          if (!["cash", "credit", "debit"].includes(trimmed)) {
+            throw new Error(`Invalid expense payment method: ${trimmed}`);
+          }
+          return trimmed;
+        });
+      } catch (error) {
+        return NextResponse.json(
+          {
+            error: `Invalid expensePaymentMethods parameter: ${(error as Error).message}`,
+          },
+          { status: 400 }
+        );
       }
-    } else {
-      // Original queries without budget data
-      if (paymentMethod && paymentMethod !== "all") {
-        // Query with payment method filter
-        query = `
-          SELECT 
-            c.id as category_id, 
-            c.name as category_name,
-            COALESCE(SUM(e.amount), 0) as total_amount
-          FROM 
-            categories c
-          JOIN grouper_categories gc ON c.id = gc.category_id
-          LEFT JOIN expenses e ON c.id = e.category_id 
-            AND e.period_id = $1
-            AND e.payment_method = $2
-          WHERE 
-            gc.grouper_id = $3
-          GROUP BY 
-            c.id, 
-            c.name
-          ORDER BY 
-            total_amount DESC
-        `;
-        queryParams = [periodId, paymentMethod, grouperId];
-      } else {
-        // Query without payment method filter
-        query = `
-          SELECT 
-            c.id as category_id, 
-            c.name as category_name,
-            COALESCE(SUM(e.amount), 0) as total_amount
-          FROM 
-            categories c
-          JOIN grouper_categories gc ON c.id = gc.category_id
-          LEFT JOIN expenses e ON c.id = e.category_id 
-            AND e.period_id = $1
-          WHERE 
-            gc.grouper_id = $2
-          GROUP BY 
-            c.id, 
-            c.name
-          ORDER BY 
-            total_amount DESC
-        `;
-        queryParams = [periodId, grouperId];
+    } else if (paymentMethod && paymentMethod !== "all") {
+      // Legacy backward compatibility
+      expensePaymentMethodsArray = [paymentMethod];
+    }
+
+    // Handle budget payment methods
+    if (budgetPaymentMethods) {
+      try {
+        budgetPaymentMethodsArray = budgetPaymentMethods.split(",").map((method) => {
+          const trimmed = method.trim();
+          if (!["cash", "credit", "debit"].includes(trimmed)) {
+            throw new Error(`Invalid budget payment method: ${trimmed}`);
+          }
+          return trimmed;
+        });
+      } catch (error) {
+        return NextResponse.json(
+          {
+            error: `Invalid budgetPaymentMethods parameter: ${(error as Error).message}`,
+          },
+          { status: 400 }
+        );
       }
     }
+
+    // Build dynamic SQL query
+    let query: string;
+    let queryParams: (string | number | string[])[] = [periodId, grouperId];
+    let paramIndex = 3;
+
+    // Base SELECT clause
+    let selectClause = `
+      SELECT 
+        c.id as category_id, 
+        c.name as category_name,
+        COALESCE(SUM(e.amount), 0) as total_amount`;
+
+    // Add budget column if requested
+    if (includeBudgets) {
+      selectClause += `,
+        COALESCE(SUM(b.expected_amount), 0) as budget_amount`;
+    }
+
+    // Base FROM and JOIN clauses
+    let fromClause = `
+      FROM 
+        categories c
+      JOIN grouper_categories gc ON c.id = gc.category_id
+      LEFT JOIN expenses e ON c.id = e.category_id 
+        AND e.period_id = $1`;
+
+    // Add budget join if requested
+    if (includeBudgets) {
+      fromClause += `
+      LEFT JOIN budgets b ON c.id = b.category_id 
+        AND b.period_id = $1`;
+    }
+
+    // Add expense payment method filter
+    if (expensePaymentMethodsArray && expensePaymentMethodsArray.length > 0) {
+      fromClause += `
+        AND e.payment_method = ANY($${paramIndex}::text[])`;
+      queryParams.push(expensePaymentMethodsArray);
+      paramIndex++;
+    }
+
+    // Add budget payment method filter
+    if (includeBudgets && budgetPaymentMethodsArray && budgetPaymentMethodsArray.length > 0) {
+      fromClause += `
+        AND b.payment_method = ANY($${paramIndex}::text[])`;
+      queryParams.push(budgetPaymentMethodsArray);
+      paramIndex++;
+    }
+
+    // WHERE clause
+    let whereClause = `
+      WHERE 
+        gc.grouper_id = $2`;
+
+    // GROUP BY clause
+    let groupByClause = `
+      GROUP BY 
+        c.id, 
+        c.name`;
+
+    if (includeBudgets) {
+      groupByClause += `,
+        b.expected_amount`;
+    }
+
+    // ORDER BY clause
+    let orderByClause = `
+      ORDER BY 
+        total_amount DESC`;
+
+    // Combine all parts
+    query = selectClause + fromClause + whereClause + groupByClause + orderByClause;
 
     const categoryStats = await sql.query(query, queryParams);
 

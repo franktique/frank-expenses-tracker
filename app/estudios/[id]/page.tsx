@@ -35,6 +35,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import {
   BookOpen,
   PlusCircle,
@@ -42,12 +43,16 @@ import {
   ArrowLeft,
   AlertCircle,
   RefreshCw,
+  Edit3,
+  Check,
+  X,
 } from "lucide-react";
 
 type Grouper = {
   id: number;
   name: string;
   is_assigned?: boolean;
+  percentage?: number;
 };
 
 type EstudioData = {
@@ -56,6 +61,96 @@ type EstudioData = {
   assignedGroupers: Grouper[];
   availableGroupers: Grouper[];
 };
+
+type PercentageInputProps = {
+  grouper: Grouper;
+  estudioId: number;
+  onUpdate: (grouperId: number, percentage: number | null) => Promise<void>;
+};
+
+function PercentageInput({ grouper, estudioId, onUpdate }: PercentageInputProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [value, setValue] = useState(grouper.percentage?.toString() || "");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSave = async () => {
+    setIsLoading(true);
+    try {
+      const numValue = value.trim() === "" ? null : parseFloat(value);
+      if (numValue !== null && (isNaN(numValue) || numValue < 0 || numValue > 100)) {
+        toast({
+          title: "Error",
+          description: "El porcentaje debe ser un número entre 0 y 100",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      await onUpdate(grouper.id, numValue);
+      setIsEditing(false);
+    } catch (error) {
+      console.error("Error updating percentage:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setValue(grouper.percentage?.toString() || "");
+    setIsEditing(false);
+  };
+
+  if (isEditing) {
+    return (
+      <div className="flex items-center gap-2">
+        <Input
+          type="number"
+          min="0"
+          max="100"
+          step="0.01"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          className="w-20"
+          placeholder="0.00"
+          disabled={isLoading}
+        />
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={handleSave}
+          disabled={isLoading}
+        >
+          <Check className="h-3 w-3" />
+        </Button>
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={handleCancel}
+          disabled={isLoading}
+        >
+          <X className="h-3 w-3" />
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="min-w-12">
+        {grouper.percentage !== null && grouper.percentage !== undefined
+          ? `${grouper.percentage}%`
+          : "-"}
+      </span>
+      <Button
+        size="sm"
+        variant="ghost"
+        onClick={() => setIsEditing(true)}
+      >
+        <Edit3 className="h-3 w-3" />
+      </Button>
+    </div>
+  );
+}
 
 export default function EstudioGroupersPage() {
   const params = useParams();
@@ -360,6 +455,62 @@ export default function EstudioGroupersPage() {
     }
   };
 
+  // Handle percentage updates for assigned groupers
+  const handlePercentageUpdate = async (grouperId: number, percentage: number | null) => {
+    try {
+      const response = await fetch(`/api/estudios/${estudioId}/groupers/${grouperId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ percentage }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        
+        // Update the local state to reflect the change
+        setEstudioData((prev) =>
+          prev
+            ? {
+                ...prev,
+                assignedGroupers: prev.assignedGroupers.map((grouper) =>
+                  grouper.id === grouperId
+                    ? { ...grouper, percentage }
+                    : grouper
+                ),
+              }
+            : null
+        );
+
+        toast({
+          title: "Porcentaje actualizado",
+          description: result.message,
+        });
+      } else {
+        const error = await response.json().catch(() => ({}));
+        const errorMessage = error.error || `Error ${response.status}: ${response.statusText}`;
+        
+        toast({
+          title: "Error al actualizar porcentaje",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error updating percentage:", error);
+      const errorMessage = error instanceof Error
+        ? error.message.includes("fetch")
+          ? "Error de conexión. Verifique su conexión a internet."
+          : error.message
+        : "No se pudo actualizar el porcentaje";
+
+      toast({
+        title: "Error al actualizar porcentaje",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="container mx-auto py-6">
@@ -490,6 +641,7 @@ export default function EstudioGroupersPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Nombre</TableHead>
+                  <TableHead>Porcentaje (%)</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -498,6 +650,13 @@ export default function EstudioGroupersPage() {
                   <TableRow key={grouper.id}>
                     <TableCell className="font-medium">
                       {grouper.name}
+                    </TableCell>
+                    <TableCell>
+                      <PercentageInput 
+                        grouper={grouper}
+                        estudioId={estudioId}
+                        onUpdate={handlePercentageUpdate}
+                      />
                     </TableCell>
                     <TableCell className="text-right">
                       <Button

@@ -16,12 +16,13 @@ export async function GET(
       );
     }
 
-    // Get all groupers with their assignment status for this estudio
+    // Get all groupers with their assignment status and percentage for this estudio
     const groupers = await sql`
       SELECT 
         g.id, 
         g.name,
-        CASE WHEN eg.estudio_id IS NOT NULL THEN true ELSE false END as is_assigned
+        CASE WHEN eg.estudio_id IS NOT NULL THEN true ELSE false END as is_assigned,
+        eg.percentage
       FROM groupers g
       LEFT JOIN estudio_groupers eg ON g.id = eg.grouper_id AND eg.estudio_id = ${estudioId}
       ORDER BY g.name

@@ -1,6 +1,79 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 
+export async function PUT(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string; grouperId: string }> }
+) {
+  try {
+    const { id, grouperId } = await params;
+    const estudioId = parseInt(id);
+    const grouperIdNum = parseInt(grouperId);
+
+    if (isNaN(estudioId) || isNaN(grouperIdNum)) {
+      return NextResponse.json(
+        { error: "IDs de estudio y agrupador inválidos" },
+        { status: 400 }
+      );
+    }
+
+    const { percentage } = await request.json();
+
+    // Validate percentage value
+    if (percentage !== null && percentage !== undefined) {
+      if (typeof percentage !== 'number' || percentage < 0 || percentage > 100) {
+        return NextResponse.json(
+          { error: "El porcentaje debe ser un número entre 0 y 100" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Verify the estudio-grouper relationship exists
+    const [existing] = await sql`
+      SELECT id FROM estudio_groupers 
+      WHERE estudio_id = ${estudioId} AND grouper_id = ${grouperIdNum}
+    `;
+
+    if (!existing) {
+      return NextResponse.json(
+        { error: "La relación estudio-agrupador no existe" },
+        { status: 404 }
+      );
+    }
+
+    // Update the percentage
+    await sql`
+      UPDATE estudio_groupers 
+      SET percentage = ${percentage}
+      WHERE estudio_id = ${estudioId} AND grouper_id = ${grouperIdNum}
+    `;
+
+    // Get the updated grouper info
+    const [updatedGrouper] = await sql`
+      SELECT g.id, g.name, eg.percentage
+      FROM groupers g
+      JOIN estudio_groupers eg ON g.id = eg.grouper_id
+      WHERE eg.estudio_id = ${estudioId} AND eg.grouper_id = ${grouperIdNum}
+    `;
+
+    return NextResponse.json({
+      success: true,
+      grouper: updatedGrouper,
+      message: percentage !== null 
+        ? `Porcentaje actualizado a ${percentage}%`
+        : "Porcentaje removido"
+    });
+
+  } catch (error) {
+    console.error(`Error updating grouper percentage:`, error);
+    return NextResponse.json(
+      { error: "Error interno del servidor. Intente nuevamente." },
+      { status: 500 }
+    );
+  }
+}
+
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; grouperId: string }> }

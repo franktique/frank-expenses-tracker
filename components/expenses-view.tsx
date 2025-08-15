@@ -9,6 +9,9 @@ import {
   AlertTriangle,
   ArrowRight,
   RotateCcw,
+  ChevronDown,
+  ChevronUp,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -31,6 +34,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -150,6 +158,14 @@ export function ExpensesView() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isFundSectionOpenAdd, setIsFundSectionOpenAdd] = useState(false);
+  const [isFundSectionOpenEdit, setIsFundSectionOpenEdit] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, boolean>
+  >({});
+  const [editValidationErrors, setEditValidationErrors] = useState<
+    Record<string, boolean>
+  >({});
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>("");
 
@@ -219,6 +235,17 @@ export function ExpensesView() {
       );
       setAvailableFundsForNewExpense(availableFunds);
 
+      // Auto-set source fund to default if not already set
+      const defaultFund = getDefaultFundForCategory(
+        newExpenseCategory,
+        categories,
+        funds,
+        fundFilter
+      );
+      if (defaultFund && !newExpenseSourceFund) {
+        setNewExpenseSourceFund(defaultFund);
+      }
+
       // Note: Destination fund is independent of category restrictions
       // Users can select any available fund as destination
     } else {
@@ -227,6 +254,10 @@ export function ExpensesView() {
       if (newExpenseDestinationFund !== null) {
         setNewExpenseDestinationFund(null);
       }
+      // Reset source fund if no category selected
+      if (newExpenseSourceFund !== null) {
+        setNewExpenseSourceFund(null);
+      }
     }
   }, [
     newExpenseCategory,
@@ -234,6 +265,7 @@ export function ExpensesView() {
     funds,
     fundFilter,
     newExpenseDestinationFund,
+    newExpenseSourceFund,
   ]);
 
   // Update available funds for edit expense when category changes
@@ -246,6 +278,17 @@ export function ExpensesView() {
       );
       setAvailableFundsForEditExpense(availableFunds);
 
+      // Auto-set source fund to default if not already set (similar to add form)
+      const defaultFund = getDefaultFundForCategory(
+        editExpense.categoryId,
+        categories,
+        funds,
+        fundFilter
+      );
+      if (defaultFund && !editExpenseSourceFund) {
+        setEditExpenseSourceFund(defaultFund);
+      }
+
       // Note: Destination fund is independent of category restrictions
       // Users can select any available fund as destination
     } else {
@@ -254,6 +297,10 @@ export function ExpensesView() {
       if (editExpenseDestinationFund !== null) {
         setEditExpenseDestinationFund(null);
       }
+      // Reset source fund if no category selected
+      if (editExpenseSourceFund !== null) {
+        setEditExpenseSourceFund(null);
+      }
     }
   }, [
     editExpense?.categoryId,
@@ -261,6 +308,7 @@ export function ExpensesView() {
     funds,
     fundFilter,
     editExpenseDestinationFund,
+    editExpenseSourceFund,
   ]);
 
   // Filter categories based on selected fund
@@ -295,23 +343,104 @@ export function ExpensesView() {
     setNewExpenseDestinationFund(null);
     setCategorySearch("");
     setAvailableFundsForNewExpense(funds || []);
+    setIsFundSectionOpenAdd(false);
+    setValidationErrors({});
+  };
+
+  const validateNewExpenseForm = () => {
+    const errors: Record<string, boolean> = {};
+    const missingFields: string[] = [];
+
+    if (!newExpenseCategory) {
+      errors.category = true;
+      missingFields.push("Categoría");
+    }
+    if (!newExpensePeriod) {
+      errors.period = true;
+      missingFields.push("Periodo");
+    }
+    if (!newExpenseDate) {
+      errors.date = true;
+      missingFields.push("Fecha");
+    }
+    if (!newExpenseDescription.trim()) {
+      errors.description = true;
+      missingFields.push("Descripción");
+    }
+    if (!newExpenseAmount) {
+      errors.amount = true;
+      missingFields.push("Monto");
+    }
+    if (!newExpenseSourceFund) {
+      errors.sourceFund = true;
+      missingFields.push("Fondo Origen");
+    }
+
+    setValidationErrors(errors);
+
+    if (missingFields.length > 0) {
+      // Auto-expand collapsible if fund errors exist
+      if (errors.sourceFund) {
+        setIsFundSectionOpenAdd(true);
+      }
+
+      toast({
+        title: "Campos requeridos faltantes",
+        description: `Por favor complete: ${missingFields.join(", ")}`,
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
+  };
+
+  const validateEditExpenseForm = () => {
+    const errors: Record<string, boolean> = {};
+    const missingFields: string[] = [];
+
+    if (!editExpense?.categoryId) {
+      errors.category = true;
+      missingFields.push("Categoría");
+    }
+    if (!editExpense?.date) {
+      errors.date = true;
+      missingFields.push("Fecha");
+    }
+    if (!editExpense?.description?.trim()) {
+      errors.description = true;
+      missingFields.push("Descripción");
+    }
+    if (!editExpense?.amount) {
+      errors.amount = true;
+      missingFields.push("Monto");
+    }
+    if (!editExpenseSourceFund) {
+      errors.sourceFund = true;
+      missingFields.push("Fondo Origen");
+    }
+
+    setEditValidationErrors(errors);
+
+    if (missingFields.length > 0) {
+      // Auto-expand collapsible if fund errors exist
+      if (errors.sourceFund) {
+        setIsFundSectionOpenEdit(true);
+      }
+
+      toast({
+        title: "Campos requeridos faltantes",
+        description: `Por favor complete: ${missingFields.join(", ")}`,
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    return true;
   };
 
   const handleAddExpense = () => {
-    if (
-      !newExpenseCategory ||
-      !newExpensePeriod ||
-      !newExpenseDate ||
-      !newExpenseDescription.trim() ||
-      !newExpenseAmount ||
-      !newExpenseSourceFund
-    ) {
-      toast({
-        title: "Error",
-        description:
-          "Los campos obligatorios no pueden estar vacíos. Debe seleccionar un fondo origen.",
-        variant: "destructive",
-      });
+    if (!validateNewExpenseForm()) {
       return;
     }
 
@@ -360,20 +489,7 @@ export function ExpensesView() {
   };
 
   const handleEditExpense = () => {
-    if (
-      !editExpense ||
-      !editExpense.categoryId ||
-      !editExpense.date ||
-      !editExpense.description.trim() ||
-      !editExpense.amount ||
-      !editExpenseSourceFund
-    ) {
-      toast({
-        title: "Error",
-        description:
-          "Los campos obligatorios no pueden estar vacíos. Debe seleccionar un fondo origen.",
-        variant: "destructive",
-      });
+    if (!validateEditExpenseForm()) {
       return;
     }
 
@@ -536,10 +652,22 @@ export function ExpensesView() {
                     value={newExpenseCategory}
                     onValueChange={(value) => {
                       setNewExpenseCategory(value);
+                      // Clear validation error when field is corrected
+                      if (validationErrors.category) {
+                        setValidationErrors((prev) => ({
+                          ...prev,
+                          category: false,
+                        }));
+                      }
                       // The useEffect will handle fund selection automatically
                     }}
                   >
-                    <SelectTrigger id="category">
+                    <SelectTrigger
+                      id="category"
+                      className={
+                        validationErrors.category ? "border-red-500" : ""
+                      }
+                    >
                       <SelectValue placeholder="Selecciona una categoría" />
                     </SelectTrigger>
                     <SelectContent>
@@ -571,24 +699,107 @@ export function ExpensesView() {
                         ))}
                     </SelectContent>
                   </Select>
-                  {newExpenseCategory && (
-                    <FundSelectionConstraintIndicator
-                      categoryId={newExpenseCategory}
-                      availableFunds={availableFundsForNewExpense}
-                      selectedFund={newExpenseDestinationFund}
-                      currentFilterFund={fundFilter}
-                      className="mt-2"
-                    />
+                  {validationErrors.category && (
+                    <p className="text-sm text-red-500">
+                      Este campo es requerido
+                    </p>
                   )}
+                </div>
+                {/* Collapsible Fund Configuration Section with Orange Border */}
+                <div className="border border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950 rounded-lg p-3">
+                  <Collapsible
+                    open={isFundSectionOpenAdd}
+                    onOpenChange={setIsFundSectionOpenAdd}
+                  >
+                    <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-orange-800 dark:text-orange-200 hover:text-orange-900 dark:hover:text-orange-100 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <Settings className="h-4 w-4" />
+                        <span>Configuración de Fondos</span>
+                      </div>
+                      {isFundSectionOpenAdd ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-3 space-y-3">
+                      {newExpenseCategory && (
+                        <FundSelectionConstraintIndicator
+                          categoryId={newExpenseCategory}
+                          availableFunds={availableFundsForNewExpense}
+                          selectedFund={newExpenseDestinationFund}
+                          currentFilterFund={fundFilter}
+                          className=""
+                        />
+                      )}
+                      <div className="grid gap-2">
+                        <Label htmlFor="source-fund">Fondo Origen *</Label>
+                        <SourceFundSelector
+                          selectedCategoryId={newExpenseCategory}
+                          selectedSourceFund={newExpenseSourceFund}
+                          onSourceFundChange={(fund) => {
+                            setNewExpenseSourceFund(fund);
+                            // Clear validation error when field is corrected
+                            if (validationErrors.sourceFund) {
+                              setValidationErrors((prev) => ({
+                                ...prev,
+                                sourceFund: false,
+                              }));
+                            }
+                          }}
+                          placeholder="Seleccionar fondo origen..."
+                          currentFundFilter={fundFilter}
+                          required={true}
+                          className="w-full"
+                        />
+                        {validationErrors.sourceFund && (
+                          <p className="text-sm text-red-500">
+                            Este campo es requerido
+                          </p>
+                        )}
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="destination-fund">
+                          Fondo Destino (opcional)
+                        </Label>
+                        <FundFilter
+                          selectedFund={newExpenseDestinationFund}
+                          onFundChange={setNewExpenseDestinationFund}
+                          placeholder="Seleccionar fondo destino..."
+                          includeAllFunds={false}
+                          className="w-full"
+                          availableFunds={funds}
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Opcional: Transfiere dinero a otro fondo. Puedes
+                          seleccionar cualquier fondo disponible como destino.
+                        </p>
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="period">Periodo *</Label>
                   <Select
                     value={newExpensePeriod}
-                    onValueChange={setNewExpensePeriod}
+                    onValueChange={(value) => {
+                      setNewExpensePeriod(value);
+                      // Clear validation error when field is corrected
+                      if (validationErrors.period) {
+                        setValidationErrors((prev) => ({
+                          ...prev,
+                          period: false,
+                        }));
+                      }
+                    }}
                     disabled={!periods || !periods.length}
                   >
-                    <SelectTrigger id="period">
+                    <SelectTrigger
+                      id="period"
+                      className={
+                        validationErrors.period ? "border-red-500" : ""
+                      }
+                    >
                       <SelectValue placeholder="Selecciona un periodo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -599,6 +810,11 @@ export function ExpensesView() {
                       ))}
                     </SelectContent>
                   </Select>
+                  {validationErrors.period && (
+                    <p className="text-sm text-red-500">
+                      Este campo es requerido
+                    </p>
+                  )}
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="date">Fecha *</Label>
@@ -609,7 +825,8 @@ export function ExpensesView() {
                         variant={"outline"}
                         className={cn(
                           "w-full justify-start text-left font-normal",
-                          !newExpenseDate && "text-muted-foreground"
+                          !newExpenseDate && "text-muted-foreground",
+                          validationErrors.date && "border-red-500"
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
@@ -624,11 +841,25 @@ export function ExpensesView() {
                       <Calendar
                         mode="single"
                         selected={newExpenseDate}
-                        onSelect={setNewExpenseDate}
+                        onSelect={(date) => {
+                          setNewExpenseDate(date);
+                          // Clear validation error when field is corrected
+                          if (validationErrors.date) {
+                            setValidationErrors((prev) => ({
+                              ...prev,
+                              date: false,
+                            }));
+                          }
+                        }}
                         initialFocus
                       />
                     </PopoverContent>
                   </Popover>
+                  {validationErrors.date && (
+                    <p className="text-sm text-red-500">
+                      Este campo es requerido
+                    </p>
+                  )}
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="event">Evento (opcional)</Label>
@@ -667,38 +898,26 @@ export function ExpensesView() {
                   <Input
                     id="description"
                     value={newExpenseDescription}
-                    onChange={(e) => setNewExpenseDescription(e.target.value)}
+                    onChange={(e) => {
+                      setNewExpenseDescription(e.target.value);
+                      // Clear validation error when field is corrected
+                      if (validationErrors.description) {
+                        setValidationErrors((prev) => ({
+                          ...prev,
+                          description: false,
+                        }));
+                      }
+                    }}
                     placeholder="Ej: Compra de alimentos, Pago de servicios, etc."
+                    className={
+                      validationErrors.description ? "border-red-500" : ""
+                    }
                   />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="source-fund">Fondo Origen *</Label>
-                  <SourceFundSelector
-                    selectedCategoryId={newExpenseCategory}
-                    selectedSourceFund={newExpenseSourceFund}
-                    onSourceFundChange={setNewExpenseSourceFund}
-                    placeholder="Seleccionar fondo origen..."
-                    currentFundFilter={fundFilter}
-                    required={true}
-                    className="w-full"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="destination-fund">
-                    Fondo Destino (opcional)
-                  </Label>
-                  <FundFilter
-                    selectedFund={newExpenseDestinationFund}
-                    onFundChange={setNewExpenseDestinationFund}
-                    placeholder="Seleccionar fondo destino..."
-                    includeAllFunds={false}
-                    className="w-full"
-                    availableFunds={funds}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Opcional: Transfiere dinero a otro fondo. Puedes seleccionar
-                    cualquier fondo disponible como destino.
-                  </p>
+                  {validationErrors.description && (
+                    <p className="text-sm text-red-500">
+                      Este campo es requerido
+                    </p>
+                  )}
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="amount">Monto *</Label>
@@ -708,9 +927,24 @@ export function ExpensesView() {
                     min="0"
                     step="0.01"
                     value={newExpenseAmount}
-                    onChange={(e) => setNewExpenseAmount(e.target.value)}
+                    onChange={(e) => {
+                      setNewExpenseAmount(e.target.value);
+                      // Clear validation error when field is corrected
+                      if (validationErrors.amount) {
+                        setValidationErrors((prev) => ({
+                          ...prev,
+                          amount: false,
+                        }));
+                      }
+                    }}
                     placeholder="0.00"
+                    className={validationErrors.amount ? "border-red-500" : ""}
                   />
+                  {validationErrors.amount && (
+                    <p className="text-sm text-red-500">
+                      Este campo es requerido
+                    </p>
+                  )}
                 </div>
               </div>
               <DialogFooter>
@@ -984,6 +1218,8 @@ export function ExpensesView() {
             setEditExpense(null);
             setEditExpenseSourceFund(null);
             setEditExpenseDestinationFund(null);
+            setIsFundSectionOpenEdit(false);
+            setEditValidationErrors({});
           }
         }}
       >
@@ -1003,10 +1239,22 @@ export function ExpensesView() {
                   setEditExpense((prev) =>
                     prev ? { ...prev, categoryId: value } : null
                   );
+                  // Clear validation error when field is corrected
+                  if (editValidationErrors.category) {
+                    setEditValidationErrors((prev) => ({
+                      ...prev,
+                      category: false,
+                    }));
+                  }
                   // The useEffect will handle fund selection automatically
                 }}
               >
-                <SelectTrigger id="edit-category">
+                <SelectTrigger
+                  id="edit-category"
+                  className={
+                    editValidationErrors.category ? "border-red-500" : ""
+                  }
+                >
                   <SelectValue placeholder="Selecciona una categoría" />
                 </SelectTrigger>
                 <SelectContent>
@@ -1033,15 +1281,82 @@ export function ExpensesView() {
                     ))}
                 </SelectContent>
               </Select>
-              {editExpense?.categoryId && (
-                <FundSelectionConstraintIndicator
-                  categoryId={editExpense.categoryId}
-                  availableFunds={availableFundsForEditExpense}
-                  selectedFund={editExpenseDestinationFund}
-                  currentFilterFund={fundFilter}
-                  className="mt-2"
-                />
+              {editValidationErrors.category && (
+                <p className="text-sm text-red-500">Este campo es requerido</p>
               )}
+            </div>
+            {/* Collapsible Fund Configuration Section with Orange Border */}
+            <div className="border border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950 rounded-lg p-3">
+              <Collapsible
+                open={isFundSectionOpenEdit}
+                onOpenChange={setIsFundSectionOpenEdit}
+              >
+                <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-orange-800 dark:text-orange-200 hover:text-orange-900 dark:hover:text-orange-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    <span>Configuración de Fondos</span>
+                  </div>
+                  {isFundSectionOpenEdit ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-3 space-y-3">
+                  {editExpense?.categoryId && (
+                    <FundSelectionConstraintIndicator
+                      categoryId={editExpense.categoryId}
+                      availableFunds={availableFundsForEditExpense}
+                      selectedFund={editExpenseDestinationFund}
+                      currentFilterFund={fundFilter}
+                      className=""
+                    />
+                  )}
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-source-fund">Fondo Origen *</Label>
+                    <SourceFundSelector
+                      selectedCategoryId={editExpense?.categoryId || null}
+                      selectedSourceFund={editExpenseSourceFund}
+                      onSourceFundChange={(fund) => {
+                        setEditExpenseSourceFund(fund);
+                        // Clear validation error when field is corrected
+                        if (editValidationErrors.sourceFund) {
+                          setEditValidationErrors((prev) => ({
+                            ...prev,
+                            sourceFund: false,
+                          }));
+                        }
+                      }}
+                      placeholder="Seleccionar fondo origen..."
+                      currentFundFilter={fundFilter}
+                      required={true}
+                      className="w-full"
+                    />
+                    {editValidationErrors.sourceFund && (
+                      <p className="text-sm text-red-500">
+                        Este campo es requerido
+                      </p>
+                    )}
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-destination-fund">
+                      Fondo Destino (opcional)
+                    </Label>
+                    <FundFilter
+                      selectedFund={editExpenseDestinationFund}
+                      onFundChange={setEditExpenseDestinationFund}
+                      placeholder="Seleccionar fondo destino..."
+                      includeAllFunds={false}
+                      className="w-full"
+                      availableFunds={funds}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Opcional: Transfiere dinero a otro fondo. Puedes
+                      seleccionar cualquier fondo disponible como destino.
+                    </p>
+                  </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-date">Fecha</Label>
@@ -1052,7 +1367,8 @@ export function ExpensesView() {
                     variant={"outline"}
                     className={cn(
                       "w-full justify-start text-left font-normal",
-                      !editExpense?.date && "text-muted-foreground"
+                      !editExpense?.date && "text-muted-foreground",
+                      editValidationErrors.date && "border-red-500"
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
@@ -1067,15 +1383,25 @@ export function ExpensesView() {
                   <Calendar
                     mode="single"
                     selected={editExpense?.date}
-                    onSelect={(date) =>
+                    onSelect={(date) => {
                       setEditExpense((prev) =>
                         prev ? { ...prev, date } : null
-                      )
-                    }
+                      );
+                      // Clear validation error when field is corrected
+                      if (editValidationErrors.date) {
+                        setEditValidationErrors((prev) => ({
+                          ...prev,
+                          date: false,
+                        }));
+                      }
+                    }}
                     initialFocus
                   />
                 </PopoverContent>
               </Popover>
+              {editValidationErrors.date && (
+                <p className="text-sm text-red-500">Este campo es requerido</p>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-event">Evento (opcional)</Label>
@@ -1121,41 +1447,25 @@ export function ExpensesView() {
               <Input
                 id="edit-description"
                 value={editExpense?.description || ""}
-                onChange={(e) =>
+                onChange={(e) => {
                   setEditExpense((prev) =>
                     prev ? { ...prev, description: e.target.value } : null
-                  )
+                  );
+                  // Clear validation error when field is corrected
+                  if (editValidationErrors.description) {
+                    setEditValidationErrors((prev) => ({
+                      ...prev,
+                      description: false,
+                    }));
+                  }
+                }}
+                className={
+                  editValidationErrors.description ? "border-red-500" : ""
                 }
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-source-fund">Fondo Origen *</Label>
-              <SourceFundSelector
-                selectedCategoryId={editExpense?.categoryId || null}
-                selectedSourceFund={editExpenseSourceFund}
-                onSourceFundChange={setEditExpenseSourceFund}
-                placeholder="Seleccionar fondo origen..."
-                currentFundFilter={fundFilter}
-                required={true}
-                className="w-full"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-destination-fund">
-                Fondo Destino (opcional)
-              </Label>
-              <FundFilter
-                selectedFund={editExpenseDestinationFund}
-                onFundChange={setEditExpenseDestinationFund}
-                placeholder="Seleccionar fondo destino..."
-                includeAllFunds={false}
-                className="w-full"
-                availableFunds={funds}
-              />
-              <p className="text-sm text-muted-foreground">
-                Opcional: Transfiere dinero a otro fondo. Puedes seleccionar
-                cualquier fondo disponible como destino.
-              </p>
+              {editValidationErrors.description && (
+                <p className="text-sm text-red-500">Este campo es requerido</p>
+              )}
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-amount">Monto</Label>
@@ -1165,12 +1475,23 @@ export function ExpensesView() {
                 min="0"
                 step="0.01"
                 value={editExpense?.amount || ""}
-                onChange={(e) =>
+                onChange={(e) => {
                   setEditExpense((prev) =>
                     prev ? { ...prev, amount: e.target.value } : null
-                  )
-                }
+                  );
+                  // Clear validation error when field is corrected
+                  if (editValidationErrors.amount) {
+                    setEditValidationErrors((prev) => ({
+                      ...prev,
+                      amount: false,
+                    }));
+                  }
+                }}
+                className={editValidationErrors.amount ? "border-red-500" : ""}
               />
+              {editValidationErrors.amount && (
+                <p className="text-sm text-red-500">Este campo es requerido</p>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -1181,6 +1502,8 @@ export function ExpensesView() {
                 setEditExpense(null);
                 setEditExpenseSourceFund(null);
                 setEditExpenseDestinationFund(null);
+                setIsFundSectionOpenEdit(false);
+                setEditValidationErrors({});
               }}
             >
               Cancelar

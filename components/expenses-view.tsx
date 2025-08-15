@@ -9,6 +9,9 @@ import {
   AlertTriangle,
   ArrowRight,
   RotateCcw,
+  ChevronDown,
+  ChevronUp,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -31,6 +34,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -150,6 +158,8 @@ export function ExpensesView() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isFundSectionOpenAdd, setIsFundSectionOpenAdd] = useState(false);
+  const [isFundSectionOpenEdit, setIsFundSectionOpenEdit] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>("");
 
@@ -295,6 +305,7 @@ export function ExpensesView() {
     setNewExpenseDestinationFund(null);
     setCategorySearch("");
     setAvailableFundsForNewExpense(funds || []);
+    setIsFundSectionOpenAdd(false);
   };
 
   const handleAddExpense = () => {
@@ -571,15 +582,65 @@ export function ExpensesView() {
                         ))}
                     </SelectContent>
                   </Select>
-                  {newExpenseCategory && (
-                    <FundSelectionConstraintIndicator
-                      categoryId={newExpenseCategory}
-                      availableFunds={availableFundsForNewExpense}
-                      selectedFund={newExpenseDestinationFund}
-                      currentFilterFund={fundFilter}
-                      className="mt-2"
-                    />
-                  )}
+                </div>
+                {/* Collapsible Fund Configuration Section with Orange Border */}
+                <div className="border border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950 rounded-lg p-3">
+                  <Collapsible
+                    open={isFundSectionOpenAdd}
+                    onOpenChange={setIsFundSectionOpenAdd}
+                  >
+                    <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-orange-800 dark:text-orange-200 hover:text-orange-900 dark:hover:text-orange-100 transition-colors">
+                      <div className="flex items-center gap-2">
+                        <Settings className="h-4 w-4" />
+                        <span>Configuración de Fondos</span>
+                      </div>
+                      {isFundSectionOpenAdd ? (
+                        <ChevronUp className="h-4 w-4" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" />
+                      )}
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pt-3 space-y-3">
+                    {newExpenseCategory && (
+                      <FundSelectionConstraintIndicator
+                        categoryId={newExpenseCategory}
+                        availableFunds={availableFundsForNewExpense}
+                        selectedFund={newExpenseDestinationFund}
+                        currentFilterFund={fundFilter}
+                        className=""
+                      />
+                    )}
+                    <div className="grid gap-2">
+                      <Label htmlFor="source-fund">Fondo Origen *</Label>
+                      <SourceFundSelector
+                        selectedCategoryId={newExpenseCategory}
+                        selectedSourceFund={newExpenseSourceFund}
+                        onSourceFundChange={setNewExpenseSourceFund}
+                        placeholder="Seleccionar fondo origen..."
+                        currentFundFilter={fundFilter}
+                        required={true}
+                        className="w-full"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="destination-fund">
+                        Fondo Destino (opcional)
+                      </Label>
+                      <FundFilter
+                        selectedFund={newExpenseDestinationFund}
+                        onFundChange={setNewExpenseDestinationFund}
+                        placeholder="Seleccionar fondo destino..."
+                        includeAllFunds={false}
+                        className="w-full"
+                        availableFunds={funds}
+                      />
+                      <p className="text-sm text-muted-foreground">
+                        Opcional: Transfiere dinero a otro fondo. Puedes seleccionar
+                        cualquier fondo disponible como destino.
+                      </p>
+                    </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="period">Periodo *</Label>
@@ -670,35 +731,6 @@ export function ExpensesView() {
                     onChange={(e) => setNewExpenseDescription(e.target.value)}
                     placeholder="Ej: Compra de alimentos, Pago de servicios, etc."
                   />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="source-fund">Fondo Origen *</Label>
-                  <SourceFundSelector
-                    selectedCategoryId={newExpenseCategory}
-                    selectedSourceFund={newExpenseSourceFund}
-                    onSourceFundChange={setNewExpenseSourceFund}
-                    placeholder="Seleccionar fondo origen..."
-                    currentFundFilter={fundFilter}
-                    required={true}
-                    className="w-full"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="destination-fund">
-                    Fondo Destino (opcional)
-                  </Label>
-                  <FundFilter
-                    selectedFund={newExpenseDestinationFund}
-                    onFundChange={setNewExpenseDestinationFund}
-                    placeholder="Seleccionar fondo destino..."
-                    includeAllFunds={false}
-                    className="w-full"
-                    availableFunds={funds}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Opcional: Transfiere dinero a otro fondo. Puedes seleccionar
-                    cualquier fondo disponible como destino.
-                  </p>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="amount">Monto *</Label>
@@ -984,6 +1016,7 @@ export function ExpensesView() {
             setEditExpense(null);
             setEditExpenseSourceFund(null);
             setEditExpenseDestinationFund(null);
+            setIsFundSectionOpenEdit(false);
           }
         }}
       >
@@ -1033,15 +1066,65 @@ export function ExpensesView() {
                     ))}
                 </SelectContent>
               </Select>
-              {editExpense?.categoryId && (
-                <FundSelectionConstraintIndicator
-                  categoryId={editExpense.categoryId}
-                  availableFunds={availableFundsForEditExpense}
-                  selectedFund={editExpenseDestinationFund}
-                  currentFilterFund={fundFilter}
-                  className="mt-2"
-                />
-              )}
+            </div>
+            {/* Collapsible Fund Configuration Section with Orange Border */}
+            <div className="border border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950 rounded-lg p-3">
+              <Collapsible
+                open={isFundSectionOpenEdit}
+                onOpenChange={setIsFundSectionOpenEdit}
+              >
+                <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-orange-800 dark:text-orange-200 hover:text-orange-900 dark:hover:text-orange-100 transition-colors">
+                  <div className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    <span>Configuración de Fondos</span>
+                  </div>
+                  {isFundSectionOpenEdit ? (
+                    <ChevronUp className="h-4 w-4" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4" />
+                  )}
+                </CollapsibleTrigger>
+                <CollapsibleContent className="pt-3 space-y-3">
+                {editExpense?.categoryId && (
+                  <FundSelectionConstraintIndicator
+                    categoryId={editExpense.categoryId}
+                    availableFunds={availableFundsForEditExpense}
+                    selectedFund={editExpenseDestinationFund}
+                    currentFilterFund={fundFilter}
+                    className=""
+                  />
+                )}
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-source-fund">Fondo Origen *</Label>
+                  <SourceFundSelector
+                    selectedCategoryId={editExpense?.categoryId || null}
+                    selectedSourceFund={editExpenseSourceFund}
+                    onSourceFundChange={setEditExpenseSourceFund}
+                    placeholder="Seleccionar fondo origen..."
+                    currentFundFilter={fundFilter}
+                    required={true}
+                    className="w-full"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="edit-destination-fund">
+                    Fondo Destino (opcional)
+                  </Label>
+                  <FundFilter
+                    selectedFund={editExpenseDestinationFund}
+                    onFundChange={setEditExpenseDestinationFund}
+                    placeholder="Seleccionar fondo destino..."
+                    includeAllFunds={false}
+                    className="w-full"
+                    availableFunds={funds}
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    Opcional: Transfiere dinero a otro fondo. Puedes seleccionar
+                    cualquier fondo disponible como destino.
+                  </p>
+                </div>
+                </CollapsibleContent>
+              </Collapsible>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-date">Fecha</Label>
@@ -1129,35 +1212,6 @@ export function ExpensesView() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-source-fund">Fondo Origen *</Label>
-              <SourceFundSelector
-                selectedCategoryId={editExpense?.categoryId || null}
-                selectedSourceFund={editExpenseSourceFund}
-                onSourceFundChange={setEditExpenseSourceFund}
-                placeholder="Seleccionar fondo origen..."
-                currentFundFilter={fundFilter}
-                required={true}
-                className="w-full"
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-destination-fund">
-                Fondo Destino (opcional)
-              </Label>
-              <FundFilter
-                selectedFund={editExpenseDestinationFund}
-                onFundChange={setEditExpenseDestinationFund}
-                placeholder="Seleccionar fondo destino..."
-                includeAllFunds={false}
-                className="w-full"
-                availableFunds={funds}
-              />
-              <p className="text-sm text-muted-foreground">
-                Opcional: Transfiere dinero a otro fondo. Puedes seleccionar
-                cualquier fondo disponible como destino.
-              </p>
-            </div>
-            <div className="grid gap-2">
               <Label htmlFor="edit-amount">Monto</Label>
               <Input
                 id="edit-amount"
@@ -1181,6 +1235,7 @@ export function ExpensesView() {
                 setEditExpense(null);
                 setEditExpenseSourceFund(null);
                 setEditExpenseDestinationFund(null);
+                setIsFundSectionOpenEdit(false);
               }}
             >
               Cancelar

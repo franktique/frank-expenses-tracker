@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 
+interface GrouperResult {
+  grouper_id: number;
+  grouper_name: string;
+  total_amount: string;
+  budget_amount?: string;
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -48,17 +55,21 @@ export async function GET(request: Request) {
     // Handle expense payment methods (new parameter or legacy fallback)
     if (expensePaymentMethods) {
       try {
-        expensePaymentMethodsArray = expensePaymentMethods.split(",").map((method) => {
-          const trimmed = method.trim();
-          if (!["cash", "credit", "debit"].includes(trimmed)) {
-            throw new Error(`Invalid expense payment method: ${trimmed}`);
-          }
-          return trimmed;
-        });
+        expensePaymentMethodsArray = expensePaymentMethods
+          .split(",")
+          .map((method) => {
+            const trimmed = method.trim();
+            if (!["cash", "credit", "debit"].includes(trimmed)) {
+              throw new Error(`Invalid expense payment method: ${trimmed}`);
+            }
+            return trimmed;
+          });
       } catch (error) {
         return NextResponse.json(
           {
-            error: `Invalid expensePaymentMethods parameter: ${(error as Error).message}`,
+            error: `Invalid expensePaymentMethods parameter: ${
+              (error as Error).message
+            }`,
           },
           { status: 400 }
         );
@@ -71,17 +82,21 @@ export async function GET(request: Request) {
     // Handle budget payment methods
     if (budgetPaymentMethods) {
       try {
-        budgetPaymentMethodsArray = budgetPaymentMethods.split(",").map((method) => {
-          const trimmed = method.trim();
-          if (!["cash", "credit", "debit"].includes(trimmed)) {
-            throw new Error(`Invalid budget payment method: ${trimmed}`);
-          }
-          return trimmed;
-        });
+        budgetPaymentMethodsArray = budgetPaymentMethods
+          .split(",")
+          .map((method) => {
+            const trimmed = method.trim();
+            if (!["cash", "credit", "debit"].includes(trimmed)) {
+              throw new Error(`Invalid budget payment method: ${trimmed}`);
+            }
+            return trimmed;
+          });
       } catch (error) {
         return NextResponse.json(
           {
-            error: `Invalid budgetPaymentMethods parameter: ${(error as Error).message}`,
+            error: `Invalid budgetPaymentMethods parameter: ${
+              (error as Error).message
+            }`,
           },
           { status: 400 }
         );
@@ -90,7 +105,7 @@ export async function GET(request: Request) {
 
     // Build the query based on parameters
     let query: string;
-    let queryParams: (string | number | number[])[] = [periodId];
+    let queryParams: (string | number | string[] | number[])[] = [periodId];
     let paramIndex = 2;
 
     // Base SELECT clause
@@ -125,27 +140,50 @@ export async function GET(request: Request) {
       LEFT JOIN expenses e ON e.category_id = c.id 
         AND e.period_id = $1`;
 
-    // Add budget join if requested
+    // Add payment method filtering logic for expenses
+    if (estudioId) {
+      // When estudioId is provided, use payment method configuration from estudio_groupers
+      // If payment_methods is NULL, include all methods (no filter)
+      // If payment_methods is configured, filter expenses by those methods
+      fromClause += `
+        AND (
+          eg.payment_methods IS NULL 
+          OR e.payment_method IS NULL
+          OR e.payment_method = ANY(eg.payment_methods)
+        )`;
+    } else {
+      // Legacy behavior: use expensePaymentMethods parameter for filtering
+      if (expensePaymentMethodsArray && expensePaymentMethodsArray.length > 0) {
+        fromClause += `
+          AND e.payment_method = ANY($${paramIndex}::text[])`;
+        queryParams.push(expensePaymentMethodsArray);
+        paramIndex++;
+      }
+    }
+
+    // Add budget join and payment method filtering if requested
     if (includeBudgets) {
       fromClause += `
       LEFT JOIN budgets b ON b.category_id = c.id
         AND b.period_id = $1`;
-    }
 
-    // Add expense payment method filter
-    if (expensePaymentMethodsArray && expensePaymentMethodsArray.length > 0) {
-      fromClause += `
-        AND e.payment_method = ANY($${paramIndex}::text[])`;
-      queryParams.push(expensePaymentMethodsArray);
-      paramIndex++;
-    }
-
-    // Add budget payment method filter
-    if (includeBudgets && budgetPaymentMethodsArray && budgetPaymentMethodsArray.length > 0) {
-      fromClause += `
-        AND b.payment_method = ANY($${paramIndex}::text[])`;
-      queryParams.push(budgetPaymentMethodsArray);
-      paramIndex++;
+      if (estudioId) {
+        // Apply the same payment method filtering for budgets when estudioId is provided
+        fromClause += `
+        AND (
+          eg.payment_methods IS NULL 
+          OR b.payment_method IS NULL
+          OR b.payment_method = ANY(eg.payment_methods)
+        )`;
+      } else {
+        // Legacy behavior for budget payment method filtering
+        if (budgetPaymentMethodsArray && budgetPaymentMethodsArray.length > 0) {
+          fromClause += `
+          AND b.payment_method = ANY($${paramIndex}::text[])`;
+          queryParams.push(budgetPaymentMethodsArray);
+          paramIndex++;
+        }
+      }
     }
 
     // Add WHERE clause for grouper filtering
@@ -165,13 +203,13 @@ export async function GET(request: Request) {
     // Combine all parts
     query = selectClause + fromClause + whereClause + groupByClause;
 
-    const result = await sql.query(query, queryParams);
+    const result = (await sql.query(query, queryParams)) as GrouperResult[];
 
     // Enhanced error handling for projection mode
     if (projectionMode && includeBudgets) {
       // Check if any budget data exists
       const hasBudgetData = result.some(
-        (item) =>
+        (item: GrouperResult) =>
           item.budget_amount !== null &&
           item.budget_amount !== undefined &&
           parseFloat(item.budget_amount.toString()) > 0
@@ -189,7 +227,7 @@ export async function GET(request: Request) {
 
       // Check for partial budget data
       const itemsWithBudget = result.filter(
-        (item) =>
+        (item: GrouperResult) =>
           item.budget_amount !== null &&
           item.budget_amount !== undefined &&
           parseFloat(item.budget_amount.toString()) > 0
@@ -214,8 +252,10 @@ export async function GET(request: Request) {
 
     // Enhanced error handling with context
     const errorMessage = (error as Error).message;
+    const { searchParams: errorSearchParams } = new URL(request.url);
     const isProjectionError =
-      projectionMode && errorMessage.toLowerCase().includes("budget");
+      errorSearchParams.get("projectionMode") === "true" &&
+      errorMessage.toLowerCase().includes("budget");
 
     if (isProjectionError) {
       return NextResponse.json(

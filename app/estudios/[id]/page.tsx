@@ -36,16 +36,27 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { PaymentMethodSelector } from "@/components/payment-method-selector";
+import { PaymentMethodBadges } from "@/components/payment-method-badges";
+import { PaymentMethodTableSelector } from "@/components/payment-method-table-selector";
+import { PaymentMethodErrorBoundary } from "@/components/payment-method-error-boundary";
+import { PaymentMethodErrorHandler } from "@/components/payment-method-error-handler";
+import {
+  usePaymentMethodValidation,
+  usePaymentMethodApi,
+} from "@/hooks/use-payment-method-validation";
 import {
   BookOpen,
   PlusCircle,
   Trash2,
   ArrowLeft,
   AlertCircle,
+  AlertTriangle,
   RefreshCw,
   Edit3,
   Check,
   X,
+  Save,
 } from "lucide-react";
 
 type Grouper = {
@@ -53,6 +64,7 @@ type Grouper = {
   name: string;
   is_assigned?: boolean;
   percentage?: number;
+  payment_methods?: string[] | null;
 };
 
 type EstudioData = {
@@ -68,7 +80,11 @@ type PercentageInputProps = {
   onUpdate: (grouperId: number, percentage: number | null) => Promise<void>;
 };
 
-function PercentageInput({ grouper, estudioId, onUpdate }: PercentageInputProps) {
+function PercentageInput({
+  grouper,
+  estudioId,
+  onUpdate,
+}: PercentageInputProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [value, setValue] = useState(grouper.percentage?.toString() || "");
   const [isLoading, setIsLoading] = useState(false);
@@ -77,7 +93,10 @@ function PercentageInput({ grouper, estudioId, onUpdate }: PercentageInputProps)
     setIsLoading(true);
     try {
       const numValue = value.trim() === "" ? null : parseFloat(value);
-      if (numValue !== null && (isNaN(numValue) || numValue < 0 || numValue > 100)) {
+      if (
+        numValue !== null &&
+        (isNaN(numValue) || numValue < 0 || numValue > 100)
+      ) {
         toast({
           title: "Error",
           description: "El porcentaje debe ser un número entre 0 y 100",
@@ -85,7 +104,7 @@ function PercentageInput({ grouper, estudioId, onUpdate }: PercentageInputProps)
         });
         return;
       }
-      
+
       await onUpdate(grouper.id, numValue);
       setIsEditing(false);
     } catch (error) {
@@ -141,11 +160,7 @@ function PercentageInput({ grouper, estudioId, onUpdate }: PercentageInputProps)
           ? `${grouper.percentage}%`
           : "-"}
       </span>
-      <Button
-        size="sm"
-        variant="ghost"
-        onClick={() => setIsEditing(true)}
-      >
+      <Button size="sm" variant="ghost" onClick={() => setIsEditing(true)}>
         <Edit3 className="h-3 w-3" />
       </Button>
     </div>
@@ -165,6 +180,35 @@ export default function EstudioGroupersPage() {
     []
   );
   const [grouperToRemove, setGrouperToRemove] = useState<Grouper | null>(null);
+
+  // Payment methods state management
+  const [paymentMethodsState, setPaymentMethodsState] = useState<
+    Record<number, string[]>
+  >({});
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isSavingPaymentMethods, setIsSavingPaymentMethods] = useState(false);
+
+  // Payment method validation state
+  const [paymentMethodValidationErrors, setPaymentMethodValidationErrors] =
+    useState<Record<number, string[]>>({});
+  const [hasValidationErrors, setHasValidationErrors] = useState(false);
+
+  // API error handling
+  const {
+    isLoading: isApiLoading,
+    error: apiError,
+    clearError: clearApiError,
+    handleApiCall,
+    canRetry,
+    retry,
+  } = usePaymentMethodApi({
+    onSuccess: (data) => {
+      console.log("Payment method operation successful:", data);
+    },
+    onError: (error) => {
+      console.error("Payment method API error:", error);
+    },
+  });
 
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -227,6 +271,15 @@ export default function EstudioGroupersPage() {
         assignedGroupers: groupersData.assignedGroupers,
         availableGroupers: groupersData.availableGroupers,
       });
+
+      // Initialize payment methods state
+      const initialPaymentMethods: Record<number, string[]> = {};
+      groupersData.assignedGroupers.forEach((grouper: Grouper) => {
+        initialPaymentMethods[grouper.id] = grouper.payment_methods || [];
+      });
+      setPaymentMethodsState(initialPaymentMethods);
+      setHasUnsavedChanges(false);
+
       setFetchError(null);
       setRetryCount(0);
     } catch (error) {
@@ -324,6 +377,17 @@ export default function EstudioGroupersPage() {
               : null
           );
 
+          // Update payment methods state for new groupers
+          const updatedPaymentMethods: Record<number, string[]> = {
+            ...paymentMethodsState,
+          };
+          groupersData.assignedGroupers.forEach((grouper: Grouper) => {
+            if (!(grouper.id in updatedPaymentMethods)) {
+              updatedPaymentMethods[grouper.id] = grouper.payment_methods || [];
+            }
+          });
+          setPaymentMethodsState(updatedPaymentMethods);
+
           setSelectedGroupersToAdd([]);
           setIsAddDialogOpen(false);
 
@@ -404,6 +468,15 @@ export default function EstudioGroupersPage() {
               : null
           );
 
+          // Remove payment methods state for removed grouper
+          if (grouperToRemove) {
+            setPaymentMethodsState((prev) => {
+              const updated = { ...prev };
+              delete updated[grouperToRemove.id];
+              return updated;
+            });
+          }
+
           setIsRemoveDialogOpen(false);
           setGrouperToRemove(null);
 
@@ -455,18 +528,184 @@ export default function EstudioGroupersPage() {
     }
   };
 
-  // Handle percentage updates for assigned groupers
-  const handlePercentageUpdate = async (grouperId: number, percentage: number | null) => {
+  // Handle payment method changes with validation
+  const handlePaymentMethodChange = (grouperId: number, methods: string[]) => {
     try {
-      const response = await fetch(`/api/estudios/${estudioId}/groupers/${grouperId}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ percentage }),
+      setPaymentMethodsState((prev) => ({
+        ...prev,
+        [grouperId]: methods,
+      }));
+      setHasUnsavedChanges(true);
+
+      // Clear any existing validation errors for this grouper
+      setPaymentMethodValidationErrors((prev) => {
+        const updated = { ...prev };
+        delete updated[grouperId];
+        return updated;
       });
+    } catch (error) {
+      console.error("Error updating payment methods:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron actualizar los métodos de pago",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handle payment method validation changes
+  const handlePaymentMethodValidation = (
+    grouperId: number,
+    isValid: boolean,
+    errors: string[]
+  ) => {
+    setPaymentMethodValidationErrors((prev) => ({
+      ...prev,
+      [grouperId]: errors,
+    }));
+
+    // Update global validation state
+    const allErrors = Object.values({
+      ...paymentMethodValidationErrors,
+      [grouperId]: errors,
+    });
+    setHasValidationErrors(allErrors.some((errorList) => errorList.length > 0));
+  };
+
+  // Save all payment method changes with enhanced error handling
+  const handleSavePaymentMethods = async () => {
+    if (!estudioData || !hasUnsavedChanges) return;
+
+    // Check for validation errors before saving
+    if (hasValidationErrors) {
+      toast({
+        title: "Errores de validación",
+        description: "Corrige los errores de validación antes de guardar.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSavingPaymentMethods(true);
+    clearApiError(); // Clear any previous API errors
+    let successCount = 0;
+    let errorCount = 0;
+    const failedGroupers: string[] = [];
+
+    try {
+      // Save payment methods for each grouper that has changes
+      const savePromises = estudioData.assignedGroupers.map(async (grouper) => {
+        const currentMethods = paymentMethodsState[grouper.id] || [];
+        const originalMethods = grouper.payment_methods || [];
+
+        // Check if methods have changed
+        const methodsChanged =
+          JSON.stringify(currentMethods.sort()) !==
+          JSON.stringify(originalMethods.sort());
+
+        if (methodsChanged) {
+          const result = await handleApiCall(async () => {
+            return fetch(`/api/estudios/${estudioId}/groupers/${grouper.id}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                percentage: grouper.percentage,
+                payment_methods:
+                  currentMethods.length === 0 ? null : currentMethods,
+              }),
+            });
+          });
+
+          if (result.success) {
+            successCount++;
+            return {
+              success: true,
+              grouperId: grouper.id,
+              grouperName: grouper.name,
+            };
+          } else {
+            errorCount++;
+            failedGroupers.push(grouper.name);
+            return {
+              success: false,
+              grouperId: grouper.id,
+              grouperName: grouper.name,
+              error: result.error,
+            };
+          }
+        }
+        return { success: true, grouperId: grouper.id, skipped: true };
+      });
+
+      const results = await Promise.all(savePromises);
+      const successfulResults = results.filter((r) => r.success && !r.skipped);
+
+      if (successfulResults.length > 0) {
+        // Update the estudio data with new payment methods
+        setEstudioData((prev) =>
+          prev
+            ? {
+                ...prev,
+                assignedGroupers: prev.assignedGroupers.map((grouper) => ({
+                  ...grouper,
+                  payment_methods: paymentMethodsState[grouper.id] || [],
+                })),
+              }
+            : null
+        );
+
+        setHasUnsavedChanges(false);
+        setPaymentMethodValidationErrors({}); // Clear validation errors
+
+        toast({
+          title: "Métodos de pago guardados",
+          description: `Se actualizaron los métodos de pago para ${successCount} agrupadores.`,
+        });
+      }
+
+      if (errorCount > 0) {
+        toast({
+          title: "Algunos cambios no se pudieron guardar",
+          description: `Error en agrupadores: ${failedGroupers.join(", ")}`,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving payment methods:", error);
+      toast({
+        title: "Error al guardar",
+        description:
+          "No se pudieron guardar los métodos de pago. Intenta nuevamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSavingPaymentMethods(false);
+    }
+  };
+
+  // Handle percentage updates for assigned groupers
+  const handlePercentageUpdate = async (
+    grouperId: number,
+    percentage: number | null
+  ) => {
+    try {
+      const currentPaymentMethods = paymentMethodsState[grouperId] || [];
+      const response = await fetch(
+        `/api/estudios/${estudioId}/groupers/${grouperId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            percentage,
+            payment_methods:
+              currentPaymentMethods.length === 0 ? null : currentPaymentMethods,
+          }),
+        }
+      );
 
       if (response.ok) {
         const result = await response.json();
-        
+
         // Update the local state to reflect the change
         setEstudioData((prev) =>
           prev
@@ -487,8 +726,9 @@ export default function EstudioGroupersPage() {
         });
       } else {
         const error = await response.json().catch(() => ({}));
-        const errorMessage = error.error || `Error ${response.status}: ${response.statusText}`;
-        
+        const errorMessage =
+          error.error || `Error ${response.status}: ${response.statusText}`;
+
         toast({
           title: "Error al actualizar porcentaje",
           description: errorMessage,
@@ -497,11 +737,12 @@ export default function EstudioGroupersPage() {
       }
     } catch (error) {
       console.error("Error updating percentage:", error);
-      const errorMessage = error instanceof Error
-        ? error.message.includes("fetch")
-          ? "Error de conexión. Verifique su conexión a internet."
-          : error.message
-        : "No se pudo actualizar el porcentaje";
+      const errorMessage =
+        error instanceof Error
+          ? error.message.includes("fetch")
+            ? "Error de conexión. Verifique su conexión a internet."
+            : error.message
+          : "No se pudo actualizar el porcentaje";
 
       toast({
         title: "Error al actualizar porcentaje",
@@ -614,21 +855,97 @@ export default function EstudioGroupersPage() {
             Agrupadores - {estudioData.name}
           </h1>
         </div>
-        <Button
-          onClick={() => setIsAddDialogOpen(true)}
-          disabled={estudioData.availableGroupers.length === 0}
-        >
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Agregar Agrupadores
-        </Button>
+        <div className="flex gap-2">
+          {hasUnsavedChanges && (
+            <Button
+              onClick={handleSavePaymentMethods}
+              disabled={
+                isSavingPaymentMethods || isApiLoading || hasValidationErrors
+              }
+              variant={hasValidationErrors ? "secondary" : "default"}
+            >
+              {isSavingPaymentMethods || isApiLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Guardando...
+                </>
+              ) : hasValidationErrors ? (
+                <>
+                  <AlertTriangle className="mr-2 h-4 w-4" />
+                  Corregir Errores
+                </>
+              ) : (
+                <>
+                  <Save className="mr-2 h-4 w-4" />
+                  Guardar Cambios
+                </>
+              )}
+            </Button>
+          )}
+          <Button
+            onClick={() => setIsAddDialogOpen(true)}
+            disabled={estudioData.availableGroupers.length === 0}
+          >
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Agregar Agrupadores
+          </Button>
+        </div>
       </div>
+
+      {/* API Error Display */}
+      {apiError && (
+        <div className="mb-4">
+          <PaymentMethodErrorHandler
+            error={apiError}
+            onRetry={
+              canRetry
+                ? () =>
+                    retry(() => fetch(`/api/estudios/${estudioId}/groupers`))
+                : undefined
+            }
+            onClear={clearApiError}
+            canRetry={canRetry}
+          />
+        </div>
+      )}
+
+      {/* Validation Errors Warning */}
+      {hasValidationErrors && (
+        <Card className="mb-4 border-red-200 bg-red-50">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 text-red-800">
+              <AlertTriangle className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                Hay errores de validación en los métodos de pago. Corrige los
+                errores antes de guardar.
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Unsaved Changes Warning */}
+      {hasUnsavedChanges && !hasValidationErrors && (
+        <Card className="mb-4 border-orange-200 bg-orange-50">
+          <CardContent className="pt-4">
+            <div className="flex items-center gap-2 text-orange-800">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                Tienes cambios sin guardar en los métodos de pago. No olvides
+                guardar tus cambios.
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Assigned Groupers */}
       <Card className="mb-6">
         <CardHeader>
           <CardTitle>Agrupadores Asignados</CardTitle>
           <CardDescription>
-            Agrupadores que pertenecen a este estudio.
+            Agrupadores que pertenecen a este estudio. Configura los métodos de
+            pago para cada agrupador.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -642,6 +959,7 @@ export default function EstudioGroupersPage() {
                 <TableRow>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Porcentaje (%)</TableHead>
+                  <TableHead>Métodos de Pago</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -652,11 +970,42 @@ export default function EstudioGroupersPage() {
                       {grouper.name}
                     </TableCell>
                     <TableCell>
-                      <PercentageInput 
+                      <PercentageInput
                         grouper={grouper}
                         estudioId={estudioId}
                         onUpdate={handlePercentageUpdate}
                       />
+                    </TableCell>
+                    <TableCell className="w-80">
+                      <PaymentMethodErrorBoundary>
+                        <PaymentMethodTableSelector
+                          selectedMethods={
+                            paymentMethodsState[grouper.id] || []
+                          }
+                          onSelectionChange={(methods) =>
+                            handlePaymentMethodChange(grouper.id, methods)
+                          }
+                          disabled={isSavingPaymentMethods || isApiLoading}
+                          hasUnsavedChanges={
+                            JSON.stringify(
+                              (paymentMethodsState[grouper.id] || []).sort()
+                            ) !==
+                            JSON.stringify(
+                              (grouper.payment_methods || []).sort()
+                            )
+                          }
+                          validationError={paymentMethodValidationErrors[
+                            grouper.id
+                          ]?.join(", ")}
+                          onValidationChange={(isValid, errors) =>
+                            handlePaymentMethodValidation(
+                              grouper.id,
+                              isValid,
+                              errors
+                            )
+                          }
+                        />
+                      </PaymentMethodErrorBoundary>
                     </TableCell>
                     <TableCell className="text-right">
                       <Button

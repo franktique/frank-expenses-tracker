@@ -1,4 +1,5 @@
 // Dashboard-related type definitions
+import { PaymentMethod } from "./estudios";
 
 /**
  * Budget summary item representing a category's budget and expense data
@@ -138,4 +139,56 @@ export function verifyBudgetTotals(budgetSummary: BudgetSummaryItem[]): {
     isValid: discrepancies.length === 0,
     discrepancies,
   };
+}
+
+/**
+ * Dashboard grouper result with payment method filtering support
+ * Requirements 2.1, 2.2 - reflects filtered data based on payment method selections
+ */
+export interface DashboardGrouperResult {
+  grouper_id: number;
+  grouper_name: string;
+  total_amount: string;
+  budget_amount?: string;
+  // Metadata about payment method filtering applied
+  payment_methods_applied?: PaymentMethod[] | null;
+}
+
+/**
+ * Enhanced dashboard groupers response with filtering metadata
+ * Requirements 2.1, 2.2 - provides context about applied filters
+ */
+export interface DashboardGroupersResponse {
+  data: DashboardGrouperResult[];
+  metadata: {
+    estudio_id?: number;
+    period_id: string;
+    payment_method_filtering_applied: boolean;
+    projection_mode: boolean;
+    includes_budgets: boolean;
+    total_groupers: number;
+    filtered_groupers: number;
+  };
+}
+
+/**
+ * Payment method filter configuration for dashboard queries
+ */
+export interface PaymentMethodFilter {
+  expense_payment_methods?: PaymentMethod[];
+  budget_payment_methods?: PaymentMethod[];
+  estudio_based_filtering?: boolean;
+}
+
+/**
+ * Utility function to check if payment method filtering is active
+ */
+export function hasPaymentMethodFiltering(
+  filter: PaymentMethodFilter
+): boolean {
+  return !!(
+    filter.expense_payment_methods?.length ||
+    filter.budget_payment_methods?.length ||
+    filter.estudio_based_filtering
+  );
 }

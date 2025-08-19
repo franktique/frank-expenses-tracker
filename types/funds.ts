@@ -1,8 +1,18 @@
 import { z } from "zod";
+import {
+  PaymentMethodEnum,
+  type PaymentMethod,
+  VALID_PAYMENT_METHODS,
+  PAYMENT_METHOD_LABELS,
+} from "./estudios";
 
-// Payment method enum and type
-export const PaymentMethodEnum = z.enum(["credit", "debit", "cash"]);
-export type PaymentMethod = z.infer<typeof PaymentMethodEnum>;
+// Re-export PaymentMethod types and constants for backward compatibility
+export {
+  PaymentMethodEnum,
+  type PaymentMethod,
+  VALID_PAYMENT_METHODS,
+  PAYMENT_METHOD_LABELS,
+};
 
 // Fund interface and validation schema
 export interface Fund {

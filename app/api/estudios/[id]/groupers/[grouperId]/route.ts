@@ -17,13 +17,109 @@ export async function PUT(
       );
     }
 
-    const { percentage } = await request.json();
+    const { percentage, payment_methods } = await request.json();
 
     // Validate percentage value
     if (percentage !== null && percentage !== undefined) {
-      if (typeof percentage !== 'number' || percentage < 0 || percentage > 100) {
+      if (
+        typeof percentage !== "number" ||
+        percentage < 0 ||
+        percentage > 100
+      ) {
         return NextResponse.json(
           { error: "El porcentaje debe ser un número entre 0 y 100" },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Enhanced payment methods validation
+    if (payment_methods !== null && payment_methods !== undefined) {
+      // Type validation
+      if (!Array.isArray(payment_methods)) {
+        return NextResponse.json(
+          {
+            error: "Los métodos de pago deben ser un array",
+            code: "INVALID_TYPE",
+            details: {
+              received: typeof payment_methods,
+              expected: "array",
+            },
+          },
+          { status: 400 }
+        );
+      }
+
+      // Empty array validation (not allowed, use null for "all methods")
+      if (payment_methods.length === 0) {
+        return NextResponse.json(
+          {
+            error:
+              "El array de métodos de pago no puede estar vacío. Use null para incluir todos los métodos",
+            code: "EMPTY_ARRAY",
+            suggestion:
+              "Para incluir todos los métodos de pago, envíe null en lugar de un array vacío",
+          },
+          { status: 400 }
+        );
+      }
+
+      // Validate individual payment method values
+      const validMethods = ["cash", "credit", "debit"];
+      const invalidMethods = payment_methods.filter(
+        (method) => typeof method !== "string" || !validMethods.includes(method)
+      );
+
+      if (invalidMethods.length > 0) {
+        return NextResponse.json(
+          {
+            error: `Métodos de pago inválidos encontrados`,
+            code: "INVALID_METHODS",
+            details: {
+              invalidMethods: invalidMethods,
+              validMethods: validMethods,
+              message: `Los siguientes valores no son válidos: ${invalidMethods.join(
+                ", "
+              )}`,
+            },
+          },
+          { status: 400 }
+        );
+      }
+
+      // Check for duplicates
+      const uniqueMethods = [...new Set(payment_methods)];
+      if (uniqueMethods.length !== payment_methods.length) {
+        const duplicates = payment_methods.filter(
+          (method, index) => payment_methods.indexOf(method) !== index
+        );
+
+        return NextResponse.json(
+          {
+            error: "No se permiten métodos de pago duplicados",
+            code: "DUPLICATE_METHODS",
+            details: {
+              duplicates: [...new Set(duplicates)],
+              suggestion: "Elimine los métodos duplicados de la selección",
+            },
+          },
+          { status: 400 }
+        );
+      }
+
+      // Validate array length (should not exceed valid methods count)
+      if (payment_methods.length > validMethods.length) {
+        return NextResponse.json(
+          {
+            error: "Demasiados métodos de pago especificados",
+            code: "TOO_MANY_METHODS",
+            details: {
+              received: payment_methods.length,
+              maximum: validMethods.length,
+              suggestion:
+                "Verifique que no haya métodos duplicados o inválidos",
+            },
+          },
           { status: 400 }
         );
       }
@@ -42,33 +138,113 @@ export async function PUT(
       );
     }
 
-    // Update the percentage
+    // Update the percentage and payment methods
     await sql`
       UPDATE estudio_groupers 
-      SET percentage = ${percentage}
+      SET 
+        percentage = ${percentage},
+        payment_methods = ${payment_methods}
       WHERE estudio_id = ${estudioId} AND grouper_id = ${grouperIdNum}
     `;
 
     // Get the updated grouper info
     const [updatedGrouper] = await sql`
-      SELECT g.id, g.name, eg.percentage
+      SELECT g.id, g.name, eg.percentage, eg.payment_methods
       FROM groupers g
       JOIN estudio_groupers eg ON g.id = eg.grouper_id
       WHERE eg.estudio_id = ${estudioId} AND eg.grouper_id = ${grouperIdNum}
     `;
 
+    // Build response message
+    let message = "";
+    if (
+      percentage !== null &&
+      percentage !== undefined &&
+      payment_methods !== null &&
+      payment_methods !== undefined
+    ) {
+      message = `Porcentaje actualizado a ${percentage}% y métodos de pago configurados`;
+    } else if (percentage !== null && percentage !== undefined) {
+      message = `Porcentaje actualizado a ${percentage}%`;
+    } else if (payment_methods !== null && payment_methods !== undefined) {
+      message = "Métodos de pago configurados";
+    } else {
+      message =
+        percentage === null
+          ? "Porcentaje removido"
+          : "Métodos de pago removidos";
+    }
+
     return NextResponse.json({
       success: true,
       grouper: updatedGrouper,
-      message: percentage !== null 
-        ? `Porcentaje actualizado a ${percentage}%`
-        : "Porcentaje removido"
+      message,
     });
-
   } catch (error) {
-    console.error(`Error updating grouper percentage:`, error);
+    console.error(
+      `Error updating grouper percentage and payment methods:`,
+      error
+    );
+
+    // Enhanced error handling with specific error types
+    if (error instanceof Error) {
+      // Database connection errors
+      if (
+        error.message.includes("connection") ||
+        error.message.includes("ECONNREFUSED")
+      ) {
+        return NextResponse.json(
+          {
+            error: "Error de conexión con la base de datos",
+            code: "DATABASE_CONNECTION_ERROR",
+            details:
+              "No se pudo conectar con la base de datos. Intente nuevamente en unos momentos.",
+            retryable: true,
+          },
+          { status: 503 }
+        );
+      }
+
+      // Database constraint violations
+      if (
+        error.message.includes("constraint") ||
+        error.message.includes("violates")
+      ) {
+        return NextResponse.json(
+          {
+            error: "Error de validación en la base de datos",
+            code: "DATABASE_CONSTRAINT_ERROR",
+            details:
+              "Los datos no cumplen con las restricciones de la base de datos. Verifique los valores enviados.",
+            retryable: false,
+          },
+          { status: 400 }
+        );
+      }
+
+      // Timeout errors
+      if (error.message.includes("timeout")) {
+        return NextResponse.json(
+          {
+            error: "Tiempo de espera agotado",
+            code: "TIMEOUT_ERROR",
+            details: "La operación tardó demasiado tiempo. Intente nuevamente.",
+            retryable: true,
+          },
+          { status: 408 }
+        );
+      }
+    }
+
+    // Generic server error
     return NextResponse.json(
-      { error: "Error interno del servidor. Intente nuevamente." },
+      {
+        error: "Error interno del servidor",
+        code: "INTERNAL_SERVER_ERROR",
+        details:
+          "Ocurrió un error inesperado. Si el problema persiste, contacte al administrador.",
+        retryable: true,
+      },
       { status: 500 }
     );
   }

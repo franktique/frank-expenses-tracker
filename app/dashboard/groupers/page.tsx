@@ -9,6 +9,7 @@ import {
   Calendar,
   AlertCircle,
   RefreshCw,
+  X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -39,14 +40,14 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  LineChart,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   Cell,
   LabelList,
-  LineChart,
-  Line,
   Legend,
   ReferenceLine,
 } from "recharts";
@@ -120,6 +121,31 @@ type WeeklyCumulativeData = {
   }[];
 }[];
 
+type WeeklyExpensesData = {
+  week_start: string;
+  week_end: string;
+  week_label: string;
+  grouper_data: {
+    grouper_id: number;
+    grouper_name: string;
+    weekly_amount: number;
+    budget_amount?: number;
+  }[];
+}[];
+
+type WeeklyCategoryData = {
+  category_id: number;
+  category_name: string;
+  total_amount: number;
+  percentage: number;
+}[];
+
+type SelectedWeekData = {
+  week_start: string;
+  week_end: string;
+  week_label: string;
+} | null;
+
 type TransformedWeeklyData = {
   week_label: string;
   [key: `grouper_${number}`]: number;
@@ -159,7 +185,7 @@ export default function GroupersChartPage() {
 
   // Tab state management
   const [activeTab, setActiveTab] = useState<
-    "current" | "period-comparison" | "weekly-cumulative"
+    "current" | "period-comparison" | "weekly-cumulative" | "weekly-expenses"
   >("current");
 
   // Filter state management
@@ -294,7 +320,10 @@ export default function GroupersChartPage() {
       }
       return false;
     } catch (error) {
-      console.error("Error loading projection mode from session storage:", error);
+      console.error(
+        "Error loading projection mode from session storage:",
+        error
+      );
 
       // Use projection-specific error handling for loading errors
       const loadError =
@@ -371,9 +400,11 @@ export default function GroupersChartPage() {
   const [grouperData, setGrouperData] = useState<GrouperData[]>([]);
   const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
   // Payment method filtering - separate for expenses and budgets
-  const [selectedExpensePaymentMethods, setSelectedExpensePaymentMethods] = useState<string[]>(["cash", "credit", "debit"]);
-  const [selectedBudgetPaymentMethods, setSelectedBudgetPaymentMethods] = useState<string[]>(["cash", "credit", "debit"]);
-  
+  const [selectedExpensePaymentMethods, setSelectedExpensePaymentMethods] =
+    useState<string[]>(["cash", "credit", "debit"]);
+  const [selectedBudgetPaymentMethods, setSelectedBudgetPaymentMethods] =
+    useState<string[]>(["cash", "credit", "debit"]);
+
   // Helper functions for backward compatibility
   const getExpensePaymentMethodParam = () => {
     if (selectedExpensePaymentMethods.length === 3) return "all";
@@ -386,9 +417,13 @@ export default function GroupersChartPage() {
   };
 
   // Legacy paymentMethod for backward compatibility (expense-focused)
-  const paymentMethod = selectedExpensePaymentMethods.length === 3 ? "all" : 
-    selectedExpensePaymentMethods.length === 1 ? selectedExpensePaymentMethods[0] : "all";
-  
+  const paymentMethod =
+    selectedExpensePaymentMethods.length === 3
+      ? "all"
+      : selectedExpensePaymentMethods.length === 1
+      ? selectedExpensePaymentMethods[0]
+      : "all";
+
   const setPaymentMethod = (method: string) => {
     if (method === "all") {
       setSelectedExpensePaymentMethods(["cash", "credit", "debit"]);
@@ -401,15 +436,18 @@ export default function GroupersChartPage() {
     null
   );
   const [showCategoryChart, setShowCategoryChart] = useState<boolean>(false);
-  const [referenceLineData, setReferenceLineData] = useState<ReferenceLineData[]>([]);
-  const [periodIncomeData, setPeriodIncomeData] = useState<PeriodIncomeData | null>(null);
+  const [referenceLineData, setReferenceLineData] = useState<
+    ReferenceLineData[]
+  >([]);
+  const [periodIncomeData, setPeriodIncomeData] =
+    useState<PeriodIncomeData | null>(null);
   const [maxGrouperAmount, setMaxGrouperAmount] = useState<number>(0);
   const [maxCategoryAmount, setMaxCategoryAmount] = useState<number>(0);
 
   // Color palette for reference lines
   const referenceLineColors = [
     "#ef4444", // Red
-    "#3b82f6", // Blue  
+    "#3b82f6", // Blue
     "#10b981", // Green
     "#f59e0b", // Orange
     "#8b5cf6", // Purple
@@ -480,6 +518,25 @@ export default function GroupersChartPage() {
     string | null
   >(null);
 
+  // Weekly expenses state
+  const [weeklyExpensesData, setWeeklyExpensesData] =
+    useState<WeeklyExpensesData>([]);
+  const [isLoadingWeeklyExpenses, setIsLoadingWeeklyExpenses] =
+    useState<boolean>(false);
+  const [weeklyExpensesError, setWeeklyExpensesError] = useState<
+    string | null
+  >(null);
+
+  // Weekly category drill-down state
+  const [selectedWeek, setSelectedWeek] = useState<SelectedWeekData>(null);
+  const [weeklyCategoryData, setWeeklyCategoryData] =
+    useState<WeeklyCategoryData>([]);
+  const [isLoadingWeeklyCategories, setIsLoadingWeeklyCategories] =
+    useState<boolean>(false);
+  const [weeklyCategoryError, setWeeklyCategoryError] = useState<
+    string | null
+  >(null);
+
   // Budget data state
   const [budgetData, setBudgetData] = useState<{
     [key: string]: { [grouperId: number]: number };
@@ -499,10 +556,12 @@ export default function GroupersChartPage() {
     current: string;
     periodComparison: string;
     weeklyCumulative: string;
+    weeklyExpenses: string;
   }>({
     current: "all",
     periodComparison: "all",
     weeklyCumulative: "all",
+    weeklyExpenses: "all",
   });
 
   // Track filter state for each tab to ensure proper synchronization
@@ -522,6 +581,11 @@ export default function GroupersChartPage() {
       showBudgets: boolean;
       selectedEstudio: number | null;
     };
+    weeklyExpenses: {
+      selectedGroupers: number[];
+      showBudgets: boolean;
+      selectedEstudio: number | null;
+    };
   }>({
     current: {
       selectedGroupers: [],
@@ -534,6 +598,11 @@ export default function GroupersChartPage() {
       selectedEstudio: null,
     },
     weeklyCumulative: {
+      selectedGroupers: [],
+      showBudgets: false,
+      selectedEstudio: null,
+    },
+    weeklyExpenses: {
       selectedGroupers: [],
       showBudgets: false,
       selectedEstudio: null,
@@ -758,6 +827,7 @@ export default function GroupersChartPage() {
     setGrouperData([]);
     setPeriodComparisonData([]);
     setWeeklyCumulativeData([]);
+    setWeeklyExpensesData([]);
 
     // Persist estudio selection in both session storage and URL parameters
     if (estudioId !== null) {
@@ -965,12 +1035,18 @@ export default function GroupersChartPage() {
 
         // Add expense payment method filtering
         if (selectedExpensePaymentMethods.length < 3) {
-          params.append("expensePaymentMethods", selectedExpensePaymentMethods.join(","));
+          params.append(
+            "expensePaymentMethods",
+            selectedExpensePaymentMethods.join(",")
+          );
         }
 
         // Add budget payment method filtering
         if (selectedBudgetPaymentMethods.length < 3) {
-          params.append("budgetPaymentMethods", selectedBudgetPaymentMethods.join(","));
+          params.append(
+            "budgetPaymentMethods",
+            selectedBudgetPaymentMethods.join(",")
+          );
         }
 
         // Add estudio filtering if selected - works with projection mode
@@ -1162,14 +1238,10 @@ export default function GroupersChartPage() {
         // In projection mode, show all groupers even with zero budget amounts
         // to provide clear feedback about missing budget data
         const sortedData = projectionMode
-          ? projectedData.sort(
-              (a, b) => b.total_amount - a.total_amount
-            )
+          ? projectedData.sort((a, b) => b.total_amount - a.total_amount)
           : projectedData
               .filter((item) => item.total_amount > 0)
-              .sort(
-                (a, b) => b.total_amount - a.total_amount
-              );
+              .sort((a, b) => b.total_amount - a.total_amount);
 
         const finalData = sortedData as GrouperData[];
         setGrouperData(finalData);
@@ -1196,11 +1268,7 @@ export default function GroupersChartPage() {
             ...sortedData.map((item) => item.total_amount)
           );
           const maxBudgetAmount = showBudgets
-            ? Math.max(
-                ...sortedData.map(
-                  (item) => item.budget_amount || 0
-                )
-              )
+            ? Math.max(...sortedData.map((item) => item.budget_amount || 0))
             : 0;
           const maxAmount = Math.max(maxExpenseAmount, maxBudgetAmount);
           setMaxGrouperAmount(maxAmount * 1.1); // Add 10% for visualization margin
@@ -1287,12 +1355,12 @@ export default function GroupersChartPage() {
         const incomeResponse = await fetch(
           `/api/incomes/period/${activePeriod.id}/total`
         );
-        
+
         if (!incomeResponse.ok) {
-          console.warn('Could not fetch period income data');
+          console.warn("Could not fetch period income data");
           return;
         }
-        
+
         const incomeData = await incomeResponse.json();
         setPeriodIncomeData(incomeData);
 
@@ -1300,20 +1368,24 @@ export default function GroupersChartPage() {
         const grouperResponse = await fetch(
           `/api/estudios/${selectedEstudio}/groupers`
         );
-        
+
         if (!grouperResponse.ok) {
-          console.warn('Could not fetch estudio grouper data');
+          console.warn("Could not fetch estudio grouper data");
           return;
         }
-        
+
         const grouperData = await grouperResponse.json();
-        
+
         // Calculate reference values for groupers with percentages
         const referenceData: ReferenceLineData[] = grouperData.assignedGroupers
-          .filter((grouper: any) => grouper.percentage != null && parseFloat(grouper.percentage) > 0)
+          .filter(
+            (grouper: any) =>
+              grouper.percentage != null && parseFloat(grouper.percentage) > 0
+          )
           .map((grouper: any) => {
             const percentage = parseFloat(grouper.percentage);
-            const reference_value = (percentage / 100) * incomeData.total_income;
+            const reference_value =
+              (percentage / 100) * incomeData.total_income;
             return {
               grouper_id: grouper.id,
               grouper_name: grouper.name,
@@ -1321,11 +1393,10 @@ export default function GroupersChartPage() {
               reference_value: reference_value,
             };
           });
-        
+
         setReferenceLineData(referenceData);
-        
       } catch (error) {
-        console.error('Error fetching reference line data:', error);
+        console.error("Error fetching reference line data:", error);
         // Don't show toast for reference line errors as they're not critical
         setReferenceLineData([]);
         setPeriodIncomeData(null);
@@ -1373,12 +1444,18 @@ export default function GroupersChartPage() {
 
           // Add expense payment method filtering
           if (selectedExpensePaymentMethods.length < 3) {
-            params.append("expensePaymentMethods", selectedExpensePaymentMethods.join(","));
+            params.append(
+              "expensePaymentMethods",
+              selectedExpensePaymentMethods.join(",")
+            );
           }
 
           // Add budget payment method filtering
           if (selectedBudgetPaymentMethods.length < 3) {
-            params.append("budgetPaymentMethods", selectedBudgetPaymentMethods.join(","));
+            params.append(
+              "budgetPaymentMethods",
+              selectedBudgetPaymentMethods.join(",")
+            );
           }
 
           if (showBudgets || projectionMode) {
@@ -1536,12 +1613,18 @@ export default function GroupersChartPage() {
 
         // Add expense payment method filtering
         if (selectedExpensePaymentMethods.length < 3) {
-          params.append("expensePaymentMethods", selectedExpensePaymentMethods.join(","));
+          params.append(
+            "expensePaymentMethods",
+            selectedExpensePaymentMethods.join(",")
+          );
         }
 
         // Add budget payment method filtering
         if (selectedBudgetPaymentMethods.length < 3) {
-          params.append("budgetPaymentMethods", selectedBudgetPaymentMethods.join(","));
+          params.append(
+            "budgetPaymentMethods",
+            selectedBudgetPaymentMethods.join(",")
+          );
         }
 
         // Add budget parameter if budget display is enabled or projection mode is active
@@ -1694,14 +1777,10 @@ export default function GroupersChartPage() {
         // In projection mode, show all categories even with zero budget amounts
         // to provide clear feedback about missing budget data
         const sortedData = projectionMode
-          ? projectedData.sort(
-              (a, b) => b.total_amount - a.total_amount
-            )
+          ? projectedData.sort((a, b) => b.total_amount - a.total_amount)
           : projectedData
               .filter((item) => item.total_amount > 0)
-              .sort(
-                (a, b) => b.total_amount - a.total_amount
-              );
+              .sort((a, b) => b.total_amount - a.total_amount);
 
         const finalCategoryData = sortedData as CategoryData[];
         setCategoryData(finalCategoryData);
@@ -1713,11 +1792,7 @@ export default function GroupersChartPage() {
             ...sortedData.map((item) => item.total_amount)
           );
           const maxBudgetAmount = showBudgets
-            ? Math.max(
-                ...sortedData.map(
-                  (item) => item.budget_amount || 0
-                )
-              )
+            ? Math.max(...sortedData.map((item) => item.budget_amount || 0))
             : 0;
           const maxAmount = Math.max(maxExpenseAmount, maxBudgetAmount);
           setMaxCategoryAmount(maxAmount * 1.1); // Add 10% for visualization margin
@@ -1814,12 +1889,18 @@ export default function GroupersChartPage() {
 
         // Add expense payment method filtering
         if (selectedExpensePaymentMethods.length < 3) {
-          params.append("expensePaymentMethods", selectedExpensePaymentMethods.join(","));
+          params.append(
+            "expensePaymentMethods",
+            selectedExpensePaymentMethods.join(",")
+          );
         }
 
         // Add budget payment method filtering (for budget data in period comparison)
         if (selectedBudgetPaymentMethods.length < 3) {
-          params.append("budgetPaymentMethods", selectedBudgetPaymentMethods.join(","));
+          params.append(
+            "budgetPaymentMethods",
+            selectedBudgetPaymentMethods.join(",")
+          );
         }
 
         // Add estudio filtering if selected
@@ -1961,12 +2042,18 @@ export default function GroupersChartPage() {
 
         // Add expense payment method filtering
         if (selectedExpensePaymentMethods.length < 3) {
-          params.append("expensePaymentMethods", selectedExpensePaymentMethods.join(","));
+          params.append(
+            "expensePaymentMethods",
+            selectedExpensePaymentMethods.join(",")
+          );
         }
 
         // Add budget payment method filtering (for budget data in weekly cumulative)
         if (selectedBudgetPaymentMethods.length < 3) {
-          params.append("budgetPaymentMethods", selectedBudgetPaymentMethods.join(","));
+          params.append(
+            "budgetPaymentMethods",
+            selectedBudgetPaymentMethods.join(",")
+          );
         }
 
         // Add estudio filtering if selected
@@ -2078,6 +2165,209 @@ export default function GroupersChartPage() {
     }
   }, [activePeriod, activeTab]);
 
+  // Fetch weekly expenses data
+  useEffect(() => {
+    if (
+      activeTab !== "weekly-expenses" ||
+      !activePeriod ||
+      selectedEstudio === null
+    )
+      return;
+
+    // Determine filter state for comparison
+    const currentFilterState = {
+      selectedGroupers,
+      showBudgets,
+      selectedEstudio,
+    };
+    const lastFilterStateForTab = lastFilterState.weeklyExpenses;
+    const filterStateChanged =
+      !lastFilterStateForTab ||
+      JSON.stringify(currentFilterState) !==
+        JSON.stringify(lastFilterStateForTab);
+
+    const shouldFetch =
+      paymentMethod !== lastPaymentMethodUsed.weeklyExpenses ||
+      filterStateChanged ||
+      weeklyExpensesData.length === 0;
+
+    if (!shouldFetch) return;
+
+    const fetchWeeklyExpensesData = async () => {
+      try {
+        setIsLoadingWeeklyExpenses(true);
+        setWeeklyExpensesError(null);
+
+        // Build query parameters
+        const params = new URLSearchParams({
+          periodId: activePeriod.id.toString(),
+        });
+
+        // Add grouper filtering
+        if (selectedGroupers.length > 0 && selectedGroupers.length < allGroupers.length) {
+          params.set("grouperIds", selectedGroupers.join(","));
+        }
+
+        // Add estudio filtering
+        if (selectedEstudio !== null) {
+          params.set("estudioId", selectedEstudio.toString());
+        }
+
+        // Add expense payment methods
+        if (paymentMethod !== "all") {
+          params.set("expensePaymentMethods", paymentMethod);
+        }
+
+        // Add budget inclusion
+        if (showBudgets) {
+          params.set("includeBudgets", "true");
+        }
+
+        const response = await fetch(
+          `/api/dashboard/groupers/weekly-expenses?${params.toString()}`
+        );
+
+        if (response.ok) {
+          const data: WeeklyExpensesData = await response.json();
+
+          const processedData = data.map((week) => ({
+            ...week,
+            grouper_data: week.grouper_data.map((grouper) => ({
+              ...grouper,
+              budget_amount: showBudgets
+                ? grouper.budget_amount
+                  ? parseFloat(grouper.budget_amount.toString())
+                  : 0
+                : undefined,
+            })),
+          }));
+
+          setWeeklyExpensesData(processedData);
+          setLastPaymentMethodUsed((prev) => ({
+            ...prev,
+            weeklyExpenses: paymentMethod,
+          }));
+
+          // Update the filter state
+          setLastFilterState((prev) => ({
+            ...prev,
+            weeklyExpenses: currentFilterState,
+          }));
+        } else {
+          const errorData = await response.json();
+          setWeeklyExpensesError(
+            errorData.error || "Error al cargar datos de gastos semanales"
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching weekly expenses data:", error);
+        setWeeklyExpensesError(
+          "Error de conexión. Verifica tu conexión a internet."
+        );
+      } finally {
+        setIsLoadingWeeklyExpenses(false);
+      }
+    };
+
+    fetchWeeklyExpensesData();
+  }, [
+    activeTab,
+    activePeriod,
+    paymentMethod,
+    lastPaymentMethodUsed.weeklyExpenses,
+    weeklyExpensesData.length,
+    selectedGroupers,
+    showBudgets,
+    allGroupers.length,
+    lastFilterState.weeklyExpenses,
+    selectedEstudio,
+  ]);
+
+  // Handle period changes for weekly expenses data
+  useEffect(() => {
+    if (activeTab === "weekly-expenses" && activePeriod) {
+      // Clear data when period changes to force refresh
+      setWeeklyExpensesData([]);
+      setLastPaymentMethodUsed((prev) => ({
+        ...prev,
+        weeklyExpenses: "",
+      }));
+      // Clear selected week when period changes
+      clearWeekSelection();
+    }
+  }, [activePeriod, activeTab]);
+
+  // Fetch weekly category data when a week is selected
+  useEffect(() => {
+    if (
+      !selectedWeek ||
+      activeTab !== "weekly-expenses" ||
+      !activePeriod ||
+      selectedEstudio === null
+    )
+      return;
+
+    const fetchWeeklyCategoryData = async () => {
+      try {
+        setIsLoadingWeeklyCategories(true);
+        setWeeklyCategoryError(null);
+
+        // Build query parameters
+        const params = new URLSearchParams({
+          periodId: activePeriod.id.toString(),
+          weekStart: selectedWeek.week_start,
+          weekEnd: selectedWeek.week_end,
+        });
+
+        // Add grouper filtering
+        if (selectedGroupers.length > 0 && selectedGroupers.length < allGroupers.length) {
+          params.set("grouperIds", selectedGroupers.join(","));
+        }
+
+        // Add estudio filtering
+        if (selectedEstudio !== null) {
+          params.set("estudioId", selectedEstudio.toString());
+        }
+
+        // Add expense payment methods
+        if (paymentMethod !== "all") {
+          params.set("expensePaymentMethods", paymentMethod);
+        }
+
+        const response = await fetch(
+          `/api/dashboard/groupers/weekly-categories?${params.toString()}`
+        );
+
+        if (response.ok) {
+          const data: WeeklyCategoryData = await response.json();
+          setWeeklyCategoryData(data);
+        } else {
+          const errorData = await response.json();
+          setWeeklyCategoryError(
+            errorData.error || "Error al cargar datos de categorías semanales"
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching weekly category data:", error);
+        setWeeklyCategoryError(
+          "Error de conexión. Verifica tu conexión a internet."
+        );
+      } finally {
+        setIsLoadingWeeklyCategories(false);
+      }
+    };
+
+    fetchWeeklyCategoryData();
+  }, [
+    selectedWeek,
+    activePeriod,
+    paymentMethod,
+    selectedGroupers,
+    allGroupers.length,
+    selectedEstudio,
+    activeTab,
+  ]);
+
   // Fetch budget data when budget toggle is enabled
   useEffect(() => {
     if (!showBudgets || !activePeriod || selectedEstudio === null) {
@@ -2102,7 +2392,10 @@ export default function GroupersChartPage() {
 
         // Add budget payment method filtering
         if (selectedBudgetPaymentMethods.length < 3) {
-          params.append("budgetPaymentMethods", selectedBudgetPaymentMethods.join(","));
+          params.append(
+            "budgetPaymentMethods",
+            selectedBudgetPaymentMethods.join(",")
+          );
         }
 
         // Add estudio filtering if selected
@@ -2367,6 +2660,55 @@ export default function GroupersChartPage() {
     }));
   };
 
+  // Transform weekly expenses data for chart consumption
+  const transformWeeklyExpensesData = (
+    data: WeeklyExpensesData
+  ): TransformedWeeklyData => {
+    if (!data || data.length === 0) return [];
+
+    // Get all unique groupers
+    const allGroupers = new Set<string>();
+    data.forEach((week) => {
+      week.grouper_data.forEach((grouper) => {
+        allGroupers.add(`grouper_${grouper.grouper_id}`);
+      });
+    });
+
+    // Transform data for chart
+    return data.map((week) => {
+      const transformedWeek: any = {
+        week_label: week.week_label,
+      };
+
+      // Initialize all groupers with 0
+      allGroupers.forEach((grouperKey) => {
+        transformedWeek[grouperKey] = 0;
+      });
+
+      // Fill in actual values
+      week.grouper_data.forEach((grouper) => {
+        transformedWeek[`grouper_${grouper.grouper_id}`] =
+          grouper.weekly_amount;
+      });
+
+      return transformedWeek;
+    });
+  };
+
+  // Get unique groupers for weekly expenses legend
+  const getUniqueGroupersFromWeeklyExpenses = (data: WeeklyExpensesData) => {
+    const groupersMap = new Map<number, string>();
+    data.forEach((week) => {
+      week.grouper_data.forEach((grouper) => {
+        groupersMap.set(grouper.grouper_id, grouper.grouper_name);
+      });
+    });
+    return Array.from(groupersMap.entries()).map(([id, name]) => ({
+      grouper_id: id,
+      grouper_name: name,
+    }));
+  };
+
   // Format currency
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("es-MX", {
@@ -2391,6 +2733,60 @@ export default function GroupersChartPage() {
       weeklyCumulative: "",
     }));
     setWeeklyCumulativeError(null);
+  };
+
+  const retryWeeklyExpenses = () => {
+    setLastPaymentMethodUsed((prev) => ({
+      ...prev,
+      weeklyExpenses: "",
+    }));
+    setWeeklyExpensesError(null);
+  };
+
+  const retryWeeklyCategories = () => {
+    setWeeklyCategoryError(null);
+    if (selectedWeek) {
+      // Re-trigger the fetch by clearing and setting the selected week
+      const currentWeek = selectedWeek;
+      setSelectedWeek(null);
+      setTimeout(() => setSelectedWeek(currentWeek), 0);
+    }
+  };
+
+  // Clear selected week and category data
+  const clearWeekSelection = () => {
+    setSelectedWeek(null);
+    setWeeklyCategoryData([]);
+    setWeeklyCategoryError(null);
+  };
+
+  // Handle week bar click for drill-down
+  const handleWeekBarClick = (data: any) => {
+    if (!data || !data.payload) return;
+
+    const payload = data.payload;
+    const weekLabel = payload.week_label;
+    
+    // Find the corresponding week data from weeklyExpensesData
+    const weekData = weeklyExpensesData.find((week) => week.week_label === weekLabel);
+    
+    if (weekData) {
+      const selectedWeekData: SelectedWeekData = {
+        week_start: weekData.week_start,
+        week_end: weekData.week_end,
+        week_label: weekData.week_label,
+      };
+
+      // Toggle selection - if same week is clicked, clear selection
+      if (selectedWeek && selectedWeek.week_label === weekLabel) {
+        clearWeekSelection();
+      } else {
+        setSelectedWeek(selectedWeekData);
+        // Clear previous category data
+        setWeeklyCategoryData([]);
+        setWeeklyCategoryError(null);
+      }
+    }
   };
 
   const retryBudgetData = () => {
@@ -2744,6 +3140,58 @@ export default function GroupersChartPage() {
     return null;
   };
 
+  // Custom tooltip for weekly expenses chart
+  const CustomWeeklyExpensesTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="p-3 bg-white dark:bg-gray-800 border rounded shadow-lg">
+          <p className="font-medium mb-2">{label}</p>
+          {payload.map((entry: any, index: number) => {
+            if (entry.value > 0) {
+              // Find grouper name from the data key
+              const grouperKey = entry.dataKey;
+              const grouperId = parseInt(grouperKey.replace("grouper_", ""));
+              const uniqueGroupers =
+                getUniqueGroupersFromWeeklyExpenses(weeklyExpensesData);
+              const grouperName =
+                uniqueGroupers.find((g) => g.grouper_id === grouperId)
+                  ?.grouper_name || "Unknown";
+
+              return (
+                <div key={index} className="flex items-center gap-2 text-sm">
+                  <div
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: entry.color }}
+                  />
+                  <span>{grouperName}:</span>
+                  <span className="font-medium">
+                    {formatCurrency(entry.value)} (semanal)
+                  </span>
+                </div>
+              );
+            }
+            return null;
+          })}
+
+          {/* Show filter context information */}
+          {(selectedGroupers.length < allGroupers.length ||
+            selectedEstudio ||
+            paymentMethod !== "all") && (
+            <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
+              <p className="text-xs text-muted-foreground text-center">
+                {selectedGroupers.length < allGroupers.length &&
+                  "Filtrado por agrupadores"}
+                {selectedEstudio && " • Estudio seleccionado"}
+                {paymentMethod !== "all" && " • Método de pago filtrado"}
+              </p>
+            </div>
+          )}
+        </div>
+      );
+    }
+    return null;
+  };
+
   // Handle grouper click
   const handleGrouperClick = (data: GrouperData) => {
     setSelectedGrouper(data);
@@ -2774,6 +3222,8 @@ export default function GroupersChartPage() {
       setIsLoadingPeriodComparison(true);
     } else if (activeTab === "weekly-cumulative") {
       setIsLoadingWeeklyCumulative(true);
+    } else if (activeTab === "weekly-expenses") {
+      setIsLoadingWeeklyExpenses(true);
     }
   };
 
@@ -2791,6 +3241,8 @@ export default function GroupersChartPage() {
       setIsLoadingPeriodComparison(true);
     } else if (activeTab === "weekly-cumulative") {
       setIsLoadingWeeklyCumulative(true);
+    } else if (activeTab === "weekly-expenses") {
+      setIsLoadingWeeklyExpenses(true);
     }
   };
 
@@ -2813,12 +3265,14 @@ export default function GroupersChartPage() {
       setIsLoadingPeriodComparison(true);
     } else if (activeTab === "weekly-cumulative") {
       setIsLoadingWeeklyCumulative(true);
+    } else if (activeTab === "weekly-expenses") {
+      setIsLoadingWeeklyExpenses(true);
     }
   };
 
   // Handle tab switching with filter state maintenance
   const handleTabChange = (
-    tab: "current" | "period-comparison" | "weekly-cumulative"
+    tab: "current" | "period-comparison" | "weekly-cumulative" | "weekly-expenses"
   ) => {
     // Store the previous tab for reference
     const previousTab = activeTab;
@@ -2830,6 +3284,8 @@ export default function GroupersChartPage() {
       setIsLoadingPeriodComparison(false);
     } else if (activeTab === "weekly-cumulative") {
       setIsLoadingWeeklyCumulative(false);
+    } else if (activeTab === "weekly-expenses") {
+      setIsLoadingWeeklyExpenses(false);
     }
 
     setActiveTab(tab);
@@ -2839,6 +3295,11 @@ export default function GroupersChartPage() {
       setSelectedGrouper(null);
       setShowCategoryChart(false);
       setCategoryData([]);
+    }
+
+    // Clear week selection when switching away from weekly-expenses tab
+    if (activeTab === "weekly-expenses" && tab !== "weekly-expenses") {
+      clearWeekSelection();
     }
 
     // Determine if data needs to be refetched based on filter state changes
@@ -2886,6 +3347,18 @@ export default function GroupersChartPage() {
             currentFilterState.selectedEstudio !==
               lastWeeklyState.selectedEstudio
           );
+        case "weekly-expenses":
+          const lastWeeklyExpensesState = lastFilterState.weeklyExpenses;
+          return (
+            !weeklyExpensesData.length ||
+            lastPaymentMethodUsed.weeklyExpenses !== paymentMethod ||
+            // Data needs refresh if filters changed
+            JSON.stringify(currentFilterState.selectedGroupers) !==
+              JSON.stringify(lastWeeklyExpensesState.selectedGroupers) ||
+            currentFilterState.showBudgets !== lastWeeklyExpensesState.showBudgets ||
+            currentFilterState.selectedEstudio !==
+              lastWeeklyExpensesState.selectedEstudio
+          );
         default:
           return false;
       }
@@ -2905,6 +3378,11 @@ export default function GroupersChartPage() {
       needsDataRefresh("weekly-cumulative")
     ) {
       setIsLoadingWeeklyCumulative(true);
+    } else if (
+      tab === "weekly-expenses" &&
+      needsDataRefresh("weekly-expenses")
+    ) {
+      setIsLoadingWeeklyExpenses(true);
     }
 
     // Force data refresh for the new tab to ensure filter state is properly applied
@@ -2919,6 +3397,9 @@ export default function GroupersChartPage() {
       } else if (tab === "weekly-cumulative") {
         // Trigger weekly cumulative data refresh
         setLastPaymentMethodUsed((prev) => ({ ...prev, weeklyCumulative: "" }));
+      } else if (tab === "weekly-expenses") {
+        // Trigger weekly expenses data refresh
+        setLastPaymentMethodUsed((prev) => ({ ...prev, weeklyExpenses: "" }));
       }
     }, 0);
   };
@@ -2943,6 +3424,12 @@ export default function GroupersChartPage() {
         onClick={() => handleTabChange("weekly-cumulative")}
       >
         Acumulado Semanal
+      </Button>
+      <Button
+        variant={activeTab === "weekly-expenses" ? "default" : "outline"}
+        onClick={() => handleTabChange("weekly-expenses")}
+      >
+        Gastos por Semana
       </Button>
     </div>
   );
@@ -3016,9 +3503,11 @@ export default function GroupersChartPage() {
             {referenceLineData.length > 0 && periodIncomeData && (
               <div className="mt-2 p-3 bg-muted/50 rounded-lg">
                 <p className="text-sm text-muted-foreground">
-                  <strong>Líneas de referencia:</strong> Las líneas punteadas de colores muestran el {" "}
-                  porcentaje del total de ingresos del período (${periodIncomeData.total_income.toLocaleString()}) {" "}
-                  configurado para cada agrupador. Consulte la leyenda debajo del gráfico para identificar cada línea.
+                  <strong>Líneas de referencia:</strong> Las líneas punteadas de
+                  colores muestran el porcentaje del total de ingresos del
+                  período (${periodIncomeData.total_income.toLocaleString()}){" "}
+                  configurado para cada agrupador. Consulte la leyenda debajo
+                  del gráfico para identificar cada línea.
                 </p>
               </div>
             )}
@@ -3032,7 +3521,9 @@ export default function GroupersChartPage() {
                     : "Sin datos de gastos"
                 }
                 description={`No hay ${
-                  projectionMode ? "presupuestos asignados" : "gastos registrados"
+                  projectionMode
+                    ? "presupuestos asignados"
+                    : "gastos registrados"
                 } para ${
                   selectedGroupers.length === 1
                     ? "el agrupador seleccionado"
@@ -3090,7 +3581,14 @@ export default function GroupersChartPage() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis
                       type="number"
-                      domain={[0, Math.max(maxGrouperAmount, ...referenceLineData.map(r => r.reference_value), 0)]}
+                      domain={[
+                        0,
+                        Math.max(
+                          maxGrouperAmount,
+                          ...referenceLineData.map((r) => r.reference_value),
+                          0
+                        ),
+                      ]}
                       tickFormatter={(value) => `$${value.toLocaleString()}`}
                     />
                     <YAxis
@@ -3103,14 +3601,15 @@ export default function GroupersChartPage() {
 
                     {/* Colored reference lines for each grouper */}
                     {referenceLineData.map((refData, index) => {
-                      const color = referenceLineColors[index % referenceLineColors.length];
-                      
+                      const color =
+                        referenceLineColors[index % referenceLineColors.length];
+
                       return (
                         <ReferenceLine
                           key={`ref-${refData.grouper_id}`}
                           x={refData.reference_value}
                           stroke={color}
-                          strokeDasharray="5 5" 
+                          strokeDasharray="5 5"
                           strokeWidth={2}
                           label={{
                             value: `${refData.percentage}%`,
@@ -3176,12 +3675,16 @@ export default function GroupersChartPage() {
               </h4>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {referenceLineData.map((refData, index) => {
-                  const color = referenceLineColors[index % referenceLineColors.length];
-                  
+                  const color =
+                    referenceLineColors[index % referenceLineColors.length];
+
                   return (
-                    <div key={`legend-${refData.grouper_id}`} className="flex items-center space-x-2">
+                    <div
+                      key={`legend-${refData.grouper_id}`}
+                      className="flex items-center space-x-2"
+                    >
                       <div className="flex items-center space-x-1">
-                        <div 
+                        <div
                           className="w-4 h-0.5 border-dashed border-t-2"
                           style={{ borderColor: color }}
                         ></div>
@@ -3321,156 +3824,166 @@ export default function GroupersChartPage() {
               ) : (
                 <div className="w-full mt-4">
                   {/* Add scrolling container for large datasets */}
-                  <div 
-                    className="overflow-y-auto" 
-                    style={{ 
-                      maxHeight: categoryData.length > 15 ? '600px' : 'auto',
-                      height: categoryData.length <= 15 ? `${Math.max(400, categoryData.length * 35 + 60)}px` : '600px'
+                  <div
+                    className="overflow-y-auto"
+                    style={{
+                      maxHeight: categoryData.length > 15 ? "600px" : "auto",
+                      height:
+                        categoryData.length <= 15
+                          ? `${Math.max(400, categoryData.length * 35 + 60)}px`
+                          : "600px",
                     }}
                   >
-                    <ResponsiveContainer 
-                      width="100%" 
-                      height={categoryData.length <= 15 ? '100%' : Math.max(600, categoryData.length * 35 + 60)}
+                    <ResponsiveContainer
+                      width="100%"
+                      height={
+                        categoryData.length <= 15
+                          ? "100%"
+                          : Math.max(600, categoryData.length * 35 + 60)
+                      }
                     >
-                    <BarChart
-                      layout="vertical"
-                      data={categoryData.map((item) => ({
-                        name: item.category_name,
-                        amount: item.total_amount,
-                        budget_amount: showBudgets
-                          ? item.budget_amount || 0
-                          : undefined,
-                        ...item,
-                      }))}
-                      margin={{ top: 10, right: 120, left: 120, bottom: 10 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis
-                        type="number"
-                        domain={[0, maxCategoryAmount]}
-                        tickFormatter={formatCurrency}
-                      />
-                      <YAxis
-                        dataKey="name"
-                        type="category"
-                        width={150}
-                        tick={{
-                          fontSize: 12,
-                        }}
-                        interval={0}
-                      />
-                      <Tooltip content={<CustomCurrentViewTooltip />} />
+                      <BarChart
+                        layout="vertical"
+                        data={categoryData.map((item) => ({
+                          name: item.category_name,
+                          amount: item.total_amount,
+                          budget_amount: showBudgets
+                            ? item.budget_amount || 0
+                            : undefined,
+                          ...item,
+                        }))}
+                        margin={{ top: 10, right: 120, left: 120, bottom: 10 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" />
+                        <XAxis
+                          type="number"
+                          domain={[0, maxCategoryAmount]}
+                          tickFormatter={formatCurrency}
+                        />
+                        <YAxis
+                          dataKey="name"
+                          type="category"
+                          width={150}
+                          tick={{
+                            fontSize: 12,
+                          }}
+                          interval={0}
+                        />
+                        <Tooltip content={<CustomCurrentViewTooltip />} />
 
-                      {/* Budget bars for categories - shown first so they appear behind expense bars */}
-                      {showBudgets && (
+                        {/* Budget bars for categories - shown first so they appear behind expense bars */}
+                        {showBudgets && (
+                          <Bar
+                            dataKey="budget_amount"
+                            name="Presupuesto"
+                            opacity={0.5}
+                          >
+                            {categoryData.map((entry, index) => {
+                              // Create a more distinct budget color scheme
+                              const baseColor =
+                                chartColors[index % chartColors.length];
+
+                              // Convert hex to RGB and create a lighter, more muted version
+                              const hexToRgb = (hex: string) => {
+                                const result =
+                                  /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(
+                                    hex
+                                  );
+                                return result
+                                  ? {
+                                      r: parseInt(result[1], 16),
+                                      g: parseInt(result[2], 16),
+                                      b: parseInt(result[3], 16),
+                                    }
+                                  : null;
+                              };
+
+                              const rgb = hexToRgb(baseColor);
+                              const budgetColor = rgb
+                                ? `rgba(${Math.min(
+                                    255,
+                                    rgb.r + 40
+                                  )}, ${Math.min(255, rgb.g + 40)}, ${Math.min(
+                                    255,
+                                    rgb.b + 40
+                                  )}, 0.6)`
+                                : `${baseColor}60`;
+
+                              return (
+                                <Cell
+                                  key={`budget-cell-${index}`}
+                                  fill={budgetColor}
+                                  stroke={baseColor}
+                                  strokeWidth={2}
+                                  strokeDasharray="8 4" // More prominent dashed pattern
+                                />
+                              );
+                            })}
+                            <LabelList
+                              dataKey="budget_amount"
+                              position="right"
+                              formatter={(value: number) =>
+                                value > 0
+                                  ? `Presup: ${formatCurrency(value)}`
+                                  : ""
+                              }
+                              style={{
+                                fontSize: "11px",
+                                fill: "#475569",
+                                fontWeight: "600",
+                                fontStyle: "italic",
+                              }}
+                            />
+                          </Bar>
+                        )}
+
+                        {/* Main data bars for categories - expenses or simulated budget data */}
                         <Bar
-                          dataKey="budget_amount"
-                          name="Presupuesto"
-                          opacity={0.5}
+                          dataKey="amount"
+                          name={projectionMode ? "Presupuesto" : "Gastos"}
+                          opacity={projectionMode ? 0.7 : 1}
                         >
                           {categoryData.map((entry, index) => {
-                            // Create a more distinct budget color scheme
                             const baseColor =
                               chartColors[index % chartColors.length];
 
-                            // Convert hex to RGB and create a lighter, more muted version
-                            const hexToRgb = (hex: string) => {
-                              const result =
-                                /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(
-                                  hex
-                                );
-                              return result
-                                ? {
-                                    r: parseInt(result[1], 16),
-                                    g: parseInt(result[2], 16),
-                                    b: parseInt(result[3], 16),
-                                  }
-                                : null;
-                            };
-
-                            const rgb = hexToRgb(baseColor);
-                            const budgetColor = rgb
-                              ? `rgba(${Math.min(255, rgb.r + 40)}, ${Math.min(
-                                  255,
-                                  rgb.g + 40
-                                )}, ${Math.min(255, rgb.b + 40)}, 0.6)`
-                              : `${baseColor}60`;
+                            // Enhanced projection styling for categories
+                            if (projectionMode) {
+                              return (
+                                <Cell
+                                  key={`main-category-cell-${index}`}
+                                  fill={`${baseColor}B3`} // 70% opacity in projection mode
+                                  stroke={baseColor}
+                                  strokeWidth={2}
+                                  strokeDasharray="5 3" // Dashed pattern for projection
+                                />
+                              );
+                            }
 
                             return (
                               <Cell
-                                key={`budget-cell-${index}`}
-                                fill={budgetColor}
-                                stroke={baseColor}
-                                strokeWidth={2}
-                                strokeDasharray="8 4" // More prominent dashed pattern
+                                key={`main-category-cell-${index}`}
+                                fill={baseColor}
                               />
                             );
                           })}
                           <LabelList
-                            dataKey="budget_amount"
+                            dataKey="amount"
                             position="right"
                             formatter={(value: number) =>
-                              value > 0
-                                ? `Presup: ${formatCurrency(value)}`
-                                : ""
+                              projectionMode
+                                ? `Presupuesto: ${formatCurrency(value)}`
+                                : `Gastos: ${formatCurrency(value)}`
                             }
                             style={{
                               fontSize: "11px",
-                              fill: "#475569",
                               fontWeight: "600",
-                              fontStyle: "italic",
+                              fontStyle: projectionMode ? "italic" : "normal",
+                              fill: projectionMode ? "#6366f1" : "#374151",
                             }}
                           />
                         </Bar>
-                      )}
-
-                      {/* Main data bars for categories - expenses or simulated budget data */}
-                      <Bar
-                        dataKey="amount"
-                        name={projectionMode ? "Presupuesto" : "Gastos"}
-                        opacity={projectionMode ? 0.7 : 1}
-                      >
-                        {categoryData.map((entry, index) => {
-                          const baseColor =
-                            chartColors[index % chartColors.length];
-
-                          // Enhanced projection styling for categories
-                          if (projectionMode) {
-                            return (
-                              <Cell
-                                key={`main-category-cell-${index}`}
-                                fill={`${baseColor}B3`} // 70% opacity in projection mode
-                                stroke={baseColor}
-                                strokeWidth={2}
-                                strokeDasharray="5 3" // Dashed pattern for projection
-                              />
-                            );
-                          }
-
-                          return (
-                            <Cell
-                              key={`main-category-cell-${index}`}
-                              fill={baseColor}
-                            />
-                          );
-                        })}
-                        <LabelList
-                          dataKey="amount"
-                          position="right"
-                          formatter={(value: number) =>
-                            projectionMode
-                              ? `Presupuesto: ${formatCurrency(value)}`
-                              : `Gastos: ${formatCurrency(value)}`
-                          }
-                          style={{
-                            fontSize: "11px",
-                            fontWeight: "600",
-                            fontStyle: projectionMode ? "italic" : "normal",
-                            fill: projectionMode ? "#6366f1" : "#374151",
-                          }}
-                        />
-                      </Bar>
-                    </BarChart>
+                      </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
@@ -3791,40 +4304,447 @@ export default function GroupersChartPage() {
               }
             />
           ) : (
-            <div className="w-full h-[500px] mt-4">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart
-                  data={transformedData}
-                  margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="week_label"
-                    angle={-45}
-                    textAnchor="end"
-                    height={100}
-                    interval={0}
-                    tick={{ fontSize: 11 }}
-                  />
-                  <YAxis tickFormatter={formatCurrency} />
-                  <Tooltip content={<CustomWeeklyTooltip />} />
-                  <Legend />
-                  {uniqueGroupers.map((grouper, index) => (
-                    <Line
-                      key={grouper.grouper_id}
-                      type="monotone"
-                      dataKey={`grouper_${grouper.grouper_id}`}
-                      stroke={chartColors[index % chartColors.length]}
-                      name={grouper.grouper_name}
-                      strokeWidth={2}
-                      dot={{ r: 4 }}
-                      activeDot={{ r: 6 }}
+            <div
+              className={`w-full h-[500px] mt-4 ${
+                transformedData.length > 8 ? "overflow-x-auto" : ""
+              }`}
+            >
+              <div
+                className={`${
+                  transformedData.length > 8 ? "min-w-[800px]" : "w-full"
+                } h-full`}
+              >
+                <ResponsiveContainer width="100%" height={500}>
+                  <BarChart
+                    data={transformedData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                    barCategoryGap={transformedData.length > 8 ? 10 : 20}
+                    barGap={4}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="week_label"
+                      angle={-45}
+                      textAnchor="end"
+                      height={100}
+                      interval={0}
+                      tick={{
+                        fontSize: transformedData.length > 12 ? 10 : 11,
+                        dy: 10,
+                      }}
                     />
-                  ))}
-                </LineChart>
-              </ResponsiveContainer>
+                    <YAxis tickFormatter={formatCurrency} />
+                    <Tooltip content={<CustomWeeklyTooltip />} />
+                    <Legend />
+                    {uniqueGroupers.map((grouper, index) => (
+                      <Bar
+                        key={grouper.grouper_id}
+                        dataKey={`grouper_${grouper.grouper_id}`}
+                        fill={chartColors[index % chartColors.length]}
+                        name={grouper.grouper_name}
+                        radius={[2, 2, 0, 0]}
+                      />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  // Render weekly expenses view
+  const renderWeeklyExpensesView = () => {
+    // Show error state if there's a weekly expenses error
+    if (weeklyExpensesError) {
+      return (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="rounded-full bg-destructive/10 p-3">
+                <AlertCircle className="h-6 w-6 text-destructive" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">
+                  Error al cargar gastos semanales
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {weeklyExpensesError}
+                </p>
+              </div>
+              <Button onClick={retryWeeklyExpenses} variant="outline" size="sm">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Intentar de nuevo
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Show empty state if no groupers are selected
+    if (selectedGroupers.length === 0) {
+      return (
+        <Card>
+          <CardContent className="p-6">
+            <EmptyState
+              title="Selecciona agrupadores"
+              description="Para ver el gráfico de gastos por semana, selecciona al menos un agrupador de la lista de filtros."
+              icon={<Filter className="h-12 w-12 text-muted-foreground/50" />}
+              action={
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // Select all groupers
+                    const allGrouperIds = allGroupers.map((g) => g.grouper_id);
+                    setSelectedGroupers(allGrouperIds);
+                  }}
+                  disabled={allGroupers.length === 0}
+                >
+                  Seleccionar todos los agrupadores
+                </Button>
+              }
+            />
+          </CardContent>
+        </Card>
+      );
+    }
+
+    const transformedData = transformWeeklyExpensesData(weeklyExpensesData);
+    const uniqueGroupers = getUniqueGroupersFromWeeklyExpenses(weeklyExpensesData);
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>
+            Gastos por Semana
+            {paymentMethod !== "all" &&
+              ` (${
+                paymentMethod === "cash"
+                  ? "Efectivo"
+                  : paymentMethod === "credit"
+                  ? "Crédito"
+                  : "Débito"
+              })`}
+            {activePeriod && ` - ${activePeriod.name}`}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {isLoadingWeeklyExpenses ? (
+            <LineChartSkeleton />
+          ) : weeklyExpensesError ? (
+            <ErrorState
+              message={weeklyExpensesError}
+              onRetry={retryWeeklyExpenses}
+            />
+          ) : transformedData.length === 0 || uniqueGroupers.length === 0 ? (
+            <EmptyState
+              title="Sin datos semanales"
+              description={`No hay gastos registrados para mostrar los gastos por semana${
+                selectedGroupers.length === 1
+                  ? " del agrupador seleccionado"
+                  : ` de los ${selectedGroupers.length} agrupadores seleccionados`
+              } en el período "${activePeriod?.name || "actual"}"${
+                paymentMethod !== "all"
+                  ? ` con el método de pago ${
+                      paymentMethod === "cash" ? "efectivo" : "crédito"
+                    }`
+                  : ""
+              }. Registra algunos gastos para ver los gastos por semana.`}
+              icon={<Calendar className="h-12 w-12 text-muted-foreground/50" />}
+              action={
+                <div className="space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Intenta cambiar los filtros o registra gastos en este
+                    período.
+                  </p>
+                  {paymentMethod !== "all" && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handlePaymentMethodChange("all")}
+                    >
+                      Ver todos los métodos de pago
+                    </Button>
+                  )}
+                </div>
+              }
+            />
+          ) : (
+            <div
+              className={`w-full h-[500px] mt-4 ${
+                transformedData.length > 8 ? "overflow-x-auto" : ""
+              }`}
+            >
+              <div
+                className={`${
+                  transformedData.length > 8 ? "min-w-[800px]" : "w-full"
+                } h-full`}
+              >
+                <ResponsiveContainer width="100%" height={500}>
+                  <BarChart
+                    data={transformedData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                    barCategoryGap={transformedData.length > 8 ? 10 : 20}
+                    barGap={4}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="week_label"
+                      angle={-45}
+                      textAnchor="end"
+                      height={100}
+                      interval={0}
+                      tick={{
+                        fontSize: transformedData.length > 12 ? 10 : 11,
+                        dy: 10,
+                      }}
+                    />
+                    <YAxis tickFormatter={formatCurrency} />
+                    <Tooltip content={<CustomWeeklyExpensesTooltip />} />
+                    <Legend />
+                    {uniqueGroupers.map((grouper, index) => (
+                      <Bar
+                        key={grouper.grouper_id}
+                        dataKey={`grouper_${grouper.grouper_id}`}
+                        fill={chartColors[index % chartColors.length]}
+                        name={grouper.grouper_name}
+                        radius={[2, 2, 0, 0]}
+                        cursor="pointer"
+                        onClick={handleWeekBarClick}
+                      >
+                        {transformedData.map((entry, entryIndex) => (
+                          <Cell 
+                            key={`cell-${grouper.grouper_id}-${entryIndex}`}
+                            fill={
+                              selectedWeek && entry.week_label === selectedWeek.week_label
+                                ? `${chartColors[index % chartColors.length]}CC` // Add transparency for selected
+                                : chartColors[index % chartColors.length]
+                            }
+                            stroke={
+                              selectedWeek && entry.week_label === selectedWeek.week_label
+                                ? "#ffffff"
+                                : "none"
+                            }
+                            strokeWidth={
+                              selectedWeek && entry.week_label === selectedWeek.week_label
+                                ? 2
+                                : 0
+                            }
+                          />
+                        ))}
+                      </Bar>
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  // Render weekly category drill-down chart
+  const renderWeeklyCategoryChart = () => {
+    if (!selectedWeek) return null;
+
+    // Show error state
+    if (weeklyCategoryError) {
+      return (
+        <Card className="mt-6">
+          <CardContent className="p-6">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="rounded-full bg-destructive/10 p-3">
+                <AlertCircle className="h-6 w-6 text-destructive" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold">
+                  Error al cargar categorías
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  {weeklyCategoryError}
+                </p>
+              </div>
+              <Button onClick={retryWeeklyCategories} variant="outline" size="sm">
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Intentar de nuevo
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Show loading state
+    if (isLoadingWeeklyCategories) {
+      return (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>
+              Gastos por Categorías - {selectedWeek.week_label}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <LineChartSkeleton />
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Show empty state
+    if (weeklyCategoryData.length === 0) {
+      return (
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle className="flex justify-between items-center">
+              Gastos por Categorías - {selectedWeek.week_label}
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={clearWeekSelection}
+              >
+                <X className="h-4 w-4 mr-1" />
+                Cerrar
+              </Button>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EmptyState
+              title="Sin gastos en esta semana"
+              description={`No hay gastos registrados en la ${selectedWeek.week_label} para las categorías de los agrupadores seleccionados${
+                paymentMethod !== "all" 
+                  ? ` con el método de pago ${
+                      paymentMethod === "cash" ? "efectivo" : 
+                      paymentMethod === "credit" ? "crédito" : "débito"
+                    }`
+                  : ""
+              }.`}
+              icon={<Calendar className="h-12 w-12 text-muted-foreground/50" />}
+              action={
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={clearWeekSelection}
+                >
+                  Volver a vista semanal
+                </Button>
+              }
+            />
+          </CardContent>
+        </Card>
+      );
+    }
+
+    // Show chart with data
+    return (
+      <Card className="mt-6">
+        <CardHeader>
+          <CardTitle className="flex justify-between items-center">
+            Gastos por Categorías - {selectedWeek.week_label}
+            {paymentMethod !== "all" &&
+              ` (${
+                paymentMethod === "cash"
+                  ? "Efectivo"
+                  : paymentMethod === "credit"
+                  ? "Crédito"
+                  : "Débito"
+              })`}
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={clearWeekSelection}
+            >
+              <X className="h-4 w-4 mr-1" />
+              Cerrar
+            </Button>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="w-full h-[500px] mt-4">
+            <ResponsiveContainer width="100%" height={500}>
+              <BarChart
+                data={weeklyCategoryData}
+                margin={{ top: 20, right: 30, left: 60, bottom: 150 }}
+                barCategoryGap={8}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="category_name"
+                  angle={-45}
+                  textAnchor="end"
+                  height={130}
+                  interval={0}
+                  tick={{ fontSize: 11, dy: 10 }}
+                />
+                <YAxis 
+                  tickFormatter={formatCurrency}
+                  tick={{ fontSize: 11 }}
+                />
+                <Tooltip 
+                  formatter={(value: number, name: string, props: any) => [
+                    formatCurrency(value), 
+                    `Gasto (${props.payload?.percentage || 0}%)`
+                  ]}
+                  labelFormatter={(label) => `Categoría: ${label}`}
+                  contentStyle={{
+                    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+                    border: '1px solid #374151',
+                    borderRadius: '8px',
+                    color: '#ffffff',
+                    fontSize: '14px',
+                    fontWeight: '500'
+                  }}
+                  labelStyle={{
+                    color: '#ffffff',
+                    fontWeight: '600'
+                  }}
+                />
+                <Bar 
+                  dataKey="total_amount" 
+                  fill="#8884d8"
+                  radius={[4, 4, 0, 0]}
+                  name="Gasto"
+                >
+                  {weeklyCategoryData.map((entry, index) => (
+                    <Cell 
+                      key={`category-cell-${index}`}
+                      fill={chartColors[index % chartColors.length]}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Show total and percentage summary */}
+          <div className="mt-4 pt-4 border-t">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+              <div>
+                <span className="text-muted-foreground">Total de categorías:</span>
+                <span className="ml-2 font-medium">{weeklyCategoryData.length}</span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Gasto total:</span>
+                <span className="ml-2 font-medium">
+                  {formatCurrency(
+                    weeklyCategoryData.reduce((sum, category) => sum + category.total_amount, 0)
+                  )}
+                </span>
+              </div>
+              <div>
+                <span className="text-muted-foreground">Categoría principal:</span>
+                <span className="ml-2 font-medium">
+                  {weeklyCategoryData[0]?.category_name || "N/A"}
+                  {weeklyCategoryData[0] && 
+                    ` (${weeklyCategoryData[0].percentage.toFixed(1)}%)`
+                  }
+                </span>
+              </div>
+            </div>
+          </div>
         </CardContent>
       </Card>
     );
@@ -3952,12 +4872,14 @@ export default function GroupersChartPage() {
         )}
 
         {/* Information about projection mode and payment method interaction */}
-        {projectionMode && paymentMethod !== "all" && activeTab === "current" && (
-          <div className="text-sm text-blue-600 bg-blue-50 dark:bg-blue-950/20 px-3 py-1 rounded-md">
-            ℹ️ En modo simulación, se muestran todos los presupuestos
-            (independiente del método de pago seleccionado)
-          </div>
-        )}
+        {projectionMode &&
+          paymentMethod !== "all" &&
+          activeTab === "current" && (
+            <div className="text-sm text-blue-600 bg-blue-50 dark:bg-blue-950/20 px-3 py-1 rounded-md">
+              ℹ️ En modo simulación, se muestran todos los presupuestos
+              (independiente del método de pago seleccionado)
+            </div>
+          )}
       </div>
 
       {/* Tab Navigation */}
@@ -3981,6 +4903,12 @@ export default function GroupersChartPage() {
         ))}
       {activeTab === "period-comparison" && renderPeriodComparisonView()}
       {activeTab === "weekly-cumulative" && renderWeeklyCumulativeView()}
+      {activeTab === "weekly-expenses" && (
+        <>
+          {renderWeeklyExpensesView()}
+          {renderWeeklyCategoryChart()}
+        </>
+      )}
 
       {/* Performance Monitor temporarily disabled */}
     </div>

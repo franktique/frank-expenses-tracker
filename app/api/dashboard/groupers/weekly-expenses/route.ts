@@ -235,18 +235,10 @@ export async function GET(request: Request) {
         week_end,
         grouper_id,
         grouper_name,
-        SUM(weekly_amount) OVER (
-          PARTITION BY grouper_id
-          ORDER BY week_start
-          ROWS UNBOUNDED PRECEDING
-        ) as cumulative_amount${
+        weekly_amount${
           includeBudgets
             ? `,
-        SUM(weekly_budget_amount) OVER (
-          PARTITION BY grouper_id
-          ORDER BY week_start
-          ROWS UNBOUNDED PRECEDING
-        ) as cumulative_budget_amount`
+        weekly_budget_amount`
             : ""
         }
       FROM weekly_expenses
@@ -289,13 +281,13 @@ export async function GET(request: Request) {
       const grouperData: any = {
         grouper_id: row.grouper_id,
         grouper_name: row.grouper_name,
-        cumulative_amount: parseFloat(row.cumulative_amount) || 0,
+        weekly_amount: parseFloat(row.weekly_amount) || 0,
       };
 
       // Add budget data if requested
       if (includeBudgets) {
-        grouperData.cumulative_budget_amount =
-          parseFloat(row.cumulative_budget_amount) || 0;
+        grouperData.weekly_budget_amount =
+          parseFloat(row.weekly_budget_amount) || 0;
       }
 
       weekMap.get(weekKey).grouper_data.push(grouperData);
@@ -305,7 +297,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(structuredData);
   } catch (error) {
-    console.error("Error in weekly cumulative API:", error);
+    console.error("Error in weekly expenses API:", error);
 
     // Provide more specific error messages
     let errorMessage = "Error interno del servidor";

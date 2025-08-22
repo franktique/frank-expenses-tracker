@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useBudget } from "@/context/budget-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -20,6 +21,8 @@ import {
   ResponsiveContainer,
   LabelList,
 } from "recharts";
+import { CategoryExclusionFilter } from "@/components/category-exclusion-filter";
+import { Settings } from "lucide-react";
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash: "Efectivo",
@@ -39,6 +42,8 @@ function getMethodFilter(option: string) {
 export default function OverspendDashboard() {
   const { expenses, budgets, categories, activePeriod } = useBudget();
   const [methodFilter, setMethodFilter] = useState<string>("all");
+  const [excludedCategories, setExcludedCategories] = useState<string[]>([]);
+  const [showCategoryFilter, setShowCategoryFilter] = useState(false);
 
   // Filter by active period & payment method
   const filteredExpenses = useMemo(() => {
@@ -77,57 +82,61 @@ export default function OverspendDashboard() {
   const overspendRows = useMemo(() => {
     const rows = [];
     const methods = getMethodFilter(methodFilter);
-    // Use all categories with either planned or spent > 0
-    categories.forEach((cat) => {
-      let planned = 0;
-      let spent = 0;
-      methods.forEach((method) => {
-        planned += plannedByCatAndMethod[cat.id]?.[method] || 0;
-        spent += spentByCatAndMethod[cat.id]?.[method] || 0;
-      });
-      const overspent = spent - planned;
-      if (overspent > 0) {
-        rows.push({
-          category: cat.name,
-          planned,
-          overspent,
+    // Use all categories with either planned or spent > 0, excluding the selected ones
+    categories
+      .filter((cat) => !excludedCategories.includes(cat.id))
+      .forEach((cat) => {
+        let planned = 0;
+        let spent = 0;
+        methods.forEach((method) => {
+          planned += plannedByCatAndMethod[cat.id]?.[method] || 0;
+          spent += spentByCatAndMethod[cat.id]?.[method] || 0;
         });
-      }
-    });
+        const overspent = spent - planned;
+        if (overspent > 0) {
+          rows.push({
+            category: cat.name,
+            planned,
+            overspent,
+          });
+        }
+      });
     // Order from most to least overspent
     return rows.sort((a, b) => b.overspent - a.overspent);
-  }, [plannedByCatAndMethod, spentByCatAndMethod, categories, methodFilter]);
+  }, [plannedByCatAndMethod, spentByCatAndMethod, categories, methodFilter, excludedCategories]);
 
   // KPI values
-  // Calculate overspend per category for each method, regardless of filter
+  // Calculate overspend per category for each method, excluding selected categories
   const overspendByCategory = useMemo(() => {
     if (!activePeriod) return {};
     const map: Record<string, { cash: number; credit: number }> = {};
-    categories.forEach((cat) => {
-      // Cash/debit
-      let plannedCash = 0,
-        spentCash = 0;
-      let plannedCredit = 0,
-        spentCredit = 0;
-      if (plannedByCatAndMethod[cat.id]) {
-        plannedCash =
-          Number(plannedByCatAndMethod[cat.id]["cash"] || 0) +
-          Number(plannedByCatAndMethod[cat.id]["debit"] || 0);
-        plannedCredit = Number(plannedByCatAndMethod[cat.id]["credit"] || 0);
-      }
-      if (spentByCatAndMethod[cat.id]) {
-        spentCash =
-          Number(spentByCatAndMethod[cat.id]["cash"] || 0) +
-          Number(spentByCatAndMethod[cat.id]["debit"] || 0);
-        spentCredit = Number(spentByCatAndMethod[cat.id]["credit"] || 0);
-      }
-      map[cat.id] = {
-        cash: Math.max(0, spentCash - plannedCash),
-        credit: Math.max(0, spentCredit - plannedCredit),
-      };
-    });
+    categories
+      .filter((cat) => !excludedCategories.includes(cat.id))
+      .forEach((cat) => {
+        // Cash/debit
+        let plannedCash = 0,
+          spentCash = 0;
+        let plannedCredit = 0,
+          spentCredit = 0;
+        if (plannedByCatAndMethod[cat.id]) {
+          plannedCash =
+            Number(plannedByCatAndMethod[cat.id]["cash"] || 0) +
+            Number(plannedByCatAndMethod[cat.id]["debit"] || 0);
+          plannedCredit = Number(plannedByCatAndMethod[cat.id]["credit"] || 0);
+        }
+        if (spentByCatAndMethod[cat.id]) {
+          spentCash =
+            Number(spentByCatAndMethod[cat.id]["cash"] || 0) +
+            Number(spentByCatAndMethod[cat.id]["debit"] || 0);
+          spentCredit = Number(spentByCatAndMethod[cat.id]["credit"] || 0);
+        }
+        map[cat.id] = {
+          cash: Math.max(0, spentCash - plannedCash),
+          credit: Math.max(0, spentCredit - plannedCredit),
+        };
+      });
     return map;
-  }, [categories, plannedByCatAndMethod, spentByCatAndMethod, activePeriod]);
+  }, [categories, plannedByCatAndMethod, spentByCatAndMethod, activePeriod, excludedCategories]);
 
   // KPIs: sum only the overspent values visible in the chart
   // KPIs: always show total overspend for each method for the open period, regardless of filter
@@ -182,7 +191,16 @@ export default function OverspendDashboard() {
             </CardContent>
           </Card>
         )}
-        <div className="flex items-end">
+        <div className="flex items-end gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowCategoryFilter(!showCategoryFilter)}
+            className={showCategoryFilter ? "bg-gray-100" : ""}
+          >
+            <Settings className="h-4 w-4 mr-2" />
+            Filtros
+          </Button>
           <Select value={methodFilter} onValueChange={setMethodFilter}>
             <SelectTrigger className="w-40">
               <SelectValue />
@@ -195,6 +213,15 @@ export default function OverspendDashboard() {
           </Select>
         </div>
       </div>
+      {showCategoryFilter && (
+        <div className="flex justify-start">
+          <CategoryExclusionFilter
+            categories={categories.map((cat) => ({ id: cat.id, name: cat.name }))}
+            excludedCategories={excludedCategories}
+            onExclusionChange={setExcludedCategories}
+          />
+        </div>
+      )}
       <Card>
         <CardHeader>
           <CardTitle>Overspend por Categoría</CardTitle>

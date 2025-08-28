@@ -4,7 +4,7 @@ import { useState } from "react"
 import { FileSpreadsheet, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
-import { objectsToExcel, downloadExcel } from "@/lib/csv-export"
+import { objectsToExcel, downloadExcel, ExcelColumn } from "@/lib/csv-export"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { BudgetSummaryItem, calculateBudgetTotals } from "@/types/dashboard"
@@ -68,48 +68,48 @@ export function ExportBudgetSummaryButton({
         } as BudgetSummaryItem & { balance: number });
       }
 
-      // Define columns for Excel export
-      const columns = [
-        { header: "Categoría", key: "category_name" },
+      // Define columns for Excel export with currency formatting
+      const columns: ExcelColumn[] = [
+        { header: "Categoría", key: "category_name", columnType: "text" },
         { 
           header: "Presupuesto Crédito", 
           key: "credit_budget", 
-          formatter: (value: number) => formatCurrency(value) 
+          columnType: "currency"
         },
         { 
           header: "Presupuesto Efectivo", 
           key: "cash_debit_budget", 
-          formatter: (value: number) => formatCurrency(value) 
+          columnType: "currency"
         },
         { 
           header: "Gasto Total", 
           key: "total_amount", 
-          formatter: (value: number) => formatCurrency(value) 
+          columnType: "currency"
         },
         { 
           header: "Tarjeta Crédito", 
           key: "credit_amount", 
-          formatter: (value: number) => formatCurrency(value) 
+          columnType: "currency"
         },
         { 
           header: "Tarjeta Débito", 
           key: "debit_amount", 
-          formatter: (value: number) => formatCurrency(value) 
+          columnType: "currency"
         },
         { 
           header: "Efectivo", 
           key: "cash_amount", 
-          formatter: (value: number) => formatCurrency(value) 
+          columnType: "currency"
         },
         { 
           header: "Restante", 
           key: "remaining", 
-          formatter: (value: number) => formatCurrency(value) 
+          columnType: "currency"
         },
         { 
           header: "Saldo", 
           key: "balance", 
-          formatter: (value: number) => formatCurrency(value) 
+          columnType: "currency"
         }
       ];
 

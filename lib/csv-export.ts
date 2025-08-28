@@ -60,6 +60,16 @@ export function downloadCSV(csvString: string, filename: string): void {
 }
 
 /**
+ * Column configuration for Excel export
+ */
+export interface ExcelColumn {
+  header: string;
+  key: string;
+  columnType?: 'currency' | 'number' | 'text';
+  formatter?: (value: any) => string; // Only used for 'text' type
+}
+
+/**
  * Convert an array of objects to Excel workbook
  * @param data Array of objects to convert
  * @param columns Array of columns to include in the Excel
@@ -68,7 +78,7 @@ export function downloadCSV(csvString: string, filename: string): void {
  */
 export function objectsToExcel(
   data: any[],
-  columns: { header: string; key: string; formatter?: (value: any) => string }[],
+  columns: ExcelColumn[],
   sheetName: string = 'Data'
 ): XLSX.WorkBook {
   // Transform data to match column structure
@@ -76,8 +86,13 @@ export function objectsToExcel(
     const transformed: any = {};
     columns.forEach(column => {
       const value = item[column.key];
-      const formattedValue = column.formatter ? column.formatter(value) : value;
-      transformed[column.header] = formattedValue;
+      // Only apply formatter for text columns, keep numeric values as numbers
+      if (column.columnType === 'text' && column.formatter) {
+        transformed[column.header] = column.formatter(value);
+      } else {
+        // For currency and number types, keep the raw numeric value
+        transformed[column.header] = value;
+      }
     });
     return transformed;
   });
@@ -86,13 +101,41 @@ export function objectsToExcel(
   const workbook = XLSX.utils.book_new();
   const worksheet = XLSX.utils.json_to_sheet(transformedData);
 
+  // Apply formatting to specific column types
+  const range = XLSX.utils.decode_range(worksheet['!ref']!);
+  columns.forEach((column, colIndex) => {
+    if (column.columnType === 'currency') {
+      // Apply currency formatting to all cells in this column (excluding header)
+      for (let row = range.s.r + 1; row <= range.e.r; row++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIndex });
+        if (worksheet[cellAddress]) {
+          // Apply Colombian peso currency format with 2 decimals
+          worksheet[cellAddress].z = '"$"#,##0.00';
+        }
+      }
+    } else if (column.columnType === 'number') {
+      // Apply number formatting to all cells in this column (excluding header)
+      for (let row = range.s.r + 1; row <= range.e.r; row++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIndex });
+        if (worksheet[cellAddress]) {
+          worksheet[cellAddress].z = '#,##0.00';
+        }
+      }
+    }
+  });
+
   // Auto-size columns based on content
-  const columnWidths = columns.map(col => {
-    const maxLength = Math.max(
-      col.header.length,
-      ...transformedData.map(row => String(row[col.header] || '').length)
-    );
-    return { wch: Math.min(Math.max(maxLength + 2, 10), 50) };
+  const columnWidths = columns.map((col, index) => {
+    if (col.columnType === 'currency') {
+      // Currency columns need more space for $ symbol and formatting
+      return { wch: Math.max(col.header.length + 4, 15) };
+    } else {
+      const maxLength = Math.max(
+        col.header.length,
+        ...transformedData.map(row => String(row[col.header] || '').length)
+      );
+      return { wch: Math.min(Math.max(maxLength + 2, 10), 50) };
+    }
   });
   worksheet['!cols'] = columnWidths;
 
@@ -144,7 +187,7 @@ export function downloadExcel(workbook: XLSX.WorkBook, filename: string): void {
  */
 export function createMultiSheetExcel(
   dataBySheet: { [sheetName: string]: any[] },
-  columns: { header: string; key: string; formatter?: (value: any) => string }[]
+  columns: ExcelColumn[]
 ): XLSX.WorkBook {
   const workbook = XLSX.utils.book_new();
   
@@ -157,8 +200,13 @@ export function createMultiSheetExcel(
       const transformed: any = {};
       columns.forEach(column => {
         const value = item[column.key];
-        const formattedValue = column.formatter ? column.formatter(value) : value;
-        transformed[column.header] = formattedValue;
+        // Only apply formatter for text columns, keep numeric values as numbers
+        if (column.columnType === 'text' && column.formatter) {
+          transformed[column.header] = column.formatter(value);
+        } else {
+          // For currency and number types, keep the raw numeric value
+          transformed[column.header] = value;
+        }
       });
       return transformed;
     });
@@ -166,13 +214,41 @@ export function createMultiSheetExcel(
     // Create worksheet
     const worksheet = XLSX.utils.json_to_sheet(transformedData);
 
+    // Apply formatting to specific column types
+    const range = XLSX.utils.decode_range(worksheet['!ref']!);
+    columns.forEach((column, colIndex) => {
+      if (column.columnType === 'currency') {
+        // Apply currency formatting to all cells in this column (excluding header)
+        for (let row = range.s.r + 1; row <= range.e.r; row++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIndex });
+          if (worksheet[cellAddress]) {
+            // Apply Colombian peso currency format with 2 decimals
+            worksheet[cellAddress].z = '"$"#,##0.00';
+          }
+        }
+      } else if (column.columnType === 'number') {
+        // Apply number formatting to all cells in this column (excluding header)
+        for (let row = range.s.r + 1; row <= range.e.r; row++) {
+          const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIndex });
+          if (worksheet[cellAddress]) {
+            worksheet[cellAddress].z = '#,##0.00';
+          }
+        }
+      }
+    });
+
     // Auto-size columns based on content
-    const columnWidths = columns.map(col => {
-      const maxLength = Math.max(
-        col.header.length,
-        ...transformedData.map(row => String(row[col.header] || '').length)
-      );
-      return { wch: Math.min(Math.max(maxLength + 2, 10), 50) };
+    const columnWidths = columns.map((col, index) => {
+      if (col.columnType === 'currency') {
+        // Currency columns need more space for $ symbol and formatting
+        return { wch: Math.max(col.header.length + 4, 15) };
+      } else {
+        const maxLength = Math.max(
+          col.header.length,
+          ...transformedData.map(row => String(row[col.header] || '').length)
+        );
+        return { wch: Math.min(Math.max(maxLength + 2, 10), 50) };
+      }
     });
     worksheet['!cols'] = columnWidths;
 

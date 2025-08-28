@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, CreditCard } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
-interface PaymentMethodFilterProps {
+interface SimulationPaymentMethodFilterProps {
   title: string;
   selectedMethods: string[];
   onMethodsChange: (methods: string[]) => void;
@@ -19,12 +19,11 @@ interface PaymentMethodFilterProps {
 }
 
 const PAYMENT_METHODS = [
-  { value: "cash", label: "Efectivo", icon: "💵" },
-  { value: "credit", label: "Crédito", icon: "💳" },
-  { value: "debit", label: "Débito", icon: "💰" },
+  { value: "efectivo", label: "Efectivo", icon: "💵" },
+  { value: "credito", label: "Crédito", icon: "💳" },
 ];
 
-export function PaymentMethodFilter({
+export function SimulationPaymentMethodFilter({
   title,
   selectedMethods,
   onMethodsChange,
@@ -32,8 +31,9 @@ export function PaymentMethodFilter({
   simulationContext = false,
   showBudgetInfo = false,
   persistSelection = true,
-}: PaymentMethodFilterProps) {
-  const [isCollapsed, setIsCollapsed] = useState(true);
+}: SimulationPaymentMethodFilterProps) {
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   const handleMethodChange = (method: string, checked: boolean) => {
     let newMethods: string[];
 
@@ -65,7 +65,19 @@ export function PaymentMethodFilter({
   };
 
   const handleSelectAll = () => {
-    onMethodsChange(PAYMENT_METHODS.map((m) => m.value));
+    const allMethods = PAYMENT_METHODS.map((m) => m.value);
+    onMethodsChange(allMethods);
+
+    if (persistSelection && simulationContext) {
+      try {
+        sessionStorage.setItem(
+          "simulation-paymentMethods",
+          JSON.stringify(allMethods)
+        );
+      } catch (error) {
+        console.warn("Failed to persist payment method selection:", error);
+      }
+    }
   };
 
   const handleDeselectAll = () => {
@@ -91,6 +103,17 @@ export function PaymentMethodFilter({
   const allSelected = selectedMethods.length === PAYMENT_METHODS.length;
   const noneSelected = selectedMethods.length === 0;
 
+  // Get selection summary for display
+  const getSelectionSummary = () => {
+    if (noneSelected) {
+      return simulationContext ? "Todos los métodos" : "Ninguno";
+    }
+    if (allSelected) {
+      return "Todos";
+    }
+    return `${selectedMethods.length}/${PAYMENT_METHODS.length}`;
+  };
+
   return (
     <Card
       className={cn(
@@ -99,16 +122,32 @@ export function PaymentMethodFilter({
       )}
     >
       <CardHeader
-        className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors"
+        className={cn(
+          "pb-3 cursor-pointer hover:bg-muted/50 transition-colors",
+          simulationContext && "hover:bg-blue-50"
+        )}
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
         <CardTitle className="text-sm font-medium flex items-center justify-between">
-          <span>{title}</span>
           <div className="flex items-center gap-2">
-            <span className="text-xs text-muted-foreground">
-              {selectedMethods.length === PAYMENT_METHODS.length
-                ? "Todos"
-                : `${selectedMethods.length}/${PAYMENT_METHODS.length}`}
+            <CreditCard
+              className={cn("h-4 w-4", simulationContext && "text-blue-600")}
+            />
+            <span>{title}</span>
+            {simulationContext && (
+              <span className="text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
+                Simulación
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "text-xs text-muted-foreground",
+                simulationContext && "text-blue-600"
+              )}
+            >
+              {getSelectionSummary()}
             </span>
             {isCollapsed ? (
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -120,6 +159,18 @@ export function PaymentMethodFilter({
       </CardHeader>
       {!isCollapsed && (
         <CardContent className="space-y-3 pt-0">
+          {/* Simulation context info */}
+          {simulationContext && showBudgetInfo && (
+            <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded border border-blue-200">
+              <p className="font-medium">Filtro de simulación:</p>
+              <p>
+                Selecciona los métodos de pago para incluir en el análisis de
+                simulación. Si no seleccionas ninguno, se incluirán todos los
+                métodos.
+              </p>
+            </div>
+          )}
+
           {/* Quick Actions */}
           <div className="flex gap-2">
             <Button
@@ -127,7 +178,10 @@ export function PaymentMethodFilter({
               size="sm"
               onClick={handleSelectAll}
               disabled={disabled || allSelected}
-              className="text-xs"
+              className={cn(
+                "text-xs",
+                simulationContext && "border-blue-200 hover:bg-blue-50"
+              )}
             >
               Todos
             </Button>
@@ -135,10 +189,17 @@ export function PaymentMethodFilter({
               variant="outline"
               size="sm"
               onClick={handleDeselectAll}
-              disabled={disabled || selectedMethods.length <= 1}
-              className="text-xs"
+              disabled={
+                disabled ||
+                (noneSelected && simulationContext) ||
+                (!simulationContext && selectedMethods.length <= 1)
+              }
+              className={cn(
+                "text-xs",
+                simulationContext && "border-blue-200 hover:bg-blue-50"
+              )}
             >
-              Limpiar
+              {simulationContext ? "Ninguno" : "Limpiar"}
             </Button>
           </div>
 
@@ -146,7 +207,8 @@ export function PaymentMethodFilter({
           <div className="space-y-2">
             {PAYMENT_METHODS.map((method) => {
               const isChecked = selectedMethods.includes(method.value);
-              const isLastSelected = selectedMethods.length === 1 && isChecked;
+              const isLastSelected =
+                !simulationContext && selectedMethods.length === 1 && isChecked;
 
               return (
                 <div key={method.value} className="flex items-center space-x-2">
@@ -157,20 +219,38 @@ export function PaymentMethodFilter({
                       handleMethodChange(method.value, checked as boolean)
                     }
                     disabled={disabled || isLastSelected}
+                    className={simulationContext ? "border-blue-300" : ""}
                   />
                   <Label
                     htmlFor={`${title}-${method.value}`}
-                    className={`text-sm ${
+                    className={cn(
+                      "text-sm flex items-center gap-2",
                       disabled || isLastSelected
                         ? "text-muted-foreground"
-                        : "cursor-pointer"
-                    }`}
+                        : "cursor-pointer",
+                      simulationContext &&
+                        isChecked &&
+                        "text-blue-700 font-medium"
+                    )}
                   >
+                    <span>{method.icon}</span>
                     {method.label}
                   </Label>
                 </div>
               );
             })}
+          </div>
+
+          {/* Selection info */}
+          <div
+            className={cn(
+              "text-xs text-muted-foreground pt-2 border-t",
+              simulationContext && "text-blue-600 border-blue-200"
+            )}
+          >
+            {noneSelected && simulationContext
+              ? "Se incluirán todos los métodos de pago en el análisis"
+              : `${selectedMethods.length} de ${PAYMENT_METHODS.length} métodos seleccionados`}
           </div>
         </CardContent>
       )}

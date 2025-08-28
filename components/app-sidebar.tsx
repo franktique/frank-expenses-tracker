@@ -13,6 +13,7 @@ import {
   PieChart,
   TrendingUp,
   Wallet,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -36,6 +37,9 @@ export function AppSidebar() {
   const isActive = (path: string) => {
     if (path === "/estudios") {
       return pathname === "/estudios" || pathname.startsWith("/estudios/");
+    }
+    if (path === "/simular") {
+      return pathname === "/simular" || pathname.startsWith("/simular/");
     }
     return pathname === path;
   };
@@ -119,6 +123,14 @@ export function AppSidebar() {
               <Link href="/estudios">
                 <BookOpen className="h-4 w-4" />
                 <span>Estudios</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={isActive("/simular")}>
+              <Link href="/simular">
+                <Zap className="h-4 w-4" />
+                <span>Simular</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -54,6 +54,7 @@ import {
   verifyBudgetTotals,
 } from "@/types/dashboard";
 import { getCategoryNameStyle } from "@/lib/category-styling";
+import { ExportBudgetSummaryButton } from "@/components/export-budget-summary-button";
 
 // DashboardData type is now imported from @/types/dashboard
 
@@ -493,10 +494,20 @@ export function DashboardView() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Resumen de Presupuesto</CardTitle>
-              <CardDescription>
-                Gastos por categoría en el periodo actual
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Resumen de Presupuesto</CardTitle>
+                  <CardDescription>
+                    Gastos por categoría en el periodo actual
+                  </CardDescription>
+                </div>
+                <ExportBudgetSummaryButton
+                  budgetSummary={budgetSummary}
+                  totalIncome={totalIncome}
+                  fundFilter={fundFilter}
+                  periodName={dashboardData.activePeriod.name}
+                />
+              </div>
             </CardHeader>
             <CardContent>
               <Table>

@@ -25,6 +25,7 @@ import {
 import { CSVImportDialog } from "@/components/csv-import-dialog";
 import { CSVImportDialogEnhanced } from "@/components/csv-import-dialog-enhanced";
 import { ExportExpensesButton } from "@/components/export-expenses-button";
+import { ExportExpensesExcelButton } from "@/components/export-expenses-excel-button";
 import {
   Dialog,
   DialogContent,
@@ -513,6 +514,7 @@ export function ExpensesView() {
         </div>
         <div className="flex gap-2">
           <ExportExpensesButton />
+          <ExportExpensesExcelButton />
           <Button variant="outline" onClick={() => setIsImportOpen(true)}>
             <FileUp className="mr-2 h-4 w-4" />
             Importar CSV

@@ -203,7 +203,7 @@ export const UpdateIncomeSchema = z.object({
   fund_id: z.string().uuid().optional(),
 });
 
-// Enhanced Expense interface with fund support
+// Enhanced Expense interface with fund and credit card support
 export interface Expense {
   id: string;
   category_id: string;
@@ -217,6 +217,12 @@ export interface Expense {
   source_fund_name?: string; // Populated in joins
   destination_fund_id?: string;
   destination_fund_name?: string; // Populated in joins
+  credit_card_id?: string; // Optional credit card association
+  credit_card_info?: {
+    bank_name: string;
+    franchise: string;
+    last_four_digits: string;
+  }; // Populated in joins when credit card is associated
 }
 
 export const ExpenseSchema = z.object({
@@ -235,6 +241,14 @@ export const ExpenseSchema = z.object({
   source_fund_name: z.string().optional(),
   destination_fund_id: z.string().uuid().optional(),
   destination_fund_name: z.string().optional(),
+  credit_card_id: z.string().uuid().optional(), // Optional credit card field
+  credit_card_info: z
+    .object({
+      bank_name: z.string(),
+      franchise: z.string(),
+      last_four_digits: z.string(),
+    })
+    .optional(), // Populated in joins when credit card is associated
 });
 
 // Expense creation schema
@@ -251,6 +265,7 @@ export const CreateExpenseSchema = z.object({
   amount: z.number().positive("El monto debe ser positivo"),
   source_fund_id: z.string().uuid(), // Required source fund field
   destination_fund_id: z.string().uuid().optional(),
+  credit_card_id: z.string().uuid().nullable().optional(), // Optional credit card field
 });
 
 // Expense update schema
@@ -270,6 +285,7 @@ export const UpdateExpenseSchema = z.object({
   amount: z.number().positive("El monto debe ser positivo").optional(),
   source_fund_id: z.string().uuid().optional(), // Optional source fund field for updates
   destination_fund_id: z.string().uuid().optional(),
+  credit_card_id: z.string().uuid().nullable().optional(), // Optional credit card field for updates
 });
 
 // Existing interfaces that don't need fund support but are included for completeness

@@ -1,7 +1,7 @@
 /**
  * Utility functions for CSV and Excel export
  */
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 
 /**
  * Convert an array of objects to CSV string
@@ -11,24 +11,32 @@ import * as XLSX from 'xlsx';
  */
 export function objectsToCSV(
   data: any[],
-  columns: { header: string; key: string; formatter?: (value: any) => string }[]
+  columns: {
+    header: string;
+    key: string;
+    formatter?: (value: any, item?: any) => string;
+  }[]
 ): string {
   // Create headers row
-  const headers = columns.map(col => `"${col.header}"`).join(',');
-  
+  const headers = columns.map((col) => `"${col.header}"`).join(",");
+
   // Create data rows
-  const rows = data.map(item => {
-    return columns.map(column => {
-      const value = item[column.key];
-      const formattedValue = column.formatter ? column.formatter(value) : value;
-      
-      // Escape quotes and wrap with quotes
-      return `"${String(formattedValue).replace(/"/g, '""')}"`;
-    }).join(',');
+  const rows = data.map((item) => {
+    return columns
+      .map((column) => {
+        const value = item[column.key];
+        const formattedValue = column.formatter
+          ? column.formatter(value, item)
+          : value;
+
+        // Escape quotes and wrap with quotes
+        return `"${String(formattedValue).replace(/"/g, '""')}"`;
+      })
+      .join(",");
   });
-  
+
   // Combine headers and rows
-  return [headers, ...rows].join('\n');
+  return [headers, ...rows].join("\n");
 }
 
 /**
@@ -38,23 +46,23 @@ export function objectsToCSV(
  */
 export function downloadCSV(csvString: string, filename: string): void {
   // Create a blob with the CSV data
-  const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
-  
+  const blob = new Blob([csvString], { type: "text/csv;charset=utf-8;" });
+
   // Create a URL for the blob
   const url = URL.createObjectURL(blob);
-  
+
   // Create a link element
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', filename);
-  link.style.visibility = 'hidden';
-  
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  link.style.visibility = "hidden";
+
   // Add the link to the DOM
   document.body.appendChild(link);
-  
+
   // Click the link to start the download
   link.click();
-  
+
   // Clean up
   document.body.removeChild(link);
 }
@@ -65,8 +73,8 @@ export function downloadCSV(csvString: string, filename: string): void {
 export interface ExcelColumn {
   header: string;
   key: string;
-  columnType?: 'currency' | 'number' | 'text';
-  formatter?: (value: any) => string; // Only used for 'text' type
+  columnType?: "currency" | "number" | "text";
+  formatter?: (value: any, item?: any) => string; // Only used for 'text' type
 }
 
 /**
@@ -79,16 +87,16 @@ export interface ExcelColumn {
 export function objectsToExcel(
   data: any[],
   columns: ExcelColumn[],
-  sheetName: string = 'Data'
+  sheetName: string = "Data"
 ): XLSX.WorkBook {
   // Transform data to match column structure
-  const transformedData = data.map(item => {
+  const transformedData = data.map((item) => {
     const transformed: any = {};
-    columns.forEach(column => {
+    columns.forEach((column) => {
       const value = item[column.key];
       // Only apply formatter for text columns, keep numeric values as numbers
-      if (column.columnType === 'text' && column.formatter) {
-        transformed[column.header] = column.formatter(value);
+      if (column.columnType === "text" && column.formatter) {
+        transformed[column.header] = column.formatter(value, item);
       } else {
         // For currency and number types, keep the raw numeric value
         transformed[column.header] = value;
@@ -102,9 +110,9 @@ export function objectsToExcel(
   const worksheet = XLSX.utils.json_to_sheet(transformedData);
 
   // Apply formatting to specific column types
-  const range = XLSX.utils.decode_range(worksheet['!ref']!);
+  const range = XLSX.utils.decode_range(worksheet["!ref"]!);
   columns.forEach((column, colIndex) => {
-    if (column.columnType === 'currency') {
+    if (column.columnType === "currency") {
       // Apply currency formatting to all cells in this column (excluding header)
       for (let row = range.s.r + 1; row <= range.e.r; row++) {
         const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIndex });
@@ -113,12 +121,12 @@ export function objectsToExcel(
           worksheet[cellAddress].z = '"$"#,##0.00';
         }
       }
-    } else if (column.columnType === 'number') {
+    } else if (column.columnType === "number") {
       // Apply number formatting to all cells in this column (excluding header)
       for (let row = range.s.r + 1; row <= range.e.r; row++) {
         const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIndex });
         if (worksheet[cellAddress]) {
-          worksheet[cellAddress].z = '#,##0.00';
+          worksheet[cellAddress].z = "#,##0.00";
         }
       }
     }
@@ -126,18 +134,18 @@ export function objectsToExcel(
 
   // Auto-size columns based on content
   const columnWidths = columns.map((col, index) => {
-    if (col.columnType === 'currency') {
+    if (col.columnType === "currency") {
       // Currency columns need more space for $ symbol and formatting
       return { wch: Math.max(col.header.length + 4, 15) };
     } else {
       const maxLength = Math.max(
         col.header.length,
-        ...transformedData.map(row => String(row[col.header] || '').length)
+        ...transformedData.map((row) => String(row[col.header] || "").length)
       );
       return { wch: Math.min(Math.max(maxLength + 2, 10), 50) };
     }
   });
-  worksheet['!cols'] = columnWidths;
+  worksheet["!cols"] = columnWidths;
 
   // Add worksheet to workbook
   XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
@@ -152,28 +160,28 @@ export function objectsToExcel(
  */
 export function downloadExcel(workbook: XLSX.WorkBook, filename: string): void {
   // Write the workbook to binary string
-  const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-  
+  const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+
   // Create a blob with the Excel data
-  const blob = new Blob([excelBuffer], { 
-    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
+  const blob = new Blob([excelBuffer], {
+    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
-  
+
   // Create a URL for the blob
   const url = URL.createObjectURL(blob);
-  
+
   // Create a link element
-  const link = document.createElement('a');
-  link.setAttribute('href', url);
-  link.setAttribute('download', filename);
-  link.style.visibility = 'hidden';
-  
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  link.style.visibility = "hidden";
+
   // Add the link to the DOM
   document.body.appendChild(link);
-  
+
   // Click the link to start the download
   link.click();
-  
+
   // Clean up
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
@@ -190,19 +198,19 @@ export function createMultiSheetExcel(
   columns: ExcelColumn[]
 ): XLSX.WorkBook {
   const workbook = XLSX.utils.book_new();
-  
+
   // Create a sheet for each period/group
   Object.entries(dataBySheet).forEach(([sheetName, data]) => {
     if (data.length === 0) return; // Skip empty sheets
-    
+
     // Transform data to match column structure
-    const transformedData = data.map(item => {
+    const transformedData = data.map((item) => {
       const transformed: any = {};
-      columns.forEach(column => {
+      columns.forEach((column) => {
         const value = item[column.key];
         // Only apply formatter for text columns, keep numeric values as numbers
-        if (column.columnType === 'text' && column.formatter) {
-          transformed[column.header] = column.formatter(value);
+        if (column.columnType === "text" && column.formatter) {
+          transformed[column.header] = column.formatter(value, item);
         } else {
           // For currency and number types, keep the raw numeric value
           transformed[column.header] = value;
@@ -215,9 +223,9 @@ export function createMultiSheetExcel(
     const worksheet = XLSX.utils.json_to_sheet(transformedData);
 
     // Apply formatting to specific column types
-    const range = XLSX.utils.decode_range(worksheet['!ref']!);
+    const range = XLSX.utils.decode_range(worksheet["!ref"]!);
     columns.forEach((column, colIndex) => {
-      if (column.columnType === 'currency') {
+      if (column.columnType === "currency") {
         // Apply currency formatting to all cells in this column (excluding header)
         for (let row = range.s.r + 1; row <= range.e.r; row++) {
           const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIndex });
@@ -226,12 +234,12 @@ export function createMultiSheetExcel(
             worksheet[cellAddress].z = '"$"#,##0.00';
           }
         }
-      } else if (column.columnType === 'number') {
+      } else if (column.columnType === "number") {
         // Apply number formatting to all cells in this column (excluding header)
         for (let row = range.s.r + 1; row <= range.e.r; row++) {
           const cellAddress = XLSX.utils.encode_cell({ r: row, c: colIndex });
           if (worksheet[cellAddress]) {
-            worksheet[cellAddress].z = '#,##0.00';
+            worksheet[cellAddress].z = "#,##0.00";
           }
         }
       }
@@ -239,22 +247,22 @@ export function createMultiSheetExcel(
 
     // Auto-size columns based on content
     const columnWidths = columns.map((col, index) => {
-      if (col.columnType === 'currency') {
+      if (col.columnType === "currency") {
         // Currency columns need more space for $ symbol and formatting
         return { wch: Math.max(col.header.length + 4, 15) };
       } else {
         const maxLength = Math.max(
           col.header.length,
-          ...transformedData.map(row => String(row[col.header] || '').length)
+          ...transformedData.map((row) => String(row[col.header] || "").length)
         );
         return { wch: Math.min(Math.max(maxLength + 2, 10), 50) };
       }
     });
-    worksheet['!cols'] = columnWidths;
+    worksheet["!cols"] = columnWidths;
 
     // Clean sheet name (Excel sheet names have restrictions)
     const cleanSheetName = sheetName
-      .replace(/[\\\/\?\*\[\]]/g, '-') // Replace invalid characters
+      .replace(/[\\\/\?\*\[\]]/g, "-") // Replace invalid characters
       .substring(0, 31); // Max 31 characters
 
     // Add worksheet to workbook

@@ -13,6 +13,7 @@ import {
   PieChart,
   TrendingUp,
   Wallet,
+  Receipt,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -93,8 +94,16 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive("/gastos")}>
               <Link href="/gastos">
-                <CreditCard className="h-4 w-4" />
+                <Receipt className="h-4 w-4" />
                 <span>Gastos</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={isActive("/tarjetas-credito")}>
+              <Link href="/tarjetas-credito">
+                <CreditCard className="h-4 w-4" />
+                <span>Tarjetas de Crédito</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server"
-import { sql } from "@/lib/db"
+import { NextResponse } from "next/server";
+import { sql } from "@/lib/db";
 
 export async function GET() {
   try {
-    // Get all expenses with details needed for export
+    // Get all expenses with details needed for export, including credit card information
     const expenses = await sql`
       SELECT 
         e.id,
@@ -13,16 +13,23 @@ export async function GET() {
         e.payment_method,
         e.description,
         e.event,
-        e.amount
+        e.amount,
+        cc.bank_name as credit_card_bank,
+        cc.franchise as credit_card_franchise,
+        cc.last_four_digits as credit_card_last_four
       FROM expenses e
       JOIN categories c ON e.category_id = c.id
       JOIN periods p ON e.period_id = p.id
+      LEFT JOIN credit_cards cc ON e.credit_card_id = cc.id
       ORDER BY e.date DESC
-    `
-    
-    return NextResponse.json(expenses)
+    `;
+
+    return NextResponse.json(expenses);
   } catch (error) {
-    console.error("Error exporting expenses:", error)
-    return NextResponse.json({ error: (error as Error).message }, { status: 500 })
+    console.error("Error exporting expenses:", error);
+    return NextResponse.json(
+      { error: (error as Error).message },
+      { status: 500 }
+    );
   }
 }

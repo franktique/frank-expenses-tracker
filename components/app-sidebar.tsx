@@ -155,6 +155,14 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={isActive("/dashboard/remainder")}>
+              <Link href="/dashboard/remainder">
+                <TrendingUp className="h-4 w-4" />
+                <span>Dashboard Remanentes</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               isActive={isActive("/dashboard/category-bars")}

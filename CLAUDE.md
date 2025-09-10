@@ -132,3 +132,4 @@ The application implements a sophisticated fund management system:
 - Use `CategoryFundFallback` for backward compatibility
 - Implement proper cache invalidation
 - Handle fund filtering in UI components
+- if asked for a password when using playwrigh MCP, use the password: 123

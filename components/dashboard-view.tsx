@@ -12,6 +12,7 @@ import {
   LineChart,
   PieChart,
   PiggyBank,
+  TrendingUp,
   Wallet,
   CreditCardIcon,
 } from "lucide-react";
@@ -488,6 +489,43 @@ export function DashboardView() {
                 >
                   Ver gráficos
                 </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card
+              className="cursor-pointer hover:bg-accent/50 transition-colors"
+              onClick={() => router.push("/dashboard/remainder")}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Dashboard Remanentes
+                </CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push("/dashboard/remainder");
+                  }}
+                >
+                  Ver remanentes
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Categorías con presupuesto disponible
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="flex items-center justify-center border-dashed">
+              <CardContent className="text-center py-6">
+                <p className="text-sm text-muted-foreground">
+                  Más dashboards próximamente
+                </p>
               </CardContent>
             </Card>
           </div>

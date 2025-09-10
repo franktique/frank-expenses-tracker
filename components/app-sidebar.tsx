@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/sidebar";
 import { LogoutButton } from "@/components/logout-button";
 import { useAuth } from "@/lib/auth-context";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -44,9 +45,12 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b">
-        <div className="flex items-center gap-2 px-4 py-2">
-          <DollarSign className="h-6 w-6" />
-          <span className="text-lg font-semibold">Budget Tracker</span>
+        <div className="flex items-center justify-between px-4 py-2">
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-6 w-6" />
+            <span className="text-lg font-semibold">Budget Tracker</span>
+          </div>
+          <ThemeToggle />
         </div>
       </SidebarHeader>
       <SidebarContent>

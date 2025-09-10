@@ -550,8 +550,11 @@ export function DashboardView() {
                             className={`font-medium ${getCategoryNameStyle(
                               item
                             )} ${
-                              // Green: remaining is equal to or less than 0
-                              item.remaining <= 0
+                              // White background for categories with no expenses
+                              item.total_amount === 0
+                                ? "bg-white dark:bg-gray-800"
+                                : // Green: remaining is equal to or less than 0
+                                item.remaining <= 0
                                 ? // Red: remaining is less than 0 and absolute value is >= 30% of budget
                                   item.remaining < 0 &&
                                   Math.abs(item.remaining) >=

@@ -43,14 +43,14 @@ describe("getCategoryNameStyle", () => {
   });
 
   describe("inactive categories (no expenses)", () => {
-    it("should return muted text class for categories with zero expenses", () => {
+    it("should return black text class for categories with zero expenses", () => {
       const item = createMockItem(0);
-      expect(getCategoryNameStyle(item)).toBe("text-muted-foreground");
+      expect(getCategoryNameStyle(item)).toBe("!text-black dark:!text-white");
     });
 
-    it("should return muted text class for categories with exactly zero expenses", () => {
+    it("should return black text class for categories with exactly zero expenses", () => {
       const item = createMockItem(0.0);
-      expect(getCategoryNameStyle(item)).toBe("text-muted-foreground");
+      expect(getCategoryNameStyle(item)).toBe("!text-black dark:!text-white");
     });
   });
 
@@ -94,22 +94,22 @@ describe("getCategoryNameStyle", () => {
   });
 
   describe("requirements verification", () => {
-    it("should meet requirement 1.1: gray out categories with no expenses", () => {
+    it("should meet requirement 1.1: style categories with no expenses", () => {
       const itemWithExpenses = createMockItem(100);
       const itemWithoutExpenses = createMockItem(0);
 
       expect(getCategoryNameStyle(itemWithExpenses)).toBe("");
       expect(getCategoryNameStyle(itemWithoutExpenses)).toBe(
-        "text-muted-foreground"
+        "!text-black dark:!text-white"
       );
     });
 
-    it("should meet requirement 2.1: use muted text color for accessibility", () => {
+    it("should meet requirement 2.1: use black text color for accessibility", () => {
       const item = createMockItem(0);
       const result = getCategoryNameStyle(item);
 
-      // Verify it uses the Tailwind muted foreground class
-      expect(result).toBe("text-muted-foreground");
+      // Verify it uses the Tailwind black text class with important modifier
+      expect(result).toBe("!text-black dark:!text-white");
     });
 
     it("should handle requirement 1.4: support dynamic updates", () => {
@@ -117,7 +117,7 @@ describe("getCategoryNameStyle", () => {
       const baseItem = createMockItem(0);
 
       // Initially no expenses
-      expect(getCategoryNameStyle(baseItem)).toBe("text-muted-foreground");
+      expect(getCategoryNameStyle(baseItem)).toBe("!text-black dark:!text-white");
 
       // After adding expenses
       const updatedItem = { ...baseItem, total_amount: 50 };
@@ -126,7 +126,7 @@ describe("getCategoryNameStyle", () => {
       // After removing expenses
       const backToZeroItem = { ...baseItem, total_amount: 0 };
       expect(getCategoryNameStyle(backToZeroItem)).toBe(
-        "text-muted-foreground"
+        "!text-black dark:!text-white"
       );
     });
   });

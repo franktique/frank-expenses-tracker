@@ -46,13 +46,15 @@ type BudgetContextType = {
   addCategory: (
     name: string,
     fundId?: string,
-    fundIds?: string[]
+    fundIds?: string[],
+    recurringDate?: number | null
   ) => Promise<void>;
   updateCategory: (
     id: string,
     name: string,
     fundId?: string,
-    fundIds?: string[]
+    fundIds?: string[],
+    recurringDate?: number | null
   ) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   getCategoryFunds: (categoryId: string) => Promise<Fund[]>;
@@ -84,12 +86,14 @@ type BudgetContextType = {
     categoryId: string,
     periodId: string,
     expectedAmount: number,
-    paymentMethod: PaymentMethod
+    paymentMethod: PaymentMethod,
+    expectedDate?: string | null
   ) => Promise<void>;
   updateBudget: (
     id: string,
     expectedAmount: number,
-    paymentMethod?: PaymentMethod
+    paymentMethod?: PaymentMethod,
+    expectedDate?: string | null
   ) => Promise<void>;
   deleteBudget: (id: string) => Promise<void>;
   addIncome: (
@@ -601,10 +605,11 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const addCategory = async (
     name: string,
     fundId?: string,
-    fundIds?: string[]
+    fundIds?: string[],
+    recurringDate?: number | null
   ) => {
     try {
-      // Prepare request body with support for multiple funds
+      // Prepare request body with support for multiple funds and recurring date
       const requestBody: any = { name };
 
       if (fundIds && fundIds.length > 0) {
@@ -619,6 +624,11 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         if (defaultFund) {
           requestBody.fund_id = defaultFund.id;
         }
+      }
+
+      // Add recurring date if provided
+      if (recurringDate !== undefined) {
+        requestBody.recurring_date = recurringDate;
       }
 
       const response = await fetch("/api/categories", {
@@ -649,10 +659,11 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     id: string,
     name: string,
     fundId?: string,
-    fundIds?: string[]
+    fundIds?: string[],
+    recurringDate?: number | null
   ) => {
     try {
-      // Prepare request body with support for multiple funds
+      // Prepare request body with support for multiple funds and recurring date
       const requestBody: any = { name };
 
       if (fundIds && fundIds.length > 0) {
@@ -667,6 +678,11 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         if (defaultFund) {
           requestBody.fund_id = defaultFund.id;
         }
+      }
+
+      // Add recurring date if provided
+      if (recurringDate !== undefined) {
+        requestBody.recurring_date = recurringDate;
       }
 
       const response = await fetch(`/api/categories/${id}`, {
@@ -1219,20 +1235,28 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     categoryId: string,
     periodId: string,
     expectedAmount: number,
-    paymentMethod: PaymentMethod
+    paymentMethod: PaymentMethod,
+    expectedDate?: string | null
   ) => {
     try {
+      const requestBody: any = {
+        categoryId,
+        periodId,
+        expectedAmount,
+        paymentMethod,
+      };
+
+      // Add expected date if provided
+      if (expectedDate !== undefined) {
+        requestBody.expectedDate = expectedDate;
+      }
+
       const response = await fetch("/api/budgets", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          categoryId,
-          periodId,
-          expectedAmount,
-          paymentMethod,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {
@@ -1265,18 +1289,26 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const updateBudget = async (
     id: string,
     expectedAmount: number,
-    paymentMethod?: PaymentMethod
+    paymentMethod?: PaymentMethod,
+    expectedDate?: string | null
   ) => {
     try {
+      const requestBody: any = {
+        expectedAmount,
+        ...(paymentMethod ? { paymentMethod } : {}),
+      };
+
+      // Add expected date if provided
+      if (expectedDate !== undefined) {
+        requestBody.expectedDate = expectedDate;
+      }
+
       const response = await fetch(`/api/budgets/${id}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          expectedAmount,
-          ...(paymentMethod ? { paymentMethod } : {}),
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) {

@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
-import { UpdateCategorySchema, DEFAULT_FUND_NAME } from "@/types/funds";
+import { UpdateCategorySchema, DEFAULT_FUND_NAME, DateUtils } from "@/types/funds";
 
 export async function GET(
   request: NextRequest,
@@ -73,7 +73,17 @@ export async function PUT(
       );
     }
 
-    const { name, fund_id, fund_ids } = validationResult.data;
+    const { name, fund_id, fund_ids, recurring_date } = validationResult.data;
+
+    // Validate recurring date if provided
+    if (recurring_date !== null && recurring_date !== undefined) {
+      if (recurring_date < 1 || recurring_date > 31) {
+        return NextResponse.json(
+          { error: "El día recurrente debe estar entre 1 y 31" },
+          { status: 400 }
+        );
+      }
+    }
 
     // Check if category exists
     const [existingCategory] =
@@ -210,28 +220,33 @@ export async function PUT(
 
     // Build update query based on provided fields
     let updatedCategory;
+    let updateFields = [];
+    let updateValues = [];
 
-    if (name !== undefined && fund_id !== undefined) {
-      [updatedCategory] = await sql`
+    if (name !== undefined) {
+      updateFields.push("name = $1");
+      updateValues.push(name);
+    }
+    if (fund_id !== undefined) {
+      updateFields.push("fund_id = $" + (updateValues.length + 1));
+      updateValues.push(validationResult.data.fund_id);
+    }
+    if (recurring_date !== undefined) {
+      updateFields.push("recurring_date = $" + (updateValues.length + 1));
+      updateValues.push(recurring_date);
+    }
+
+    if (updateFields.length > 0) {
+      updateFields.push("updated_at = NOW()");
+      const query = `
         UPDATE categories
-        SET name = ${name}, fund_id = ${validationResult.data.fund_id}
-        WHERE id = ${id}
+        SET ${updateFields.join(", ")}
+        WHERE id = $${updateValues.length + 1}
         RETURNING *
       `;
-    } else if (name !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET name = ${name}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (fund_id !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET fund_id = ${validationResult.data.fund_id}
-        WHERE id = ${id}
-        RETURNING *
-      `;
+      updateValues.push(id);
+      
+      [updatedCategory] = await sql.unsafe(query, updateValues);
     } else if (fund_ids === undefined) {
       return NextResponse.json(
         { error: "No fields to update" },

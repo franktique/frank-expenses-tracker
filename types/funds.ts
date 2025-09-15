@@ -85,13 +85,14 @@ export const UpdateFundSchema = z.object({
   // Note: start_date is not included as it cannot be modified after creation
 });
 
-// Enhanced Category interface with fund support
+// Enhanced Category interface with fund support and recurring date
 export interface Category {
   id: string;
   name: string;
   fund_id?: string;
   fund_name?: string; // Populated in joins
   associated_funds?: Fund[]; // New field for multiple fund relationships
+  recurring_date?: number; // Optional day of month (1-31) for recurring expenses
 }
 
 // Category-Fund relationship interface
@@ -111,6 +112,13 @@ export const CategorySchema = z.object({
     .max(255, "El nombre de la categoría es demasiado largo"),
   fund_id: z.string().uuid().optional(),
   fund_name: z.string().optional(),
+  recurring_date: z
+    .number()
+    .int("El día debe ser un número entero")
+    .min(1, "El día debe estar entre 1 y 31")
+    .max(31, "El día debe estar entre 1 y 31")
+    .nullable()
+    .optional(),
 });
 
 // Category creation schema
@@ -121,6 +129,13 @@ export const CreateCategorySchema = z.object({
     .max(255, "El nombre de la categoría es demasiado largo"),
   fund_id: z.string().uuid().optional(),
   fund_ids: z.array(z.string().uuid()).optional(), // New field for multiple fund relationships
+  recurring_date: z
+    .number()
+    .int("El día debe ser un número entero")
+    .min(1, "El día debe estar entre 1 y 31")
+    .max(31, "El día debe estar entre 1 y 31")
+    .nullable()
+    .optional(),
 });
 
 // Category update schema
@@ -132,6 +147,13 @@ export const UpdateCategorySchema = z.object({
     .optional(),
   fund_id: z.string().uuid().optional(),
   fund_ids: z.array(z.string().uuid()).optional(), // New field for multiple fund relationships
+  recurring_date: z
+    .number()
+    .int("El día debe ser un número entero")
+    .min(1, "El día debe estar entre 1 y 31")
+    .max(31, "El día debe estar entre 1 y 31")
+    .nullable()
+    .optional(),
 });
 
 // Category-Fund relationship schemas
@@ -316,6 +338,7 @@ export interface Budget {
   period_id: string;
   expected_amount: number;
   payment_method: PaymentMethod;
+  expected_date?: string; // Optional expected date for the budget
 }
 
 export const BudgetSchema = z.object({
@@ -324,6 +347,11 @@ export const BudgetSchema = z.object({
   period_id: z.string().uuid(),
   expected_amount: z.number().min(0, "El monto esperado no puede ser negativo"),
   payment_method: PaymentMethodEnum,
+  expected_date: z
+    .string()
+    .refine((date) => !isNaN(Date.parse(date)), "Fecha esperada inválida")
+    .nullable()
+    .optional(),
 });
 
 // Fund balance calculation types
@@ -452,6 +480,78 @@ export const DEFAULT_FUND_NAME = "Disponible";
 export const DEFAULT_FUND_DESCRIPTION =
   "Fondo por defecto para categorías sin asignación específica";
 
+// Recurring date validation schema
+export const RecurringDateSchema = z.object({
+  recurring_date: z
+    .number()
+    .int("El día debe ser un número entero")
+    .min(1, "El día debe estar entre 1 y 31")
+    .max(31, "El día debe estar entre 1 y 31")
+    .nullable()
+    .optional(),
+});
+
+// Expected date validation schema
+export const ExpectedDateSchema = z.object({
+  expected_date: z
+    .string()
+    .refine((date) => !isNaN(Date.parse(date)), "Fecha esperada inválida")
+    .nullable()
+    .optional(),
+});
+
+// Utility functions for date handling
+export const DateUtils = {
+  /**
+   * Calculate expected date from recurring date and period
+   */
+  calculateExpectedDate: (recurringDate: number | null | undefined, year: number, month: number): string | null => {
+    if (!recurringDate) return null;
+    
+    // Create date for the specified month and year
+    const date = new Date(year, month - 1, recurringDate);
+    
+    // If the date is invalid (e.g., February 30), use the last day of the month
+    if (date.getMonth() !== month - 1) {
+      const lastDay = new Date(year, month, 0).getDate();
+      return new Date(year, month - 1, lastDay).toISOString().split('T')[0];
+    }
+    
+    return date.toISOString().split('T')[0];
+  },
+
+  /**
+   * Validate recurring date for a specific month
+   */
+  validateRecurringDateForMonth: (recurringDate: number, year: number, month: number): boolean => {
+    if (recurringDate < 1 || recurringDate > 31) return false;
+    
+    const date = new Date(year, month - 1, recurringDate);
+    return date.getMonth() === month - 1;
+  },
+
+  /**
+   * Format recurring date for display (e.g., "5th", "15th", "Last day")
+   */
+  formatRecurringDate: (recurringDate: number | null | undefined): string => {
+    if (!recurringDate) return "No especificado";
+    
+    if (recurringDate === 31) return "Último día";
+    if (recurringDate === 1) return "1er día";
+    if (recurringDate === 2) return "2do día";
+    if (recurringDate === 3) return "3er día";
+    
+    return `${recurringDate}avo día`;
+  },
+
+  /**
+   * Get days in month for validation
+   */
+  getDaysInMonth: (year: number, month: number): number => {
+    return new Date(year, month, 0).getDate();
+  }
+};
+
 // Fund validation error messages
 export const FUND_ERROR_MESSAGES = {
   FUND_NOT_FOUND: "El fondo especificado no existe",
@@ -467,7 +567,7 @@ export const FUND_ERROR_MESSAGES = {
   FUND_START_DATE_FUTURE: "La fecha de inicio no puede ser en el futuro",
   FUND_INITIAL_BALANCE_NEGATIVE: "El balance inicial no puede ser negativo",
   FUND_NAME_TOO_LONG: "El nombre del fondo es demasiado largo",
-  FUND_DESCRIPTION_TOO_LONG: "La descripción del fondo es demasiado larga",
+  FUND_DESCRIPTION_TOO_LONG: "La descripción del fondo es demasiado largo",
 } as const;
 
 // Category-Fund relationship error messages

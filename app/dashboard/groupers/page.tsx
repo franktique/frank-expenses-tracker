@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   ArrowLeft,
   Filter,
@@ -2086,12 +2086,13 @@ export default function GroupersChartPage() {
             ...week,
             grouper_data: week.grouper_data.map((grouper: any) => ({
               ...grouper,
-              // Ensure budget_amount is a number or undefined, handle null/undefined cases
+              // Use new date-aware cumulative budget amount
               budget_amount: showBudgets
-                ? typeof grouper.budget_amount === "number"
-                  ? grouper.budget_amount
+                ? typeof grouper.cumulative_budget_amount === "number"
+                  ? grouper.cumulative_budget_amount
                   : 0
                 : undefined,
+              budget_type: grouper.budget_type || 'none',
             })),
           }));
 
@@ -2234,11 +2235,13 @@ export default function GroupersChartPage() {
             ...week,
             grouper_data: week.grouper_data.map((grouper) => ({
               ...grouper,
+              // Use new date-aware weekly budget amount
               budget_amount: showBudgets
-                ? grouper.budget_amount
-                  ? parseFloat(grouper.budget_amount.toString())
+                ? grouper.weekly_budget_amount
+                  ? parseFloat(grouper.weekly_budget_amount.toString())
                   : 0
                 : undefined,
+              budget_type: grouper.budget_type || 'none',
             })),
           }));
 
@@ -2615,7 +2618,11 @@ export default function GroupersChartPage() {
   const transformWeeklyCumulativeData = (
     data: WeeklyCumulativeData
   ): TransformedWeeklyData => {
-    if (!data || data.length === 0) return [];
+    console.log('🔍 transformWeeklyCumulativeData input:', data);
+    if (!data || data.length === 0) {
+      console.log('❌ No cumulative data or empty array');
+      return [];
+    }
 
     // Get all unique groupers
     const allGroupers = new Set<string>();
@@ -2624,9 +2631,10 @@ export default function GroupersChartPage() {
         allGroupers.add(`grouper_${grouper.grouper_id}`);
       });
     });
+    console.log('🔧 Unique groupers found:', Array.from(allGroupers));
 
     // Transform data for chart
-    return data.map((week) => {
+    const transformedData = data.map((week) => {
       const transformedWeek: any = {
         week_label: week.week_label,
       };
@@ -2634,37 +2642,64 @@ export default function GroupersChartPage() {
       // Initialize all groupers with 0
       allGroupers.forEach((grouperKey) => {
         transformedWeek[grouperKey] = 0;
+        // Initialize budget data if enabled
+        if (showBudgets) {
+          transformedWeek[`budget_${grouperKey.replace('grouper_', '')}`] = 0;
+        }
       });
 
       // Fill in actual values
       week.grouper_data.forEach((grouper) => {
-        transformedWeek[`grouper_${grouper.grouper_id}`] =
-          grouper.cumulative_amount;
+        const grouperKey = `grouper_${grouper.grouper_id}`;
+        const cumulativeAmount = parseFloat(String(grouper.cumulative_amount)) || 0;
+
+        transformedWeek[grouperKey] = cumulativeAmount;
+        console.log(`📊 Setting ${grouperKey} = ${cumulativeAmount} for week ${week.week_label}`);
+
+        // Add budget data if enabled (API returns cumulative_budget_amount for weekly cumulative)
+        if (showBudgets && grouper.cumulative_budget_amount !== undefined) {
+          const budgetKey = `budget_${grouper.grouper_id}`;
+          const cumulativeBudgetAmount = parseFloat(String(grouper.cumulative_budget_amount)) || 0;
+          transformedWeek[budgetKey] = cumulativeBudgetAmount;
+          console.log(`💰 Setting ${budgetKey} = ${cumulativeBudgetAmount} for week ${week.week_label}`);
+        }
       });
 
+      console.log('📅 Week data transformed:', transformedWeek);
       return transformedWeek;
     });
+
+    console.log('✅ Final transformed weekly cumulative data:', transformedData);
+    console.log('🔍 Sample week keys:', transformedData.length > 0 ? Object.keys(transformedData[0]) : 'No data');
+    return transformedData;
   };
 
   // Get unique groupers for weekly cumulative legend
   const getUniqueGroupersFromWeekly = (data: WeeklyCumulativeData) => {
+    console.log('🔍 getUniqueGroupersFromWeekly input:', data);
     const groupersMap = new Map<number, string>();
     data.forEach((week) => {
       week.grouper_data.forEach((grouper) => {
         groupersMap.set(grouper.grouper_id, grouper.grouper_name);
       });
     });
-    return Array.from(groupersMap.entries()).map(([id, name]) => ({
+    const result = Array.from(groupersMap.entries()).map(([id, name]) => ({
       grouper_id: id,
       grouper_name: name,
     }));
+    console.log('👥 Unique groupers extracted:', result);
+    return result;
   };
 
   // Transform weekly expenses data for chart consumption
   const transformWeeklyExpensesData = (
     data: WeeklyExpensesData
   ): TransformedWeeklyData => {
-    if (!data || data.length === 0) return [];
+    console.log('🔍 transformWeeklyExpensesData input:', data);
+    if (!data || data.length === 0) {
+      console.log('❌ No data or empty array');
+      return [];
+    }
 
     // Get all unique groupers
     const allGroupers = new Set<string>();
@@ -2673,9 +2708,10 @@ export default function GroupersChartPage() {
         allGroupers.add(`grouper_${grouper.grouper_id}`);
       });
     });
+    console.log('📊 Unique groupers found:', Array.from(allGroupers));
 
     // Transform data for chart
-    return data.map((week) => {
+    const transformed = data.map((week) => {
       const transformedWeek: any = {
         week_label: week.week_label,
       };
@@ -2683,16 +2719,27 @@ export default function GroupersChartPage() {
       // Initialize all groupers with 0
       allGroupers.forEach((grouperKey) => {
         transformedWeek[grouperKey] = 0;
+        // Initialize budget data if enabled
+        if (showBudgets) {
+          transformedWeek[`budget_${grouperKey.replace('grouper_', '')}`] = 0;
+        }
       });
 
       // Fill in actual values
       week.grouper_data.forEach((grouper) => {
         transformedWeek[`grouper_${grouper.grouper_id}`] =
           grouper.weekly_amount;
+        // Add budget data if enabled (API returns weekly_budget_amount for weekly expenses)
+        if (showBudgets && grouper.weekly_budget_amount !== undefined) {
+          transformedWeek[`budget_${grouper.grouper_id}`] = grouper.weekly_budget_amount;
+        }
       });
 
       return transformedWeek;
     });
+
+    console.log('✅ Transformed weekly expenses data:', transformed);
+    return transformed;
   };
 
   // Get unique groupers for weekly expenses legend
@@ -3096,25 +3143,53 @@ export default function GroupersChartPage() {
           <p className="font-medium mb-2">{label}</p>
           {payload.map((entry: any, index: number) => {
             if (entry.value > 0) {
-              // Find grouper name from the data key
+              // Find grouper name and type from the data key
               const grouperKey = entry.dataKey;
-              const grouperId = parseInt(grouperKey.replace("grouper_", ""));
-              const uniqueGroupers =
-                getUniqueGroupersFromWeekly(weeklyCumulativeData);
-              const grouperName =
-                uniqueGroupers.find((g) => g.grouper_id === grouperId)
-                  ?.grouper_name || "Unknown";
-
+              const isBudget = grouperKey.startsWith("budget_");
+              const grouperId = parseInt(grouperKey.replace(isBudget ? "budget_" : "grouper_", ""));
+              
+              let uniqueGroupers, grouperName, budgetType = 'none';
+              
+              if (isBudget) {
+                // For budget data, find the original data to get budget type
+                uniqueGroupers = getUniqueGroupersFromWeekly(weeklyCumulativeData);
+                grouperName = uniqueGroupers.find((g) => g.grouper_id === grouperId)?.grouper_name || "Unknown";
+                
+                // Find budget type from the original data
+                const weekData = weeklyCumulativeData.find(week => 
+                  week.grouper_data.some(grouper => grouper.grouper_id === grouperId && grouper.budget_type)
+                );
+                const grouperData = weekData?.grouper_data.find(grouper => grouper.grouper_id === grouperId);
+                budgetType = grouperData?.budget_type || 'none';
+              } else {
+                uniqueGroupers = getUniqueGroupersFromWeekly(weeklyCumulativeData);
+                grouperName = uniqueGroupers.find((g) => g.grouper_id === grouperId)?.grouper_name || "Unknown";
+              }
+              
+              const getBudgetTypeLabel = (type: string) => {
+                switch (type) {
+                  case 'dated': return 'Fecha específica';
+                  case 'prorated': return 'Prorrateado';
+                  case 'mixed': return 'Mixto';
+                  default: return '';
+                }
+              };
+              
               return (
                 <div key={index} className="flex items-center gap-2 text-sm">
                   <div
                     className="w-3 h-3 rounded-full"
                     style={{ backgroundColor: entry.color }}
                   />
-                  <span>{grouperName}:</span>
+                  <span>{grouperName}{isBudget ? ' (Presupuesto)' : ''}:</span>
                   <span className="font-medium">
-                    {formatCurrency(entry.value)} (acumulado)
+                    {formatCurrency(entry.value)}{isBudget ? '' : ' (acumulado)'}
                   </span>
+                  {isBudget && budgetType !== 'none' && (
+                    <span className="text-xs text-muted-foreground">
+                      ({getBudgetTypeLabel(budgetType)})
+                    </span>
+                  )}
                 </div>
               );
             }
@@ -3157,6 +3232,19 @@ export default function GroupersChartPage() {
                 uniqueGroupers.find((g) => g.grouper_id === grouperId)
                   ?.grouper_name || "Unknown";
 
+              // Check if this is a budget entry
+              const isBudget = grouperKey.endsWith("_budget");
+              const weekData = weeklyExpensesData.find((w) => w.week_label === label);
+              const grouperData = weekData?.grouper_data.find((g) => g.grouper_id === grouperId);
+
+              let labelSuffix = "semanal";
+              let budgetTypeLabel = "";
+
+              if (isBudget && grouperData && "budget_type" in grouperData) {
+                labelSuffix = "presupuesto";
+                budgetTypeLabel = getBudgetTypeLabel(grouperData.budget_type || "none");
+              }
+
               return (
                 <div key={index} className="flex items-center gap-2 text-sm">
                   <div
@@ -3165,7 +3253,8 @@ export default function GroupersChartPage() {
                   />
                   <span>{grouperName}:</span>
                   <span className="font-medium">
-                    {formatCurrency(entry.value)} (semanal)
+                    {formatCurrency(entry.value)} ({labelSuffix}
+                    {budgetTypeLabel && `, ${budgetTypeLabel}`})
                   </span>
                 </div>
               );
@@ -4288,8 +4377,12 @@ export default function GroupersChartPage() {
               action={
                 <div className="space-y-2">
                   <p className="text-sm text-muted-foreground">
-                    Intenta cambiar los filtros o registra gastos en este
-                    período.
+                    {transformedData.length === 0
+                      ? "No hay datos transformados disponibles. Verifica que existan gastos y agrupadores en el período."
+                      : uniqueGroupers.length === 0
+                      ? "No se encontraron agrupadores válidos. Verifica la configuración de agrupadores."
+                      : "Intenta cambiar los filtros o registra gastos en este período."
+                    }
                   </p>
                   {paymentMethod !== "all" && (
                     <Button
@@ -4304,51 +4397,91 @@ export default function GroupersChartPage() {
               }
             />
           ) : (
-            <div
-              className={`w-full h-[500px] mt-4 ${
-                transformedData.length > 8 ? "overflow-x-auto" : ""
-              }`}
-            >
+            <>
+              {/* Debug info - remove in production */}
+              {process.env.NODE_ENV === 'development' && console.log('🎯 Chart render debug:', {
+                transformedDataLength: transformedData.length,
+                uniqueGroupersLength: uniqueGroupers.length,
+                firstWeekData: transformedData[0],
+                grouperDataKeys: uniqueGroupers.map(g => `grouper_${g.grouper_id}`),
+                budgetDataKeys: showBudgets ? uniqueGroupers.map(g => `budget_${g.grouper_id}`) : [],
+                showBudgets
+              })}
+
               <div
-                className={`${
-                  transformedData.length > 8 ? "min-w-[800px]" : "w-full"
-                } h-full`}
+                className={`w-full h-[500px] mt-4 ${
+                  transformedData.length > 8 ? "overflow-x-auto" : ""
+                }`}
               >
-                <ResponsiveContainer width="100%" height={500}>
-                  <BarChart
-                    data={transformedData}
-                    margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
-                    barCategoryGap={transformedData.length > 8 ? 10 : 20}
-                    barGap={4}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="week_label"
-                      angle={-45}
-                      textAnchor="end"
-                      height={100}
-                      interval={0}
-                      tick={{
-                        fontSize: transformedData.length > 12 ? 10 : 11,
-                        dy: 10,
-                      }}
-                    />
-                    <YAxis tickFormatter={formatCurrency} />
-                    <Tooltip content={<CustomWeeklyTooltip />} />
-                    <Legend />
-                    {uniqueGroupers.map((grouper, index) => (
-                      <Bar
-                        key={grouper.grouper_id}
-                        dataKey={`grouper_${grouper.grouper_id}`}
-                        fill={chartColors[index % chartColors.length]}
-                        name={grouper.grouper_name}
-                        radius={[2, 2, 0, 0]}
+                <div
+                  className={`${
+                    transformedData.length > 8 ? "min-w-[800px]" : "w-full"
+                  } h-full`}
+                >
+                  <ResponsiveContainer width="100%" height={500}>
+                    <BarChart
+                      data={transformedData}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 80 }}
+                      barCategoryGap={transformedData.length > 8 ? 10 : 20}
+                      barGap={4}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="week_label"
+                        angle={-45}
+                        textAnchor="end"
+                        height={100}
+                        interval={0}
+                        tick={{
+                          fontSize: transformedData.length > 12 ? 10 : 11,
+                          dy: 10,
+                        }}
                       />
-                    ))}
-                  </BarChart>
-                </ResponsiveContainer>
+                      <YAxis tickFormatter={formatCurrency} />
+                      <Tooltip content={<CustomWeeklyTooltip />} />
+                      <Legend />
+                      {uniqueGroupers.map((grouper, index) => {
+                        const expenseDataKey = `grouper_${grouper.grouper_id}`;
+                        const budgetDataKey = `budget_${grouper.grouper_id}`;
+
+                        if (process.env.NODE_ENV === 'development') {
+                          console.log(`🔧 Rendering bars for grouper ${grouper.grouper_name}:`, {
+                            expenseDataKey,
+                            budgetDataKey,
+                            showBudgets,
+                            color: chartColors[index % chartColors.length]
+                          });
+                        }
+
+                        return (
+                          <React.Fragment key={grouper.grouper_id}>
+                            {/* Budget bar - shown first so it appears behind expense bar */}
+                            {showBudgets && (
+                              <Bar
+                                key={`budget-${grouper.grouper_id}`}
+                                dataKey={budgetDataKey}
+                                fill={chartColors[index % chartColors.length]}
+                                name={`${grouper.grouper_name} (Presupuesto)`}
+                                radius={[2, 2, 0, 0]}
+                                opacity={0.5}
+                              />
+                            )}
+                            {/* Expense bar */}
+                            <Bar
+                              key={grouper.grouper_id}
+                              dataKey={expenseDataKey}
+                              fill={chartColors[index % chartColors.length]}
+                              name={grouper.grouper_name}
+                              radius={[2, 2, 0, 0]}
+                            />
+                          </React.Fragment>
+                        );
+                      })}
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-            </div>
+            </>
           )}
         </CardContent>
       </Card>
@@ -4506,36 +4639,61 @@ export default function GroupersChartPage() {
                     <Tooltip content={<CustomWeeklyExpensesTooltip />} />
                     <Legend />
                     {uniqueGroupers.map((grouper, index) => (
-                      <Bar
-                        key={grouper.grouper_id}
-                        dataKey={`grouper_${grouper.grouper_id}`}
-                        fill={chartColors[index % chartColors.length]}
-                        name={grouper.grouper_name}
-                        radius={[2, 2, 0, 0]}
-                        cursor="pointer"
-                        onClick={handleWeekBarClick}
-                      >
-                        {transformedData.map((entry, entryIndex) => (
-                          <Cell 
-                            key={`cell-${grouper.grouper_id}-${entryIndex}`}
-                            fill={
-                              selectedWeek && entry.week_label === selectedWeek.week_label
-                                ? `${chartColors[index % chartColors.length]}CC` // Add transparency for selected
-                                : chartColors[index % chartColors.length]
-                            }
-                            stroke={
-                              selectedWeek && entry.week_label === selectedWeek.week_label
-                                ? "#ffffff"
-                                : "none"
-                            }
-                            strokeWidth={
-                              selectedWeek && entry.week_label === selectedWeek.week_label
-                                ? 2
-                                : 0
-                            }
-                          />
-                        ))}
-                      </Bar>
+                      <>
+                        {/* Budget bar - shown first so it appears behind expense bar */}
+                        {showBudgets && (
+                          <Bar
+                            key={`budget-${grouper.grouper_id}`}
+                            dataKey={`budget_${grouper.grouper_id}`}
+                            fill={chartColors[index % chartColors.length]}
+                            name={`${grouper.grouper_name} (Presupuesto)`}
+                            radius={[2, 2, 0, 0]}
+                            opacity={0.5}
+                          >
+                            {transformedData.map((entry, entryIndex) => (
+                              <Cell 
+                                key={`budget-cell-${grouper.grouper_id}-${entryIndex}`}
+                                fill={
+                                  selectedWeek && entry.week_label === selectedWeek.week_label
+                                    ? `${chartColors[index % chartColors.length]}80` // More transparent for selected
+                                    : `${chartColors[index % chartColors.length]}80` // Consistent transparency
+                                }
+                              />
+                            ))}
+                          </Bar>
+                        )}
+                        {/* Expense bar */}
+                        <Bar
+                          key={grouper.grouper_id}
+                          dataKey={`grouper_${grouper.grouper_id}`}
+                          fill={chartColors[index % chartColors.length]}
+                          name={grouper.grouper_name}
+                          radius={[2, 2, 0, 0]}
+                          cursor="pointer"
+                          onClick={handleWeekBarClick}
+                        >
+                          {transformedData.map((entry, entryIndex) => (
+                            <Cell 
+                              key={`cell-${grouper.grouper_id}-${entryIndex}`}
+                              fill={
+                                selectedWeek && entry.week_label === selectedWeek.week_label
+                                  ? `${chartColors[index % chartColors.length]}CC` // Add transparency for selected
+                                  : chartColors[index % chartColors.length]
+                              }
+                              stroke={
+                                selectedWeek && entry.week_label === selectedWeek.week_label
+                                  ? "#ffffff"
+                                  : "none"
+                              }
+                              strokeWidth={
+                                selectedWeek && entry.week_label === selectedWeek.week_label
+                                  ? 2
+                                  : 0
+                              }
+                            />
+                          ))}
+                        </Bar>
+                      </>
                     ))}
                   </BarChart>
                 </ResponsiveContainer>
@@ -4810,8 +4968,8 @@ export default function GroupersChartPage() {
           onRetry={retryFilterLoad}
         />
 
-        {/* Budget toggle is only available for current and period comparison views */}
-        {(activeTab === "current" || activeTab === "period-comparison") && (
+        {/* Budget toggle is available for current, period comparison, and weekly views */}
+        {(activeTab === "current" || activeTab === "period-comparison" || activeTab === "weekly-cumulative" || activeTab === "weekly-expenses") && (
           <BudgetToggle
             showBudgets={showBudgets}
             onToggle={handleBudgetToggle}

@@ -38,6 +38,8 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { useBudget, PaymentMethod } from "@/context/budget-context";
 import { formatCurrency } from "@/lib/utils";
+import { ExpectedDateDisplay } from "@/components/expected-date-display";
+import { DateUtils } from "@/types/funds";
 
 export function BudgetsView() {
   const {
@@ -60,6 +62,7 @@ export function BudgetsView() {
     budgetId?: string;
     amount: string;
     paymentMethod: PaymentMethod;
+    expectedDate?: string | null;
   } | null>(null);
 
   // Get the selected period object
@@ -69,6 +72,17 @@ export function BudgetsView() {
   const periodBudgets = selectedPeriod
     ? budgets.filter((budget) => budget.period_id === selectedPeriod.id)
     : [];
+
+  // Helper function to get default expected date from category's recurring date
+  const getDefaultExpectedDate = (categoryId: string): string | null => {
+    const category = categories.find(c => c.id === categoryId);
+    if (!category?.recurring_date || !selectedPeriod) return null;
+    return DateUtils.calculateExpectedDate(
+      category.recurring_date,
+      selectedPeriod.year,
+      selectedPeriod.month
+    );
+  };
 
   const handleEditBudget = () => {
     if (!editCategory || !selectedPeriod) return;
@@ -85,14 +99,15 @@ export function BudgetsView() {
 
     if (editCategory.budgetId) {
       // Update existing budget
-      updateBudget(editCategory.budgetId, amount, editCategory.paymentMethod);
+      updateBudget(editCategory.budgetId, amount, editCategory.paymentMethod, editCategory.expectedDate);
     } else {
       // Create new budget
       addBudget(
         editCategory.id,
         selectedPeriod.id,
         amount,
-        editCategory.paymentMethod
+        editCategory.paymentMethod,
+        editCategory.expectedDate
       );
     }
 
@@ -233,6 +248,7 @@ export function BudgetsView() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Categoría</TableHead>
+                  <TableHead>Fecha Esperada</TableHead>
                   <TableHead className="text-right">Efectivo</TableHead>
                   <TableHead className="text-right">Crédito</TableHead>
                   <TableHead className="text-right">Total</TableHead>
@@ -265,6 +281,15 @@ export function BudgetsView() {
                         <TableCell className="font-medium">
                           {category.name}
                         </TableCell>
+                        <TableCell>
+                          <ExpectedDateDisplay
+                            expectedDate={cashBudget?.expected_date || creditBudget?.expected_date || null}
+                            recurringDate={category.recurring_date}
+                            periodMonth={selectedPeriod?.month}
+                            periodYear={selectedPeriod?.year}
+                            className="text-sm"
+                          />
+                        </TableCell>
                         <TableCell className="text-right">
                           {cashBudget
                             ? formatCurrency(cashBudget.expected_amount)
@@ -282,6 +307,7 @@ export function BudgetsView() {
                                   ? cashBudget.expected_amount.toString()
                                   : "0",
                                 paymentMethod: "cash",
+                                expectedDate: cashBudget?.expected_date || getDefaultExpectedDate(category.id),
                               });
                               setIsEditOpen(true);
                             }}
@@ -307,6 +333,7 @@ export function BudgetsView() {
                                   ? creditBudget.expected_amount.toString()
                                   : "0",
                                 paymentMethod: "credit",
+                                expectedDate: creditBudget?.expected_date || getDefaultExpectedDate(category.id),
                               });
                               setIsEditOpen(true);
                             }}
@@ -328,6 +355,7 @@ export function BudgetsView() {
                                 name: category.name,
                                 amount: "0",
                                 paymentMethod: "cash",
+                                expectedDate: getDefaultExpectedDate(category.id),
                               });
                               setIsEditOpen(true);
                             }}
@@ -341,7 +369,7 @@ export function BudgetsView() {
                 {(!categories || categories.length === 0) && (
                   <TableRow>
                     <TableCell
-                      colSpan={3}
+                      colSpan={6}
                       className="text-center py-4 text-muted-foreground"
                     >
                       No hay categorías. Agrega categorías en la sección de
@@ -381,6 +409,24 @@ export function BudgetsView() {
                   )
                 }
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="expected-date">Fecha Esperada (opcional)</Label>
+              <Input
+                id="expected-date"
+                type="date"
+                value={editCategory?.expectedDate || ""}
+                onChange={(e) =>
+                  setEditCategory((prev) =>
+                    prev ? { ...prev, expectedDate: e.target.value || null } : null
+                  )
+                }
+              />
+              {selectedPeriod && (
+                <p className="text-sm text-muted-foreground">
+                  {selectedPeriod.name}: {selectedPeriod.month}/{selectedPeriod.year}
+                </p>
+              )}
             </div>
 
             <div className="grid gap-2">

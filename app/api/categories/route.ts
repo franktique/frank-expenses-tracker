@@ -1,10 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
-import { CreateCategorySchema, DEFAULT_FUND_NAME } from "@/types/funds";
+import { CreateCategorySchema, DEFAULT_FUND_NAME, DateUtils } from "@/types/funds";
 
 export async function GET() {
   try {
-    // Get categories with backward compatibility fund info
+    // Get categories with backward compatibility fund info and recurring dates
     const categories = await sql`
       SELECT 
         c.*,
@@ -78,8 +78,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, fund_id } = validationResult.data;
+    const { name, fund_id, recurring_date } = validationResult.data;
     const { fund_ids } = body; // Extract fund_ids from raw body
+
+    // Validate recurring date if provided
+    if (recurring_date !== null && recurring_date !== undefined) {
+      // Additional validation for specific months (like February)
+      // This is a basic validation - the DateUtils utility handles month-specific validation
+      if (recurring_date < 1 || recurring_date > 31) {
+        return NextResponse.json(
+          { error: "El día recurrente debe estar entre 1 y 31" },
+          { status: 400 }
+        );
+      }
+    }
 
     // Determine which fund approach to use
     let fundsToAssociate: string[] = [];
@@ -124,10 +136,10 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Create the category
+    // Create the category with recurring date
     const [newCategory] = await sql`
-      INSERT INTO categories (name, fund_id)
-      VALUES (${name}, ${finalFundId})
+      INSERT INTO categories (name, fund_id, recurring_date)
+      VALUES (${name}, ${finalFundId}, ${recurring_date})
       RETURNING *
     `;
 

@@ -58,6 +58,7 @@ import {
   CategoryFundInfoCompact,
 } from "@/components/category-fund-info-panel";
 import { Fund, Category } from "@/types/funds";
+import { RecurringDateInput } from "@/components/recurring-date-input";
 
 export function CategoriesView() {
   const { categories, addCategory, updateCategory, deleteCategory, funds } =
@@ -70,8 +71,10 @@ export function CategoriesView() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryFunds, setNewCategoryFunds] = useState<Fund[]>([]);
+  const [newCategoryRecurringDate, setNewCategoryRecurringDate] = useState<number | null>(null);
   const [editCategory, setEditCategory] = useState<Category | null>(null);
   const [editCategoryFunds, setEditCategoryFunds] = useState<Fund[]>([]);
+  const [editCategoryRecurringDate, setEditCategoryRecurringDate] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteValidation, setDeleteValidation] = useState<{
     hasExpenses: boolean;
@@ -227,6 +230,7 @@ export function CategoriesView() {
         body: JSON.stringify({
           name: newCategoryName,
           fund_ids: fundIds.length > 0 ? fundIds : undefined,
+          recurring_date: newCategoryRecurringDate,
         }),
       });
 
@@ -247,6 +251,7 @@ export function CategoriesView() {
 
       setNewCategoryName("");
       setNewCategoryFunds([]);
+      setNewCategoryRecurringDate(null);
       setIsAddOpen(false);
 
       const fundNames = newCategoryFunds.map((f) => f.name).join(", ");
@@ -282,7 +287,7 @@ export function CategoriesView() {
 
     try {
       // Update category name using existing method
-      await updateCategory(editCategory.id, editCategory.name);
+      await updateCategory(editCategory.id, editCategory.name, editCategoryRecurringDate);
 
       // Update fund relationships separately with enhanced error handling
       const fundIds = editCategoryFunds.map((fund) => fund.id);
@@ -293,6 +298,7 @@ export function CategoriesView() {
 
       setEditCategory(null);
       setEditCategoryFunds([]);
+      setEditCategoryRecurringDate(null);
       setIsEditOpen(false);
 
       toast({
@@ -380,6 +386,8 @@ export function CategoriesView() {
     } else {
       setEditCategoryFunds([]);
     }
+    // Set recurring date
+    setEditCategoryRecurringDate(category.recurring_date || null);
     setIsEditOpen(true);
   };
 
@@ -434,6 +442,12 @@ export function CategoriesView() {
                   />
                   <CategoryFundInfoCompact className="mt-2" />
                 </div>
+                <RecurringDateInput
+                  value={newCategoryRecurringDate}
+                  onChange={setNewCategoryRecurringDate}
+                  label="Día recurrente (opcional)"
+                  placeholder="Selecciona un día del mes"
+                />
               </div>
               <DialogFooter>
                 <Button
@@ -442,6 +456,7 @@ export function CategoriesView() {
                     setIsAddOpen(false);
                     setNewCategoryName("");
                     setNewCategoryFunds([]);
+                    setNewCategoryRecurringDate(null);
                   }}
                   disabled={loadingState.isLoading("addCategory")}
                 >
@@ -482,6 +497,7 @@ export function CategoriesView() {
               <TableRow>
                 <TableHead>Nombre</TableHead>
                 <TableHead>Fondo</TableHead>
+                <TableHead>Día Recurrente</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -504,6 +520,13 @@ export function CategoriesView() {
                         showTooltip={true}
                         variant="default"
                       />
+                    </TableCell>
+                    <TableCell>
+                      {category.recurring_date ? (
+                        <span className="text-sm">Día {category.recurring_date}</span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">No configurado</span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -530,7 +553,7 @@ export function CategoriesView() {
               {(!filteredCategories || filteredCategories.length === 0) && (
                 <TableRow>
                   <TableCell
-                    colSpan={3}
+                    colSpan={4}
                     className="text-center py-4 text-muted-foreground"
                   >
                     {fundFilter
@@ -550,7 +573,7 @@ export function CategoriesView() {
           <DialogHeader>
             <DialogTitle>Editar Categoría</DialogTitle>
             <DialogDescription>
-              Actualiza el nombre de la categoría y su asignación de fondo
+              Actualiza el nombre de la categoría, su asignación de fondo y día recurrente
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -576,6 +599,12 @@ export function CategoriesView() {
               />
               <CategoryFundInfoCompact className="mt-2" />
             </div>
+            <RecurringDateInput
+              value={editCategoryRecurringDate}
+              onChange={setEditCategoryRecurringDate}
+              label="Día recurrente (opcional)"
+              placeholder="Selecciona un día del mes"
+            />
           </div>
           <DialogFooter>
             <Button
@@ -584,6 +613,7 @@ export function CategoriesView() {
                 setIsEditOpen(false);
                 setEditCategory(null);
                 setEditCategoryFunds([]);
+                setEditCategoryRecurringDate(null);
               }}
               disabled={loadingState.isLoading("editCategory")}
             >

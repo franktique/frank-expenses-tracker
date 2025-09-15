@@ -146,7 +146,8 @@ export async function GET(request: Request) {
 
     // Build budget join and select if requested
     const budgetJoin = includeBudgets
-      ? `LEFT JOIN budgets b ON b.category_id = c.id AND b.period_id = $1${budgetPaymentMethodFilter}`
+      ? `LEFT JOIN budgets b ON b.category_id = c.id AND b.period_id = $1
+        AND (b.expected_date IS NULL OR b.expected_date BETWEEN wr.week_start AND wr.week_end)${budgetPaymentMethodFilter}`
       : "";
 
     const budgetSelect = includeBudgets
@@ -160,7 +161,7 @@ export async function GET(request: Request) {
           p.year,
           p.month,
           make_date(p.year, p.month, 1) as period_start,
-          (make_date(p.year, p.month, 1) + interval '1 month' - interval '1 day')::date as period_end
+          (make_date(p.year, p.month + 1, 1) - interval '1 day')::date as period_end
         FROM periods p 
         WHERE p.id = $1
       ),
@@ -181,22 +182,24 @@ export async function GET(request: Request) {
         GROUP BY pi.period_start, pi.period_end
       ),
       week_boundaries AS (
-        SELECT
-          -- Adjust to Sunday start: date_trunc('week', date + interval '1 day') - interval '1 day'
-          (date_trunc('week', generate_series(
-            -- Start from the Sunday of the week containing the first expense
-            (date_trunc('week', edr.actual_start + interval '1 day') - interval '1 day')::date,
-            -- End at the Saturday of the week containing the last expense
-            (date_trunc('week', edr.actual_end + interval '1 day') - interval '1 day' + interval '6 days')::date,
+        SELECT DISTINCT
+          date_trunc('week', date_series.date)::date as week_start
+        FROM expense_date_range edr,
+        generate_series(
+            -- Start from the first day of the period
+            edr.actual_start,
+            -- End at the last day of the period  
+            edr.actual_end,
             '1 week'::interval
-          ) + interval '1 day') - interval '1 day')::date as week_start
-        FROM expense_date_range edr
+        ) as date_series(date)
       ),
       week_ranges AS (
         SELECT
           wb.week_start,
           (wb.week_start + interval '6 days')::date as week_end
         FROM week_boundaries wb
+        CROSS JOIN expense_date_range edr
+        WHERE wb.week_start <= edr.actual_end
       ),
       weekly_expenses AS (
         SELECT
@@ -206,6 +209,7 @@ export async function GET(request: Request) {
           g.name as grouper_name,
           COALESCE(SUM(e.amount), 0) as weekly_amount${budgetSelect}
         FROM week_ranges wr
+        CROSS JOIN period_info pi
         CROSS JOIN groupers g`;
 
     // Add estudio filtering join if estudioId is provided
@@ -286,8 +290,7 @@ export async function GET(request: Request) {
 
       // Add budget data if requested
       if (includeBudgets) {
-        grouperData.weekly_budget_amount =
-          parseFloat(row.weekly_budget_amount) || 0;
+        grouperData.weekly_budget_amount = parseFloat(row.weekly_budget_amount) || 0;
       }
 
       weekMap.get(weekKey).grouper_data.push(grouperData);

@@ -46,7 +46,8 @@ export class CategoryFundFallback {
     categories: Category[],
     funds: Fund[],
     currentFilterFund?: Fund | null,
-    fundFilter?: string | null
+    fundFilter?: string | null,
+    configuredDefaultFundId?: string | null
   ): Fund | null {
     const availableFunds = this.getAvailableFundsForCategory(
       categoryId,
@@ -75,7 +76,7 @@ export class CategoryFundFallback {
     }
 
     // Priority 3: Use the default fund if available
-    const defaultFund = this.getDefaultFund(funds);
+    const defaultFund = this.getDefaultFund(funds, configuredDefaultFundId);
     if (defaultFund && availableFunds.some((f) => f.id === defaultFund.id)) {
       return defaultFund;
     }
@@ -85,14 +86,24 @@ export class CategoryFundFallback {
   }
 
   /**
-   * Gets the system default fund (usually "Disponible")
+   * Gets the system default fund
+   * @param funds - Available funds
+   * @param configuredDefaultFundId - Optional configured default fund ID from settings
    */
-  static getDefaultFund(funds: Fund[]): Fund | null {
+  static getDefaultFund(funds: Fund[], configuredDefaultFundId?: string | null): Fund | null {
     if (!funds || funds.length === 0) {
       return null;
     }
 
-    // Look for "Disponible" fund first
+    // Priority 1: Use configured default fund if provided and exists
+    if (configuredDefaultFundId) {
+      const configuredFund = funds.find((fund) => fund.id === configuredDefaultFundId);
+      if (configuredFund) {
+        return configuredFund;
+      }
+    }
+
+    // Priority 2: Look for "Disponible" fund (backward compatibility)
     const disponibleFund = funds.find(
       (fund) => fund.name.toLowerCase() === "disponible"
     );
@@ -100,7 +111,7 @@ export class CategoryFundFallback {
       return disponibleFund;
     }
 
-    // Look for any fund with "disponible" in the name
+    // Priority 3: Look for any fund with "disponible" in the name
     const disponibleLikeFund = funds.find((fund) =>
       fund.name.toLowerCase().includes("disponible")
     );
@@ -108,7 +119,7 @@ export class CategoryFundFallback {
       return disponibleLikeFund;
     }
 
-    // Look for "default" fund
+    // Priority 4: Look for "default" fund
     const defaultFund = funds.find((fund) =>
       fund.name.toLowerCase().includes("default")
     );
@@ -116,7 +127,7 @@ export class CategoryFundFallback {
       return defaultFund;
     }
 
-    // Return the first fund as last resort
+    // Priority 5: Return the first fund as last resort
     return funds[0] || null;
   }
 

@@ -59,6 +59,7 @@ export function IncomesView() {
     updateIncome,
     deleteIncome,
     getFundById,
+    getDefaultFund,
   } = useBudget();
   const { toast } = useToast();
 
@@ -76,6 +77,7 @@ export function IncomesView() {
   const [newIncomeAmount, setNewIncomeAmount] = useState("");
   const [newIncomeEvent, setNewIncomeEvent] = useState("");
   const [newIncomeFund, setNewIncomeFund] = useState<Fund | null>(null);
+  const [defaultFundInitialized, setDefaultFundInitialized] = useState(false);
 
   const [editIncome, setEditIncome] = useState<{
     id: string;
@@ -97,6 +99,24 @@ export function IncomesView() {
       setNewIncomePeriod(activePeriod.id);
     }
   }, [activePeriod]);
+
+  // Set default fund when add dialog opens
+  useEffect(() => {
+    if (isAddOpen && funds && funds.length > 0 && !defaultFundInitialized) {
+      const defaultFund = getDefaultFund();
+      if (defaultFund) {
+        setNewIncomeFund(defaultFund);
+        setDefaultFundInitialized(true);
+      }
+    }
+  }, [isAddOpen, funds, defaultFundInitialized, getDefaultFund]);
+
+  // Reset default fund initialization when dialog closes
+  useEffect(() => {
+    if (!isAddOpen) {
+      setDefaultFundInitialized(false);
+    }
+  }, [isAddOpen]);
 
   const handleAddIncome = async () => {
     if (!newIncomeDate || !newIncomeDescription.trim() || !newIncomeAmount) {
@@ -138,6 +158,7 @@ export function IncomesView() {
       setNewIncomeAmount("");
       setNewIncomeEvent("");
       setNewIncomeFund(null);
+      setDefaultFundInitialized(false);
       setIsAddOpen(false);
 
       toast({
@@ -395,11 +416,14 @@ export function IncomesView() {
                   onFundChange={setNewIncomeFund}
                   placeholder="Seleccionar fondo..."
                   includeAllFunds={false}
+                  defaultFund={getDefaultFund()}
                   className="w-full"
                 />
                 <p className="text-sm text-muted-foreground">
-                  Si no seleccionas un fondo, se asignará al fondo "Disponible"
-                  por defecto
+                  {getDefaultFund()
+                    ? `Si no seleccionas un fondo, se asignará al fondo "${getDefaultFund()?.name}" por defecto`
+                    : 'Si no seleccionas un fondo, se asignará al fondo "Disponible" por defecto'
+                  }
                 </p>
               </div>
             </div>
@@ -647,11 +671,14 @@ export function IncomesView() {
                 onFundChange={setEditIncomeFund}
                 placeholder="Seleccionar fondo..."
                 includeAllFunds={false}
+                defaultFund={getDefaultFund()}
                 className="w-full"
               />
               <p className="text-sm text-muted-foreground">
-                Si no seleccionas un fondo, se asignará al fondo "Disponible"
-                por defecto
+                {getDefaultFund()
+                  ? `Si no seleccionas un fondo, se asignará al fondo "${getDefaultFund()?.name}" por defecto`
+                  : 'Si no seleccionas un fondo, se asignará al fondo "Disponible" por defecto'
+                }
               </p>
             </div>
           </div>

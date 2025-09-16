@@ -1,1 +1,1 @@
-commit changes and submit a PR with all the details of the changes
+commit all changes and submit a PR.

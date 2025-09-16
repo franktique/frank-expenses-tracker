@@ -14,6 +14,7 @@ import {
   TrendingUp,
   Wallet,
   Zap,
+  Receipt,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -29,6 +30,7 @@ import {
 } from "@/components/ui/sidebar";
 import { LogoutButton } from "@/components/logout-button";
 import { useAuth } from "@/lib/auth-context";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 export function AppSidebar() {
   const pathname = usePathname();
@@ -47,9 +49,12 @@ export function AppSidebar() {
   return (
     <Sidebar>
       <SidebarHeader className="border-b">
-        <div className="flex items-center gap-2 px-4 py-2">
-          <DollarSign className="h-6 w-6" />
-          <span className="text-lg font-semibold">Budget Tracker</span>
+        <div className="flex items-center justify-between px-4 py-2">
+          <div className="flex items-center gap-2">
+            <DollarSign className="h-6 w-6" />
+            <span className="text-lg font-semibold">Budget Tracker</span>
+          </div>
+          <ThemeToggle />
         </div>
       </SidebarHeader>
       <SidebarContent>
@@ -97,8 +102,16 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive("/gastos")}>
               <Link href="/gastos">
-                <CreditCard className="h-4 w-4" />
+                <Receipt className="h-4 w-4" />
                 <span>Gastos</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={isActive("/tarjetas-credito")}>
+              <Link href="/tarjetas-credito">
+                <CreditCard className="h-4 w-4" />
+                <span>Tarjetas de Crédito</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -150,6 +163,17 @@ export function AppSidebar() {
               <Link href="/dashboard/fondos">
                 <BarChart3 className="h-4 w-4" />
                 <span>Dashboard Fondos</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive("/dashboard/remainder")}
+            >
+              <Link href="/dashboard/remainder">
+                <TrendingUp className="h-4 w-4" />
+                <span>Dashboard Remanentes</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

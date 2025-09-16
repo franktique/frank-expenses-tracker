@@ -27,5 +27,5 @@ export function getCategoryNameStyle(item: BudgetSummaryItem): string {
   const hasNoExpenses = item.total_amount === 0;
 
   // Return appropriate Tailwind CSS classes
-  return hasNoExpenses ? "text-muted-foreground" : "";
+  return hasNoExpenses ? "!text-black dark:!text-white" : "";
 }

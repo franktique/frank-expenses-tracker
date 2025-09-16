@@ -12,6 +12,7 @@ import {
   LineChart,
   PieChart,
   PiggyBank,
+  TrendingUp,
   Wallet,
   CreditCardIcon,
 } from "lucide-react";
@@ -492,12 +493,49 @@ export function DashboardView() {
             </Card>
           </div>
 
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card
+              className="cursor-pointer hover:bg-accent/50 transition-colors"
+              onClick={() => router.push("/dashboard/remainder")}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Dashboard Remanentes
+                </CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    router.push("/dashboard/remainder");
+                  }}
+                >
+                  Ver remanentes
+                </Button>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Categorías con presupuesto disponible
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="flex items-center justify-center border-dashed">
+              <CardContent className="text-center py-6">
+                <p className="text-sm text-muted-foreground">
+                  Más dashboards próximamente
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Resumen de Presupuesto</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-lg">Resumen de Presupuesto</CardTitle>
+                  <CardDescription className="text-sm">
                     Gastos por categoría en el periodo actual
                   </CardDescription>
                 </div>
@@ -509,9 +547,9 @@ export function DashboardView() {
                 />
               </div>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
+            <CardContent className="p-0">
+              <Table className="max-h-[60vh]">
+                <TableHeader className="sticky top-0 bg-muted z-10">
                   <TableRow>
                     <TableHead>Categoria</TableHead>
                     <TableHead className="text-right">
@@ -550,8 +588,11 @@ export function DashboardView() {
                             className={`font-medium ${getCategoryNameStyle(
                               item
                             )} ${
-                              // Green: remaining is equal to or less than 0
-                              item.remaining <= 0
+                              // White background for categories with no expenses
+                              item.total_amount === 0
+                                ? "bg-white dark:bg-gray-800"
+                                : // Green: remaining is equal to or less than 0
+                                item.remaining <= 0
                                 ? // Red: remaining is less than 0 and absolute value is >= 30% of budget
                                   item.remaining < 0 &&
                                   Math.abs(item.remaining) >=

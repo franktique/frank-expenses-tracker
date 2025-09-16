@@ -16,6 +16,8 @@ import {
   FundBalanceRecalculationResult,
   CategoryFundRelationship,
 } from "@/types/funds";
+import { CreditCard, CreditCardOperationResult } from "@/types/credit-cards";
+import { AppSettings } from "@/types/settings";
 import { ActivePeriodStorage } from "@/lib/active-period-storage";
 import { loadActivePeriod } from "@/lib/active-period-service";
 import {
@@ -32,10 +34,13 @@ type BudgetContextType = {
   incomes: Income[];
   expenses: Expense[];
   funds: Fund[];
+  creditCards: CreditCard[];
+  settings: AppSettings | null;
   activePeriod: Period | null;
   selectedFund: Fund | null;
   fundFilter: string | null; // 'all' for all funds, fund_id for specific fund, null for no filter
   isLoading: boolean;
+  dataLoaded: boolean; // true when all initial data has been loaded
   error: string | null;
   isDbInitialized: boolean;
   dbConnectionError: boolean;
@@ -117,7 +122,8 @@ type BudgetContextType = {
     description: string,
     amount: number,
     sourceFundId: string,
-    destinationFundId?: string
+    destinationFundId?: string,
+    creditCardId?: string
   ) => Promise<void>;
   updateExpense: (
     id: string,
@@ -128,7 +134,8 @@ type BudgetContextType = {
     description: string,
     amount: number,
     sourceFundId?: string,
-    destinationFundId?: string
+    destinationFundId?: string,
+    creditCardId?: string
   ) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   addFund: (
@@ -153,6 +160,20 @@ type BudgetContextType = {
   getFilteredIncomes: (fundId?: string) => Income[];
   getFilteredExpenses: (fundId?: string) => Expense[];
   getDashboardData: (fundId?: string) => Promise<any>;
+  addCreditCard: (
+    bankName: string,
+    franchise: string,
+    lastFourDigits: string
+  ) => Promise<CreditCard>;
+  updateCreditCard: (
+    id: string,
+    bankName?: string,
+    franchise?: string,
+    lastFourDigits?: string
+  ) => Promise<CreditCard>;
+  deleteCreditCard: (id: string) => Promise<void>;
+  getCreditCardById: (id: string) => CreditCard | undefined;
+  refreshCreditCards: () => Promise<void>;
   getCategoryById: (id: string) => Category | undefined;
   getPeriodById: (id: string) => Period | undefined;
   getFundById: (id: string) => Fund | undefined;
@@ -171,10 +192,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [funds, setFunds] = useState<Fund[]>([]);
+  const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const [activePeriod, setActivePeriod] = useState<Period | null>(null);
   const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
   const [fundFilter, setFundFilter] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDbInitialized, setIsDbInitialized] = useState(false);
   const [dbConnectionError, setDbConnectionError] = useState(false);
@@ -208,15 +232,16 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Initialize fund filter with default fund when funds are loaded
+  // Initialize fund filter with default fund when funds are loaded and data is fully loaded
   useEffect(() => {
-    if (funds.length > 0 && !fundFilter) {
+    if (dataLoaded && funds.length > 0 && !fundFilter) {
       const defaultFund = getDefaultFund();
       if (defaultFund) {
         setFundFilter(defaultFund.id);
+        console.log(`Fund filter initialized to default fund: ${defaultFund.name}`);
       }
     }
-  }, [funds, fundFilter]);
+  }, [funds, fundFilter, dataLoaded]);
 
   // Cleanup cache when component unmounts
   useEffect(() => {
@@ -379,10 +404,12 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const refreshData = async () => {
     if (!isDbInitialized) {
       setIsLoading(false);
+      setDataLoaded(false);
       return;
     }
 
     setIsLoading(true);
+    setDataLoaded(false);
     setError(null);
 
     try {
@@ -529,12 +556,86 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         setFunds(fundsData);
       }
 
+      // Fetch credit cards
+      try {
+        const creditCardsResponse = await fetch("/api/credit-cards");
+        if (creditCardsResponse.ok) {
+          const creditCardsData = await creditCardsResponse.json();
+          setCreditCards(creditCardsData);
+        } else {
+          // Credit cards might not be migrated yet, try migration
+          try {
+            const migrationResponse = await fetch("/api/migrate-credit-cards", {
+              method: "POST",
+            });
+
+            if (migrationResponse.ok) {
+              // Migration successful, try fetching credit cards again
+              const retryResponse = await fetch("/api/credit-cards");
+              if (retryResponse.ok) {
+                const creditCardsData = await retryResponse.json();
+                setCreditCards(creditCardsData);
+              } else {
+                // If still fails, set empty array (credit cards are optional)
+                setCreditCards([]);
+              }
+            } else {
+              // Migration failed, set empty array (credit cards are optional)
+              setCreditCards([]);
+            }
+          } catch (migrationError) {
+            // Migration error, set empty array (credit cards are optional)
+            setCreditCards([]);
+          }
+        }
+      } catch (creditCardError) {
+        // Credit card fetch error, set empty array (credit cards are optional)
+        console.warn("Failed to fetch credit cards:", creditCardError);
+        setCreditCards([]);
+      }
+
+      // Fetch settings
+      try {
+        const settingsResponse = await fetch("/api/settings");
+        if (settingsResponse.ok) {
+          const settingsData = await settingsResponse.json();
+          if (settingsData.success && settingsData.settings) {
+            setSettings(settingsData.settings);
+          }
+        } else {
+          // Settings might not be initialized yet, try to set up the table
+          try {
+            const setupResponse = await fetch("/api/setup-settings", {
+              method: "POST",
+            });
+            if (setupResponse.ok) {
+              // Table setup successful, try fetching settings again
+              const retryResponse = await fetch("/api/settings");
+              if (retryResponse.ok) {
+                const settingsData = await retryResponse.json();
+                if (settingsData.success && settingsData.settings) {
+                  setSettings(settingsData.settings);
+                }
+              }
+            }
+          } catch (setupError) {
+            console.warn("Failed to set up settings table:", setupError);
+          }
+        }
+      } catch (settingsError) {
+        console.warn("Failed to fetch settings:", settingsError);
+      }
+
       // Clear category-fund cache when funds are updated during data refresh
       categoryFundCache.clear();
       setCategoryFundsCache(new Map());
+
+      // Mark data as loaded only when ALL data has been successfully fetched
+      setDataLoaded(true);
     } catch (err) {
       console.error("Error refreshing data:", err);
       setError((err as Error).message);
+      setDataLoaded(false);
     } finally {
       setIsLoading(false);
     }
@@ -804,7 +905,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       categories,
       funds,
       currentFilterFund,
-      fundFilter
+      fundFilter,
+      settings?.default_fund_id
     );
   };
 
@@ -1378,7 +1480,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     description: string,
     amount: number,
     sourceFundId: string,
-    destinationFundId?: string
+    destinationFundId?: string,
+    creditCardId?: string
   ) => {
     try {
       // Validate fund transfer - prevent same fund transfers
@@ -1401,6 +1504,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           amount,
           source_fund_id: sourceFundId,
           destination_fund_id: destinationFundId,
+          credit_card_id: creditCardId,
         }),
       });
 
@@ -1429,7 +1533,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     description: string,
     amount: number,
     sourceFundId?: string,
-    destinationFundId?: string
+    destinationFundId?: string,
+    creditCardId?: string
   ) => {
     try {
       // Validate fund transfer - prevent same fund transfers
@@ -1455,6 +1560,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           amount,
           source_fund_id: sourceFundId,
           destination_fund_id: destinationFundId,
+          credit_card_id: creditCardId,
         }),
       });
 
@@ -1795,7 +1901,125 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getDefaultFund = (): Fund | undefined => {
-    return funds.find((fund) => fund.name === "Disponible");
+    // First, try to use the configured default fund from settings
+    if (settings?.default_fund_id) {
+      const configuredDefault = funds.find((fund) => fund.id === settings.default_fund_id);
+      if (configuredDefault) {
+        return configuredDefault;
+      }
+    }
+
+    // Fallback to CategoryFundFallback logic for backward compatibility
+    return CategoryFundFallback.getDefaultFund(funds);
+  };
+
+  // Credit Card functions
+  const addCreditCard = async (
+    bankName: string,
+    franchise: string,
+    lastFourDigits: string
+  ): Promise<CreditCard> => {
+    try {
+      const response = await fetch("/api/credit-cards", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          bank_name: bankName,
+          franchise,
+          last_four_digits: lastFourDigits,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to add credit card: ${errorText}`);
+      }
+
+      const newCreditCard = await response.json();
+      setCreditCards([...creditCards, newCreditCard]);
+      return newCreditCard;
+    } catch (err) {
+      setError((err as Error).message);
+      throw err;
+    }
+  };
+
+  const updateCreditCard = async (
+    id: string,
+    bankName?: string,
+    franchise?: string,
+    lastFourDigits?: string
+  ): Promise<CreditCard> => {
+    try {
+      const updateData: any = {};
+      if (bankName !== undefined) updateData.bank_name = bankName;
+      if (franchise !== undefined) updateData.franchise = franchise;
+      if (lastFourDigits !== undefined)
+        updateData.last_four_digits = lastFourDigits;
+
+      const response = await fetch(`/api/credit-cards/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updateData),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update credit card: ${errorText}`);
+      }
+
+      const updatedCreditCard = await response.json();
+      setCreditCards(
+        creditCards.map((card) => (card.id === id ? updatedCreditCard : card))
+      );
+      return updatedCreditCard;
+    } catch (err) {
+      setError((err as Error).message);
+      throw err;
+    }
+  };
+
+  const deleteCreditCard = async (id: string): Promise<void> => {
+    try {
+      const response = await fetch(`/api/credit-cards/${id}`, {
+        method: "DELETE",
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to delete credit card: ${errorText}`);
+      }
+
+      setCreditCards(creditCards.filter((card) => card.id !== id));
+    } catch (err) {
+      setError((err as Error).message);
+      throw err;
+    }
+  };
+
+  const getCreditCardById = (id: string): CreditCard | undefined => {
+    return creditCards.find((card) => card.id === id);
+  };
+
+  const refreshCreditCards = async (): Promise<void> => {
+    try {
+      const response = await fetch("/api/credit-cards");
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to refresh credit cards: ${errorText}`);
+      }
+
+      const creditCardsData = await response.json();
+      setCreditCards(creditCardsData);
+    } catch (err) {
+      console.error("Error refreshing credit cards:", err);
+      setError((err as Error).message);
+      throw err;
+    }
   };
 
   // Background synchronization for active period
@@ -1839,10 +2063,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         incomes,
         expenses,
         funds,
+        creditCards,
+        settings,
         activePeriod,
         selectedFund,
         fundFilter,
         isLoading,
+        dataLoaded,
         error,
         isDbInitialized,
         dbConnectionError,
@@ -1882,6 +2109,11 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         getFilteredIncomes,
         getFilteredExpenses,
         getDashboardData,
+        addCreditCard,
+        updateCreditCard,
+        deleteCreditCard,
+        getCreditCardById,
+        refreshCreditCards,
         getCategoryById,
         getPeriodById,
         getFundById,

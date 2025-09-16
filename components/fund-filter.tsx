@@ -28,6 +28,7 @@ interface FundFilterProps {
   includeAllFunds?: boolean;
   allFundsLabel?: string;
   availableFunds?: Fund[]; // New prop to filter available funds
+  defaultFund?: Fund | null; // Optional default fund for initial selection
 }
 
 export function FundFilter({
@@ -38,6 +39,7 @@ export function FundFilter({
   includeAllFunds = true,
   allFundsLabel = "Todos los fondos",
   availableFunds,
+  defaultFund,
 }: FundFilterProps) {
   const { funds, isLoading, error } = useBudget();
   const [open, setOpen] = useState(false);
@@ -172,7 +174,7 @@ export function FundFilter({
                           : "opacity-0"
                       )}
                     />
-                    <div className="flex flex-col">
+                    <div className="flex flex-col flex-1">
                       <span>{fund.name}</span>
                       {fund.description && (
                         <span className="text-xs text-muted-foreground">
@@ -180,6 +182,11 @@ export function FundFilter({
                         </span>
                       )}
                     </div>
+                    {defaultFund?.id === fund.id && (
+                      <span className="text-xs text-blue-600 ml-2">
+                        Por defecto
+                      </span>
+                    )}
                   </CommandItem>
                 ))}
             </CommandGroup>

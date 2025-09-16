@@ -37,6 +37,7 @@ interface SourceFundSelectorProps {
   className?: string;
   disabled?: boolean;
   currentFundFilter?: Fund | null; // For smart defaults from fund filter
+  defaultFund?: Fund | null; // For configured default fund
   required?: boolean;
   error?: string;
   onValidationChange?: (
@@ -57,6 +58,7 @@ export function SourceFundSelector({
   className,
   disabled = false,
   currentFundFilter,
+  defaultFund,
   required = true,
   error,
   onValidationChange,
@@ -122,6 +124,15 @@ export function SourceFundSelector({
         ) {
           onSourceFundChange(currentFundFilter);
         }
+        // Fallback: use configured default fund if it's related to the category
+        else if (
+          defaultFund &&
+          !selectedSourceFund &&
+          !currentFundFilter &&
+          funds.some((fund: Fund) => fund.id === defaultFund.id)
+        ) {
+          onSourceFundChange(defaultFund);
+        }
 
         // Add informational warnings
         const warnings: string[] = [];
@@ -149,6 +160,7 @@ export function SourceFundSelector({
   }, [
     selectedCategoryId,
     currentFundFilter,
+    defaultFund,
     selectedSourceFund,
     onSourceFundChange,
     onValidationChange,

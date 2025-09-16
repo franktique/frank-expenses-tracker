@@ -15,12 +15,16 @@ export async function GET(
         c.name as category_name,
         p.name as period_name,
         sf.name as source_fund_name,
-        df.name as destination_fund_name
+        df.name as destination_fund_name,
+        cc.bank_name as credit_card_bank_name,
+        cc.franchise as credit_card_franchise,
+        cc.last_four_digits as credit_card_last_four_digits
       FROM expenses e
       JOIN categories c ON e.category_id = c.id
       JOIN periods p ON e.period_id = p.id
       LEFT JOIN funds sf ON e.source_fund_id = sf.id
       LEFT JOIN funds df ON e.destination_fund_id = df.id
+      LEFT JOIN credit_cards cc ON e.credit_card_id = cc.id
       WHERE e.id = ${id}
     `;
 
@@ -28,7 +32,23 @@ export async function GET(
       return NextResponse.json({ error: "Expense not found" }, { status: 404 });
     }
 
-    return NextResponse.json(expense);
+    // Transform the response to include credit card info in the expected format
+    const transformedExpense = {
+      ...expense,
+      credit_card_info: expense.credit_card_bank_name
+        ? {
+            bank_name: expense.credit_card_bank_name,
+            franchise: expense.credit_card_franchise,
+            last_four_digits: expense.credit_card_last_four_digits,
+          }
+        : undefined,
+      // Remove the individual credit card fields from the response
+      credit_card_bank_name: undefined,
+      credit_card_franchise: undefined,
+      credit_card_last_four_digits: undefined,
+    };
+
+    return NextResponse.json(transformedExpense);
   } catch (error) {
     console.error("Error fetching expense:", error);
     return NextResponse.json(
@@ -75,6 +95,7 @@ export async function PUT(
       amount,
       source_fund_id,
       destination_fund_id,
+      credit_card_id,
     } = validationResult.data;
 
     // Use existing values if not provided
@@ -89,6 +110,10 @@ export async function PUT(
       destination_fund_id !== undefined
         ? destination_fund_id
         : existingExpense.destination_fund_id;
+    credit_card_id =
+      credit_card_id !== undefined
+        ? credit_card_id
+        : existingExpense.credit_card_id;
 
     // Enhanced validation for expense updates
     const validation = await validateSourceFundUpdate(
@@ -153,7 +178,8 @@ export async function PUT(
         description = ${description},
         amount = ${amount},
         source_fund_id = ${source_fund_id},
-        destination_fund_id = ${destination_fund_id || null}
+        destination_fund_id = ${destination_fund_id || null},
+        credit_card_id = ${credit_card_id || null}
       WHERE id = ${id}
       RETURNING *
     `;
@@ -179,23 +205,43 @@ export async function PUT(
       `;
     }
 
-    // Fetch the updated expense with fund information
+    // Fetch the updated expense with fund and credit card information
     const [expenseWithFunds] = await sql`
       SELECT 
         e.*,
         c.name as category_name,
         p.name as period_name,
         sf.name as source_fund_name,
-        df.name as destination_fund_name
+        df.name as destination_fund_name,
+        cc.bank_name as credit_card_bank_name,
+        cc.franchise as credit_card_franchise,
+        cc.last_four_digits as credit_card_last_four_digits
       FROM expenses e
       JOIN categories c ON e.category_id = c.id
       JOIN periods p ON e.period_id = p.id
       JOIN funds sf ON e.source_fund_id = sf.id
       LEFT JOIN funds df ON e.destination_fund_id = df.id
+      LEFT JOIN credit_cards cc ON e.credit_card_id = cc.id
       WHERE e.id = ${id}
     `;
 
-    return NextResponse.json(expenseWithFunds);
+    // Transform the response to include credit card info in the expected format
+    const transformedExpense = {
+      ...expenseWithFunds,
+      credit_card_info: expenseWithFunds.credit_card_bank_name
+        ? {
+            bank_name: expenseWithFunds.credit_card_bank_name,
+            franchise: expenseWithFunds.credit_card_franchise,
+            last_four_digits: expenseWithFunds.credit_card_last_four_digits,
+          }
+        : undefined,
+      // Remove the individual credit card fields from the response
+      credit_card_bank_name: undefined,
+      credit_card_franchise: undefined,
+      credit_card_last_four_digits: undefined,
+    };
+
+    return NextResponse.json(transformedExpense);
   } catch (error) {
     console.error("Error updating expense:", error);
     return NextResponse.json(

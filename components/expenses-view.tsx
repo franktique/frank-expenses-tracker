@@ -64,12 +64,16 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
+import { Badge } from "@/components/ui/badge";
 import { useBudget, type PaymentMethod } from "@/context/budget-context";
 import { cn, formatCurrency, formatDate } from "@/lib/utils";
 import { FundFilter } from "@/components/fund-filter";
 import { FundSelectionConstraintIndicator } from "@/components/fund-category-relationship-indicator";
 import { SourceFundSelector } from "@/components/source-fund-selector";
+import { CreditCardSelector } from "@/components/credit-card-selector";
 import { Fund } from "@/types/funds";
+import { CreditCard, CREDIT_CARD_FRANCHISE_LABELS } from "@/types/credit-cards";
+import { useRouter, useSearchParams } from "next/navigation";
 
 // Helper function to get available funds for a category
 const getAvailableFundsForCategory = (
@@ -152,8 +156,14 @@ export function ExpensesView() {
     getCategoryById,
     getPeriodById,
     getFundById,
+    getDefaultFund,
+    isLoading,
+    dataLoaded,
+    refreshData,
   } = useBudget();
   const { toast } = useToast();
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -161,8 +171,15 @@ export function ExpensesView() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isFundSectionOpenAdd, setIsFundSectionOpenAdd] = useState(false);
   const [isFundSectionOpenEdit, setIsFundSectionOpenEdit] = useState(false);
-  const [categoryFilter, setCategoryFilter] = useState<string>("");
-  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>("");
+  const [categoryFilter, setCategoryFilter] = useState<string>(
+    searchParams.get("category") || ""
+  );
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>(
+    searchParams.get("paymentMethod") || ""
+  );
+  const [creditCardFilter, setCreditCardFilter] = useState<string>(
+    searchParams.get("creditCard") || ""
+  );
 
   // Fund filter state - mandatory for expenses
   const [fundFilter, setFundFilter] = useState<Fund | null>(null);
@@ -185,6 +202,8 @@ export function ExpensesView() {
   const [newExpenseSourceFund, setNewExpenseSourceFund] = useState<Fund | null>(
     null
   );
+  const [newExpenseCreditCard, setNewExpenseCreditCard] =
+    useState<CreditCard | null>(null);
 
   // State for dynamic fund filtering
   const [availableFundsForNewExpense, setAvailableFundsForNewExpense] =
@@ -202,23 +221,82 @@ export function ExpensesView() {
     amount: string;
     sourceFundId?: string;
     destinationFundId?: string;
+    creditCardId?: string;
   } | null>(null);
   const [editExpenseDestinationFund, setEditExpenseDestinationFund] =
     useState<Fund | null>(null);
   const [editExpenseSourceFund, setEditExpenseSourceFund] =
     useState<Fund | null>(null);
+  const [editExpenseCreditCard, setEditExpenseCreditCard] =
+    useState<CreditCard | null>(null);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
-  // Set default fund filter to 'Disponible' on component mount
+  // Credit cards state for filtering
+  const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
+  const [creditCardsLoading, setCreditCardsLoading] = useState(false);
+
+  // Function to update URL parameters when filters change
+  const updateUrlParams = (updates: Record<string, string>) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+
+    Object.entries(updates).forEach(([key, value]) => {
+      if (value && value !== "" && value !== "all") {
+        current.set(key, value);
+      } else {
+        current.delete(key);
+      }
+    });
+
+    const search = current.toString();
+    const query = search ? `?${search}` : "";
+    router.push(`${window.location.pathname}${query}`);
+  };
+
+  // Refresh data when component mounts to ensure all data is loaded
   useEffect(() => {
-    if (funds && funds.length > 0 && !fundFilter) {
-      const disponibleFund = funds.find((fund) => fund.name === "Disponible");
-      if (disponibleFund) {
-        setFundFilter(disponibleFund);
+    refreshData();
+  }, []); // Empty dependency array - only run on mount
+
+  // Set default fund filter using configured default fund when data is fully loaded
+  useEffect(() => {
+    if (dataLoaded && funds && funds.length > 0 && !fundFilter) {
+      // Get the configured default fund from settings
+      const defaultFund = getDefaultFund();
+      if (defaultFund) {
+        setFundFilter(defaultFund);
+        console.log(`Expenses: Fund filter set to default fund: ${defaultFund.name}`);
+      } else {
+        // Fallback to "Disponible" fund if no default is configured
+        const disponibleFund = funds.find((fund) => fund.name === "Disponible");
+        if (disponibleFund) {
+          setFundFilter(disponibleFund);
+          console.log(`Expenses: Fund filter set to fallback 'Disponible' fund`);
+        }
       }
     }
-  }, [funds, fundFilter]);
+  }, [funds, fundFilter, dataLoaded]);
+
+  // Fetch credit cards for filtering
+  useEffect(() => {
+    const fetchCreditCards = async () => {
+      setCreditCardsLoading(true);
+      try {
+        const response = await fetch("/api/credit-cards");
+        if (response.ok) {
+          const data = await response.json();
+          setCreditCards(data.credit_cards || []);
+        }
+      } catch (error) {
+        console.error("Error fetching credit cards for filter:", error);
+        setCreditCards([]);
+      } finally {
+        setCreditCardsLoading(false);
+      }
+    };
+
+    fetchCreditCards();
+  }, []);
 
   // Update available funds for new expense when category changes
   useEffect(() => {
@@ -304,6 +382,7 @@ export function ExpensesView() {
     setNewExpenseAmount("");
     setNewExpenseSourceFund(null);
     setNewExpenseDestinationFund(null);
+    setNewExpenseCreditCard(null);
     setCategorySearch("");
     setAvailableFundsForNewExpense(funds || []);
     setIsFundSectionOpenAdd(false);
@@ -359,7 +438,8 @@ export function ExpensesView() {
       newExpenseDescription,
       amount,
       newExpenseSourceFund.id,
-      newExpenseDestinationFund?.id
+      newExpenseDestinationFund?.id,
+      newExpenseCreditCard?.id
     );
 
     resetNewExpenseForm();
@@ -424,12 +504,14 @@ export function ExpensesView() {
       editExpense.description,
       amount,
       editExpenseSourceFund?.id,
-      editExpenseDestinationFund?.id
+      editExpenseDestinationFund?.id,
+      editExpenseCreditCard?.id
     );
 
     setEditExpense(null);
     setEditExpenseSourceFund(null);
     setEditExpenseDestinationFund(null);
+    setEditExpenseCreditCard(null);
     setIsEditOpen(false);
 
     toast({
@@ -456,7 +538,7 @@ export function ExpensesView() {
     .slice()
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  // Filter expenses by active period, selected category and payment method if available
+  // Filter expenses by active period, selected category, payment method, and credit card if available
   // Also filter by fund - only show expenses from categories that belong to the selected fund
   const filteredExpenses = sortedExpenses.filter((expense) => {
     // Filter by period
@@ -473,6 +555,13 @@ export function ExpensesView() {
       paymentMethodFilter === "all" || !paymentMethodFilter
         ? true
         : expense.payment_method === paymentMethodFilter;
+    // Filter by credit card
+    const creditCardMatch =
+      creditCardFilter === "all" || !creditCardFilter
+        ? true
+        : creditCardFilter === "none"
+        ? !expense.credit_card_id
+        : expense.credit_card_id === creditCardFilter;
     // Filter by fund - only show expenses from categories that belong to the selected fund
     const fundMatch = !fundFilter
       ? true
@@ -493,7 +582,13 @@ export function ExpensesView() {
           return category.fund_id === fundFilter.id;
         })();
 
-    return periodMatch && categoryMatch && paymentMethodMatch && fundMatch;
+    return (
+      periodMatch &&
+      categoryMatch &&
+      paymentMethodMatch &&
+      creditCardMatch &&
+      fundMatch
+    );
   });
 
   return (
@@ -507,7 +602,8 @@ export function ExpensesView() {
               ? "registro"
               : "registros"}
             {(categoryFilter !== "all" && categoryFilter) ||
-            (paymentMethodFilter !== "all" && paymentMethodFilter)
+            (paymentMethodFilter !== "all" && paymentMethodFilter) ||
+            (creditCardFilter !== "all" && creditCardFilter)
               ? " con los filtros aplicados"
               : ""}
           </p>
@@ -530,7 +626,7 @@ export function ExpensesView() {
             }}
           >
             <DialogTrigger asChild>
-              <Button disabled={!fundFilter}>
+              <Button disabled={!dataLoaded || !fundFilter}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Nuevo Gasto
               </Button>
@@ -603,44 +699,45 @@ export function ExpensesView() {
                       )}
                     </CollapsibleTrigger>
                     <CollapsibleContent className="pt-3 space-y-3">
-                    {newExpenseCategory && (
-                      <FundSelectionConstraintIndicator
-                        categoryId={newExpenseCategory}
-                        availableFunds={availableFundsForNewExpense}
-                        selectedFund={newExpenseDestinationFund}
-                        currentFilterFund={fundFilter}
-                        className=""
-                      />
-                    )}
-                    <div className="grid gap-2">
-                      <Label htmlFor="source-fund">Fondo Origen *</Label>
-                      <SourceFundSelector
-                        selectedCategoryId={newExpenseCategory}
-                        selectedSourceFund={newExpenseSourceFund}
-                        onSourceFundChange={setNewExpenseSourceFund}
-                        placeholder="Seleccionar fondo origen..."
-                        currentFundFilter={fundFilter}
-                        required={true}
-                        className="w-full"
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <Label htmlFor="destination-fund">
-                        Fondo Destino (opcional)
-                      </Label>
-                      <FundFilter
-                        selectedFund={newExpenseDestinationFund}
-                        onFundChange={setNewExpenseDestinationFund}
-                        placeholder="Seleccionar fondo destino..."
-                        includeAllFunds={false}
-                        className="w-full"
-                        availableFunds={funds}
-                      />
-                      <p className="text-sm text-muted-foreground">
-                        Opcional: Transfiere dinero a otro fondo. Puedes seleccionar
-                        cualquier fondo disponible como destino.
-                      </p>
-                    </div>
+                      {newExpenseCategory && (
+                        <FundSelectionConstraintIndicator
+                          categoryId={newExpenseCategory}
+                          availableFunds={availableFundsForNewExpense}
+                          selectedFund={newExpenseDestinationFund}
+                          currentFilterFund={fundFilter}
+                          className=""
+                        />
+                      )}
+                      <div className="grid gap-2">
+                        <Label htmlFor="source-fund">Fondo Origen *</Label>
+                        <SourceFundSelector
+                          selectedCategoryId={newExpenseCategory}
+                          selectedSourceFund={newExpenseSourceFund}
+                          onSourceFundChange={setNewExpenseSourceFund}
+                          placeholder="Seleccionar fondo origen..."
+                          currentFundFilter={fundFilter}
+                          defaultFund={getDefaultFund()}
+                          required={true}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="destination-fund">
+                          Fondo Destino (opcional)
+                        </Label>
+                        <FundFilter
+                          selectedFund={newExpenseDestinationFund}
+                          onFundChange={setNewExpenseDestinationFund}
+                          placeholder="Seleccionar fondo destino..."
+                          includeAllFunds={false}
+                          className="w-full"
+                          availableFunds={funds}
+                        />
+                        <p className="text-sm text-muted-foreground">
+                          Opcional: Transfiere dinero a otro fondo. Puedes
+                          seleccionar cualquier fondo disponible como destino.
+                        </p>
+                      </div>
                     </CollapsibleContent>
                   </Collapsible>
                 </div>
@@ -746,6 +843,19 @@ export function ExpensesView() {
                     placeholder="0.00"
                   />
                 </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="credit-card">
+                    Tarjeta de Crédito (opcional)
+                  </Label>
+                  <CreditCardSelector
+                    selectedCreditCard={newExpenseCreditCard}
+                    onCreditCardChange={setNewExpenseCreditCard}
+                    placeholder="Seleccionar tarjeta de crédito..."
+                    showNoCardOption={true}
+                    required={false}
+                    showOnlyActive={true}
+                  />
+                </div>
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setIsAddOpen(false)}>
@@ -769,21 +879,32 @@ export function ExpensesView() {
         <CardContent>
           <div className="flex items-center gap-4">
             <Label htmlFor="fund-filter">Fondo:</Label>
-            <FundFilter
-              selectedFund={fundFilter}
-              onFundChange={setFundFilter}
-              placeholder="Seleccionar fondo..."
-              includeAllFunds={false}
-              className="w-[300px]"
-              required
-            />
-            {!fundFilter && (
-              <div className="flex items-center gap-2 p-2 rounded-md bg-destructive/10 border border-destructive/20">
-                <AlertTriangle className="w-4 h-4 text-destructive" />
-                <p className="text-sm text-destructive">
-                  Debe seleccionar un fondo para registrar gastos
+            {!dataLoaded ? (
+              <div className="flex items-center gap-2 p-2 rounded-md bg-blue-50 border border-blue-200">
+                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-sm text-blue-700">
+                  Cargando fondos disponibles...
                 </p>
               </div>
+            ) : (
+              <>
+                <FundFilter
+                  selectedFund={fundFilter}
+                  onFundChange={setFundFilter}
+                  placeholder="Seleccionar fondo..."
+                  includeAllFunds={false}
+                  className="w-[300px]"
+                  required
+                />
+                {!fundFilter && (
+                  <div className="flex items-center gap-2 p-2 rounded-md bg-destructive/10 border border-destructive/20">
+                    <AlertTriangle className="w-4 h-4 text-destructive" />
+                    <p className="text-sm text-destructive">
+                      Debe seleccionar un fondo para registrar gastos
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </CardContent>
@@ -800,7 +921,13 @@ export function ExpensesView() {
           <div className="mt-4 space-y-4">
             <div>
               <Label htmlFor="category-filter">Filtrar por categoría</Label>
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <Select
+                value={categoryFilter}
+                onValueChange={(value) => {
+                  setCategoryFilter(value);
+                  updateUrlParams({ category: value });
+                }}
+              >
                 <SelectTrigger id="category-filter" className="mt-1">
                   <SelectValue placeholder="Todas las categorías" />
                 </SelectTrigger>
@@ -824,7 +951,10 @@ export function ExpensesView() {
               </Label>
               <Select
                 value={paymentMethodFilter}
-                onValueChange={setPaymentMethodFilter}
+                onValueChange={(value) => {
+                  setPaymentMethodFilter(value);
+                  updateUrlParams({ paymentMethod: value });
+                }}
               >
                 <SelectTrigger id="payment-method-filter" className="mt-1">
                   <SelectValue placeholder="Todos los medios de pago" />
@@ -834,6 +964,38 @@ export function ExpensesView() {
                   <SelectItem value="credit">Tarjeta de crédito</SelectItem>
                   <SelectItem value="debit">Tarjeta de débito</SelectItem>
                   <SelectItem value="cash">Efectivo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="credit-card-filter">
+                Filtrar por tarjeta de crédito
+              </Label>
+              <Select
+                value={creditCardFilter}
+                onValueChange={(value) => {
+                  setCreditCardFilter(value);
+                  updateUrlParams({ creditCard: value });
+                }}
+                disabled={creditCardsLoading}
+              >
+                <SelectTrigger id="credit-card-filter" className="mt-1">
+                  <SelectValue placeholder="Todas las tarjetas" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas las tarjetas</SelectItem>
+                  <SelectItem value="none">Sin tarjeta de crédito</SelectItem>
+                  {creditCards
+                    .slice()
+                    .sort((a, b) => a.bank_name.localeCompare(b.bank_name))
+                    .map((creditCard) => (
+                      <SelectItem key={creditCard.id} value={creditCard.id}>
+                        {creditCard.bank_name} -{" "}
+                        {CREDIT_CARD_FRANCHISE_LABELS[creditCard.franchise]}{" "}
+                        ****{creditCard.last_four_digits}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>
@@ -847,6 +1009,7 @@ export function ExpensesView() {
                 <TableHead>Categoría</TableHead>
                 <TableHead>Descripción</TableHead>
                 <TableHead>Medio</TableHead>
+                <TableHead>Tarjeta</TableHead>
                 <TableHead>Fondo Origen</TableHead>
                 <TableHead>Fondo Destino</TableHead>
                 <TableHead className="text-right">Monto</TableHead>
@@ -880,6 +1043,29 @@ export function ExpensesView() {
                       {expense.payment_method === "credit" && "Crédito"}
                       {expense.payment_method === "debit" && "Débito"}
                       {expense.payment_method === "cash" && "Efectivo"}
+                    </TableCell>
+                    <TableCell>
+                      {expense.credit_card_info ? (
+                        <div className="flex items-center gap-2">
+                          <span
+                            className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
+                              expense.credit_card_info.is_active
+                                ? "bg-purple-50 text-purple-700 ring-purple-700/10"
+                                : "bg-gray-50 text-gray-600 ring-gray-600/10"
+                            }`}
+                          >
+                            {expense.credit_card_info.bank_name} ****
+                            {expense.credit_card_info.last_four_digits}
+                          </span>
+                          {!expense.credit_card_info.is_active && (
+                            <Badge variant="secondary" className="text-xs">
+                              Inactiva
+                            </Badge>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {expense.source_fund_name ? (
@@ -959,6 +1145,7 @@ export function ExpensesView() {
                             amount: expense.amount.toString(),
                             sourceFundId: expense.source_fund_id,
                             destinationFundId: expense.destination_fund_id,
+                            creditCardId: expense.credit_card_id,
                           });
                           // Set the source fund for editing
                           const sourceFund = expense.source_fund_id
@@ -972,6 +1159,25 @@ export function ExpensesView() {
                           setEditExpenseDestinationFund(
                             destinationFund || null
                           );
+                          // Set the credit card for editing
+                          // We'll need to fetch the credit card if it exists
+                          if (expense.credit_card_info) {
+                            // Create a CreditCard object from the expense credit_card_info
+                            const creditCard: CreditCard = {
+                              id: expense.credit_card_id!,
+                              bank_name: expense.credit_card_info.bank_name,
+                              franchise: expense.credit_card_info
+                                .franchise as any,
+                              last_four_digits:
+                                expense.credit_card_info.last_four_digits,
+                              is_active: expense.credit_card_info.is_active,
+                              created_at: "",
+                              updated_at: "",
+                            };
+                            setEditExpenseCreditCard(creditCard);
+                          } else {
+                            setEditExpenseCreditCard(null);
+                          }
                           setIsEditOpen(true);
                         }}
                       >
@@ -995,10 +1201,12 @@ export function ExpensesView() {
               {(!filteredExpenses || filteredExpenses.length === 0) && (
                 <TableRow>
                   <TableCell
-                    colSpan={8}
+                    colSpan={9}
                     className="text-center py-4 text-muted-foreground"
                   >
-                    {!fundFilter
+                    {!dataLoaded
+                      ? "Cargando gastos..."
+                      : !fundFilter
                       ? "Selecciona un fondo para ver los gastos disponibles."
                       : `No hay gastos registrados para el fondo "${fundFilter.name}". Agrega un nuevo gasto para comenzar.`}
                   </TableCell>
@@ -1018,6 +1226,7 @@ export function ExpensesView() {
             setEditExpense(null);
             setEditExpenseSourceFund(null);
             setEditExpenseDestinationFund(null);
+            setEditExpenseCreditCard(null);
             setIsFundSectionOpenEdit(false);
           }
         }}
@@ -1087,44 +1296,45 @@ export function ExpensesView() {
                   )}
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pt-3 space-y-3">
-                {editExpense?.categoryId && (
-                  <FundSelectionConstraintIndicator
-                    categoryId={editExpense.categoryId}
-                    availableFunds={availableFundsForEditExpense}
-                    selectedFund={editExpenseDestinationFund}
-                    currentFilterFund={fundFilter}
-                    className=""
-                  />
-                )}
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-source-fund">Fondo Origen *</Label>
-                  <SourceFundSelector
-                    selectedCategoryId={editExpense?.categoryId || null}
-                    selectedSourceFund={editExpenseSourceFund}
-                    onSourceFundChange={setEditExpenseSourceFund}
-                    placeholder="Seleccionar fondo origen..."
-                    currentFundFilter={fundFilter}
-                    required={true}
-                    className="w-full"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="edit-destination-fund">
-                    Fondo Destino (opcional)
-                  </Label>
-                  <FundFilter
-                    selectedFund={editExpenseDestinationFund}
-                    onFundChange={setEditExpenseDestinationFund}
-                    placeholder="Seleccionar fondo destino..."
-                    includeAllFunds={false}
-                    className="w-full"
-                    availableFunds={funds}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Opcional: Transfiere dinero a otro fondo. Puedes seleccionar
-                    cualquier fondo disponible como destino.
-                  </p>
-                </div>
+                  {editExpense?.categoryId && (
+                    <FundSelectionConstraintIndicator
+                      categoryId={editExpense.categoryId}
+                      availableFunds={availableFundsForEditExpense}
+                      selectedFund={editExpenseDestinationFund}
+                      currentFilterFund={fundFilter}
+                      className=""
+                    />
+                  )}
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-source-fund">Fondo Origen *</Label>
+                    <SourceFundSelector
+                      selectedCategoryId={editExpense?.categoryId || null}
+                      selectedSourceFund={editExpenseSourceFund}
+                      onSourceFundChange={setEditExpenseSourceFund}
+                      placeholder="Seleccionar fondo origen..."
+                      currentFundFilter={fundFilter}
+                      defaultFund={getDefaultFund()}
+                      required={true}
+                      className="w-full"
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-destination-fund">
+                      Fondo Destino (opcional)
+                    </Label>
+                    <FundFilter
+                      selectedFund={editExpenseDestinationFund}
+                      onFundChange={setEditExpenseDestinationFund}
+                      placeholder="Seleccionar fondo destino..."
+                      includeAllFunds={false}
+                      className="w-full"
+                      availableFunds={funds}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Opcional: Transfiere dinero a otro fondo. Puedes
+                      seleccionar cualquier fondo disponible como destino.
+                    </p>
+                  </div>
                 </CollapsibleContent>
               </Collapsible>
             </div>
@@ -1228,6 +1438,19 @@ export function ExpensesView() {
                 }
               />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-credit-card">
+                Tarjeta de Crédito (opcional)
+              </Label>
+              <CreditCardSelector
+                selectedCreditCard={editExpenseCreditCard}
+                onCreditCardChange={setEditExpenseCreditCard}
+                placeholder="Seleccionar tarjeta de crédito..."
+                showNoCardOption={true}
+                required={false}
+                showOnlyActive={true}
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -1237,6 +1460,7 @@ export function ExpensesView() {
                 setEditExpense(null);
                 setEditExpenseSourceFund(null);
                 setEditExpenseDestinationFund(null);
+                setEditExpenseCreditCard(null);
                 setIsFundSectionOpenEdit(false);
               }}
             >

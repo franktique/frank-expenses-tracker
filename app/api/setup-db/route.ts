@@ -132,6 +132,34 @@ export async function GET() {
       )
     }
 
+    try {
+      // Create settings table
+      await sql`
+        CREATE TABLE IF NOT EXISTS settings (
+          id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          default_fund_id UUID REFERENCES funds(id) ON DELETE SET NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+          updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+      `
+      console.log("Settings table created or already exists")
+
+      // Create initial settings record if none exists
+      const existingSettings = await sql`SELECT id FROM settings LIMIT 1`
+      if (existingSettings.length === 0) {
+        await sql`
+          INSERT INTO settings (default_fund_id)
+          VALUES (NULL)
+        `
+        console.log("Initial settings record created")
+      }
+    } catch (error) {
+      console.error("Error creating settings table:", error)
+      // Don't fail the entire setup if settings table creation fails
+      // This table is optional and can be created later
+      console.warn("Settings table creation failed, but continuing with setup")
+    }
+
     return NextResponse.json({
       success: true,
       message: "Database tables created successfully",

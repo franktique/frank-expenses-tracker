@@ -156,6 +156,9 @@ export function ExpensesView() {
     getCategoryById,
     getPeriodById,
     getFundById,
+    isLoading,
+    dataLoaded,
+    refreshData,
   } = useBudget();
   const { toast } = useToast();
   const router = useRouter();
@@ -249,15 +252,21 @@ export function ExpensesView() {
     router.push(`${window.location.pathname}${query}`);
   };
 
-  // Set default fund filter to 'Disponible' on component mount
+  // Refresh data when component mounts to ensure all data is loaded
   useEffect(() => {
-    if (funds && funds.length > 0 && !fundFilter) {
+    refreshData();
+  }, []); // Empty dependency array - only run on mount
+
+  // Set default fund filter to 'Disponible' only when data is fully loaded
+  useEffect(() => {
+    if (dataLoaded && funds && funds.length > 0 && !fundFilter) {
       const disponibleFund = funds.find((fund) => fund.name === "Disponible");
       if (disponibleFund) {
         setFundFilter(disponibleFund);
+        console.log(`Expenses: Fund filter set to ${disponibleFund.name}`);
       }
     }
-  }, [funds, fundFilter]);
+  }, [funds, fundFilter, dataLoaded]);
 
   // Fetch credit cards for filtering
   useEffect(() => {
@@ -608,7 +617,7 @@ export function ExpensesView() {
             }}
           >
             <DialogTrigger asChild>
-              <Button disabled={!fundFilter}>
+              <Button disabled={!dataLoaded || !fundFilter}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Nuevo Gasto
               </Button>
@@ -860,21 +869,32 @@ export function ExpensesView() {
         <CardContent>
           <div className="flex items-center gap-4">
             <Label htmlFor="fund-filter">Fondo:</Label>
-            <FundFilter
-              selectedFund={fundFilter}
-              onFundChange={setFundFilter}
-              placeholder="Seleccionar fondo..."
-              includeAllFunds={false}
-              className="w-[300px]"
-              required
-            />
-            {!fundFilter && (
-              <div className="flex items-center gap-2 p-2 rounded-md bg-destructive/10 border border-destructive/20">
-                <AlertTriangle className="w-4 h-4 text-destructive" />
-                <p className="text-sm text-destructive">
-                  Debe seleccionar un fondo para registrar gastos
+            {!dataLoaded ? (
+              <div className="flex items-center gap-2 p-2 rounded-md bg-blue-50 border border-blue-200">
+                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                <p className="text-sm text-blue-700">
+                  Cargando fondos disponibles...
                 </p>
               </div>
+            ) : (
+              <>
+                <FundFilter
+                  selectedFund={fundFilter}
+                  onFundChange={setFundFilter}
+                  placeholder="Seleccionar fondo..."
+                  includeAllFunds={false}
+                  className="w-[300px]"
+                  required
+                />
+                {!fundFilter && (
+                  <div className="flex items-center gap-2 p-2 rounded-md bg-destructive/10 border border-destructive/20">
+                    <AlertTriangle className="w-4 h-4 text-destructive" />
+                    <p className="text-sm text-destructive">
+                      Debe seleccionar un fondo para registrar gastos
+                    </p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </CardContent>
@@ -1174,7 +1194,9 @@ export function ExpensesView() {
                     colSpan={9}
                     className="text-center py-4 text-muted-foreground"
                   >
-                    {!fundFilter
+                    {!dataLoaded
+                      ? "Cargando gastos..."
+                      : !fundFilter
                       ? "Selecciona un fondo para ver los gastos disponibles."
                       : `No hay gastos registrados para el fondo "${fundFilter.name}". Agrega un nuevo gasto para comenzar.`}
                   </TableCell>

@@ -531,11 +531,11 @@ export function DashboardView() {
           </div>
 
           <Card>
-            <CardHeader>
+            <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Resumen de Presupuesto</CardTitle>
-                  <CardDescription>
+                  <CardTitle className="text-lg">Resumen de Presupuesto</CardTitle>
+                  <CardDescription className="text-sm">
                     Gastos por categoría en el periodo actual
                   </CardDescription>
                 </div>
@@ -547,9 +547,9 @@ export function DashboardView() {
                 />
               </div>
             </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
+            <CardContent className="p-0">
+              <Table className="max-h-[60vh]">
+                <TableHeader className="sticky top-0 bg-muted z-10">
                   <TableRow>
                     <TableHead>Categoria</TableHead>
                     <TableHead className="text-right">

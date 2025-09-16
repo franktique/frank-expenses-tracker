@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PlusCircle, Calculator, Trash2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,6 +58,8 @@ export function FundsView() {
     deleteFund,
     recalculateFundBalance,
     isLoading,
+    dataLoaded,
+    refreshData,
   } = useBudget();
   const { toast } = useToast();
 
@@ -86,6 +88,11 @@ export function FundsView() {
   const [balanceErrors, setBalanceErrors] = useState<Record<string, string>>(
     {}
   );
+
+  // Refresh data when component mounts to ensure all data is loaded
+  useEffect(() => {
+    refreshData();
+  }, []); // Empty dependency array - only run on mount
 
   const resetNewFund = () => {
     setNewFund({
@@ -436,7 +443,7 @@ export function FundsView() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoading ? (
+              {!dataLoaded ? (
                 <TableRow>
                   <TableCell colSpan={6} className="p-0">
                     <FundsTableSkeleton />

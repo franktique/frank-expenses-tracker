@@ -38,6 +38,7 @@ type BudgetContextType = {
   selectedFund: Fund | null;
   fundFilter: string | null; // 'all' for all funds, fund_id for specific fund, null for no filter
   isLoading: boolean;
+  dataLoaded: boolean; // true when all initial data has been loaded
   error: string | null;
   isDbInitialized: boolean;
   dbConnectionError: boolean;
@@ -194,6 +195,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
   const [fundFilter, setFundFilter] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDbInitialized, setIsDbInitialized] = useState(false);
   const [dbConnectionError, setDbConnectionError] = useState(false);
@@ -227,15 +229,16 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  // Initialize fund filter with default fund when funds are loaded
+  // Initialize fund filter with default fund when funds are loaded and data is fully loaded
   useEffect(() => {
-    if (funds.length > 0 && !fundFilter) {
+    if (dataLoaded && funds.length > 0 && !fundFilter) {
       const defaultFund = getDefaultFund();
       if (defaultFund) {
         setFundFilter(defaultFund.id);
+        console.log(`Fund filter initialized to default fund: ${defaultFund.name}`);
       }
     }
-  }, [funds, fundFilter]);
+  }, [funds, fundFilter, dataLoaded]);
 
   // Cleanup cache when component unmounts
   useEffect(() => {
@@ -398,10 +401,12 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const refreshData = async () => {
     if (!isDbInitialized) {
       setIsLoading(false);
+      setDataLoaded(false);
       return;
     }
 
     setIsLoading(true);
+    setDataLoaded(false);
     setError(null);
 
     try {
@@ -589,9 +594,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       // Clear category-fund cache when funds are updated during data refresh
       categoryFundCache.clear();
       setCategoryFundsCache(new Map());
+
+      // Mark data as loaded only when ALL data has been successfully fetched
+      setDataLoaded(true);
     } catch (err) {
       console.error("Error refreshing data:", err);
       setError((err as Error).message);
+      setDataLoaded(false);
     } finally {
       setIsLoading(false);
     }
@@ -2014,6 +2023,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         selectedFund,
         fundFilter,
         isLoading,
+        dataLoaded,
         error,
         isDbInitialized,
         dbConnectionError,

@@ -156,6 +156,7 @@ export function ExpensesView() {
     getCategoryById,
     getPeriodById,
     getFundById,
+    getDefaultFund,
     isLoading,
     dataLoaded,
     refreshData,
@@ -257,13 +258,21 @@ export function ExpensesView() {
     refreshData();
   }, []); // Empty dependency array - only run on mount
 
-  // Set default fund filter to 'Disponible' only when data is fully loaded
+  // Set default fund filter using configured default fund when data is fully loaded
   useEffect(() => {
     if (dataLoaded && funds && funds.length > 0 && !fundFilter) {
-      const disponibleFund = funds.find((fund) => fund.name === "Disponible");
-      if (disponibleFund) {
-        setFundFilter(disponibleFund);
-        console.log(`Expenses: Fund filter set to ${disponibleFund.name}`);
+      // Get the configured default fund from settings
+      const defaultFund = getDefaultFund();
+      if (defaultFund) {
+        setFundFilter(defaultFund);
+        console.log(`Expenses: Fund filter set to default fund: ${defaultFund.name}`);
+      } else {
+        // Fallback to "Disponible" fund if no default is configured
+        const disponibleFund = funds.find((fund) => fund.name === "Disponible");
+        if (disponibleFund) {
+          setFundFilter(disponibleFund);
+          console.log(`Expenses: Fund filter set to fallback 'Disponible' fund`);
+        }
       }
     }
   }, [funds, fundFilter, dataLoaded]);
@@ -707,6 +716,7 @@ export function ExpensesView() {
                           onSourceFundChange={setNewExpenseSourceFund}
                           placeholder="Seleccionar fondo origen..."
                           currentFundFilter={fundFilter}
+                          defaultFund={getDefaultFund()}
                           required={true}
                           className="w-full"
                         />
@@ -1303,6 +1313,7 @@ export function ExpensesView() {
                       onSourceFundChange={setEditExpenseSourceFund}
                       placeholder="Seleccionar fondo origen..."
                       currentFundFilter={fundFilter}
+                      defaultFund={getDefaultFund()}
                       required={true}
                       className="w-full"
                     />

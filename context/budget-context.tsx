@@ -17,6 +17,7 @@ import {
   CategoryFundRelationship,
 } from "@/types/funds";
 import { CreditCard, CreditCardOperationResult } from "@/types/credit-cards";
+import { AppSettings } from "@/types/settings";
 import { ActivePeriodStorage } from "@/lib/active-period-storage";
 import { loadActivePeriod } from "@/lib/active-period-service";
 import {
@@ -34,6 +35,7 @@ type BudgetContextType = {
   expenses: Expense[];
   funds: Fund[];
   creditCards: CreditCard[];
+  settings: AppSettings | null;
   activePeriod: Period | null;
   selectedFund: Fund | null;
   fundFilter: string | null; // 'all' for all funds, fund_id for specific fund, null for no filter
@@ -191,6 +193,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [funds, setFunds] = useState<Fund[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
+  const [settings, setSettings] = useState<AppSettings | null>(null);
   const [activePeriod, setActivePeriod] = useState<Period | null>(null);
   const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
   const [fundFilter, setFundFilter] = useState<string | null>(null);
@@ -591,6 +594,38 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         setCreditCards([]);
       }
 
+      // Fetch settings
+      try {
+        const settingsResponse = await fetch("/api/settings");
+        if (settingsResponse.ok) {
+          const settingsData = await settingsResponse.json();
+          if (settingsData.success && settingsData.settings) {
+            setSettings(settingsData.settings);
+          }
+        } else {
+          // Settings might not be initialized yet, try to set up the table
+          try {
+            const setupResponse = await fetch("/api/setup-settings", {
+              method: "POST",
+            });
+            if (setupResponse.ok) {
+              // Table setup successful, try fetching settings again
+              const retryResponse = await fetch("/api/settings");
+              if (retryResponse.ok) {
+                const settingsData = await retryResponse.json();
+                if (settingsData.success && settingsData.settings) {
+                  setSettings(settingsData.settings);
+                }
+              }
+            }
+          } catch (setupError) {
+            console.warn("Failed to set up settings table:", setupError);
+          }
+        }
+      } catch (settingsError) {
+        console.warn("Failed to fetch settings:", settingsError);
+      }
+
       // Clear category-fund cache when funds are updated during data refresh
       categoryFundCache.clear();
       setCategoryFundsCache(new Map());
@@ -870,7 +905,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       categories,
       funds,
       currentFilterFund,
-      fundFilter
+      fundFilter,
+      settings?.default_fund_id
     );
   };
 
@@ -1865,7 +1901,16 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   };
 
   const getDefaultFund = (): Fund | undefined => {
-    return funds.find((fund) => fund.name === "Disponible");
+    // First, try to use the configured default fund from settings
+    if (settings?.default_fund_id) {
+      const configuredDefault = funds.find((fund) => fund.id === settings.default_fund_id);
+      if (configuredDefault) {
+        return configuredDefault;
+      }
+    }
+
+    // Fallback to CategoryFundFallback logic for backward compatibility
+    return CategoryFundFallback.getDefaultFund(funds);
   };
 
   // Credit Card functions
@@ -2019,6 +2064,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         expenses,
         funds,
         creditCards,
+        settings,
         activePeriod,
         selectedFund,
         fundFilter,

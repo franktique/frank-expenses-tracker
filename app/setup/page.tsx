@@ -1,5 +1,6 @@
 import { ManualDbConfig } from "@/components/manual-db-config"
 import { SetupDatabaseButton } from "@/components/setup-database-button"
+import { DefaultFundConfig } from "@/components/default-fund-config"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -41,6 +42,18 @@ export default function SetupPage() {
             </Card>
           </TabsContent>
         </Tabs>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Configuración de Fondo Predeterminado</CardTitle>
+            <CardDescription>
+              Configura qué fondo se utilizará por defecto para gastos e ingresos cuando no se especifique otro fondo.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <DefaultFundConfig />
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

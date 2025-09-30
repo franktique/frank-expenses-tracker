@@ -363,7 +363,7 @@ export function useSimulationFilterSync(
     if (filterState.selectedEstudio !== null) {
       saveToStorage(filterState);
     }
-  }, [filterState.selectedEstudio, filterState.lastUpdated, saveToStorage]);
+  }, [filterState.selectedEstudio, saveToStorage]); // Fixed: Removed lastUpdated to prevent infinite loop
 
   return {
     filterState,

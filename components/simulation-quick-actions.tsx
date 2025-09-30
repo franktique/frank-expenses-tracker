@@ -105,9 +105,9 @@ function SimulationQuickActions({
             setNextSimulation(simulations[currentIndex + 1]);
           }
 
-          // Generate workflow suggestions
+          // Generate workflow suggestions - use current simulation budget count directly
           const suggestions = generateWorkflowSuggestions(
-            { id: currentSimulationId, budget_count: simulationBudgetCount } as Simulation,
+            { id: currentSimulationId, budget_count: currentSimulation?.budget_count || 0 } as Simulation,
             isAnalyticsPage,
             isConfigPage
           );
@@ -119,7 +119,8 @@ function SimulationQuickActions({
     };
 
     loadNavigationContext();
-  }, [currentSimulationId, simulationBudgetCount, isAnalyticsPage, isConfigPage]); // Use primitive values instead of object
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSimulationId, isAnalyticsPage, isConfigPage]); // Removed simulationBudgetCount to prevent infinite loop
 
   // Generate workflow suggestions based on current context - memoized to prevent re-creation
   const generateWorkflowSuggestions = useCallback((
@@ -390,6 +391,16 @@ function SimulationQuickActions({
   );
 }
 
-// Export component wrapped with React.memo to prevent unnecessary re-renders
-export default React.memo(SimulationQuickActions);
+// Export component wrapped with React.memo with custom comparison to prevent unnecessary re-renders
+export default React.memo(SimulationQuickActions, (prevProps, nextProps) => {
+  // Only re-render if these specific values change
+  return (
+    prevProps.currentSimulation?.id === nextProps.currentSimulation?.id &&
+    prevProps.currentSimulation?.budget_count === nextProps.currentSimulation?.budget_count &&
+    prevProps.showWorkflowSuggestions === nextProps.showWorkflowSuggestions
+    // Ignore callback props as they're stable from useCallback in parent
+  );
+});
+
+// Named export for backwards compatibility
 export { SimulationQuickActions };

@@ -156,6 +156,7 @@ export function SimulationNavigation({
                     variant="outline"
                     size="sm"
                     onClick={() => navigateToAnalytics(currentSimulation.id)}
+                    disabled
                     className="flex items-center gap-1"
                   >
                     <BarChart3 className="h-3 w-3" />

@@ -27,6 +27,8 @@ import {
   TrendingUp,
   Download,
   Copy,
+  Zap,
+  Clock,
 } from "lucide-react";
 
 // Types
@@ -99,7 +101,7 @@ export default function SimulationAnalyticsPage() {
 
   const filterSync = useSimulationFilterSync(filterSyncOptions, filterSyncInitialState);
 
-  // Extract filter state for easier access
+  // Extract filter state and update functions for easier access
   const {
     selectedEstudio,
     selectedGroupers,
@@ -107,10 +109,13 @@ export default function SimulationAnalyticsPage() {
     comparisonPeriods,
   } = filterSync.filterState;
 
+  const { updateEstudio, updateGroupers, updatePaymentMethods, updateComparisonPeriods } = filterSync;
+
   // Filter data state
   const [allEstudios, setAllEstudios] = useState<EstudioData[]>([]);
   const [allGroupers, setAllGroupers] = useState<GrouperData[]>([]);
   const [isLoadingFilters, setIsLoadingFilters] = useState(false);
+  const [isFilterInitialized, setIsFilterInitialized] = useState(false);
 
   // Filter change handlers
   const handleFiltersChanged = useCallback((filters: any) => {
@@ -118,21 +123,21 @@ export default function SimulationAnalyticsPage() {
   }, []);
 
   const handleEstudioChange = useCallback((estudioId: number | null) => {
-    filterSync.updateEstudio(estudioId);
+    updateEstudio(estudioId);
     setAllGroupers([]); // Clear groupers to force reload
-  }, [filterSync]);
+  }, [updateEstudio]);
 
   const handleGrouperChange = useCallback((grouperIds: number[]) => {
-    filterSync.updateGroupers(grouperIds);
-  }, [filterSync]);
+    updateGroupers(grouperIds);
+  }, [updateGroupers]);
 
   const handlePaymentMethodChange = useCallback((methods: string[]) => {
-    filterSync.updatePaymentMethods(methods);
-  }, [filterSync]);
+    updatePaymentMethods(methods);
+  }, [updatePaymentMethods]);
 
   const handleComparisonPeriodsChange = useCallback((periods: number) => {
-    filterSync.updateComparisonPeriods(periods);
-  }, [filterSync]);
+    updateComparisonPeriods(periods);
+  }, [updateComparisonPeriods]);
 
   // Fetch available estudios
   const fetchEstudios = useCallback(async () => {
@@ -151,10 +156,10 @@ export default function SimulationAnalyticsPage() {
         )
       );
 
-      // Auto-select first estudio if none selected - use current state, don't depend on it
-      const currentSelectedEstudio = filterSync.filterState.selectedEstudio;
-      if (!currentSelectedEstudio && data.length > 0) {
-        filterSync.updateEstudio(data[0].id);
+      // Auto-select first estudio only once on initial load
+      if (!isFilterInitialized && !selectedEstudio && data.length > 0) {
+        updateEstudio(data[0].id);
+        setIsFilterInitialized(true);
       }
     } catch (error) {
       console.error("Error fetching estudios:", error);
@@ -166,19 +171,18 @@ export default function SimulationAnalyticsPage() {
     } finally {
       setIsLoadingFilters(false);
     }
-  }, [filterSync, toast]);
+  }, [isFilterInitialized, selectedEstudio, updateEstudio, toast]);
 
-  // Fetch available groupers based on selected estudio  
+  // Fetch available groupers based on selected estudio
   const fetchGroupers = useCallback(async () => {
-    const currentEstudio = filterSync.filterState.selectedEstudio;
-    if (!currentEstudio || !activePeriod) return;
+    if (!selectedEstudio || !activePeriod) return;
 
     try {
       setIsLoadingFilters(true);
       const params = new URLSearchParams({
         periodId: activePeriod.id.toString(),
         paymentMethod: "all",
-        estudioId: currentEstudio.toString(),
+        estudioId: selectedEstudio.toString(),
       });
 
       const response = await fetch(
@@ -196,10 +200,9 @@ export default function SimulationAnalyticsPage() {
         )
       );
 
-      // Auto-select all groupers if none selected - use current state, don't depend on it
-      const currentSelectedGroupers = filterSync.filterState.selectedGroupers;
-      if (currentSelectedGroupers.length === 0) {
-        filterSync.updateGroupers(data.map((g: GrouperData) => g.grouper_id));
+      // Auto-select all groupers if none selected
+      if (selectedGroupers.length === 0 && data.length > 0) {
+        updateGroupers(data.map((g: GrouperData) => g.grouper_id));
       }
     } catch (error) {
       console.error("Error fetching groupers:", error);
@@ -211,7 +214,7 @@ export default function SimulationAnalyticsPage() {
     } finally {
       setIsLoadingFilters(false);
     }
-  }, [filterSync, activePeriod, toast]);
+  }, [selectedEstudio, activePeriod, selectedGroupers.length, updateGroupers, toast]);
 
   // Load simulation metrics - memoized to prevent infinite re-renders
   const loadSimulationMetrics = useCallback(async () => {
@@ -350,21 +353,25 @@ export default function SimulationAnalyticsPage() {
 
   // Initialize filter data - only run once on mount
   useEffect(() => {
+    // Only run on mount, don't add fetchEstudios to dependencies to avoid loop
     fetchEstudios();
-  }, []); // Empty dependency array to run only once
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentionally empty - run only on mount
 
   useEffect(() => {
     if (selectedEstudio && activePeriod) {
       fetchGroupers();
     }
-  }, [selectedEstudio, activePeriod]); // Only refetch when these specific values change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedEstudio, activePeriod]); // Don't add fetchGroupers to avoid circular dependency
 
   // Load metrics when simulation is available
   useEffect(() => {
     if (simulation) {
       loadSimulationMetrics();
     }
-  }, [simulation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [simulation?.id]); // Only depend on simulation ID to avoid infinite loops
 
   // Handle navigation - memoized to prevent infinite re-renders
   const handleNavigateToConfig = useCallback(() => {
@@ -509,8 +516,8 @@ export default function SimulationAnalyticsPage() {
         maxRecentItems={3}
       />
 
-      {/* Quick Actions */}
-      <SimulationQuickActions
+      {/* Quick Actions - Temporarily disabled to diagnose infinite loop */}
+      {/* <SimulationQuickActions
         currentSimulation={simulation}
         onNavigateToConfig={handleNavigateToConfig}
         onNavigateToList={handleNavigateToList}
@@ -518,7 +525,7 @@ export default function SimulationAnalyticsPage() {
         onExport={handleExportData}
         onRefresh={loadSimulationMetrics}
         showWorkflowSuggestions={true}
-      />
+      /> */}
 
       {/* Header with navigation and actions */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
@@ -598,14 +605,6 @@ export default function SimulationAnalyticsPage() {
             ⚠️ No hay período activo para comparación
           </div>
         )}
-        {/* Debug info */}
-        <div className="text-xs text-gray-500 bg-gray-100 p-2 rounded">
-          Debug: activePeriod = {JSON.stringify(activePeriod, null, 2)}
-        </div>
-        {/* Debug info */}
-        <div className="text-xs text-gray-500">
-          Debug: activePeriod = {JSON.stringify(activePeriod)}
-        </div>
       </div>
 
       {/* Analytics Dashboard with Tabs */}
@@ -687,24 +686,116 @@ export default function SimulationAnalyticsPage() {
             />
           )}
 
-          {/* Detailed Analytics */}
-          <SimulationAnalyticsDashboard
-            simulationId={simulation.id}
-            simulationName={simulation.name}
-            activePeriod={activePeriod}
-            selectedEstudio={selectedEstudio}
-            selectedGroupers={selectedGroupers}
-            selectedPaymentMethods={selectedPaymentMethods}
-            comparisonPeriods={comparisonPeriods}
-            allEstudios={allEstudios}
-            allGroupers={allGroupers}
-            isLoadingFilters={isLoadingFilters}
-            onEstudioChange={handleEstudioChange}
-            onGroupersChange={handleGrouperChange}
-            onPaymentMethodsChange={handlePaymentMethodChange}
-            onComparisonPeriodsChange={handleComparisonPeriodsChange}
-            onFiltersChanged={handleFiltersChanged}
-          />
+          {/* Detailed Analytics - Temporarily Disabled (Phase 0) */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-blue-600" />
+                Panel de Análisis - En Mantenimiento
+              </CardTitle>
+              <CardDescription>
+                Estamos optimizando la experiencia de análisis para mejorar el rendimiento.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="text-center py-8">
+                <div className="mb-6 flex justify-center">
+                  <div className="rounded-full bg-blue-100 p-4">
+                    <Settings className="h-12 w-12 text-blue-600" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-semibold mb-2">
+                  Mejoras en Progreso
+                </h3>
+                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                  El panel de análisis está temporalmente no disponible mientras
+                  optimizamos el rendimiento y corregimos problemas de visualización.
+                  Los datos de tu simulación están seguros.
+                </p>
+                <div className="flex gap-3 justify-center">
+                  <Button
+                    variant="outline"
+                    onClick={() => router.push(`/simular/${simulation.id}`)}
+                  >
+                    <ArrowLeft className="mr-2 h-4 w-4" />
+                    Volver a Configuración
+                  </Button>
+                  <Button onClick={() => router.push("/simular")}>
+                    <Zap className="mr-2 h-4 w-4" />
+                    Ver Todas las Simulaciones
+                  </Button>
+                </div>
+              </div>
+
+              {/* Feature Preview */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+                <h4 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  Próximamente Disponible
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                  <div className="flex items-start gap-2">
+                    <TrendingUp className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="text-blue-600 font-medium block">Análisis Comparativo</span>
+                      <p className="text-blue-800">Comparación con datos históricos reales</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <BarChart3 className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="text-blue-600 font-medium block">Visualizaciones</span>
+                      <p className="text-blue-800">Gráficos interactivos de variaciones</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Download className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="text-blue-600 font-medium block">Exportación</span>
+                      <p className="text-blue-800">Descarga de datos en múltiples formatos</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <Copy className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <span className="text-blue-600 font-medium block">Comparación Múltiple</span>
+                      <p className="text-blue-800">Compara varias simulaciones a la vez</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Current Simulation Status */}
+              {simulation && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                  <h4 className="font-medium text-green-900 mb-2 flex items-center gap-2">
+                    <Zap className="h-4 w-4" />
+                    Estado Actual de la Simulación
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="text-green-600 font-medium">Nombre:</span>
+                      <p className="text-green-800">{simulation.name}</p>
+                    </div>
+                    <div>
+                      <span className="text-green-600 font-medium">Categorías:</span>
+                      <p className="text-green-800">
+                        {simulation.budget_count > 0
+                          ? `${simulation.budget_count} configuradas`
+                          : "Sin configurar"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-green-600 font-medium">Actualizado:</span>
+                      <p className="text-green-800">
+                        {new Date(simulation.updated_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="comparison" className="space-y-6">
@@ -717,23 +808,31 @@ export default function SimulationAnalyticsPage() {
         </TabsContent>
 
         <TabsContent value="periods" className="space-y-6">
-          <SimulationAnalyticsDashboard
-            simulationId={simulation.id}
-            simulationName={simulation.name}
-            activePeriod={activePeriod}
-            selectedEstudio={selectedEstudio}
-            selectedGroupers={selectedGroupers}
-            selectedPaymentMethods={selectedPaymentMethods}
-            comparisonPeriods={comparisonPeriods}
-            allEstudios={allEstudios}
-            allGroupers={allGroupers}
-            isLoadingFilters={isLoadingFilters}
-            onEstudioChange={handleEstudioChange}
-            onGroupersChange={handleGrouperChange}
-            onPaymentMethodsChange={handlePaymentMethodChange}
-            onComparisonPeriodsChange={handleComparisonPeriodsChange}
-            onFiltersChanged={handleFiltersChanged}
-          />
+          {/* Period Analysis - Temporarily Disabled (Phase 0) */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Clock className="h-5 w-5 text-blue-600" />
+                Análisis por Períodos - En Mantenimiento
+              </CardTitle>
+              <CardDescription>
+                El análisis de tendencias por períodos estará disponible próximamente.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center py-8">
+              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                Esta funcionalidad está siendo optimizada para ofrecerte
+                mejores visualizaciones de tendencias a lo largo del tiempo.
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => router.push(`/simular/${simulation.id}`)}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Volver a Configuración
+              </Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="export" className="space-y-6">

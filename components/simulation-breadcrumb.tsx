@@ -202,6 +202,7 @@ export function SimulationBreadcrumb({
             variant="outline"
             size="sm"
             onClick={handleQuickSwitch}
+            disabled={currentPage === "config"}
             className="flex items-center gap-1"
           >
             {currentPage === "config" ? (

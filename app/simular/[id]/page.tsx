@@ -234,7 +234,8 @@ export default function SimulationConfigPage() {
           </TabsTrigger>
           <TabsTrigger
             value="analytics"
-            className="flex items-center space-x-1 sm:space-x-2"
+            disabled
+            className="flex items-center space-x-1 sm:space-x-2 opacity-50 cursor-not-allowed"
           >
             <BarChart3 className="h-4 w-4" />
             <span>Análisis</span>

@@ -311,12 +311,12 @@ export function IncomesView() {
         <h1 className="text-3xl font-bold tracking-tight">Ingresos</h1>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button componentId="incomes-add-btn">
               <PlusCircle className="mr-2 h-4 w-4" />
               Nuevo Ingreso
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent componentId="incomes-add-dialog">
             <DialogHeader>
               <DialogTitle>Registrar Ingreso</DialogTitle>
               <DialogDescription>
@@ -331,7 +331,7 @@ export function IncomesView() {
                   onValueChange={setNewIncomePeriod}
                   disabled={!periods || !periods.length}
                 >
-                  <SelectTrigger id="period">
+                  <SelectTrigger componentId="income-add-period-select" id="period">
                     <SelectValue placeholder="Selecciona un periodo" />
                   </SelectTrigger>
                   <SelectContent>
@@ -382,6 +382,7 @@ export function IncomesView() {
               <div className="grid gap-2">
                 <Label htmlFor="description">Descripción *</Label>
                 <Input
+                  componentId="income-add-description-input"
                   id="description"
                   value={newIncomeDescription}
                   onChange={(e) => setNewIncomeDescription(e.target.value)}
@@ -391,6 +392,7 @@ export function IncomesView() {
               <div className="grid gap-2">
                 <Label htmlFor="amount">Monto *</Label>
                 <Input
+                  componentId="income-add-amount-input"
                   id="amount"
                   type="number"
                   min="0"
@@ -429,13 +431,14 @@ export function IncomesView() {
             </div>
             <DialogFooter>
               <Button
+                componentId="income-add-cancel"
                 variant="outline"
                 onClick={() => setIsAddOpen(false)}
                 disabled={isSubmitting}
               >
                 Cancelar
               </Button>
-              <Button onClick={handleAddIncome} disabled={isSubmitting}>
+              <Button componentId="income-add-submit" onClick={handleAddIncome} disabled={isSubmitting}>
                 {isSubmitting ? "Guardando..." : "Guardar"}
               </Button>
             </DialogFooter>

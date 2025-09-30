@@ -309,12 +309,12 @@ export function FundsView() {
         <h1 className="text-3xl font-bold tracking-tight">Fondos</h1>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button componentId="funds-add-btn">
               <PlusCircle className="mr-2 h-4 w-4" />
               Nuevo Fondo
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-[425px]">
+          <DialogContent componentId="funds-add-dialog" className="sm:max-w-[425px]">
             <DialogHeader>
               <DialogTitle>Crear Nuevo Fondo</DialogTitle>
               <DialogDescription>

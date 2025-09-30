@@ -401,12 +401,12 @@ export function CategoriesView() {
           </div>
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger asChild>
-              <Button>
+              <Button componentId="categories-add-btn">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Nueva Categoría
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent componentId="categories-add-dialog">
               <DialogHeader>
                 <DialogTitle>Agregar Categoría</DialogTitle>
                 <DialogDescription>
@@ -418,6 +418,7 @@ export function CategoriesView() {
                 <div className="grid gap-2">
                   <Label htmlFor="name">Nombre</Label>
                   <Input
+                    componentId="category-add-name-input"
                     id="name"
                     value={newCategoryName}
                     onChange={(e) => setNewCategoryName(e.target.value)}

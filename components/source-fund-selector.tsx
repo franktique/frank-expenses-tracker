@@ -48,6 +48,7 @@ interface SourceFundSelectorProps {
   validateOnChange?: boolean;
   showBalance?: boolean;
   amount?: number; // For balance validation
+  componentId?: string; // For component identification
 }
 
 export function SourceFundSelector({
@@ -65,6 +66,7 @@ export function SourceFundSelector({
   validateOnChange = true,
   showBalance = true,
   amount,
+  componentId,
 }: SourceFundSelectorProps) {
   const { funds, isLoading, error: contextError } = useBudget();
   const [open, setOpen] = useState(false);
@@ -364,6 +366,7 @@ export function SourceFundSelector({
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
+              componentId={componentId}
               variant={getButtonVariant()}
               role="combobox"
               aria-expanded={open}

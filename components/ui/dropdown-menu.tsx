@@ -22,8 +22,9 @@ const DropdownMenuSubTrigger = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.SubTrigger>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.SubTrigger> & {
     inset?: boolean
+    componentId?: string
   }
->(({ className, inset, children, ...props }, ref) => (
+>(({ className, inset, children, componentId, ...props }, ref) => (
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
@@ -31,6 +32,7 @@ const DropdownMenuSubTrigger = React.forwardRef<
       inset && "pl-8",
       className
     )}
+    data-component-id={componentId}
     {...props}
   >
     {children}
@@ -78,8 +80,9 @@ const DropdownMenuItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.Item>,
   React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
     inset?: boolean
+    componentId?: string
   }
->(({ className, inset, ...props }, ref) => (
+>(({ className, inset, componentId, ...props }, ref) => (
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
@@ -87,6 +90,7 @@ const DropdownMenuItem = React.forwardRef<
       inset && "pl-8",
       className
     )}
+    data-component-id={componentId}
     {...props}
   />
 ))
@@ -94,8 +98,10 @@ DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
 
 const DropdownMenuCheckboxItem = React.forwardRef<
   React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
->(({ className, children, checked, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem> & {
+    componentId?: string
+  }
+>(({ className, children, checked, componentId, ...props }, ref) => (
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
@@ -103,6 +109,7 @@ const DropdownMenuCheckboxItem = React.forwardRef<
       className
     )}
     checked={checked}
+    data-component-id={componentId}
     {...props}
   >
     <span className="absolute left-2 flex h-3.5 w-3.5 items-center justify-center">

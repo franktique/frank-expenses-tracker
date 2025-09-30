@@ -270,6 +270,7 @@ export function BudgetsView() {
                             ? formatCurrency(cashBudget.expected_amount)
                             : formatCurrency(0)}
                           <Button
+                            componentId={`budgets-edit-btn-cash-${category.id}`}
                             variant="ghost"
                             size="sm"
                             className="ml-2 h-6 w-6 p-0"
@@ -295,6 +296,7 @@ export function BudgetsView() {
                             ? formatCurrency(creditBudget.expected_amount)
                             : formatCurrency(0)}
                           <Button
+                            componentId={`budgets-edit-btn-credit-${category.id}`}
                             variant="ghost"
                             size="sm"
                             className="ml-2 h-6 w-6 p-0"

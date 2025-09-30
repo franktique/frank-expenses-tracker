@@ -611,7 +611,7 @@ export function ExpensesView() {
         <div className="flex gap-2">
           <ExportExpensesButton />
           <ExportExpensesExcelButton />
-          <Button variant="outline" onClick={() => setIsImportOpen(true)}>
+          <Button componentId="expenses-import-btn" variant="outline" onClick={() => setIsImportOpen(true)}>
             <FileUp className="mr-2 h-4 w-4" />
             Importar CSV
           </Button>
@@ -626,12 +626,12 @@ export function ExpensesView() {
             }}
           >
             <DialogTrigger asChild>
-              <Button disabled={!dataLoaded || !fundFilter}>
+              <Button componentId="expenses-add-btn" disabled={!dataLoaded || !fundFilter}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Nuevo Gasto
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-md">
+            <DialogContent componentId="expenses-add-dialog" className="max-w-md">
               <DialogHeader>
                 <DialogTitle>Registrar Gasto</DialogTitle>
                 <DialogDescription>
@@ -648,7 +648,7 @@ export function ExpensesView() {
                       // The useEffect will handle fund selection automatically
                     }}
                   >
-                    <SelectTrigger id="category">
+                    <SelectTrigger componentId="expense-add-category-select" id="category">
                       <SelectValue placeholder="Selecciona una categoría" />
                     </SelectTrigger>
                     <SelectContent>
@@ -748,7 +748,7 @@ export function ExpensesView() {
                     onValueChange={setNewExpensePeriod}
                     disabled={!periods || !periods.length}
                   >
-                    <SelectTrigger id="period">
+                    <SelectTrigger componentId="expense-add-period-select" id="period">
                       <SelectValue placeholder="Selecciona un periodo" />
                     </SelectTrigger>
                     <SelectContent>
@@ -793,6 +793,7 @@ export function ExpensesView() {
                 <div className="grid gap-2">
                   <Label htmlFor="event">Evento (opcional)</Label>
                   <Input
+                    componentId="expense-add-event-input"
                     id="event"
                     value={newExpenseEvent}
                     onChange={(e) => setNewExpenseEvent(e.target.value)}
@@ -825,6 +826,7 @@ export function ExpensesView() {
                 <div className="grid gap-2">
                   <Label htmlFor="description">Descripción *</Label>
                   <Input
+                    componentId="expense-add-description-input"
                     id="description"
                     value={newExpenseDescription}
                     onChange={(e) => setNewExpenseDescription(e.target.value)}
@@ -834,6 +836,7 @@ export function ExpensesView() {
                 <div className="grid gap-2">
                   <Label htmlFor="amount">Monto *</Label>
                   <Input
+                    componentId="expense-add-amount-input"
                     id="amount"
                     type="number"
                     min="0"
@@ -858,10 +861,10 @@ export function ExpensesView() {
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddOpen(false)}>
+                <Button componentId="expense-add-cancel" variant="outline" onClick={() => setIsAddOpen(false)}>
                   Cancelar
                 </Button>
-                <Button onClick={handleAddExpense}>Guardar</Button>
+                <Button componentId="expense-add-submit" onClick={handleAddExpense}>Guardar</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>

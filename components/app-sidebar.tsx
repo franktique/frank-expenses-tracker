@@ -13,6 +13,7 @@ import {
   PieChart,
   TrendingUp,
   Wallet,
+  Zap,
   Receipt,
 } from "lucide-react";
 import Link from "next/link";
@@ -38,6 +39,9 @@ export function AppSidebar() {
   const isActive = (path: string) => {
     if (path === "/estudios") {
       return pathname === "/estudios" || pathname.startsWith("/estudios/");
+    }
+    if (path === "/simular") {
+      return pathname === "/simular" || pathname.startsWith("/simular/");
     }
     return pathname === path;
   };
@@ -136,6 +140,14 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
+            <SidebarMenuButton asChild isActive={isActive("/simular")}>
+              <Link href="/simular">
+                <Zap className="h-4 w-4" />
+                <span>Simular</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton
               asChild
               isActive={isActive("/dashboard/groupers")}
@@ -155,7 +167,10 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/dashboard/remainder")}>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive("/dashboard/remainder")}
+            >
               <Link href="/dashboard/remainder">
                 <TrendingUp className="h-4 w-4" />
                 <span>Dashboard Remanentes</span>

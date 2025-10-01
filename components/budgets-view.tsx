@@ -53,6 +53,7 @@ export function BudgetsView() {
   const [selectedPeriodId, setSelectedPeriodId] = useState<string>(
     activePeriod?.id || ""
   );
+  const [comparisonPeriodId, setComparisonPeriodId] = useState<string>("");
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editCategory, setEditCategory] = useState<{
     id: string;
@@ -65,10 +66,23 @@ export function BudgetsView() {
   // Get the selected period object
   const selectedPeriod = periods.find((p) => p.id === selectedPeriodId);
 
+  // Get the comparison period object
+  const comparisonPeriod = comparisonPeriodId
+    ? periods.find((p) => p.id === comparisonPeriodId)
+    : null;
+
   // Filter budgets for the selected period
   const periodBudgets = selectedPeriod
     ? budgets.filter((budget) => budget.period_id === selectedPeriod.id)
     : [];
+
+  // Filter budgets for the comparison period
+  const comparisonBudgets = comparisonPeriod
+    ? budgets.filter((budget) => budget.period_id === comparisonPeriod.id)
+    : [];
+
+  // Get inactive periods for comparison dropdown (exclude active period)
+  const inactivePeriods = periods.filter((p) => !p.isOpen);
 
   const handleEditBudget = () => {
     if (!editCategory || !selectedPeriod) return;
@@ -134,29 +148,54 @@ export function BudgetsView() {
 
       <Card>
         <CardHeader>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <CardTitle>Presupuestos por Categoría</CardTitle>
-              <CardDescription>
-                Establece el monto esperado para cada categoría
-              </CardDescription>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <CardTitle>Presupuestos por Categoría</CardTitle>
+                <CardDescription>
+                  Establece el monto esperado para cada categoría
+                </CardDescription>
+              </div>
+              <div className="w-full sm:w-64">
+                <Select
+                  value={selectedPeriodId}
+                  onValueChange={setSelectedPeriodId}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona un periodo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {periods.map((period) => (
+                      <SelectItem key={period.id} value={period.id}>
+                        {period.name} {period.isOpen ? "(Activo)" : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="w-full sm:w-64">
-              <Select
-                value={selectedPeriodId}
-                onValueChange={setSelectedPeriodId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona un periodo" />
-                </SelectTrigger>
-                <SelectContent>
-                  {periods.map((period) => (
-                    <SelectItem key={period.id} value={period.id}>
-                      {period.name} {period.isOpen ? "(Activo)" : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="comparison-period" className="text-sm font-medium">
+                Periodo de Referencia (Opcional)
+              </Label>
+              <div className="w-full sm:w-64">
+                <Select
+                  value={comparisonPeriodId || undefined}
+                  onValueChange={(value) => setComparisonPeriodId(value === "none" ? "" : value)}
+                >
+                  <SelectTrigger id="comparison-period" componentId="budgets-comparison-period-select">
+                    <SelectValue placeholder="Selecciona un periodo para comparar" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="none">Ninguno</SelectItem>
+                    {inactivePeriods.map((period) => (
+                      <SelectItem key={period.id} value={period.id}>
+                        {period.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
         </CardHeader>
@@ -167,6 +206,11 @@ export function BudgetsView() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
                     Total Presupuestado
+                    {comparisonPeriod && (
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        (Comparando con: {comparisonPeriod.name})
+                      </span>
+                    )}
                   </CardTitle>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -229,10 +273,23 @@ export function BudgetsView() {
               Selecciona un periodo para ver y configurar los presupuestos
             </div>
           ) : (
-            <Table>
-              <TableHeader>
+            <Table stickyHeader>
+              <TableHeader sticky>
                 <TableRow>
                   <TableHead>Categoría</TableHead>
+                  {comparisonPeriod && (
+                    <>
+                      <TableHead className="text-right text-muted-foreground bg-muted/50">
+                        Efectivo (Ref)
+                      </TableHead>
+                      <TableHead className="text-right text-muted-foreground bg-muted/50">
+                        Crédito (Ref)
+                      </TableHead>
+                      <TableHead className="text-right text-muted-foreground bg-muted/50">
+                        Total (Ref)
+                      </TableHead>
+                    </>
+                  )}
                   <TableHead className="text-right">Efectivo</TableHead>
                   <TableHead className="text-right">Crédito</TableHead>
                   <TableHead className="text-right">Total</TableHead>
@@ -260,11 +317,44 @@ export function BudgetsView() {
                       (cashBudget ? Number(cashBudget.expected_amount) : 0) +
                       (creditBudget ? Number(creditBudget.expected_amount) : 0);
 
+                    // Find comparison budgets for this category
+                    const comparisonCashBudget = comparisonBudgets.find(
+                      (b) =>
+                        b.category_id === category.id &&
+                        b.payment_method === "cash"
+                    );
+                    const comparisonCreditBudget = comparisonBudgets.find(
+                      (b) =>
+                        b.category_id === category.id &&
+                        b.payment_method === "credit"
+                    );
+
+                    const comparisonTotalAmount =
+                      (comparisonCashBudget ? Number(comparisonCashBudget.expected_amount) : 0) +
+                      (comparisonCreditBudget ? Number(comparisonCreditBudget.expected_amount) : 0);
+
                     return (
                       <TableRow key={category.id}>
                         <TableCell className="font-medium">
                           {category.name}
                         </TableCell>
+                        {comparisonPeriod && (
+                          <>
+                            <TableCell className="text-right text-muted-foreground bg-muted/30">
+                              {formatCurrency(
+                                comparisonCashBudget?.expected_amount || 0
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right text-muted-foreground bg-muted/30">
+                              {formatCurrency(
+                                comparisonCreditBudget?.expected_amount || 0
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right font-medium text-muted-foreground bg-muted/30">
+                              {formatCurrency(comparisonTotalAmount)}
+                            </TableCell>
+                          </>
+                        )}
                         <TableCell className="text-right">
                           {cashBudget
                             ? formatCurrency(cashBudget.expected_amount)

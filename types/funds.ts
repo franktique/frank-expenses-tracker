@@ -494,3 +494,54 @@ export const SOURCE_FUND_ERROR_MESSAGES = {
   MIGRATION_SOURCE_FUND_MISSING:
     "No se pudo determinar el fondo origen para el gasto",
 } as const;
+
+// Simulation Income types and schemas
+export interface SimulationIncome {
+  id: number;
+  simulation_id: number;
+  description: string;
+  amount: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export const SimulationIncomeSchema = z.object({
+  id: z.number(),
+  simulation_id: z.number(),
+  description: z
+    .string()
+    .min(1, "La descripción es obligatoria")
+    .max(255, "La descripción es demasiado larga"),
+  amount: z.number().min(0, "El monto no puede ser negativo"),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+// Simulation income creation schema (for API requests)
+export const CreateSimulationIncomeSchema = z.object({
+  description: z
+    .string()
+    .min(1, "La descripción es obligatoria")
+    .max(255, "La descripción es demasiado larga"),
+  amount: z.number().positive("El monto debe ser positivo"),
+});
+
+// Simulation income update schema (for API requests)
+export const UpdateSimulationIncomeSchema = z.object({
+  description: z
+    .string()
+    .min(1, "La descripción es obligatoria")
+    .max(255, "La descripción es demasiado larga")
+    .optional(),
+  amount: z.number().positive("El monto debe ser positivo").optional(),
+});
+
+// Simulation income validation error messages
+export const SIMULATION_INCOME_ERROR_MESSAGES = {
+  INCOME_NOT_FOUND: "El ingreso simulado no existe",
+  DESCRIPTION_REQUIRED: "La descripción es obligatoria",
+  AMOUNT_REQUIRED: "El monto es obligatorio",
+  AMOUNT_MUST_BE_POSITIVE: "El monto debe ser positivo",
+  SIMULATION_NOT_FOUND: "La simulación no existe",
+  DELETE_FAILED: "No se pudo eliminar el ingreso simulado",
+} as const;

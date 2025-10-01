@@ -2,12 +2,18 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+interface TableProps extends React.HTMLAttributes<HTMLTableElement> {
+  stickyHeader?: boolean;
+  maxHeight?: string;
+}
+
 const Table = React.forwardRef<
   HTMLTableElement,
-  React.HTMLAttributes<HTMLTableElement>
->(({ className, ...props }, ref) => (
+  TableProps
+>(({ className, stickyHeader, maxHeight, ...props }, ref) => (
   <div className={cn(
     "relative w-full overflow-auto",
+    stickyHeader && (maxHeight || "max-h-[600px]"),
     className?.includes('max-h-') ? className : ""
   )}>
     <table
@@ -21,11 +27,23 @@ const Table = React.forwardRef<
 ))
 Table.displayName = "Table"
 
+interface TableHeaderProps extends React.HTMLAttributes<HTMLTableSectionElement> {
+  sticky?: boolean;
+}
+
 const TableHeader = React.forwardRef<
   HTMLTableSectionElement,
-  React.HTMLAttributes<HTMLTableSectionElement>
->(({ className, ...props }, ref) => (
-  <thead ref={ref} className={cn("[&_tr]:border-b", className)} {...props} />
+  TableHeaderProps
+>(({ className, sticky, ...props }, ref) => (
+  <thead
+    ref={ref}
+    className={cn(
+      "[&_tr]:border-b",
+      sticky && "sticky top-0 z-10 bg-background",
+      className
+    )}
+    {...props}
+  />
 ))
 TableHeader.displayName = "TableHeader"
 

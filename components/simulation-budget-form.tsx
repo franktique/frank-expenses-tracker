@@ -56,6 +56,7 @@ type BudgetFormData = {
 interface SimulationBudgetFormProps {
   simulationId: number;
   simulationName: string;
+  totalIncome?: number;
   onSave?: () => void;
   onCancel?: () => void;
   autoSave?: boolean;
@@ -65,6 +66,7 @@ interface SimulationBudgetFormProps {
 export function SimulationBudgetForm({
   simulationId,
   simulationName,
+  totalIncome = 0,
   onSave,
   onCancel,
   autoSave = true,
@@ -457,6 +459,38 @@ export function SimulationBudgetForm({
     return efectivo + credito;
   };
 
+  // Calculate balances for each category (running balance)
+  const categoryBalances = useMemo(() => {
+    const balances = new Map<string, number>();
+    let runningBalance = totalIncome;
+
+    // Sort categories by name (same order as display)
+    const sortedCategories = [...categories].sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+
+    sortedCategories.forEach((category) => {
+      const categoryData = budgetData[String(category.id)];
+      if (categoryData) {
+        // Only decrease balance for Efectivo (cash) amounts
+        const efectivoAmount = parseFloat(categoryData.efectivo_amount) || 0;
+        runningBalance -= efectivoAmount;
+        balances.set(String(category.id), runningBalance);
+      } else {
+        balances.set(String(category.id), runningBalance);
+      }
+    });
+
+    return balances;
+  }, [budgetData, categories, totalIncome]);
+
+  // Get balance color based on value
+  const getBalanceColor = (balance: number): string => {
+    if (balance < 0) return "text-red-600";
+    if (balance < totalIncome * 0.1) return "text-orange-600"; // Warning if less than 10% remaining
+    return "text-green-600";
+  };
+
   // Get comprehensive validation feedback
   const validationFeedback = useMemo(() => {
     const formValidation = validateBudgetFormData(budgetData);
@@ -632,10 +666,11 @@ export function SimulationBudgetForm({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Categoría</TableHead>
-                  <TableHead className="text-right">Efectivo</TableHead>
-                  <TableHead className="text-right">Crédito</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="w-1/4">Categoría</TableHead>
+                  <TableHead className="text-right w-1/5">Efectivo</TableHead>
+                  <TableHead className="text-right w-1/5">Crédito</TableHead>
+                  <TableHead className="text-right w-1/5">Total</TableHead>
+                  <TableHead className="text-right w-1/5">Balance</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -698,7 +733,7 @@ export function SimulationBudgetForm({
                                   );
                                 }
                               }}
-                              className={`w-24 text-right ${
+                              className={`w-full text-right ${
                                 categoryErrors?.efectivo
                                   ? "border-destructive"
                                   : ""
@@ -751,7 +786,7 @@ export function SimulationBudgetForm({
                                   );
                                 }
                               }}
-                              className={`w-24 text-right ${
+                              className={`w-full text-right ${
                                 categoryErrors?.credito
                                   ? "border-destructive"
                                   : ""
@@ -776,13 +811,24 @@ export function SimulationBudgetForm({
                             {formatCurrency(categoryTotal)}
                           </span>
                         </TableCell>
+                        <TableCell className="text-right font-bold">
+                          <span
+                            className={getBalanceColor(
+                              categoryBalances.get(String(category.id)) || 0
+                            )}
+                          >
+                            {formatCurrency(
+                              categoryBalances.get(String(category.id)) || 0
+                            )}
+                          </span>
+                        </TableCell>
                       </TableRow>
                     );
                   })}
                 {categories.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={4}
+                      colSpan={5}
                       className="text-center py-4 text-muted-foreground"
                     >
                       No hay categorías disponibles

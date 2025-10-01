@@ -13,6 +13,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/components/ui/use-toast";
 import { SimulationBudgetForm } from "@/components/simulation-budget-form";
+import { SimulationIncomeInput } from "@/components/simulation-income-input";
 import { SimulationBreadcrumb } from "@/components/simulation-breadcrumb";
 import { SimulationNavigation } from "@/components/simulation-navigation";
 import { SimulationQuickActions } from "@/components/simulation-quick-actions";
@@ -39,6 +40,7 @@ export default function SimulationConfigPage() {
   const [simulation, setSimulation] = useState<Simulation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("budget");
+  const [totalIncome, setTotalIncome] = useState(0);
 
   // Load simulation data
   useEffect(() => {
@@ -243,9 +245,15 @@ export default function SimulationConfigPage() {
         </TabsList>
 
         <TabsContent value="budget" className="space-y-6">
+          <SimulationIncomeInput
+            simulationId={simulation.id}
+            simulationName={simulation.name}
+            onIncomeChange={setTotalIncome}
+          />
           <SimulationBudgetForm
             simulationId={simulation.id}
             simulationName={simulation.name}
+            totalIncome={totalIncome}
             onSave={handleSaveSuccess}
             onCancel={handleBackToList}
           />

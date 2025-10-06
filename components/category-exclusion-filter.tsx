@@ -105,7 +105,7 @@ export function CategoryExclusionFilter({
           aria-expanded={isOpen}
           className={cn(
             "w-[250px] justify-between",
-            excludedCategories.length > 0 && "border-orange-300 bg-orange-50",
+            excludedCategories.length > 0 && "border-orange-300 bg-orange-50 text-orange-900 hover:bg-orange-100 hover:text-orange-900",
             className
           )}
         >

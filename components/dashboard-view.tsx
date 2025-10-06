@@ -12,10 +12,12 @@ import {
   LineChart,
   PieChart,
   PiggyBank,
+  PlusCircle,
   TrendingUp,
   Wallet,
   CreditCardIcon,
 } from "lucide-react";
+import { ExpenseFormDialog } from "@/components/expense-form-dialog";
 import { useAuth } from "@/lib/auth-context";
 import { ActivePeriodErrorHandler } from "@/components/active-period-error-handler";
 import { NoActivePeriodFallback } from "@/components/no-active-period-fallback";
@@ -82,6 +84,13 @@ export function DashboardView() {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [fundFilter, setFundFilter] = useState<Fund | null>(null);
   const router = useRouter();
+
+  // State for quick add expense dialog
+  const [isQuickAddExpenseOpen, setIsQuickAddExpenseOpen] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   // Reset fund filter to "All Funds" on page refresh
   useEffect(() => {
@@ -194,6 +203,7 @@ export function DashboardView() {
     isDbInitialized,
     dbConnectionError,
     fundFilter,
+    refreshTrigger,
   ]);
 
   if (isLoading || isLoadingData) {
@@ -583,7 +593,7 @@ export function DashboardView() {
                       runningBalance -= effectiveExpense;
 
                       return (
-                        <TableRow key={item.category_id}>
+                        <TableRow key={item.category_id} className="group">
                           <TableCell
                             className={`font-medium ${getCategoryNameStyle(
                               item
@@ -607,7 +617,22 @@ export function DashboardView() {
                                 : ""
                             }`}
                           >
-                            {item.category_name}
+                            <div className="flex items-center gap-2">
+                              <span>{item.category_name}</span>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 hover:bg-accent opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedCategoryId(item.category_id);
+                                  setIsQuickAddExpenseOpen(true);
+                                }}
+                                title={`Agregar gasto para ${item.category_name}`}
+                              >
+                                <PlusCircle className="h-4 w-4 text-muted-foreground hover:text-primary" />
+                              </Button>
+                            </div>
                           </TableCell>
                           <TableCell className="text-right">
                             {formatCurrency(item.credit_budget)}
@@ -799,6 +824,24 @@ export function DashboardView() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Quick Add Expense Dialog */}
+      <ExpenseFormDialog
+        open={isQuickAddExpenseOpen}
+        onOpenChange={(open) => {
+          setIsQuickAddExpenseOpen(open);
+          if (!open) {
+            setSelectedCategoryId(null);
+          }
+        }}
+        preSelectedCategoryId={selectedCategoryId || undefined}
+        currentFundFilter={fundFilter}
+        onSuccess={() => {
+          // Refresh dashboard data after expense is added
+          // Increment refreshTrigger to trigger useEffect refetch
+          setRefreshTrigger((prev) => prev + 1);
+        }}
+      />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import {
   ChevronUp,
   Settings,
 } from "lucide-react";
+import { ExpenseFormDialog } from "@/components/expense-form-dialog";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -33,7 +34,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Collapsible,
@@ -169,7 +169,6 @@ export function ExpensesView() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const [isFundSectionOpenAdd, setIsFundSectionOpenAdd] = useState(false);
   const [isFundSectionOpenEdit, setIsFundSectionOpenEdit] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>(
     searchParams.get("category") || ""
@@ -184,30 +183,9 @@ export function ExpensesView() {
   // Fund filter state - mandatory for expenses
   const [fundFilter, setFundFilter] = useState<Fund | null>(null);
 
-  const [newExpenseCategory, setNewExpenseCategory] = useState("");
   const [categorySearch, setCategorySearch] = useState("");
-  const [newExpensePeriod, setNewExpensePeriod] = useState(
-    activePeriod?.id || ""
-  );
-  const [newExpenseDate, setNewExpenseDate] = useState<Date | undefined>(
-    new Date()
-  );
-  const [newExpenseEvent, setNewExpenseEvent] = useState("");
-  const [newExpensePaymentMethod, setNewExpensePaymentMethod] =
-    useState<PaymentMethod>("credit");
-  const [newExpenseDescription, setNewExpenseDescription] = useState("");
-  const [newExpenseAmount, setNewExpenseAmount] = useState("");
-  const [newExpenseDestinationFund, setNewExpenseDestinationFund] =
-    useState<Fund | null>(null);
-  const [newExpenseSourceFund, setNewExpenseSourceFund] = useState<Fund | null>(
-    null
-  );
-  const [newExpenseCreditCard, setNewExpenseCreditCard] =
-    useState<CreditCard | null>(null);
 
-  // State for dynamic fund filtering
-  const [availableFundsForNewExpense, setAvailableFundsForNewExpense] =
-    useState<Fund[]>([]);
+  // State for dynamic fund filtering (for edit form only)
   const [availableFundsForEditExpense, setAvailableFundsForEditExpense] =
     useState<Fund[]>([]);
 
@@ -298,33 +276,6 @@ export function ExpensesView() {
     fetchCreditCards();
   }, []);
 
-  // Update available funds for new expense when category changes
-  useEffect(() => {
-    if (newExpenseCategory && categories && funds) {
-      const availableFunds = getAvailableFundsForCategory(
-        newExpenseCategory,
-        categories,
-        funds
-      );
-      setAvailableFundsForNewExpense(availableFunds);
-
-      // Note: Destination fund is independent of category restrictions
-      // Users can select any available fund as destination
-    } else {
-      setAvailableFundsForNewExpense(funds || []);
-      // Reset destination fund if no category selected
-      if (newExpenseDestinationFund !== null) {
-        setNewExpenseDestinationFund(null);
-      }
-    }
-  }, [
-    newExpenseCategory,
-    categories,
-    funds,
-    fundFilter,
-    newExpenseDestinationFund,
-  ]);
-
   // Update available funds for edit expense when category changes
   useEffect(() => {
     if (editExpense?.categoryId && categories && funds) {
@@ -372,83 +323,9 @@ export function ExpensesView() {
     });
   }, [categories, fundFilter]);
 
-  const resetNewExpenseForm = () => {
-    setNewExpenseCategory("");
-    setNewExpensePeriod(activePeriod?.id || "");
-    setNewExpenseDate(new Date());
-    setNewExpenseEvent("");
-    setNewExpensePaymentMethod("credit");
-    setNewExpenseDescription("");
-    setNewExpenseAmount("");
-    setNewExpenseSourceFund(null);
-    setNewExpenseDestinationFund(null);
-    setNewExpenseCreditCard(null);
-    setCategorySearch("");
-    setAvailableFundsForNewExpense(funds || []);
-    setIsFundSectionOpenAdd(false);
-  };
-
-  const handleAddExpense = () => {
-    if (
-      !newExpenseCategory ||
-      !newExpensePeriod ||
-      !newExpenseDate ||
-      !newExpenseDescription.trim() ||
-      !newExpenseAmount ||
-      !newExpenseSourceFund
-    ) {
-      toast({
-        title: "Error",
-        description:
-          "Los campos obligatorios no pueden estar vacíos. Debe seleccionar un fondo origen.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const amount = Number.parseFloat(newExpenseAmount);
-    if (isNaN(amount) || amount <= 0) {
-      toast({
-        title: "Error",
-        description: "El monto debe ser un número positivo",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate that source and destination funds are different if destination is selected
-    if (
-      newExpenseDestinationFund &&
-      newExpenseSourceFund.id === newExpenseDestinationFund.id
-    ) {
-      toast({
-        title: "Error",
-        description: "El fondo origen y destino no pueden ser el mismo",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    addExpense(
-      newExpenseCategory,
-      newExpensePeriod,
-      newExpenseDate.toISOString(),
-      newExpenseEvent.trim() || undefined,
-      newExpensePaymentMethod,
-      newExpenseDescription,
-      amount,
-      newExpenseSourceFund.id,
-      newExpenseDestinationFund?.id,
-      newExpenseCreditCard?.id
-    );
-
-    resetNewExpenseForm();
-    setIsAddOpen(false);
-
-    toast({
-      title: "Gasto agregado",
-      description: "El gasto ha sido registrado exitosamente",
-    });
+  const handleExpenseAdded = () => {
+    // Refresh data after expense is added
+    refreshData();
   };
 
   const handleEditExpense = () => {
@@ -615,259 +492,21 @@ export function ExpensesView() {
             <FileUp className="mr-2 h-4 w-4" />
             Importar CSV
           </Button>
-          <Dialog
-            open={isAddOpen}
-            onOpenChange={(open) => {
-              setIsAddOpen(open);
-              if (open) {
-                // Reset form when opening dialog
-                resetNewExpenseForm();
-              }
-            }}
+          <Button
+            componentId="expenses-add-btn"
+            disabled={!dataLoaded || !fundFilter}
+            onClick={() => setIsAddOpen(true)}
           >
-            <DialogTrigger asChild>
-              <Button componentId="expenses-add-btn" disabled={!dataLoaded || !fundFilter}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Nuevo Gasto
-              </Button>
-            </DialogTrigger>
-            <DialogContent componentId="expenses-add-dialog" className="max-w-md">
-              <DialogHeader>
-                <DialogTitle>Registrar Gasto</DialogTitle>
-                <DialogDescription>
-                  Ingresa los detalles del nuevo gasto
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="category">Categoría *</Label>
-                  <Select
-                    value={newExpenseCategory}
-                    onValueChange={(value) => {
-                      setNewExpenseCategory(value);
-                      // The useEffect will handle fund selection automatically
-                    }}
-                  >
-                    <SelectTrigger componentId="expense-add-category-select" id="category">
-                      <SelectValue placeholder="Selecciona una categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <div className="p-2">
-                        <Input
-                          placeholder="Buscar categoría..."
-                          value={categorySearch}
-                          onChange={(e) => setCategorySearch(e.target.value)}
-                          className="mb-2"
-                        />
-                      </div>
-                      {availableCategories
-                        .slice()
-                        .sort((a, b) => a.name.localeCompare(b.name))
-                        .filter((category) =>
-                          category.name
-                            .toLowerCase()
-                            .includes(categorySearch.toLowerCase())
-                        )
-                        .map((category) => (
-                          <SelectItem key={category.id} value={category.id}>
-                            {category.name}
-                            {category.fund_name && (
-                              <span className="text-xs text-muted-foreground ml-2">
-                                ({category.fund_name})
-                              </span>
-                            )}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                {/* Collapsible Fund Configuration Section with Orange Border */}
-                <div className="border border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950 rounded-lg p-3">
-                  <Collapsible
-                    open={isFundSectionOpenAdd}
-                    onOpenChange={setIsFundSectionOpenAdd}
-                  >
-                    <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-orange-800 dark:text-orange-200 hover:text-orange-900 dark:hover:text-orange-100 transition-colors">
-                      <div className="flex items-center gap-2">
-                        <Settings className="h-4 w-4" />
-                        <span>Configuración de Fondos</span>
-                      </div>
-                      {isFundSectionOpenAdd ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="pt-3 space-y-3">
-                      {newExpenseCategory && (
-                        <FundSelectionConstraintIndicator
-                          categoryId={newExpenseCategory}
-                          availableFunds={availableFundsForNewExpense}
-                          selectedFund={newExpenseDestinationFund}
-                          currentFilterFund={fundFilter}
-                          className=""
-                        />
-                      )}
-                      <div className="grid gap-2">
-                        <Label htmlFor="source-fund">Fondo Origen *</Label>
-                        <SourceFundSelector
-                          selectedCategoryId={newExpenseCategory}
-                          selectedSourceFund={newExpenseSourceFund}
-                          onSourceFundChange={setNewExpenseSourceFund}
-                          placeholder="Seleccionar fondo origen..."
-                          currentFundFilter={fundFilter}
-                          defaultFund={getDefaultFund()}
-                          required={true}
-                          className="w-full"
-                        />
-                      </div>
-                      <div className="grid gap-2">
-                        <Label htmlFor="destination-fund">
-                          Fondo Destino (opcional)
-                        </Label>
-                        <FundFilter
-                          selectedFund={newExpenseDestinationFund}
-                          onFundChange={setNewExpenseDestinationFund}
-                          placeholder="Seleccionar fondo destino..."
-                          includeAllFunds={false}
-                          className="w-full"
-                          availableFunds={funds}
-                        />
-                        <p className="text-sm text-muted-foreground">
-                          Opcional: Transfiere dinero a otro fondo. Puedes
-                          seleccionar cualquier fondo disponible como destino.
-                        </p>
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="period">Periodo *</Label>
-                  <Select
-                    value={newExpensePeriod}
-                    onValueChange={setNewExpensePeriod}
-                    disabled={!periods || !periods.length}
-                  >
-                    <SelectTrigger componentId="expense-add-period-select" id="period">
-                      <SelectValue placeholder="Selecciona un periodo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {periods.map((period) => (
-                        <SelectItem key={period.id} value={period.id}>
-                          {period.name} {period.isOpen ? "(Activo)" : ""}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="date">Fecha *</Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        id="date"
-                        variant={"outline"}
-                        className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !newExpenseDate && "text-muted-foreground"
-                        )}
-                      >
-                        <CalendarIcon className="mr-2 h-4 w-4" />
-                        {newExpenseDate ? (
-                          formatDate(newExpenseDate)
-                        ) : (
-                          <span>Selecciona una fecha</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0">
-                      <Calendar
-                        mode="single"
-                        selected={newExpenseDate}
-                        onSelect={setNewExpenseDate}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="event">Evento (opcional)</Label>
-                  <Input
-                    componentId="expense-add-event-input"
-                    id="event"
-                    value={newExpenseEvent}
-                    onChange={(e) => setNewExpenseEvent(e.target.value)}
-                    placeholder="Ej: Cumpleaños, Viaje, etc."
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="payment-method">Medio de Pago *</Label>
-                  <RadioGroup
-                    value={newExpensePaymentMethod}
-                    onValueChange={(value) =>
-                      setNewExpensePaymentMethod(value as PaymentMethod)
-                    }
-                    className="flex space-x-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="credit" id="credit" />
-                      <Label htmlFor="credit">Tarjeta de Crédito</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="debit" id="debit" />
-                      <Label htmlFor="debit">Tarjeta de Débito</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="cash" id="cash" />
-                      <Label htmlFor="cash">Efectivo</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Descripción *</Label>
-                  <Input
-                    componentId="expense-add-description-input"
-                    id="description"
-                    value={newExpenseDescription}
-                    onChange={(e) => setNewExpenseDescription(e.target.value)}
-                    placeholder="Ej: Compra de alimentos, Pago de servicios, etc."
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="amount">Monto *</Label>
-                  <Input
-                    componentId="expense-add-amount-input"
-                    id="amount"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={newExpenseAmount}
-                    onChange={(e) => setNewExpenseAmount(e.target.value)}
-                    placeholder="0.00"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="credit-card">
-                    Tarjeta de Crédito (opcional)
-                  </Label>
-                  <CreditCardSelector
-                    selectedCreditCard={newExpenseCreditCard}
-                    onCreditCardChange={setNewExpenseCreditCard}
-                    placeholder="Seleccionar tarjeta de crédito..."
-                    showNoCardOption={true}
-                    required={false}
-                    showOnlyActive={true}
-                  />
-                </div>
-              </div>
-              <DialogFooter>
-                <Button componentId="expense-add-cancel" variant="outline" onClick={() => setIsAddOpen(false)}>
-                  Cancelar
-                </Button>
-                <Button componentId="expense-add-submit" onClick={handleAddExpense}>Guardar</Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+            <PlusCircle className="mr-2 h-4 w-4" />
+            Nuevo Gasto
+          </Button>
+
+          <ExpenseFormDialog
+            open={isAddOpen}
+            onOpenChange={setIsAddOpen}
+            onSuccess={handleExpenseAdded}
+            currentFundFilter={fundFilter}
+          />
         </div>
       </div>
 

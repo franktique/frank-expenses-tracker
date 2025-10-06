@@ -133,3 +133,30 @@ The application implements a sophisticated fund management system:
 - Implement proper cache invalidation
 - Handle fund filtering in UI components
 - if asked for a password when using playwrigh MCP, use the password: 123
+
+#### Quick-Add Expense Pattern
+- **Component**: `/components/expense-form-dialog.tsx` - Reusable dialog for adding expenses
+- **Usage**: Can be triggered from any view (dashboard, tables, etc.)
+- **Features**:
+  - Pre-populate category via `preSelectedCategoryId` prop
+  - Auto-handles fund relationships and validation
+  - Supports current fund filter context via `currentFundFilter` prop
+  - Callback on success via `onSuccess` prop for data refresh
+- **Example Implementation** (dashboard-view.tsx:618-633):
+  ```tsx
+  // Add PlusCircle icon to table rows
+  <div className="flex items-center gap-2">
+    <span>{item.category_name}</span>
+    <Button
+      variant="ghost"
+      size="sm"
+      className="h-6 w-6 p-0 hover:bg-accent opacity-0 group-hover:opacity-100"
+      onClick={() => {
+        setSelectedCategoryId(item.category_id);
+        setIsQuickAddExpenseOpen(true);
+      }}
+    >
+      <PlusCircle className="h-4 w-4" />
+    </Button>
+  </div>
+  ```

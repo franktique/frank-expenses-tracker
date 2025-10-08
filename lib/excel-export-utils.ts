@@ -32,7 +32,7 @@ export interface SimulationExportData {
 }
 
 /**
- * Format currency for Excel display
+ * Format currency for Excel display (text only - used for summary labels)
  */
 function formatCurrency(value: number): string {
   return new Intl.NumberFormat("es-CO", {
@@ -41,6 +41,25 @@ function formatCurrency(value: number): string {
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
+}
+
+/**
+ * Apply Excel currency formatting to a cell
+ * Uses Excel number format code for Colombian Peso
+ */
+function applyCurrencyFormat(
+  sheet: XLSX.WorkSheet,
+  cellAddress: string
+): void {
+  if (!sheet[cellAddress]) return;
+
+  // Ensure cell type is numeric
+  if (sheet[cellAddress].t !== "n") return;
+
+  // Apply currency format: $ with thousand separators, no decimals
+  if (!sheet[cellAddress].z) {
+    sheet[cellAddress].z = '"$"#,##0';
+  }
 }
 
 /**
@@ -61,22 +80,22 @@ export function generateSimulationExcel(
     ["INGRESOS"],
   ];
 
-  // Add income details
+  // Add income details with raw numeric values
   data.incomes.forEach((income) => {
-    summaryData.push([income.description, formatCurrency(income.amount)]);
+    summaryData.push([income.description, income.amount]);
   });
 
   summaryData.push(
     [],
-    ["Total Ingresos", formatCurrency(data.totalIncome)],
+    ["Total Ingresos", data.totalIncome],
     [],
     ["PRESUPUESTOS"],
-    ["Total Efectivo", formatCurrency(data.totals.efectivo)],
-    ["Total Crédito", formatCurrency(data.totals.credito)],
-    ["Total General", formatCurrency(data.totals.general)],
+    ["Total Efectivo", data.totals.efectivo],
+    ["Total Crédito", data.totals.credito],
+    ["Total General", data.totals.general],
     [],
-    ["Categorías Configuradas", data.categoryCount.toString()],
-    ["Total Categorías", data.totalCategories.toString()]
+    ["Categorías Configuradas", data.categoryCount],
+    ["Total Categorías", data.totalCategories]
   );
 
   const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
@@ -84,12 +103,17 @@ export function generateSimulationExcel(
   // Set column widths for summary sheet
   summarySheet["!cols"] = [{ wch: 30 }, { wch: 20 }];
 
-  // Apply styling to summary sheet headers
+  // Apply styling and number formatting to summary sheet
   const summaryRange = XLSX.utils.decode_range(summarySheet["!ref"] || "A1");
   for (let R = summaryRange.s.r; R <= summaryRange.e.r; ++R) {
     for (let C = summaryRange.s.c; C <= summaryRange.e.c; ++C) {
       const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
       if (!summarySheet[cellAddress]) continue;
+
+      // Apply currency format to numeric values in column B (index 1)
+      if (C === 1 && summarySheet[cellAddress].t === "n") {
+        applyCurrencyFormat(summarySheet, cellAddress);
+      }
 
       // Bold style for specific rows
       if (
@@ -103,6 +127,7 @@ export function generateSimulationExcel(
           summarySheet[cellAddress].s = {};
         }
         summarySheet[cellAddress].s = {
+          ...summarySheet[cellAddress].s,
           font: { bold: true },
         };
       }
@@ -120,24 +145,24 @@ export function generateSimulationExcel(
 
   const budgetData: any[][] = [budgetHeaders];
 
-  // Add budget rows
+  // Add budget rows with raw numeric values
   data.budgets.forEach((budget) => {
     budgetData.push([
       budget.category_name,
-      formatCurrency(budget.efectivo_amount),
-      formatCurrency(budget.credito_amount),
-      formatCurrency(budget.total),
-      formatCurrency(budget.balance),
+      budget.efectivo_amount, // Raw number for Excel formulas
+      budget.credito_amount,
+      budget.total,
+      budget.balance,
     ]);
   });
 
-  // Add totals row
+  // Add totals row with raw numeric values
   budgetData.push([
     "TOTALES",
-    formatCurrency(data.totals.efectivo),
-    formatCurrency(data.totals.credito),
-    formatCurrency(data.totals.general),
-    "",
+    data.totals.efectivo,
+    data.totals.credito,
+    data.totals.general,
+    "", // No balance for totals
   ]);
 
   const budgetSheet = XLSX.utils.aoa_to_sheet(budgetData);
@@ -151,12 +176,18 @@ export function generateSimulationExcel(
     { wch: 18 }, // Balance
   ];
 
-  // Apply styling to budget sheet
+  // Apply styling and number formatting to budget sheet
   const budgetRange = XLSX.utils.decode_range(budgetSheet["!ref"] || "A1");
   for (let R = budgetRange.s.r; R <= budgetRange.e.r; ++R) {
     for (let C = budgetRange.s.c; C <= budgetRange.e.c; ++C) {
       const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
       if (!budgetSheet[cellAddress]) continue;
+
+      // Apply currency format to numeric columns (B=Efectivo, C=Crédito, D=Total, E=Balance)
+      // Skip header row (R === 0)
+      if (R > 0 && C >= 1 && C <= 4) {
+        applyCurrencyFormat(budgetSheet, cellAddress);
+      }
 
       // Bold style for headers and totals row
       if (R === 0 || R === budgetData.length - 1) {
@@ -164,6 +195,7 @@ export function generateSimulationExcel(
           budgetSheet[cellAddress].s = {};
         }
         budgetSheet[cellAddress].s = {
+          ...budgetSheet[cellAddress].s,
           font: { bold: true },
           fill: { fgColor: { rgb: "E8F4F8" } },
         };

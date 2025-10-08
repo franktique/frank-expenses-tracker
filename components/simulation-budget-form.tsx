@@ -21,7 +21,8 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, Save, Calculator, AlertCircle } from "lucide-react";
+import { Loader2, Save, Calculator, AlertCircle, Download } from "lucide-react";
+import { exportSimulationToExcel } from "@/lib/excel-export-utils";
 import {
   validateBudgetAmountInput,
   validateBudgetFormData,
@@ -93,6 +94,7 @@ export function SimulationBudgetForm({
   const [isSavingOnBlur, setIsSavingOnBlur] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [errors, setErrors] = useState<{
     [categoryId: number]: {
       efectivo?: string;
@@ -537,6 +539,28 @@ export function SimulationBudgetForm({
     await performSave(true);
   };
 
+  // Handle Excel export
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      await exportSimulationToExcel(simulationId);
+      toast({
+        title: "Exportación exitosa",
+        description: "El archivo Excel se ha descargado correctamente",
+      });
+    } catch (error) {
+      console.error("Error exporting to Excel:", error);
+      toast({
+        title: "Error al exportar",
+        description:
+          (error as Error).message || "No se pudo generar el archivo Excel",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -847,6 +871,24 @@ export function SimulationBudgetForm({
               Cancelar
             </Button>
           )}
+          <Button
+            variant="outline"
+            onClick={handleExport}
+            disabled={isExporting || isSaving || isSavingOnBlur}
+            className="text-green-600 hover:text-green-700"
+          >
+            {isExporting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Exportando...
+              </>
+            ) : (
+              <>
+                <Download className="mr-2 h-4 w-4" />
+                Exportar a Excel
+              </>
+            )}
+          </Button>
           <Button
             variant="outline"
             onClick={handleSave}

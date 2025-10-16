@@ -688,7 +688,7 @@ export function SimulationBudgetForm({
               <Calculator className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-emerald-600">
+              <div className="text-2xl font-bold text-purple-600">
                 {formatCurrency(totals.expectedSavings)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
@@ -910,6 +910,8 @@ export function SimulationBudgetForm({
                               className={`w-full text-right ${
                                 categoryErrors?.expected_savings
                                   ? "border-destructive"
+                                  : parseFloat(categoryData?.expected_savings || "0") > 0
+                                  ? "text-purple-600 font-semibold"
                                   : ""
                               }`}
                               placeholder="0.00"

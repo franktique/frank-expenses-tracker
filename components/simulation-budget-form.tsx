@@ -44,6 +44,7 @@ type SimulationBudget = {
   category_name: string;
   efectivo_amount: number;
   credito_amount: number;
+  expected_savings: number;
 };
 
 type BudgetFormData = {
@@ -51,6 +52,7 @@ type BudgetFormData = {
     // Use string to support UUID category IDs
     efectivo_amount: string;
     credito_amount: string;
+    expected_savings: string;
   };
 };
 
@@ -99,6 +101,7 @@ export function SimulationBudgetForm({
     [categoryId: number]: {
       efectivo?: string;
       credito?: string;
+      expected_savings?: string;
     };
   }>({});
 
@@ -150,6 +153,7 @@ export function SimulationBudgetForm({
           // Ensure amounts are valid numbers
           const efectivoAmount = existingBudget?.efectivo_amount;
           const creditoAmount = existingBudget?.credito_amount;
+          const expectedSavings = existingBudget?.expected_savings;
 
           initialBudgetData[String(category.id)] = {
             efectivo_amount:
@@ -163,6 +167,12 @@ export function SimulationBudgetForm({
               creditoAmount !== undefined &&
               !isNaN(creditoAmount)
                 ? creditoAmount.toString()
+                : "0",
+            expected_savings:
+              expectedSavings !== null &&
+              expectedSavings !== undefined &&
+              !isNaN(expectedSavings)
+                ? expectedSavings.toString()
                 : "0",
           };
         });
@@ -237,6 +247,7 @@ export function SimulationBudgetForm({
             category_id: parsedCategoryId,
             efectivo_amount: parseFloat(data.efectivo_amount) || 0,
             credito_amount: parseFloat(data.credito_amount) || 0,
+            expected_savings: parseFloat(data.expected_savings) || 0,
           };
         });
 
@@ -340,7 +351,7 @@ export function SimulationBudgetForm({
   // Handle input changes with validation
   const handleInputChange = (
     categoryId: string | number,
-    field: "efectivo_amount" | "credito_amount",
+    field: "efectivo_amount" | "credito_amount" | "expected_savings",
     value: string
   ) => {
     // Ensure categoryId is valid (can be string UUID or number)
@@ -355,12 +366,13 @@ export function SimulationBudgetForm({
     // Sanitize the input value
     const sanitizedValue = value === "" ? "0" : value;
 
-    // Update budget data, ensuring both fields exist
+    // Update budget data, ensuring all fields exist
     setBudgetData((prev) => ({
       ...prev,
       [categoryKey]: {
         efectivo_amount: prev[categoryKey]?.efectivo_amount ?? "0",
         credito_amount: prev[categoryKey]?.credito_amount ?? "0",
+        expected_savings: prev[categoryKey]?.expected_savings ?? "0",
         [field]: sanitizedValue,
       },
     }));
@@ -370,11 +382,12 @@ export function SimulationBudgetForm({
 
     // Validate and update errors for the changed field only (with typing flag)
     const error = validateField(sanitizedValue, true);
+    const errorFieldName = field === "efectivo_amount" ? "efectivo" : field === "credito_amount" ? "credito" : "expected_savings";
     setErrors((prev) => ({
       ...prev,
       [categoryKey]: {
         ...prev[categoryKey],
-        [field === "efectivo_amount" ? "efectivo" : "credito"]: error,
+        [errorFieldName]: error,
       },
     }));
   };
@@ -383,7 +396,7 @@ export function SimulationBudgetForm({
   const handleInputBlur = useCallback(
     async (
       categoryId: string | number,
-      field: "efectivo_amount" | "credito_amount",
+      field: "efectivo_amount" | "credito_amount" | "expected_savings",
       value: string
     ) => {
       // Ensure categoryId is valid
@@ -397,11 +410,12 @@ export function SimulationBudgetForm({
 
       // Final validation without typing flag (stricter validation)
       const error = validateField(value, false);
+      const errorFieldName = field === "efectivo_amount" ? "efectivo" : field === "credito_amount" ? "credito" : "expected_savings";
       setErrors((prev) => ({
         ...prev,
         [categoryKey]: {
           ...prev[categoryKey],
-          [field === "efectivo_amount" ? "efectivo" : "credito"]: error,
+          [errorFieldName]: error,
         },
       }));
 
@@ -433,20 +447,27 @@ export function SimulationBudgetForm({
   const totals = useMemo(() => {
     let totalEfectivo = 0;
     let totalCredito = 0;
+    let totalExpectedSavings = 0;
     let totalGeneral = 0;
 
     Object.entries(budgetData).forEach(([categoryId, data]) => {
       const efectivo = parseFloat(data.efectivo_amount) || 0;
       const credito = parseFloat(data.credito_amount) || 0;
+      const expectedSavings = parseFloat(data.expected_savings) || 0;
 
       totalEfectivo += efectivo;
       totalCredito += credito;
+      totalExpectedSavings += expectedSavings;
       totalGeneral += efectivo + credito;
     });
+
+    const totalNetSpend = totalEfectivo - totalExpectedSavings;
 
     return {
       efectivo: totalEfectivo,
       credito: totalCredito,
+      expectedSavings: totalExpectedSavings,
+      netSpend: totalNetSpend,
       general: totalGeneral,
     };
   }, [budgetData]);
@@ -474,9 +495,13 @@ export function SimulationBudgetForm({
     sortedCategories.forEach((category) => {
       const categoryData = budgetData[String(category.id)];
       if (categoryData) {
-        // Only decrease balance for Efectivo (cash) amounts
+        // Calculate net spend: Efectivo - Expected Savings
         const efectivoAmount = parseFloat(categoryData.efectivo_amount) || 0;
-        runningBalance -= efectivoAmount;
+        const expectedSavings = parseFloat(categoryData.expected_savings) || 0;
+        const netSpend = efectivoAmount - expectedSavings;
+
+        // Decrease balance by net spend (actual amount after savings)
+        runningBalance -= netSpend;
         balances.set(String(category.id), runningBalance);
       } else {
         balances.set(String(category.id), runningBalance);
@@ -626,7 +651,7 @@ export function SimulationBudgetForm({
         )}
 
         {/* Totals Summary */}
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
@@ -652,6 +677,23 @@ export function SimulationBudgetForm({
               <div className="text-2xl font-bold text-blue-600">
                 {formatCurrency(totals.credito)}
               </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Ahorro Esperado
+              </CardTitle>
+              <Calculator className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-600">
+                {formatCurrency(totals.expectedSavings)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Gasto neto: {formatCurrency(totals.netSpend)}
+              </p>
             </CardContent>
           </Card>
 
@@ -690,11 +732,12 @@ export function SimulationBudgetForm({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-1/4">Categoría</TableHead>
-                  <TableHead className="text-right w-1/5">Efectivo</TableHead>
-                  <TableHead className="text-right w-1/5">Crédito</TableHead>
-                  <TableHead className="text-right w-1/5">Total</TableHead>
-                  <TableHead className="text-right w-1/5">Balance</TableHead>
+                  <TableHead className="w-1/6">Categoría</TableHead>
+                  <TableHead className="text-right w-1/6">Efectivo</TableHead>
+                  <TableHead className="text-right w-1/6">Crédito</TableHead>
+                  <TableHead className="text-right w-1/6">Ahorro Esperado</TableHead>
+                  <TableHead className="text-right w-1/6">Total</TableHead>
+                  <TableHead className="text-right w-1/6">Balance</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -824,6 +867,60 @@ export function SimulationBudgetForm({
                             )}
                           </div>
                         </TableCell>
+                        <TableCell className="text-right">
+                          <div className="space-y-1">
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              max={parseFloat(categoryData?.efectivo_amount || "0")}
+                              value={categoryData?.expected_savings || "0"}
+                              onChange={(e) => {
+                                const value = e.target.value;
+                                // Ensure we have a valid category ID
+                                if (category.id) {
+                                  handleInputChange(
+                                    category.id,
+                                    "expected_savings",
+                                    value
+                                  );
+                                } else {
+                                  console.error(
+                                    "Invalid category ID:",
+                                    category.id
+                                  );
+                                }
+                              }}
+                              onBlur={(e) => {
+                                const value = e.target.value;
+                                // Ensure we have a valid category ID
+                                if (category.id) {
+                                  handleInputBlur(
+                                    category.id,
+                                    "expected_savings",
+                                    value
+                                  );
+                                } else {
+                                  console.error(
+                                    "Invalid category ID:",
+                                    category.id
+                                  );
+                                }
+                              }}
+                              className={`w-full text-right ${
+                                categoryErrors?.expected_savings
+                                  ? "border-destructive"
+                                  : ""
+                              }`}
+                              placeholder="0.00"
+                            />
+                            {categoryErrors?.expected_savings && (
+                              <p className="text-xs text-destructive">
+                                {categoryErrors.expected_savings}
+                              </p>
+                            )}
+                          </div>
+                        </TableCell>
                         <TableCell className="text-right font-medium">
                           <span
                             className={
@@ -852,7 +949,7 @@ export function SimulationBudgetForm({
                 {categories.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={6}
                       className="text-center py-4 text-muted-foreground"
                     >
                       No hay categorías disponibles

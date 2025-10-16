@@ -45,11 +45,12 @@ export async function GET(
 
     // Get simulation budgets with category information
     const budgets = await sql`
-      SELECT 
+      SELECT
         sb.category_id,
         c.name as category_name,
         sb.efectivo_amount,
         sb.credito_amount,
+        sb.expected_savings,
         sb.created_at,
         sb.updated_at
       FROM simulation_budgets sb
@@ -230,17 +231,18 @@ export async function PUT(
     try {
       // Process each budget update/insert
       for (const budget of validatedBudgets) {
-        const { category_id, efectivo_amount, credito_amount } = budget;
+        const { category_id, efectivo_amount, credito_amount, expected_savings = 0 } = budget;
 
         try {
           // Use UPSERT (INSERT ... ON CONFLICT) to handle updates
           const [result] = await sql`
-            INSERT INTO simulation_budgets (simulation_id, category_id, efectivo_amount, credito_amount, updated_at)
-            VALUES (${simulationId}, ${category_id}, ${efectivo_amount}, ${credito_amount}, CURRENT_TIMESTAMP)
-            ON CONFLICT (simulation_id, category_id) 
-            DO UPDATE SET 
+            INSERT INTO simulation_budgets (simulation_id, category_id, efectivo_amount, credito_amount, expected_savings, updated_at)
+            VALUES (${simulationId}, ${category_id}, ${efectivo_amount}, ${credito_amount}, ${expected_savings}, CURRENT_TIMESTAMP)
+            ON CONFLICT (simulation_id, category_id)
+            DO UPDATE SET
               efectivo_amount = EXCLUDED.efectivo_amount,
               credito_amount = EXCLUDED.credito_amount,
+              expected_savings = EXCLUDED.expected_savings,
               updated_at = CURRENT_TIMESTAMP
             RETURNING *
           `;

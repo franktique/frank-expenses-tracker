@@ -47,7 +47,14 @@ export const SimulationBudgetSchema = z.object({
   ),
   efectivo_amount: SimulationBudgetAmountSchema,
   credito_amount: SimulationBudgetAmountSchema,
-});
+  expected_savings: SimulationBudgetAmountSchema.optional().default(0),
+}).refine(
+  (data) => data.expected_savings <= data.efectivo_amount,
+  {
+    message: "El ahorro esperado no puede ser mayor al presupuesto en efectivo",
+    path: ["expected_savings"],
+  }
+);
 
 export const SimulationBudgetsArraySchema = z
   .array(SimulationBudgetSchema)
@@ -472,20 +479,21 @@ export function validateBudgetFormData(formData: {
   [categoryId: string]: {
     efectivo_amount: string;
     credito_amount: string;
+    expected_savings?: string;
   };
 }): {
   isValid: boolean;
-  errors: { [categoryId: string]: { efectivo?: string; credito?: string } };
+  errors: { [categoryId: string]: { efectivo?: string; credito?: string; expected_savings?: string } };
   totalErrors: number;
 } {
   const errors: {
-    [categoryId: string]: { efectivo?: string; credito?: string };
+    [categoryId: string]: { efectivo?: string; credito?: string; expected_savings?: string };
   } = {};
   let totalErrors = 0;
 
   Object.entries(formData).forEach(([categoryIdStr, data]) => {
     const categoryId = categoryIdStr; // Keep as string since it can be a UUID
-    const categoryErrors: { efectivo?: string; credito?: string } = {};
+    const categoryErrors: { efectivo?: string; credito?: string; expected_savings?: string } = {};
 
     // Ensure data exists and has the expected structure
     if (!data || typeof data !== "object") {
@@ -524,7 +532,29 @@ export function validateBudgetFormData(formData: {
       totalErrors++;
     }
 
-    if (categoryErrors.efectivo || categoryErrors.credito) {
+    // Validate expected_savings amount
+    const expectedSavings = data.expected_savings ?? "0";
+    const savingsValidation = validateBudgetAmountInput(expectedSavings);
+    if (!savingsValidation.isValid) {
+      console.warn(
+        "Expected savings validation failed for category",
+        categoryId,
+        "value:",
+        expectedSavings,
+        "error:",
+        savingsValidation.error
+      );
+      categoryErrors.expected_savings = savingsValidation.error;
+      totalErrors++;
+    } else if (savingsValidation.numericValue !== undefined && efectivoValidation.numericValue !== undefined) {
+      // Cross-field validation: expected_savings <= efectivo_amount
+      if (savingsValidation.numericValue > efectivoValidation.numericValue) {
+        categoryErrors.expected_savings = "El ahorro esperado no puede ser mayor al presupuesto en efectivo";
+        totalErrors++;
+      }
+    }
+
+    if (categoryErrors.efectivo || categoryErrors.credito || categoryErrors.expected_savings) {
       errors[categoryId] = categoryErrors;
     }
   });

@@ -17,7 +17,8 @@ import { SimulationIncomeInput } from "@/components/simulation-income-input";
 import { SimulationBreadcrumb } from "@/components/simulation-breadcrumb";
 import { SimulationNavigation } from "@/components/simulation-navigation";
 import { SimulationQuickActions } from "@/components/simulation-quick-actions";
-import { ArrowLeft, Settings, BarChart3, Loader2 } from "lucide-react";
+import { PeriodSelectorDialog } from "@/components/period-selector-dialog";
+import { ArrowLeft, Settings, BarChart3, Loader2, Copy } from "lucide-react";
 
 // Types
 type Simulation = {
@@ -41,6 +42,8 @@ export default function SimulationConfigPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("budget");
   const [totalIncome, setTotalIncome] = useState(0);
+  const [isPeriodSelectorOpen, setIsPeriodSelectorOpen] = useState(false);
+  const [existingDataCount, setExistingDataCount] = useState({ incomes: 0, budgets: 0 });
 
   // Load simulation data
   useEffect(() => {
@@ -94,6 +97,39 @@ export default function SimulationConfigPage() {
     router.push("/simular");
   };
 
+  // Load existing data count for period selector
+  useEffect(() => {
+    if (simulationId) {
+      loadExistingDataCount();
+    }
+  }, [simulationId]);
+
+  const loadExistingDataCount = async () => {
+    try {
+      // Load incomes count
+      const incomesResponse = await fetch(`/api/simulations/${simulationId}/incomes`);
+      if (incomesResponse.ok) {
+        const incomesData = await incomesResponse.json();
+        setExistingDataCount((prev) => ({
+          ...prev,
+          incomes: incomesData.incomes?.length || 0,
+        }));
+      }
+
+      // Load budgets count
+      const budgetsResponse = await fetch(`/api/simulations/${simulationId}/budgets`);
+      if (budgetsResponse.ok) {
+        const budgetsData = await budgetsResponse.json();
+        setExistingDataCount((prev) => ({
+          ...prev,
+          budgets: budgetsData.budgets?.length || 0,
+        }));
+      }
+    } catch (error) {
+      console.error("Error loading existing data count:", error);
+    }
+  };
+
   // Handle successful save
   const handleSaveSuccess = () => {
     // Refresh simulation data to update budget_count
@@ -107,6 +143,29 @@ export default function SimulationConfigPage() {
           console.error("Error refreshing simulation data:", error);
         });
     }
+  };
+
+  // Handle successful period copy
+  const handlePeriodCopySuccess = (
+    periodId: string,
+    periodName: string,
+    mode: "merge" | "replace"
+  ) => {
+    toast({
+      title: "Datos copiados exitosamente",
+      description: `Los datos del período "${periodName}" han sido copiados a la simulación`,
+    });
+
+    // Refresh data count
+    loadExistingDataCount();
+
+    // Force reload of income and budget components by triggering save success
+    handleSaveSuccess();
+
+    // Reload page to refresh all data
+    setTimeout(() => {
+      window.location.reload();
+    }, 1000);
   };
 
   if (isLoading) {
@@ -245,6 +304,28 @@ export default function SimulationConfigPage() {
         </TabsList>
 
         <TabsContent value="budget" className="space-y-6">
+          {/* Copy from Period Button */}
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Datos de la Simulación</CardTitle>
+                  <CardDescription>
+                    Configura los ingresos y presupuestos, o cópialos desde un período existente
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsPeriodSelectorOpen(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copiar desde Período
+                </Button>
+              </div>
+            </CardHeader>
+          </Card>
+
           <SimulationIncomeInput
             simulationId={simulation.id}
             simulationName={simulation.name}
@@ -256,6 +337,16 @@ export default function SimulationConfigPage() {
             totalIncome={totalIncome}
             onSave={handleSaveSuccess}
             onCancel={handleBackToList}
+          />
+
+          {/* Period Selector Dialog */}
+          <PeriodSelectorDialog
+            open={isPeriodSelectorOpen}
+            onOpenChange={setIsPeriodSelectorOpen}
+            simulationId={simulation.id}
+            simulationName={simulation.name}
+            onSuccess={handlePeriodCopySuccess}
+            existingDataCount={existingDataCount}
           />
         </TabsContent>
 

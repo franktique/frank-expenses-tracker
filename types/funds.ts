@@ -85,6 +85,23 @@ export const UpdateFundSchema = z.object({
   // Note: start_date is not included as it cannot be modified after creation
 });
 
+// Tipo Gasto (expense type) definitions
+export const TIPO_GASTO_VALUES = {
+  FIJO: "F",
+  VARIABLE: "V",
+  SEMI_FIJO: "SF",
+  EVENTUAL: "E",
+} as const;
+
+export const TIPO_GASTO_LABELS = {
+  F: "Fijo",
+  V: "Variable",
+  SF: "Semi Fijo",
+  E: "Eventual",
+} as const;
+
+export type TipoGasto = typeof TIPO_GASTO_VALUES[keyof typeof TIPO_GASTO_VALUES];
+
 // Enhanced Category interface with fund support
 export interface Category {
   id: string;
@@ -92,6 +109,7 @@ export interface Category {
   fund_id?: string;
   fund_name?: string; // Populated in joins
   associated_funds?: Fund[]; // New field for multiple fund relationships
+  tipo_gasto?: TipoGasto; // Expense type: F (Fijo), V (Variable), SF (Semi Fijo)
 }
 
 // Category-Fund relationship interface
@@ -111,6 +129,14 @@ export const CategorySchema = z.object({
     .max(255, "El nombre de la categoría es demasiado largo"),
   fund_id: z.string().uuid().optional(),
   fund_name: z.string().optional(),
+  tipo_gasto: z
+    .enum(["F", "V", "SF", "E"], {
+      errorMap: () => ({
+        message:
+          "El tipo de gasto debe ser F (Fijo), V (Variable), SF (Semi Fijo) o E (Eventual)",
+      }),
+    })
+    .optional(),
 });
 
 // Category creation schema
@@ -121,6 +147,14 @@ export const CreateCategorySchema = z.object({
     .max(255, "El nombre de la categoría es demasiado largo"),
   fund_id: z.string().uuid().optional(),
   fund_ids: z.array(z.string().uuid()).optional(), // New field for multiple fund relationships
+  tipo_gasto: z
+    .enum(["F", "V", "SF", "E"], {
+      errorMap: () => ({
+        message:
+          "El tipo de gasto debe ser F (Fijo), V (Variable), SF (Semi Fijo) o E (Eventual)",
+      }),
+    })
+    .optional(),
 });
 
 // Category update schema
@@ -132,6 +166,14 @@ export const UpdateCategorySchema = z.object({
     .optional(),
   fund_id: z.string().uuid().optional(),
   fund_ids: z.array(z.string().uuid()).optional(), // New field for multiple fund relationships
+  tipo_gasto: z
+    .enum(["F", "V", "SF", "E"], {
+      errorMap: () => ({
+        message:
+          "El tipo de gasto debe ser F (Fijo), V (Variable), SF (Semi Fijo) o E (Eventual)",
+      }),
+    })
+    .optional(),
 });
 
 // Category-Fund relationship schemas
@@ -544,4 +586,12 @@ export const SIMULATION_INCOME_ERROR_MESSAGES = {
   AMOUNT_MUST_BE_POSITIVE: "El monto debe ser positivo",
   SIMULATION_NOT_FOUND: "La simulación no existe",
   DELETE_FAILED: "No se pudo eliminar el ingreso simulado",
+} as const;
+
+// Tipo Gasto (expense type) error messages
+export const TIPO_GASTO_ERROR_MESSAGES = {
+  INVALID_TYPE:
+    "El tipo de gasto debe ser F (Fijo), V (Variable) o SF (Semi Fijo)",
+  TYPE_REQUIRED: "El tipo de gasto es obligatorio",
+  TYPE_NOT_FOUND: "El tipo de gasto especificado no existe",
 } as const;

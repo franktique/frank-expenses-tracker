@@ -19,6 +19,8 @@ The application uses API routes for database operations. Key migration endpoints
 - `/api/migrate-fondos` - Migrate funds (fondos) tables
 - `/api/migrate-category-fund-relationships` - Migrate category-fund relationships
 - `/api/migrate-expense-source-funds` - Migrate expense source fund tracking
+- `/api/migrate-tipo-gasto` - Add tipo_gasto column to categories for expense type classification
+- `/api/migrate-tipo-gasto-constraint` - Update tipo_gasto constraint to include E (Eventual) type
 
 ## Application Architecture
 
@@ -56,7 +58,8 @@ The application implements a sophisticated fund management system:
 
 #### Core Entities (see `/types/funds.ts`)
 - **Fund** - Financial pools with balances (`id`, `name`, `initial_balance`, `current_balance`)
-- **Category** - Expense categories with fund associations (`id`, `name`, `associated_funds[]`)
+- **Category** - Expense categories with fund associations (`id`, `name`, `associated_funds[]`, `tipo_gasto`)
+  - **Tipo Gasto**: Expense type classification (F=Fijo/Fixed, V=Variable, SF=Semi Fijo/Semi-Fixed)
 - **Period** - Time periods for budgeting (`id`, `name`, `month`, `year`, `is_open`)
 - **Expense** - Transactions with source/destination funds (`source_fund_id`, `destination_fund_id`)
 - **Income** - Money inflows to specific funds (`fund_id`)
@@ -132,9 +135,33 @@ The application implements a sophisticated fund management system:
 - Use `CategoryFundFallback` for backward compatibility
 - Implement proper cache invalidation
 - Handle fund filtering in UI components
-- if asked for a password when using playwrigh MCP, use the password: 123
+
+#### Working with Tipo Gasto (Expense Types)
+The **Tipo Gasto** feature classifies categories into four expense types:
+- **F (Fijo)** - Fixed expenses (blue badge) - Regular, recurring expenses like rent, insurance
+- **V (Variable)** - Variable expenses (green badge) - Expenses that fluctuate like groceries, entertainment
+- **SF (Semi Fijo)** - Semi-fixed expenses (orange badge) - Partially recurring like utilities, subscriptions
+- **E (Eventual)** - Eventual expenses (red badge) - Rare, one-time expenses like car repairs, medical bills
+
+**Implementation Details**:
+- Constants defined in `/types/funds.ts`: `TIPO_GASTO_VALUES`, `TIPO_GASTO_LABELS`
+- Validation: Uses Zod enum validation in category schemas
+- Database: Stored in `categories.tipo_gasto` as VARCHAR(2) with check constraint
+- UI Components:
+  - `TipoGastoBadge` (`/components/tipo-gasto-badge.tsx`) - Display with color coding
+  - `TipoGastoSelect` (`/components/tipo-gasto-select.tsx`) - Form select component
+- Migration: Use `/api/migrate-tipo-gasto` endpoint to add column to existing databases
+- Optional field: Type is optional for backward compatibility
+
+**Adding Tipo Gasto to New Features**:
+1. Include `tipo_gasto?: TipoGasto` in data models
+2. Add to validation schemas with `.enum(["F", "V", "SF"]).optional()`
+3. Use `TipoGastoBadge` component for display
+4. Use `TipoGastoSelect` component for form input
+5. Remember to handle undefined/null values gracefully
 
 #### Quick-Add Expense Pattern
+- **Password Note**: if asked for a password when using playwright MCP, use the password: 123
 - **Component**: `/components/expense-form-dialog.tsx` - Reusable dialog for adding expenses
 - **Usage**: Can be triggered from any view (dashboard, tables, etc.)
 - **Features**:

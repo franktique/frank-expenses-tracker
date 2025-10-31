@@ -57,10 +57,12 @@ import {
   CategoryFundInfoPanel,
   CategoryFundInfoCompact,
 } from "@/components/category-fund-info-panel";
-import { Fund, Category } from "@/types/funds";
+import { Fund, Category, TipoGasto } from "@/types/funds";
+import { TipoGastoBadge } from "@/components/tipo-gasto-badge";
+import { TipoGastoSelect } from "@/components/tipo-gasto-select";
 
 export function CategoriesView() {
-  const { categories, addCategory, updateCategory, deleteCategory, funds } =
+  const { categories, addCategory, updateCategory, deleteCategory, funds, refreshData } =
     useBudget();
   const { toast } = useToast();
 
@@ -70,8 +72,10 @@ export function CategoriesView() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
   const [newCategoryFunds, setNewCategoryFunds] = useState<Fund[]>([]);
+  const [newCategoryTipoGasto, setNewCategoryTipoGasto] = useState<TipoGasto>();
   const [editCategory, setEditCategory] = useState<Category | null>(null);
   const [editCategoryFunds, setEditCategoryFunds] = useState<Fund[]>([]);
+  const [editCategoryTipoGasto, setEditCategoryTipoGasto] = useState<TipoGasto>();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteValidation, setDeleteValidation] = useState<{
     hasExpenses: boolean;
@@ -227,6 +231,7 @@ export function CategoriesView() {
         body: JSON.stringify({
           name: newCategoryName,
           fund_ids: fundIds.length > 0 ? fundIds : undefined,
+          tipo_gasto: newCategoryTipoGasto || undefined,
         }),
       });
 
@@ -242,20 +247,25 @@ export function CategoriesView() {
         throw new Error(errorData.error || "Failed to add category");
       }
 
-      // Refresh categories to get updated data
-      window.location.reload(); // Simple refresh for now
+      // Get fund names before clearing state
+      const fundNames = newCategoryFunds.map((f) => f.name).join(", ");
 
+      // Reset form immediately
       setNewCategoryName("");
       setNewCategoryFunds([]);
+      setNewCategoryTipoGasto(undefined);
       setIsAddOpen(false);
 
-      const fundNames = newCategoryFunds.map((f) => f.name).join(", ");
+      // Show success toast
       toast({
         title: "Categoría agregada",
         description: `La categoría ha sido agregada exitosamente${
           fundNames ? ` con fondos: ${fundNames}` : ""
         }`,
       });
+
+      // Refresh the context data to show the new category
+      await refreshData();
     } catch (error) {
       toast({
         title: "Error",
@@ -281,24 +291,47 @@ export function CategoriesView() {
     loadingState.setLoading("editCategory", true, "Actualizando categoría...");
 
     try {
-      // Update category name using existing method
-      await updateCategory(editCategory.id, editCategory.name);
+      // Build update payload with all fields including tipo_gasto
+      const updatePayload: any = {
+        name: editCategory.name,
+      };
+
+      if (editCategoryTipoGasto !== undefined) {
+        updatePayload.tipo_gasto = editCategoryTipoGasto;
+      }
+
+      // Update category using API call
+      const response = await fetch(`/api/categories/${editCategory.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(updatePayload),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to update category");
+      }
 
       // Update fund relationships separately with enhanced error handling
       const fundIds = editCategoryFunds.map((fund) => fund.id);
       await updateCategoryFunds(editCategory.id, fundIds);
 
-      // Refresh categories to get updated data
-      window.location.reload(); // Simple refresh for now
-
+      // Close dialog and reset state immediately
       setEditCategory(null);
       setEditCategoryFunds([]);
+      setEditCategoryTipoGasto(undefined);
       setIsEditOpen(false);
 
+      // Show success toast
       toast({
         title: "Categoría actualizada",
         description: "La categoría ha sido actualizada exitosamente",
       });
+
+      // Refresh the context data to show updated categories
+      await refreshData();
     } catch (error) {
       // Only show error toast for actual errors, not for user cancellations
       const errorMessage = (error as Error).message;
@@ -380,6 +413,8 @@ export function CategoriesView() {
     } else {
       setEditCategoryFunds([]);
     }
+    // Set tipo_gasto
+    setEditCategoryTipoGasto(category.tipo_gasto);
     setIsEditOpen(true);
   };
 
@@ -435,6 +470,14 @@ export function CategoriesView() {
                   />
                   <CategoryFundInfoCompact className="mt-2" />
                 </div>
+                <div className="grid gap-2">
+                  <TipoGastoSelect
+                    value={newCategoryTipoGasto}
+                    onValueChange={setNewCategoryTipoGasto}
+                    label="Tipo de Gasto (opcional)"
+                    placeholder="Selecciona el tipo de gasto"
+                  />
+                </div>
               </div>
               <DialogFooter>
                 <Button
@@ -443,6 +486,7 @@ export function CategoriesView() {
                     setIsAddOpen(false);
                     setNewCategoryName("");
                     setNewCategoryFunds([]);
+                    setNewCategoryTipoGasto(undefined);
                   }}
                   disabled={loadingState.isLoading("addCategory")}
                 >
@@ -483,6 +527,7 @@ export function CategoriesView() {
               <TableRow>
                 <TableHead>Nombre</TableHead>
                 <TableHead>Fondo</TableHead>
+                <TableHead>Tipo Gasto</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -505,6 +550,9 @@ export function CategoriesView() {
                         showTooltip={true}
                         variant="default"
                       />
+                    </TableCell>
+                    <TableCell>
+                      <TipoGastoBadge tipoGasto={category.tipo_gasto} />
                     </TableCell>
                     <TableCell className="text-right">
                       <Button
@@ -531,7 +579,7 @@ export function CategoriesView() {
               {(!filteredCategories || filteredCategories.length === 0) && (
                 <TableRow>
                   <TableCell
-                    colSpan={3}
+                    colSpan={4}
                     className="text-center py-4 text-muted-foreground"
                   >
                     {fundFilter
@@ -577,6 +625,14 @@ export function CategoriesView() {
               />
               <CategoryFundInfoCompact className="mt-2" />
             </div>
+            <div className="grid gap-2">
+              <TipoGastoSelect
+                value={editCategoryTipoGasto}
+                onValueChange={setEditCategoryTipoGasto}
+                label="Tipo de Gasto (opcional)"
+                placeholder="Selecciona el tipo de gasto"
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -585,6 +641,7 @@ export function CategoriesView() {
                 setIsEditOpen(false);
                 setEditCategory(null);
                 setEditCategoryFunds([]);
+                setEditCategoryTipoGasto(undefined);
               }}
               disabled={loadingState.isLoading("editCategory")}
             >

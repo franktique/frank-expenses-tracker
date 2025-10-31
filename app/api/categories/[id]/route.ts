@@ -73,7 +73,7 @@ export async function PUT(
       );
     }
 
-    const { name, fund_id, fund_ids } = validationResult.data;
+    const { name, fund_id, fund_ids, tipo_gasto } = validationResult.data;
 
     // Check if category exists
     const [existingCategory] =
@@ -211,10 +211,31 @@ export async function PUT(
     // Build update query based on provided fields
     let updatedCategory;
 
-    if (name !== undefined && fund_id !== undefined) {
+    if (name !== undefined && fund_id !== undefined && tipo_gasto !== undefined) {
+      [updatedCategory] = await sql`
+        UPDATE categories
+        SET name = ${name}, fund_id = ${validationResult.data.fund_id}, tipo_gasto = ${tipo_gasto}
+        WHERE id = ${id}
+        RETURNING *
+      `;
+    } else if (name !== undefined && fund_id !== undefined) {
       [updatedCategory] = await sql`
         UPDATE categories
         SET name = ${name}, fund_id = ${validationResult.data.fund_id}
+        WHERE id = ${id}
+        RETURNING *
+      `;
+    } else if (name !== undefined && tipo_gasto !== undefined) {
+      [updatedCategory] = await sql`
+        UPDATE categories
+        SET name = ${name}, tipo_gasto = ${tipo_gasto}
+        WHERE id = ${id}
+        RETURNING *
+      `;
+    } else if (fund_id !== undefined && tipo_gasto !== undefined) {
+      [updatedCategory] = await sql`
+        UPDATE categories
+        SET fund_id = ${validationResult.data.fund_id}, tipo_gasto = ${tipo_gasto}
         WHERE id = ${id}
         RETURNING *
       `;
@@ -229,6 +250,13 @@ export async function PUT(
       [updatedCategory] = await sql`
         UPDATE categories
         SET fund_id = ${validationResult.data.fund_id}
+        WHERE id = ${id}
+        RETURNING *
+      `;
+    } else if (tipo_gasto !== undefined) {
+      [updatedCategory] = await sql`
+        UPDATE categories
+        SET tipo_gasto = ${tipo_gasto}
         WHERE id = ${id}
         RETURNING *
       `;

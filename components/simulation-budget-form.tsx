@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, Save, Calculator, AlertCircle, Download } from "lucide-react";
+import { Loader2, Save, Calculator, AlertCircle, Download, ArrowUpDown } from "lucide-react";
 import { exportSimulationToExcel } from "@/lib/excel-export-utils";
 import {
   validateBudgetAmountInput,
@@ -31,12 +31,15 @@ import {
 import { useSimulationRetry } from "@/hooks/use-simulation-retry";
 import { SimulationErrorWrapper } from "@/components/simulation-error-boundary";
 import { DataConsistencyAlert } from "@/components/simulation-fallback-components";
+import { TipoGastoBadge } from "@/components/tipo-gasto-badge";
+import type { TipoGasto } from "@/types/funds";
 
 // Types
 type Category = {
   id: string | number; // Support both string (UUID) and number IDs
   name: string;
   fund_name?: string;
+  tipo_gasto?: TipoGasto;
 };
 
 type SimulationBudget = {
@@ -45,6 +48,7 @@ type SimulationBudget = {
   efectivo_amount: number;
   credito_amount: number;
   expected_savings: number;
+  tipo_gasto?: TipoGasto;
 };
 
 type BudgetFormData = {
@@ -104,6 +108,8 @@ export function SimulationBudgetForm({
       expected_savings?: string;
     };
   }>({});
+  const [sortField, setSortField] = useState<"tipo_gasto" | "category_name" | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
 
   // Load categories and existing budget data
   useEffect(() => {
@@ -482,17 +488,35 @@ export function SimulationBudgetForm({
     return efectivo + credito;
   };
 
+  // Get sorted categories based on current sort settings
+  const getSortedCategories = useMemo(() => {
+    let sorted = [...categories].sort((a, b) =>
+      a.name.localeCompare(b.name)
+    );
+
+    if (sortField === "tipo_gasto") {
+      sorted.sort((a, b) => {
+        const aValue = a.tipo_gasto || "";
+        const bValue = b.tipo_gasto || "";
+        const comparison = aValue.localeCompare(bValue);
+        return sortDirection === "asc" ? comparison : -comparison;
+      });
+    } else if (sortField === "category_name") {
+      sorted.sort((a, b) => {
+        const comparison = a.name.localeCompare(b.name);
+        return sortDirection === "asc" ? comparison : -comparison;
+      });
+    }
+
+    return sorted;
+  }, [categories, sortField, sortDirection]);
+
   // Calculate balances for each category (running balance)
   const categoryBalances = useMemo(() => {
     const balances = new Map<string, number>();
     let runningBalance = totalIncome;
 
-    // Sort categories by name (same order as display)
-    const sortedCategories = [...categories].sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
-
-    sortedCategories.forEach((category) => {
+    getSortedCategories.forEach((category) => {
       const categoryData = budgetData[String(category.id)];
       if (categoryData) {
         // Calculate net spend: Efectivo - Expected Savings
@@ -509,7 +533,7 @@ export function SimulationBudgetForm({
     });
 
     return balances;
-  }, [budgetData, categories, totalIncome]);
+  }, [budgetData, getSortedCategories, totalIncome]);
 
   // Get balance color based on value
   const getBalanceColor = (balance: number): string => {
@@ -583,6 +607,24 @@ export function SimulationBudgetForm({
       });
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  // Handle sort column click
+  const handleSortClick = (field: "tipo_gasto" | "category_name") => {
+    if (sortField === field) {
+      // If clicking the same field, toggle direction
+      if (sortDirection === "asc") {
+        setSortDirection("desc");
+      } else {
+        // If descending, clear the sort
+        setSortField(null);
+        setSortDirection("asc");
+      }
+    } else {
+      // If clicking a different field, set it as sort field with ascending direction
+      setSortField(field);
+      setSortDirection("asc");
     }
   };
 
@@ -732,7 +774,32 @@ export function SimulationBudgetForm({
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-1/6">Categoría</TableHead>
+                  <TableHead className="w-1/6">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto p-0 font-semibold hover:bg-transparent"
+                      onClick={() => handleSortClick("category_name")}
+                    >
+                      Categoría
+                      {sortField === "category_name" && (
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      )}
+                    </Button>
+                  </TableHead>
+                  <TableHead className="w-1/6">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-auto p-0 font-semibold hover:bg-transparent"
+                      onClick={() => handleSortClick("tipo_gasto")}
+                    >
+                      Tipo Gasto
+                      {sortField === "tipo_gasto" && (
+                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                      )}
+                    </Button>
+                  </TableHead>
                   <TableHead className="text-right w-1/6">Efectivo</TableHead>
                   <TableHead className="text-right w-1/6">Crédito</TableHead>
                   <TableHead className="text-right w-1/6">Ahorro Esperado</TableHead>
@@ -741,10 +808,7 @@ export function SimulationBudgetForm({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {categories
-                  .slice()
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .map((category) => {
+                {getSortedCategories.map((category) => {
                     const categoryData = budgetData[String(category.id)];
                     const categoryErrors = errors[String(category.id)];
                     const categoryTotal = getCategoryTotal(category.id);
@@ -760,6 +824,13 @@ export function SimulationBudgetForm({
                               </div>
                             )}
                           </div>
+                        </TableCell>
+                        <TableCell>
+                          {category.tipo_gasto ? (
+                            <TipoGastoBadge tipoGasto={category.tipo_gasto} />
+                          ) : (
+                            <span className="text-muted-foreground text-sm">-</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="space-y-1">
@@ -948,10 +1019,10 @@ export function SimulationBudgetForm({
                       </TableRow>
                     );
                   })}
-                {categories.length === 0 && (
+                {getSortedCategories.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={6}
+                      colSpan={7}
                       className="text-center py-4 text-muted-foreground"
                     >
                       No hay categorías disponibles

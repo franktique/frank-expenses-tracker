@@ -237,3 +237,54 @@ The **Simulation Budget Form** (`/components/simulation-budget-form.tsx`) now su
 - When tipo_gasto sort is toggled off, custom order is preserved
 - Categories with undefined tipo_gasto are treated as separate group
 - Custom order applies per user/device (each device maintains its own order)
+
+#### Simulation Sub-Groups - Grouping Categories
+The **Simulation Sub-Groups** feature allows users to organize budget categories into logical groups with their own subtotals and management controls.
+
+**Features**:
+- **Create Sub-Groups**: Select multiple categories and name the group with automatic API save
+- **Display Organization**: Collapsible headers with expand/collapse toggle, shows category count and subtotals
+- **Subtotal Rows**: Display aggregated Efectivo, Crédito, Ahorro Esperado, and Total per sub-group
+- **Delete Sub-Groups**: Confirmation dialog removes group (categories remain uncategorized)
+- **Mixed Layout**: Uncategorized categories can be interspersed with sub-groups at any position
+- **Database Persistence**: All sub-groups persisted to PostgreSQL with proper relationships
+
+**Data Model**:
+- `simulation_subgroups` table: `id`, `simulation_id`, `name`, `display_order`, `created_at`, `updated_at`
+- `subgroup_categories` junction table: `id`, `subgroup_id`, `category_id`, `order_within_subgroup`
+
+**API Endpoints**:
+- `GET /api/simulations/[id]/subgroups` - Fetch all sub-groups with categories
+- `POST /api/simulations/[id]/subgroups` - Create sub-group with selected categories
+- `PATCH /api/simulations/[id]/subgroups/[subgroupId]` - Update sub-group name/order
+- `DELETE /api/simulations/[id]/subgroups/[subgroupId]` - Delete sub-group (cascade to categories)
+- `POST /api/migrate-simulation-subgroups` - Initialize database tables if needed
+
+**Components**:
+- `SubgroupNameDialog` (`components/subgroup-name-dialog.tsx`) - Modal for naming new sub-groups
+- `SubgroupHeaderRow` (`components/subgroup-header-row.tsx`) - Renders header with expand/collapse and delete
+- `SubgroupSubtotalRow` (`components/subgroup-subtotal-row.tsx`) - Renders subtotal row with aggregated values
+
+**Utilities**:
+- `organizeTableRowsWithSubgroups()` - Merges sub-groups and uncategorized categories for table rendering
+- `calculateSubgroupSubtotals()` - Memoized calculation of sub-group totals
+- `shouldShowRow()` - Determines visibility based on expand/collapse state
+- `getSubgroupForCategory()` - Finds parent sub-group for a category
+
+**Integration Notes**:
+- **Filters**: `hideEmptyCategories` and `excludedCategoryIds` work with sub-groups (filters individual categories while subtotals show full group)
+- **Drag-Drop**: Individual categories within expanded sub-groups can be reordered; collapsed sub-group categories are not draggable
+- **Tipo_gasto Sort**: Categories sort by tipo_gasto within sub-groups; sub-groups maintain integrity during sort operations
+- **Excel Export**: Sub-groups displayed as indented headers with category rows and subtotal rows in exported Excel files
+
+**Adding Sub-Groups to Components**:
+1. Import types: `import type { Subgroup } from "@/types/simulation"`
+2. Fetch sub-groups: `const subgroups = await fetch(/api/simulations/${id}/subgroups).then(r => r.json())`
+3. Organize table: `const tableRows = organizeTableRowsWithSubgroups(subgroups, categories, excludedIds)`
+4. Track expansion: `const [expandedSubgroups, setExpandedSubgroups] = useState<Set<string>>(new Set())`
+5. Render with visibility: `if (shouldShowRow(row, tableRows, expandedSubgroups)) { /* render */ }`
+
+**Performance**:
+- Sub-group subtotal calculations use `useMemo` to prevent unnecessary recalculations
+- Table organization is O(n + s) where n = categories and s = sub-groups
+- Expand/collapse is O(1) state toggle with no data fetching

@@ -20,8 +20,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, Save, Calculator, AlertCircle, Download, ArrowUpDown, GripVertical } from "lucide-react";
+import { Loader2, Save, Calculator, AlertCircle, Download, ArrowUpDown, GripVertical, Filter, X } from "lucide-react";
 import { exportSimulationToExcel } from "@/lib/excel-export-utils";
 import {
   validateBudgetAmountInput,
@@ -120,6 +126,11 @@ export function SimulationBudgetForm({
   const [draggedTipoGasto, setDraggedTipoGasto] = useState<TipoGasto | undefined>(undefined);
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const [isValidDropTarget, setIsValidDropTarget] = useState(false);
+
+  // Filter state management
+  const [hideEmptyCategories, setHideEmptyCategories] = useState(false);
+  const [excludedCategoryIds, setExcludedCategoryIds] = useState<(string | number)[]>([]);
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
 
   // Load categories and existing budget data
   useEffect(() => {
@@ -267,6 +278,29 @@ export function SimulationBudgetForm({
       localStorage.setItem(storageKey, JSON.stringify(categoryOrder));
     }
   }, [categoryOrder, simulationId]);
+
+  // Load excluded categories from localStorage on mount
+  useEffect(() => {
+    const storageKey = `simulation_${simulationId}_excluded_categories`;
+    const savedExcluded = localStorage.getItem(storageKey);
+    if (savedExcluded) {
+      try {
+        const parsed = JSON.parse(savedExcluded);
+        if (Array.isArray(parsed)) {
+          setExcludedCategoryIds(parsed);
+        }
+      } catch (error) {
+        console.error("Error parsing excluded categories from localStorage:", error);
+        setExcludedCategoryIds([]);
+      }
+    }
+  }, [simulationId]);
+
+  // Save excluded categories to localStorage whenever they change
+  useEffect(() => {
+    const storageKey = `simulation_${simulationId}_excluded_categories`;
+    localStorage.setItem(storageKey, JSON.stringify(excludedCategoryIds));
+  }, [excludedCategoryIds, simulationId]);
 
   // Auto-save functionality
   const performSave = useCallback(
@@ -549,7 +583,27 @@ export function SimulationBudgetForm({
 
   // Get sorted categories based on current sort settings
   const getSortedCategories = useMemo(() => {
-    let sorted = [...categories].sort((a, b) =>
+    // First, apply filters
+    let filtered = [...categories].filter((category) => {
+      // Filter out excluded categories
+      if (excludedCategoryIds.includes(category.id)) {
+        return false;
+      }
+
+      // Filter out empty categories if hideEmptyCategories is enabled
+      if (hideEmptyCategories) {
+        const categoryData = budgetData[String(category.id)];
+        const efectivo = parseFloat(categoryData?.efectivo_amount || "0") || 0;
+        const credito = parseFloat(categoryData?.credito_amount || "0") || 0;
+        if (efectivo === 0 && credito === 0) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    let sorted = [...filtered].sort((a, b) =>
       a.name.localeCompare(b.name)
     );
 
@@ -601,7 +655,7 @@ export function SimulationBudgetForm({
     }
 
     return sorted;
-  }, [categories, sortField, sortDirection, tipoGastoSortState, categoryOrder]);
+  }, [categories, sortField, sortDirection, tipoGastoSortState, categoryOrder, hideEmptyCategories, excludedCategoryIds, budgetData]);
 
   // Calculate balances for each category (running balance)
   const categoryBalances = useMemo(() => {
@@ -742,6 +796,37 @@ export function SimulationBudgetForm({
       }
     }
   };
+
+  // Filter handlers
+  const toggleCategoryExclusion = (categoryId: string | number) => {
+    setExcludedCategoryIds((prev) => {
+      if (prev.includes(categoryId)) {
+        return prev.filter((id) => id !== categoryId);
+      } else {
+        return [...prev, categoryId];
+      }
+    });
+  };
+
+  const clearAllExclusions = () => {
+    setExcludedCategoryIds([]);
+  };
+
+  const getExclusionFilterButtonText = () => {
+    if (excludedCategoryIds.length === 0) {
+      return "Excluir categorías";
+    } else if (excludedCategoryIds.length === 1) {
+      const excluded = categories.find((c) => c.id === excludedCategoryIds[0]);
+      return `Excluida: ${excluded?.name || "Categoría"}`;
+    } else {
+      return `${excludedCategoryIds.length} excluidas`;
+    }
+  };
+
+  // Get sorted categories for the exclusion filter dropdown
+  const sortedCategoriesForFilter = useMemo(() => {
+    return [...categories].sort((a, b) => a.name.localeCompare(b.name));
+  }, [categories]);
 
   // Drag & Drop Event Handlers
   const handleDragStart = useCallback(
@@ -954,6 +1039,112 @@ export function SimulationBudgetForm({
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Filter Controls */}
+            <div className="mb-6 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
+              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full sm:w-auto">
+                {/* Hide Empty Categories Toggle */}
+                <div className="flex items-center space-x-2 px-3 py-2 border rounded-lg bg-muted/30">
+                  <Checkbox
+                    id="hide-empty-categories"
+                    checked={hideEmptyCategories}
+                    onCheckedChange={(checked) =>
+                      setHideEmptyCategories(checked as boolean)
+                    }
+                  />
+                  <Label
+                    htmlFor="hide-empty-categories"
+                    className="cursor-pointer text-sm font-medium"
+                  >
+                    Ocultar sin presupuesto
+                  </Label>
+                </div>
+
+                {/* Category Exclusion Filter Dropdown */}
+                <Popover open={filterDropdownOpen} onOpenChange={setFilterDropdownOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant={excludedCategoryIds.length > 0 ? "default" : "outline"}
+                      size="sm"
+                      className={`gap-2 ${
+                        excludedCategoryIds.length > 0
+                          ? "bg-orange-500 hover:bg-orange-600"
+                          : ""
+                      }`}
+                    >
+                      <Filter className="h-4 w-4" />
+                      <span className="hidden sm:inline">
+                        {getExclusionFilterButtonText()}
+                      </span>
+                      <span className="sm:hidden">
+                        {excludedCategoryIds.length > 0
+                          ? `${excludedCategoryIds.length} excluidas`
+                          : "Filtros"}
+                      </span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-64 p-4">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold text-sm">
+                          Excluir Categorías
+                        </h4>
+                        {excludedCategoryIds.length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={clearAllExclusions}
+                            className="h-auto p-0 text-xs text-muted-foreground hover:text-foreground"
+                          >
+                            Limpiar
+                          </Button>
+                        )}
+                      </div>
+
+                      {/* Scrollable list of categories */}
+                      <div className="max-h-[300px] overflow-y-auto space-y-2 border rounded-lg p-2 bg-muted/20">
+                        {sortedCategoriesForFilter.length === 0 ? (
+                          <p className="text-xs text-muted-foreground py-2 text-center">
+                            No hay categorías disponibles
+                          </p>
+                        ) : (
+                          sortedCategoriesForFilter.map((category) => (
+                            <div
+                              key={category.id}
+                              className="flex items-center space-x-2"
+                            >
+                              <Checkbox
+                                id={`exclude-${category.id}`}
+                                checked={excludedCategoryIds.includes(
+                                  category.id
+                                )}
+                                onCheckedChange={() =>
+                                  toggleCategoryExclusion(category.id)
+                                }
+                              />
+                              <Label
+                                htmlFor={`exclude-${category.id}`}
+                                className="text-sm cursor-pointer flex-1"
+                              >
+                                {category.name}
+                              </Label>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
+              {/* Filter status info */}
+              {(hideEmptyCategories || excludedCategoryIds.length > 0) && (
+                <div className="text-xs text-muted-foreground">
+                  {getSortedCategories.length} de {categories.length} categorías
+                  visibles
+                </div>
+              )}
+            </div>
+
             <Table>
               <TableHeader>
                 <TableRow>

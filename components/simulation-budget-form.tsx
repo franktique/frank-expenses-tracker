@@ -27,7 +27,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, Save, Calculator, AlertCircle, Download, ArrowUpDown, GripVertical, Filter, X } from "lucide-react";
+import { Loader2, Save, Calculator, AlertCircle, Download, ArrowUpDown, GripVertical, Filter, X, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import type { Subgroup } from "@/types/simulation";
 import { exportSimulationToExcel } from "@/lib/excel-export-utils";
 import {
   validateBudgetAmountInput,
@@ -40,6 +41,7 @@ import { DataConsistencyAlert } from "@/components/simulation-fallback-component
 import { TipoGastoBadge } from "@/components/tipo-gasto-badge";
 import type { TipoGasto } from "@/types/funds";
 import { TIPO_GASTO_SORT_ORDERS } from "@/types/funds";
+import { SubgroupNameDialog } from "@/components/subgroup-name-dialog";
 
 // Types
 type Category = {
@@ -131,6 +133,15 @@ export function SimulationBudgetForm({
   const [hideEmptyCategories, setHideEmptyCategories] = useState(false);
   const [excludedCategoryIds, setExcludedCategoryIds] = useState<(string | number)[]>([]);
   const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+
+  // Sub-group state management
+  const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
+  const [isLoadingSubgroups, setIsLoadingSubgroups] = useState(false);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<(string | number)[]>([]);
+  const [isSubgroupCreationMode, setIsSubgroupCreationMode] = useState(false);
+  const [expandedSubgroups, setExpandedSubgroups] = useState<Set<string>>(new Set());
+  const [isSubgroupNameDialogOpen, setIsSubgroupNameDialogOpen] = useState(false);
+  const [isCreatingSubgroup, setIsCreatingSubgroup] = useState(false);
 
   // Load categories and existing budget data
   useEffect(() => {
@@ -301,6 +312,120 @@ export function SimulationBudgetForm({
     const storageKey = `simulation_${simulationId}_excluded_categories`;
     localStorage.setItem(storageKey, JSON.stringify(excludedCategoryIds));
   }, [excludedCategoryIds, simulationId]);
+
+  // Load sub-groups from database
+  useEffect(() => {
+    const loadSubgroups = async () => {
+      setIsLoadingSubgroups(true);
+      try {
+        const response = await fetch(`/api/simulations/${simulationId}/subgroups`);
+        if (!response.ok) {
+          throw new Error("Error al cargar subgrupos");
+        }
+        const data = await response.json();
+        setSubgroups(data.subgroups || []);
+      } catch (error) {
+        console.error("Error loading subgroups:", error);
+        // Don't show error toast for subgroups, as they are optional
+        setSubgroups([]);
+      } finally {
+        setIsLoadingSubgroups(false);
+      }
+    };
+
+    loadSubgroups();
+  }, [simulationId]);
+
+  // Helper function to toggle subgroup expansion
+  const toggleSubgroupExpanded = useCallback((subgroupId: string) => {
+    setExpandedSubgroups((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(subgroupId)) {
+        newSet.delete(subgroupId);
+      } else {
+        newSet.add(subgroupId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Helper function to toggle category selection in creation mode
+  const toggleCategorySelection = useCallback((categoryId: string | number) => {
+    setSelectedCategoryIds((prev) => {
+      const id = String(categoryId);
+      if (prev.includes(id)) {
+        return prev.filter((cId) => cId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  }, []);
+
+  // Helper function to reset creation mode
+  const resetSubgroupCreationMode = useCallback(() => {
+    setIsSubgroupCreationMode(false);
+    setSelectedCategoryIds([]);
+  }, []);
+
+  // Handler for creating a sub-group
+  const handleCreateSubgroup = useCallback(
+    async (name: string) => {
+      if (selectedCategoryIds.length === 0) {
+        throw new Error("Debe seleccionar al menos una categoría");
+      }
+
+      setIsCreatingSubgroup(true);
+      try {
+        const response = await fetch(
+          `/api/simulations/${simulationId}/subgroups`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name,
+              categoryIds: selectedCategoryIds,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || "Error al crear el subgrupo"
+          );
+        }
+
+        const result = await response.json();
+
+        // Add the new subgroup to the list
+        if (result.data) {
+          setSubgroups((prev) => [...prev, result.data]);
+        }
+
+        // Reset creation mode
+        resetSubgroupCreationMode();
+
+        // Show success toast
+        toast({
+          title: "Subgrupo creado",
+          description: `El subgrupo "${name}" se ha creado correctamente`,
+          variant: "default",
+        });
+
+        // Close the dialog
+        setIsSubgroupNameDialogOpen(false);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Error al crear el subgrupo";
+        throw new Error(errorMessage);
+      } finally {
+        setIsCreatingSubgroup(false);
+      }
+    },
+    [simulationId, selectedCategoryIds, resetSubgroupCreationMode, toast]
+  );
 
   // Auto-save functionality
   const performSave = useCallback(
@@ -1145,6 +1270,58 @@ export function SimulationBudgetForm({
               )}
             </div>
 
+            {/* Sub-group creation controls */}
+            <div className="mb-6 flex gap-3 items-center">
+              {isSubgroupCreationMode ? (
+                <>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      setIsSubgroupNameDialogOpen(true);
+                    }}
+                    disabled={selectedCategoryIds.length === 0 || isCreatingSubgroup}
+                    className="gap-2"
+                  >
+                    {isCreatingSubgroup ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Creando...
+                      </>
+                    ) : (
+                      <>
+                        Finalizar Crear Subgrupo
+                        <span className="ml-2 text-xs bg-red-900 px-2 py-1 rounded">
+                          {selectedCategoryIds.length} seleccionadas
+                        </span>
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      resetSubgroupCreationMode();
+                    }}
+                    disabled={isCreatingSubgroup}
+                  >
+                    Cancelar
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIsSubgroupCreationMode(true);
+                  }}
+                  className="gap-2"
+                >
+                  Crear Subgrupo
+                </Button>
+              )}
+            </div>
+
             <Table>
               <TableHeader>
                 <TableRow>
@@ -1223,7 +1400,16 @@ export function SimulationBudgetForm({
                         }`}
                       >
                         <TableCell className="font-medium w-8 pl-2">
-                          <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          {isSubgroupCreationMode ? (
+                            <Checkbox
+                              checked={selectedCategoryIds.includes(category.id)}
+                              onCheckedChange={() => toggleCategorySelection(category.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              aria-label={`Select ${category.name} for subgroup`}
+                            />
+                          ) : (
+                            <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                          )}
                         </TableCell>
                         <TableCell className="font-medium">
                           <div>
@@ -1443,6 +1629,15 @@ export function SimulationBudgetForm({
             </Table>
           </CardContent>
         </Card>
+
+        {/* Sub-group Name Dialog */}
+        <SubgroupNameDialog
+          isOpen={isSubgroupNameDialogOpen}
+          isLoading={isCreatingSubgroup}
+          onClose={() => setIsSubgroupNameDialogOpen(false)}
+          onConfirm={handleCreateSubgroup}
+          existingNames={subgroups.map((sg) => sg.name)}
+        />
 
         {/* Action Buttons */}
         <div className="flex justify-end space-x-2">

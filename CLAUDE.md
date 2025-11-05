@@ -187,3 +187,53 @@ The **Tipo Gasto** feature classifies categories into four expense types:
     </Button>
   </div>
   ```
+
+#### Simulation Budget Form - Drag & Drop Reordering
+The **Simulation Budget Form** (`/components/simulation-budget-form.tsx`) now supports drag-and-drop reordering of budget categories with automatic balance recalculation.
+
+**Features**:
+- **Drag Handle Icon** - GripVertical icon appears on hover over each row for intuitive drag indication
+- **Custom Category Ordering** - Users can reorder categories within their tipo_gasto groups using drag & drop
+- **Group Boundary Protection** - Drag operations are restricted within the same tipo_gasto group; dragging across groups is prevented with visual feedback
+- **Automatic Balance Recalculation** - Running balances update immediately after dropping a category in a new position
+- **Local Persistence** - Custom order is saved to browser localStorage (`simulation_${simulationId}_category_order`) and restored across browser sessions
+- **Integration with Tipo Gasto Sorting** - Custom drag order applies within tipo_gasto groups after tipo_gasto sorting is applied
+
+**Implementation Details**:
+- **State Management**: Uses `categoryOrder`, `draggedCategoryId`, `draggedTipoGasto`, and `isValidDropTarget` states
+- **Drag Handlers**:
+  - `handleDragStart` - Captures dragged category ID and tipo_gasto value
+  - `handleDragOver` - Validates drop target is in same tipo_gasto group, provides visual feedback
+  - `handleDrop` - Reorders category array and updates state
+  - `handleDragEnd` - Clears drag state
+- **Sorting Integration**:
+  - `getSortedCategories` memoized selector applies custom order after tipo_gasto grouping
+  - `categoryBalances` automatically recalculates based on new sorted order
+- **Local Storage**:
+  - Loads saved order on component mount from browser localStorage with JSON parsing and error handling
+  - Saves order to browser localStorage whenever `categoryOrder` changes
+  - Persists across browser sessions and page reloads
+
+**Visual Feedback**:
+- Dragged row: `opacity-50 bg-accent`
+- Valid drop zone (same grupo): `bg-blue-50 dark:bg-blue-950`
+- Drag cursor: `cursor-move` on table rows
+- Drag handle icon: Visible on row hover with `opacity-0 group-hover:opacity-100 transition-opacity`
+
+**Usage Example**:
+```tsx
+// Users can drag category rows to reorder within tipo_gasto groups
+// 1. Click and hold on drag handle (GripVertical icon)
+// 2. Drag over target row within same tipo_gasto group
+// 3. Drop to reorder - balances automatically recalculate
+// 4. Order persists in browser localStorage across sessions
+```
+
+**Notes**:
+- Custom order persists in browser localStorage across sessions but is not synced to database
+- Order is stored locally per simulation: `simulation_${simulationId}_category_order`
+- Order survives browser session, page refreshes, and tab closures
+- Clearing browser localStorage will reset the custom order to default
+- When tipo_gasto sort is toggled off, custom order is preserved
+- Categories with undefined tipo_gasto are treated as separate group
+- Custom order applies per user/device (each device maintains its own order)

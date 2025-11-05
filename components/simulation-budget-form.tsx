@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/table";
 import { useToast } from "@/components/ui/use-toast";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, Save, Calculator, AlertCircle, Download, ArrowUpDown } from "lucide-react";
+import { Loader2, Save, Calculator, AlertCircle, Download, ArrowUpDown, GripVertical } from "lucide-react";
 import { exportSimulationToExcel } from "@/lib/excel-export-utils";
 import {
   validateBudgetAmountInput,
@@ -33,6 +33,7 @@ import { SimulationErrorWrapper } from "@/components/simulation-error-boundary";
 import { DataConsistencyAlert } from "@/components/simulation-fallback-components";
 import { TipoGastoBadge } from "@/components/tipo-gasto-badge";
 import type { TipoGasto } from "@/types/funds";
+import { TIPO_GASTO_SORT_ORDERS } from "@/types/funds";
 
 // Types
 type Category = {
@@ -110,6 +111,15 @@ export function SimulationBudgetForm({
   }>({});
   const [sortField, setSortField] = useState<"tipo_gasto" | "category_name" | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  // Custom sort state for tipo_gasto: 0 = none, 1 = Fijo first, 2 = Variable first
+  const [tipoGastoSortState, setTipoGastoSortState] = useState<0 | 1 | 2>(0);
+
+  // Drag & drop state management
+  const [categoryOrder, setCategoryOrder] = useState<(string | number)[]>([]);
+  const [draggedCategoryId, setDraggedCategoryId] = useState<string | number | null>(null);
+  const [draggedTipoGasto, setDraggedTipoGasto] = useState<TipoGasto | undefined>(undefined);
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
+  const [isValidDropTarget, setIsValidDropTarget] = useState(false);
 
   // Load categories and existing budget data
   useEffect(() => {
@@ -222,6 +232,41 @@ export function SimulationBudgetForm({
 
     return () => clearTimeout(timeoutId);
   }, [budgetData, isLoading]);
+
+  // Initialize categoryOrder from localStorage or sorted categories
+  useEffect(() => {
+    if (categories.length > 0 && categoryOrder.length === 0) {
+      // Try to load saved order from localStorage
+      const storageKey = `simulation_${simulationId}_category_order`;
+      const savedOrder = localStorage.getItem(storageKey);
+
+      if (savedOrder) {
+        try {
+          const parsedOrder = JSON.parse(savedOrder);
+          if (Array.isArray(parsedOrder)) {
+            setCategoryOrder(parsedOrder);
+          } else {
+            // Fallback if stored format is invalid
+            setCategoryOrder(categories.map((c) => c.id));
+          }
+        } catch (error) {
+          console.error("Error parsing saved category order:", error);
+          setCategoryOrder(categories.map((c) => c.id));
+        }
+      } else {
+        // Initialize with current category IDs
+        setCategoryOrder(categories.map((c) => c.id));
+      }
+    }
+  }, [categories, simulationId]);
+
+  // Save categoryOrder to localStorage whenever it changes
+  useEffect(() => {
+    if (categoryOrder.length > 0) {
+      const storageKey = `simulation_${simulationId}_category_order`;
+      localStorage.setItem(storageKey, JSON.stringify(categoryOrder));
+    }
+  }, [categoryOrder, simulationId]);
 
   // Auto-save functionality
   const performSave = useCallback(
@@ -488,28 +533,75 @@ export function SimulationBudgetForm({
     return efectivo + credito;
   };
 
+  // Helper function to get numeric sort value for tipo_gasto based on current sort state
+  const getTipoGastoSortValue = (tipoGasto: TipoGasto | undefined): number => {
+    if (!tipoGasto) return 5; // Put undefined values at the end
+
+    if (tipoGastoSortState === 1) {
+      // State 1: Fijo → Semi-Fijo → Variable → Eventual
+      return (TIPO_GASTO_SORT_ORDERS.STATE_1[tipoGasto] as number) || 5;
+    } else if (tipoGastoSortState === 2) {
+      // State 2: Variable → Semi-Fijo → Fijo → Eventual
+      return (TIPO_GASTO_SORT_ORDERS.STATE_2[tipoGasto] as number) || 5;
+    }
+    return 5; // Default for state 0 (no custom sort)
+  };
+
   // Get sorted categories based on current sort settings
   const getSortedCategories = useMemo(() => {
     let sorted = [...categories].sort((a, b) =>
       a.name.localeCompare(b.name)
     );
 
-    if (sortField === "tipo_gasto") {
+    if (sortField === "tipo_gasto" && tipoGastoSortState !== 0) {
+      // Use custom tipo_gasto sort order
       sorted.sort((a, b) => {
-        const aValue = a.tipo_gasto || "";
-        const bValue = b.tipo_gasto || "";
-        const comparison = aValue.localeCompare(bValue);
-        return sortDirection === "asc" ? comparison : -comparison;
+        const aSortValue = getTipoGastoSortValue(a.tipo_gasto);
+        const bSortValue = getTipoGastoSortValue(b.tipo_gasto);
+        return aSortValue - bSortValue;
       });
+
+      // Apply custom drag-drop order within each tipo_gasto group
+      if (categoryOrder.length > 0) {
+        sorted.sort((a, b) => {
+          // First, sort by tipo_gasto value (from getTipoGastoSortValue)
+          const aSortValue = getTipoGastoSortValue(a.tipo_gasto);
+          const bSortValue = getTipoGastoSortValue(b.tipo_gasto);
+
+          if (aSortValue !== bSortValue) {
+            return aSortValue - bSortValue;
+          }
+
+          // If same tipo_gasto group, use custom categoryOrder
+          const aIndex = categoryOrder.indexOf(a.id);
+          const bIndex = categoryOrder.indexOf(b.id);
+
+          const aOrderIndex = aIndex !== -1 ? aIndex : categoryOrder.length;
+          const bOrderIndex = bIndex !== -1 ? bIndex : categoryOrder.length;
+
+          return aOrderIndex - bOrderIndex;
+        });
+      }
     } else if (sortField === "category_name") {
       sorted.sort((a, b) => {
         const comparison = a.name.localeCompare(b.name);
         return sortDirection === "asc" ? comparison : -comparison;
       });
+    } else if (categoryOrder.length > 0) {
+      // Apply custom drag-drop order when no sorting is active
+      sorted.sort((a, b) => {
+        const aIndex = categoryOrder.indexOf(a.id);
+        const bIndex = categoryOrder.indexOf(b.id);
+
+        const aOrderIndex = aIndex !== -1 ? aIndex : categoryOrder.length;
+        const bOrderIndex = bIndex !== -1 ? bIndex : categoryOrder.length;
+
+        return aOrderIndex - bOrderIndex;
+      });
     }
 
     return sorted;
-  }, [categories, sortField, sortDirection]);
+  }, [categories, sortField, sortDirection, tipoGastoSortState, categoryOrder]);
 
   // Calculate balances for each category (running balance)
   const categoryBalances = useMemo(() => {
@@ -612,21 +704,112 @@ export function SimulationBudgetForm({
 
   // Handle sort column click
   const handleSortClick = (field: "tipo_gasto" | "category_name") => {
-    if (sortField === field) {
-      // If clicking the same field, toggle direction
-      if (sortDirection === "asc") {
-        setSortDirection("desc");
+    if (field === "tipo_gasto") {
+      // Custom 3-cycle behavior for tipo_gasto: 0 → 1 → 2 → 0
+      if (sortField === "tipo_gasto") {
+        // Already sorting by tipo_gasto, cycle to next state
+        if (tipoGastoSortState === 0) {
+          setTipoGastoSortState(1);
+          setSortField("tipo_gasto");
+        } else if (tipoGastoSortState === 1) {
+          setTipoGastoSortState(2);
+          setSortField("tipo_gasto");
+        } else {
+          // State 2 → reset to state 0
+          setTipoGastoSortState(0);
+          setSortField(null);
+        }
       } else {
-        // If descending, clear the sort
-        setSortField(null);
+        // Start sorting by tipo_gasto with state 1
+        setSortField("tipo_gasto");
+        setTipoGastoSortState(1);
+      }
+    } else if (field === "category_name") {
+      // Standard toggle behavior for category_name
+      if (sortField === field) {
+        // If clicking the same field, toggle direction
+        if (sortDirection === "asc") {
+          setSortDirection("desc");
+        } else {
+          // If descending, clear the sort
+          setSortField(null);
+          setSortDirection("asc");
+        }
+      } else {
+        // If clicking a different field, set it as sort field with ascending direction
+        setSortField(field);
         setSortDirection("asc");
       }
-    } else {
-      // If clicking a different field, set it as sort field with ascending direction
-      setSortField(field);
-      setSortDirection("asc");
     }
   };
+
+  // Drag & Drop Event Handlers
+  const handleDragStart = useCallback(
+    (e: React.DragEvent, categoryId: string | number, tipoGasto?: TipoGasto) => {
+      setDraggedCategoryId(categoryId);
+      setDraggedTipoGasto(tipoGasto);
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/html", "");
+    },
+    []
+  );
+
+  const handleDragOver = useCallback(
+    (e: React.DragEvent, targetCategoryId: string | number, targetTipoGasto?: TipoGasto) => {
+      e.preventDefault();
+
+      // Check if drop target is in the same tipo_gasto group as dragged item
+      const isValidTarget = draggedTipoGasto === targetTipoGasto;
+      setIsValidDropTarget(isValidTarget);
+
+      if (isValidTarget) {
+        e.dataTransfer.dropEffect = "move";
+      } else {
+        e.dataTransfer.dropEffect = "none";
+      }
+    },
+    [draggedTipoGasto]
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent, targetCategoryId: string | number, targetTipoGasto?: TipoGasto) => {
+      e.preventDefault();
+
+      if (!draggedCategoryId || draggedTipoGasto !== targetTipoGasto) {
+        return;
+      }
+
+      // Create new order array
+      const newOrder = [...categoryOrder];
+      const draggedIndex = newOrder.indexOf(draggedCategoryId);
+      const targetIndex = newOrder.indexOf(targetCategoryId);
+
+      if (draggedIndex === -1 || targetIndex === -1) return;
+
+      // Remove dragged item
+      const [draggedItem] = newOrder.splice(draggedIndex, 1);
+
+      // Insert at target position
+      if (draggedIndex < targetIndex) {
+        newOrder.splice(targetIndex - 1, 0, draggedItem);
+      } else {
+        newOrder.splice(targetIndex, 0, draggedItem);
+      }
+
+      setCategoryOrder(newOrder);
+      setDraggedCategoryId(null);
+      setDraggedTipoGasto(undefined);
+      setIsValidDropTarget(false);
+    },
+    [draggedCategoryId, draggedTipoGasto, categoryOrder]
+  );
+
+  const handleDragEnd = useCallback(() => {
+    setDraggedCategoryId(null);
+    setDraggedTipoGasto(undefined);
+    setDropTargetIndex(null);
+    setIsValidDropTarget(false);
+  }, []);
 
   if (isLoading) {
     return (
@@ -774,6 +957,7 @@ export function SimulationBudgetForm({
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead className="w-8 pl-2"></TableHead>
                   <TableHead className="w-1/6">
                     <Button
                       variant="ghost"
@@ -793,10 +977,22 @@ export function SimulationBudgetForm({
                       size="sm"
                       className="h-auto p-0 font-semibold hover:bg-transparent"
                       onClick={() => handleSortClick("tipo_gasto")}
+                      title={
+                        tipoGastoSortState === 0
+                          ? "Click para ordenar: Fijo → Semi-Fijo → Variable → Eventual"
+                          : tipoGastoSortState === 1
+                            ? "Click para ordenar: Variable → Semi-Fijo → Fijo → Eventual"
+                            : "Click para resetear orden"
+                      }
                     >
                       Tipo Gasto
                       {sortField === "tipo_gasto" && (
-                        <ArrowUpDown className="ml-2 h-4 w-4" />
+                        <>
+                          <ArrowUpDown className="ml-2 h-4 w-4" />
+                          <span className="ml-1 text-xs text-muted-foreground">
+                            {tipoGastoSortState}
+                          </span>
+                        </>
                       )}
                     </Button>
                   </TableHead>
@@ -814,7 +1010,30 @@ export function SimulationBudgetForm({
                     const categoryTotal = getCategoryTotal(category.id);
 
                     return (
-                      <TableRow key={category.id}>
+                      <TableRow
+                        key={category.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, category.id, category.tipo_gasto)}
+                        onDragOver={(e) => handleDragOver(e, category.id, category.tipo_gasto)}
+                        onDrop={(e) => handleDrop(e, category.id, category.tipo_gasto)}
+                        onDragEnd={handleDragEnd}
+                        className={`cursor-move group ${
+                          draggedCategoryId === category.id
+                            ? "opacity-50 bg-accent"
+                            : ""
+                        } ${
+                          draggedCategoryId &&
+                          draggedTipoGasto === category.tipo_gasto &&
+                          draggedCategoryId !== category.id
+                            ? isValidDropTarget
+                              ? "bg-blue-50 dark:bg-blue-950"
+                              : ""
+                            : ""
+                        }`}
+                      >
+                        <TableCell className="font-medium w-8 pl-2">
+                          <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </TableCell>
                         <TableCell className="font-medium">
                           <div>
                             <div>{category.name}</div>

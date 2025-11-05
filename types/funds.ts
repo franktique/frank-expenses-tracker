@@ -102,6 +102,24 @@ export const TIPO_GASTO_LABELS = {
 
 export type TipoGasto = typeof TIPO_GASTO_VALUES[keyof typeof TIPO_GASTO_VALUES];
 
+// Tipo Gasto sort order definitions for custom 3-cycle sorting
+export const TIPO_GASTO_SORT_ORDERS = {
+  // State 1: Fijo → Semi-Fijo → Variable → Eventual
+  STATE_1: {
+    F: 1,   // Fijo
+    SF: 2,  // Semi-Fijo
+    V: 3,   // Variable
+    E: 4,   // Eventual
+  } as const,
+  // State 2: Variable → Semi-Fijo → Fijo → Eventual
+  STATE_2: {
+    V: 1,   // Variable
+    SF: 2,  // Semi-Fijo
+    F: 3,   // Fijo
+    E: 4,   // Eventual
+  } as const,
+} as const;
+
 // Enhanced Category interface with fund support
 export interface Category {
   id: string;

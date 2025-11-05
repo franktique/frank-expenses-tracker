@@ -42,6 +42,10 @@ import { TipoGastoBadge } from "@/components/tipo-gasto-badge";
 import type { TipoGasto } from "@/types/funds";
 import { TIPO_GASTO_SORT_ORDERS } from "@/types/funds";
 import { SubgroupNameDialog } from "@/components/subgroup-name-dialog";
+import { SubgroupHeaderRow } from "@/components/subgroup-header-row";
+import { SubgroupSubtotalRow } from "@/components/subgroup-subtotal-row";
+import { organizeTableRowsWithSubgroups, shouldShowRow, getSubgroupForCategory } from "@/lib/subgroup-table-utils";
+import { calculateSubgroupSubtotals, getSubgroupCategoryCount } from "@/lib/subgroup-calculations";
 
 // Types
 type Category = {
@@ -402,6 +406,8 @@ export function SimulationBudgetForm({
         // Add the new subgroup to the list
         if (result.data) {
           setSubgroups((prev) => [...prev, result.data]);
+          // Auto-expand the newly created subgroup
+          setExpandedSubgroups((prev) => new Set(prev).add(result.data.id));
         }
 
         // Reset creation mode
@@ -425,6 +431,61 @@ export function SimulationBudgetForm({
       }
     },
     [simulationId, selectedCategoryIds, resetSubgroupCreationMode, toast]
+  );
+
+  // Handler for deleting a sub-group
+  const handleDeleteSubgroup = useCallback(
+    async (subgroupId: string) => {
+      // Confirm deletion
+      const subgroup = subgroups.find((sg) => sg.id === subgroupId);
+      if (!subgroup) return;
+
+      const confirmDelete = window.confirm(
+        `¿Estás seguro de que deseas eliminar el subgrupo "${subgroup.name}"? Esto no eliminará las categorías, solo desagruparlas.`
+      );
+
+      if (!confirmDelete) return;
+
+      try {
+        const response = await fetch(
+          `/api/simulations/${simulationId}/subgroups/${subgroupId}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Error al eliminar el subgrupo");
+        }
+
+        // Remove subgroup from list
+        setSubgroups((prev) => prev.filter((sg) => sg.id !== subgroupId));
+
+        // Remove from expanded set
+        setExpandedSubgroups((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(subgroupId);
+          return newSet;
+        });
+
+        // Show success toast
+        toast({
+          title: "Subgrupo eliminado",
+          description: `El subgrupo "${subgroup.name}" se ha eliminado correctamente`,
+          variant: "default",
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Error al eliminar el subgrupo";
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    },
+    [simulationId, subgroups, toast]
   );
 
   // Auto-save functionality
@@ -1369,262 +1430,314 @@ export function SimulationBudgetForm({
                   <TableHead className="text-right w-1/6">Ahorro Esperado</TableHead>
                   <TableHead className="text-right w-1/6">Total</TableHead>
                   <TableHead className="text-right w-1/6">Balance</TableHead>
+                  <TableHead className="w-8"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {getSortedCategories.map((category) => {
-                    const categoryData = budgetData[String(category.id)];
-                    const categoryErrors = errors[String(category.id)];
-                    const categoryTotal = getCategoryTotal(category.id);
+                {(() => {
+                  // Organize table rows with subgroups
+                  const tableRows = organizeTableRowsWithSubgroups(
+                    subgroups,
+                    getSortedCategories,
+                    excludedCategoryIds
+                  );
 
+                  if (tableRows.length === 0) {
                     return (
-                      <TableRow
-                        key={category.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, category.id, category.tipo_gasto)}
-                        onDragOver={(e) => handleDragOver(e, category.id, category.tipo_gasto)}
-                        onDrop={(e) => handleDrop(e, category.id, category.tipo_gasto)}
-                        onDragEnd={handleDragEnd}
-                        className={`cursor-move group ${
-                          draggedCategoryId === category.id
-                            ? "opacity-50 bg-accent"
-                            : ""
-                        } ${
-                          draggedCategoryId &&
-                          draggedTipoGasto === category.tipo_gasto &&
-                          draggedCategoryId !== category.id
-                            ? isValidDropTarget
-                              ? "bg-blue-50 dark:bg-blue-950"
-                              : ""
-                            : ""
-                        }`}
-                      >
-                        <TableCell className="font-medium w-8 pl-2">
-                          {isSubgroupCreationMode ? (
-                            <Checkbox
-                              checked={selectedCategoryIds.includes(category.id)}
-                              onCheckedChange={() => toggleCategorySelection(category.id)}
-                              onClick={(e) => e.stopPropagation()}
-                              aria-label={`Select ${category.name} for subgroup`}
-                            />
-                          ) : (
-                            <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                          )}
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          <div>
-                            <div>{category.name}</div>
-                            {category.fund_name && (
-                              <div className="text-xs text-muted-foreground">
-                                Fondo: {category.fund_name}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {category.tipo_gasto ? (
-                            <TipoGastoBadge tipoGasto={category.tipo_gasto} />
-                          ) : (
-                            <span className="text-muted-foreground text-sm">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="space-y-1">
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={categoryData?.efectivo_amount || "0"}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                // Ensure we have a valid category ID
-                                if (category.id) {
-                                  handleInputChange(
-                                    category.id,
-                                    "efectivo_amount",
-                                    value
-                                  );
-                                } else {
-                                  console.error(
-                                    "Invalid category ID:",
-                                    category.id
-                                  );
-                                }
-                              }}
-                              onBlur={(e) => {
-                                const value = e.target.value;
-                                // Ensure we have a valid category ID
-                                if (category.id) {
-                                  handleInputBlur(
-                                    category.id,
-                                    "efectivo_amount",
-                                    value
-                                  );
-                                } else {
-                                  console.error(
-                                    "Invalid category ID:",
-                                    category.id
-                                  );
-                                }
-                              }}
-                              className={`w-full text-right ${
-                                categoryErrors?.efectivo
-                                  ? "border-destructive"
-                                  : ""
-                              }`}
-                              placeholder="0.00"
-                            />
-                            {categoryErrors?.efectivo && (
-                              <p className="text-xs text-destructive">
-                                {categoryErrors.efectivo}
-                              </p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="space-y-1">
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={categoryData?.credito_amount || "0"}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                // Ensure we have a valid category ID
-                                if (category.id) {
-                                  handleInputChange(
-                                    category.id,
-                                    "credito_amount",
-                                    value
-                                  );
-                                } else {
-                                  console.error(
-                                    "Invalid category ID:",
-                                    category.id
-                                  );
-                                }
-                              }}
-                              onBlur={(e) => {
-                                const value = e.target.value;
-                                // Ensure we have a valid category ID
-                                if (category.id) {
-                                  handleInputBlur(
-                                    category.id,
-                                    "credito_amount",
-                                    value
-                                  );
-                                } else {
-                                  console.error(
-                                    "Invalid category ID:",
-                                    category.id
-                                  );
-                                }
-                              }}
-                              className={`w-full text-right ${
-                                categoryErrors?.credito
-                                  ? "border-destructive"
-                                  : ""
-                              }`}
-                              placeholder="0.00"
-                            />
-                            {categoryErrors?.credito && (
-                              <p className="text-xs text-destructive">
-                                {categoryErrors.credito}
-                              </p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="space-y-1">
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              max={parseFloat(categoryData?.efectivo_amount || "0")}
-                              value={categoryData?.expected_savings || "0"}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                // Ensure we have a valid category ID
-                                if (category.id) {
-                                  handleInputChange(
-                                    category.id,
-                                    "expected_savings",
-                                    value
-                                  );
-                                } else {
-                                  console.error(
-                                    "Invalid category ID:",
-                                    category.id
-                                  );
-                                }
-                              }}
-                              onBlur={(e) => {
-                                const value = e.target.value;
-                                // Ensure we have a valid category ID
-                                if (category.id) {
-                                  handleInputBlur(
-                                    category.id,
-                                    "expected_savings",
-                                    value
-                                  );
-                                } else {
-                                  console.error(
-                                    "Invalid category ID:",
-                                    category.id
-                                  );
-                                }
-                              }}
-                              className={`w-full text-right ${
-                                categoryErrors?.expected_savings
-                                  ? "border-destructive"
-                                  : parseFloat(categoryData?.expected_savings || "0") > 0
-                                  ? "text-purple-600 font-semibold"
-                                  : ""
-                              }`}
-                              placeholder="0.00"
-                            />
-                            {categoryErrors?.expected_savings && (
-                              <p className="text-xs text-destructive">
-                                {categoryErrors.expected_savings}
-                              </p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          <span
-                            className={
-                              categoryTotal > 0
-                                ? "text-primary"
-                                : "text-muted-foreground"
-                            }
-                          >
-                            {formatCurrency(categoryTotal)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right font-bold">
-                          <span
-                            className={getBalanceColor(
-                              categoryBalances.get(String(category.id)) || 0
-                            )}
-                          >
-                            {formatCurrency(
-                              categoryBalances.get(String(category.id)) || 0
-                            )}
-                          </span>
+                      <TableRow>
+                        <TableCell
+                          colSpan={9}
+                          className="text-center py-4 text-muted-foreground"
+                        >
+                          No hay categorías disponibles
                         </TableCell>
                       </TableRow>
                     );
-                  })}
-                {getSortedCategories.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="text-center py-4 text-muted-foreground"
-                    >
-                      No hay categorías disponibles
-                    </TableCell>
-                  </TableRow>
-                )}
+                  }
+
+                  return tableRows.map((row, index) => {
+                    // Check if row should be visible (for expand/collapse)
+                    if (!shouldShowRow(row, tableRows, expandedSubgroups)) {
+                      return null;
+                    }
+
+                    // Render subgroup header
+                    if (row.type === "subgroup_header") {
+                      const subgroup = subgroups.find((sg) => sg.id === row.subgroupId);
+                      if (!subgroup) return null;
+
+                      const subtotals = calculateSubgroupSubtotals(
+                        subgroup,
+                        budgetData
+                      );
+
+                      return (
+                        <SubgroupHeaderRow
+                          key={`header-${row.subgroupId}`}
+                          subgroupId={row.subgroupId!}
+                          subgroupName={row.subgroupName!}
+                          isExpanded={expandedSubgroups.has(row.subgroupId!)}
+                          onToggleExpand={toggleSubgroupExpanded}
+                          onDelete={handleDeleteSubgroup}
+                          subtotals={subtotals}
+                          categoryCount={row.categoryCount || 0}
+                        />
+                      );
+                    }
+
+                    // Render subgroup subtotal
+                    if (row.type === "subgroup_subtotal") {
+                      const subgroup = subgroups.find((sg) => sg.id === row.subgroupId);
+                      if (!subgroup) return null;
+
+                      const subtotals = calculateSubgroupSubtotals(
+                        subgroup,
+                        budgetData
+                      );
+
+                      return (
+                        <SubgroupSubtotalRow
+                          key={`subtotal-${row.subgroupId}`}
+                          subgroupId={row.subgroupId!}
+                          subtotals={subtotals}
+                        />
+                      );
+                    }
+
+                    // Render category row
+                    if (row.type === "category") {
+                      const category = getSortedCategories.find(
+                        (c) => String(c.id) === String(row.categoryId)
+                      );
+                      if (!category) return null;
+
+                      const categoryData = budgetData[String(category.id)];
+                      const categoryErrors = errors[String(category.id)];
+                      const categoryTotal = getCategoryTotal(category.id);
+
+                      return (
+                        <TableRow
+                          key={`category-${category.id}`}
+                          draggable
+                          onDragStart={(e) =>
+                            handleDragStart(e, category.id, category.tipo_gasto)
+                          }
+                          onDragOver={(e) =>
+                            handleDragOver(e, category.id, category.tipo_gasto)
+                          }
+                          onDrop={(e) =>
+                            handleDrop(e, category.id, category.tipo_gasto)
+                          }
+                          onDragEnd={handleDragEnd}
+                          className={`cursor-move group ${
+                            draggedCategoryId === category.id
+                              ? "opacity-50 bg-accent"
+                              : ""
+                          } ${
+                            draggedCategoryId &&
+                            draggedTipoGasto === category.tipo_gasto &&
+                            draggedCategoryId !== category.id
+                              ? isValidDropTarget
+                                ? "bg-blue-50 dark:bg-blue-950"
+                                : ""
+                              : ""
+                          }`}
+                        >
+                          <TableCell className="font-medium w-8 pl-2">
+                            {isSubgroupCreationMode ? (
+                              <Checkbox
+                                checked={selectedCategoryIds.includes(
+                                  category.id
+                                )}
+                                onCheckedChange={() =>
+                                  toggleCategorySelection(category.id)
+                                }
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label={`Select ${category.name} for subgroup`}
+                              />
+                            ) : (
+                              <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                            )}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            <div>
+                              <div>{category.name}</div>
+                              {category.fund_name && (
+                                <div className="text-xs text-muted-foreground">
+                                  Fondo: {category.fund_name}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {category.tipo_gasto ? (
+                              <TipoGastoBadge tipoGasto={category.tipo_gasto} />
+                            ) : (
+                              <span className="text-muted-foreground text-sm">
+                                -
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="space-y-1">
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={categoryData?.efectivo_amount || "0"}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  if (category.id) {
+                                    handleInputChange(
+                                      category.id,
+                                      "efectivo_amount",
+                                      value
+                                    );
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  const value = e.target.value;
+                                  if (category.id) {
+                                    handleInputBlur(
+                                      category.id,
+                                      "efectivo_amount",
+                                      value
+                                    );
+                                  }
+                                }}
+                                className={`w-full text-right ${
+                                  categoryErrors?.efectivo
+                                    ? "border-destructive"
+                                    : ""
+                                }`}
+                                placeholder="0.00"
+                              />
+                              {categoryErrors?.efectivo && (
+                                <p className="text-xs text-destructive">
+                                  {categoryErrors.efectivo}
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="space-y-1">
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={categoryData?.credito_amount || "0"}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  if (category.id) {
+                                    handleInputChange(
+                                      category.id,
+                                      "credito_amount",
+                                      value
+                                    );
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  const value = e.target.value;
+                                  if (category.id) {
+                                    handleInputBlur(
+                                      category.id,
+                                      "credito_amount",
+                                      value
+                                    );
+                                  }
+                                }}
+                                className={`w-full text-right ${
+                                  categoryErrors?.credito
+                                    ? "border-destructive"
+                                    : ""
+                                }`}
+                                placeholder="0.00"
+                              />
+                              {categoryErrors?.credito && (
+                                <p className="text-xs text-destructive">
+                                  {categoryErrors.credito}
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="space-y-1">
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                max={parseFloat(
+                                  categoryData?.efectivo_amount || "0"
+                                )}
+                                value={categoryData?.expected_savings || "0"}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  if (category.id) {
+                                    handleInputChange(
+                                      category.id,
+                                      "expected_savings",
+                                      value
+                                    );
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  const value = e.target.value;
+                                  if (category.id) {
+                                    handleInputBlur(
+                                      category.id,
+                                      "expected_savings",
+                                      value
+                                    );
+                                  }
+                                }}
+                                className={`w-full text-right ${
+                                  categoryErrors?.expected_savings
+                                    ? "border-destructive"
+                                    : parseFloat(
+                                        categoryData?.expected_savings || "0"
+                                      ) > 0
+                                    ? "text-purple-600 font-semibold"
+                                    : ""
+                                }`}
+                                placeholder="0.00"
+                              />
+                              {categoryErrors?.expected_savings && (
+                                <p className="text-xs text-destructive">
+                                  {categoryErrors.expected_savings}
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            <span
+                              className={
+                                categoryTotal > 0
+                                  ? "text-primary"
+                                  : "text-muted-foreground"
+                              }
+                            >
+                              {formatCurrency(categoryTotal)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right font-bold">
+                            <span
+                              className={getBalanceColor(
+                                categoryBalances.get(String(category.id)) || 0
+                              )}
+                            >
+                              {formatCurrency(
+                                categoryBalances.get(String(category.id)) || 0
+                              )}
+                            </span>
+                          </TableCell>
+                          <TableCell className="w-8 pl-2"></TableCell>
+                        </TableRow>
+                      );
+                    }
+
+                    return null;
+                  });
+                })()}
               </TableBody>
             </Table>
           </CardContent>

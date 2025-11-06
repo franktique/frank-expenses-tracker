@@ -147,6 +147,11 @@ export function SimulationBudgetForm({
   const [isSubgroupNameDialogOpen, setIsSubgroupNameDialogOpen] = useState(false);
   const [isCreatingSubgroup, setIsCreatingSubgroup] = useState(false);
 
+  // Sub-group addition mode state management
+  const [addingToSubgroupId, setAddingToSubgroupId] = useState<string | null>(null);
+  const [categoriesToAddToSubgroup, setCategoriesToAddToSubgroup] = useState<(string | number)[]>([]);
+  const [isAddingCategoriesLoading, setIsAddingCategoriesLoading] = useState(false);
+
   // Load categories and existing budget data
   useEffect(() => {
     const loadData = async () => {
@@ -483,6 +488,191 @@ export function SimulationBudgetForm({
           description: errorMessage,
           variant: "destructive",
         });
+      }
+    },
+    [simulationId, subgroups, toast]
+  );
+
+
+  // Handler for toggling category selection for adding to sub-group
+  const toggleCategoryForAddition = useCallback((categoryId: string | number) => {
+    setCategoriesToAddToSubgroup((prev) => {
+      const id = String(categoryId);
+      if (prev.includes(id)) {
+        return prev.filter((cId) => String(cId) !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  }, []);
+
+  // Handler for entering add mode for a specific sub-group
+  const handleAddToSubgroupClick = useCallback((subgroupId: string) => {
+    setAddingToSubgroupId(subgroupId);
+    setCategoriesToAddToSubgroup([]);
+  }, []);
+
+  // Handler for exiting add mode without saving
+  const handleCancelAddToSubgroup = useCallback(() => {
+    setAddingToSubgroupId(null);
+    setCategoriesToAddToSubgroup([]);
+  }, []);
+
+  // Handler for adding selected categories to a sub-group
+  const handleDoneAddingToSubgroup = useCallback(
+    async (subgroupId: string) => {
+      if (categoriesToAddToSubgroup.length === 0) {
+        toast({
+          title: "Error",
+          description: "Debes seleccionar al menos una categoría",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setIsAddingCategoriesLoading(true);
+      try {
+        // Get current sub-group to merge with new categories
+        const currentSubgroup = subgroups.find((sg) => sg.id === subgroupId);
+        if (!currentSubgroup) {
+          throw new Error("Sub-grupo no encontrado");
+        }
+
+        const allCategoryIds = Array.from(
+          new Set([
+            ...currentSubgroup.categoryIds,
+            ...categoriesToAddToSubgroup,
+          ])
+        );
+
+        const response = await fetch(
+          `/api/simulations/${simulationId}/subgroups/${subgroupId}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              categoryIds: allCategoryIds,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || "Error al agregar categorías al sub-grupo"
+          );
+        }
+
+        const result = await response.json();
+
+        // Update sub-groups in state
+        setSubgroups((prev) =>
+          prev.map((sg) =>
+            sg.id === subgroupId ? result.data : sg
+          )
+        );
+
+        // Reset add mode
+        setAddingToSubgroupId(null);
+        setCategoriesToAddToSubgroup([]);
+
+        // Show success toast
+        toast({
+          title: "Categorías agregadas",
+          description: `${categoriesToAddToSubgroup.length} categoría(s) se agregó(aron) al sub-grupo`,
+          variant: "default",
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Error al agregar categorías";
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } finally {
+        setIsAddingCategoriesLoading(false);
+      }
+    },
+    [simulationId, subgroups, categoriesToAddToSubgroup, toast]
+  );
+
+  // Handler for removing a category from a sub-group
+  const handleRemoveCategoryFromSubgroup = useCallback(
+    async (categoryId: string | number) => {
+      // Find which sub-group this category belongs to
+      const subgroupWithCategory = subgroups.find((sg) =>
+        sg.categoryIds.some((cid) => String(cid) === String(categoryId))
+      );
+
+      if (!subgroupWithCategory) {
+        toast({
+          title: "Error",
+          description: "No se encontró el sub-grupo",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const confirmDelete = window.confirm(
+        "¿Deseas eliminar esta categoría del sub-grupo? La categoría seguirá disponible sin agrupar."
+      );
+
+      if (!confirmDelete) return;
+
+      setIsAddingCategoriesLoading(true);
+      try {
+        // Remove the category from the sub-group
+        const updatedCategoryIds = subgroupWithCategory.categoryIds.filter(
+          (cid) => String(cid) !== String(categoryId)
+        );
+
+        const response = await fetch(
+          `/api/simulations/${simulationId}/subgroups/${subgroupWithCategory.id}`,
+          {
+            method: "PATCH",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              categoryIds: updatedCategoryIds,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || "Error al remover categoría del sub-grupo"
+          );
+        }
+
+        const result = await response.json();
+
+        // Update sub-groups in state
+        setSubgroups((prev) =>
+          prev.map((sg) =>
+            sg.id === subgroupWithCategory.id ? result.data : sg
+          )
+        );
+
+        toast({
+          title: "Categoría removida",
+          description: "La categoría ha sido removida del sub-grupo",
+          variant: "default",
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Error al remover categoría";
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      } finally {
+        setIsAddingCategoriesLoading(false);
       }
     },
     [simulationId, subgroups, toast]
@@ -866,6 +1056,29 @@ export function SimulationBudgetForm({
 
     return balances;
   }, [budgetData, getSortedCategories, totalIncome]);
+
+  // Helper function to get uncategorized categories (not in any sub-group)
+  const getUncategorizedCategories = useCallback((): Category[] => {
+    const categorizedCategoryIds = new Set<string | number>();
+    subgroups.forEach((sg) => {
+      sg.categoryIds.forEach((cid) => {
+        categorizedCategoryIds.add(cid);
+      });
+    });
+    return getSortedCategories.filter(
+      (c) => !categorizedCategoryIds.has(c.id)
+    );
+  }, [subgroups, getSortedCategories]);
+
+  // Helper function to find which sub-group a category belongs to
+  const getSubgroupForCategory = (
+    subgroupsList: Subgroup[],
+    categoryId: string | number
+  ): Subgroup | undefined => {
+    return subgroupsList.find((sg) =>
+      sg.categoryIds.some((cid) => String(cid) === String(categoryId))
+    );
+  };
 
   // Get balance color based on value
   const getBalanceColor = (balance: number): string => {
@@ -1471,6 +1684,8 @@ export function SimulationBudgetForm({
                         budgetData
                       );
 
+                      const uncategorizedCount = getUncategorizedCategories().length;
+
                       return (
                         <SubgroupHeaderRow
                           key={`header-${row.subgroupId}`}
@@ -1481,6 +1696,11 @@ export function SimulationBudgetForm({
                           onDelete={handleDeleteSubgroup}
                           subtotals={subtotals}
                           categoryCount={row.categoryCount || 0}
+                          isInAddMode={addingToSubgroupId === row.subgroupId}
+                          onAddCategories={handleAddToSubgroupClick}
+                          onDoneAddingCategories={handleDoneAddingToSubgroup}
+                          onCancelAddingCategories={handleCancelAddToSubgroup}
+                          canAddCategories={uncategorizedCount > 0}
                         />
                       );
                     }
@@ -1515,6 +1735,10 @@ export function SimulationBudgetForm({
                       const categoryErrors = errors[String(category.id)];
                       const categoryTotal = getCategoryTotal(category.id);
 
+                      const isBeingAddedToSubgroup = categoriesToAddToSubgroup.includes(
+                        String(category.id)
+                      );
+
                       return (
                         <TableRow
                           key={`category-${category.id}`}
@@ -1541,6 +1765,10 @@ export function SimulationBudgetForm({
                                 ? "bg-blue-50 dark:bg-blue-950"
                                 : ""
                               : ""
+                          } ${
+                            isBeingAddedToSubgroup
+                              ? "bg-blue-50 dark:bg-blue-950"
+                              : ""
                           }`}
                         >
                           <TableCell className="font-medium w-8 pl-2">
@@ -1555,6 +1783,34 @@ export function SimulationBudgetForm({
                                 onClick={(e) => e.stopPropagation()}
                                 aria-label={`Select ${category.name} for subgroup`}
                               />
+                            ) : addingToSubgroupId && getUncategorizedCategories().some((c) => String(c.id) === String(category.id)) ? (
+                              // Show checkbox for uncategorized categories when in add mode
+                              <Checkbox
+                                checked={categoriesToAddToSubgroup.includes(
+                                  String(category.id)
+                                )}
+                                onCheckedChange={() =>
+                                  toggleCategoryForAddition(category.id)
+                                }
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label={`Select ${category.name} to add to sub-group`}
+                              />
+                            ) : getSubgroupForCategory(subgroups, category.id) ? (
+                              // Show delete button for categorized items
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-5 w-5 p-0 hover:bg-red-100 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveCategoryFromSubgroup(category.id);
+                                }}
+                                disabled={isAddingCategoriesLoading}
+                                aria-label={`Remove ${category.name} from sub-group`}
+                                title="Remove from sub-group"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                              </Button>
                             ) : (
                               <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                             )}

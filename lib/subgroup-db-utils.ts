@@ -11,6 +11,20 @@ import type {
 } from "@/types/simulation";
 
 /**
+ * Helper to normalize SQL query results
+ * The Neon client can return results either as an array directly or wrapped in { rows: [...] }
+ */
+function normalizeQueryResult(result: any): any[] {
+  if (Array.isArray(result)) {
+    return result;
+  }
+  if (result && Array.isArray(result.rows)) {
+    return result.rows;
+  }
+  return [];
+}
+
+/**
  * Fetch all sub-groups for a simulation
  */
 export async function getSubgroupsBySimulation(
@@ -41,7 +55,7 @@ export async function getSubgroupsBySimulation(
       ORDER BY sg.display_order ASC
     `;
 
-    return result.rows.map((row: any) => ({
+    return normalizeQueryResult(result).map((row: any) => ({
       id: row.id,
       simulationId: row.simulationId,
       name: row.name,
@@ -83,7 +97,8 @@ export async function createSubgroup(
       AND LOWER(name) = LOWER(${request.name.trim()})
     `;
 
-    if (existingSubgroup.rows.length > 0) {
+    const existingArray = normalizeQueryResult(existingSubgroup);
+    if (existingArray.length > 0) {
       throw new Error(
         `Sub-group with name "${request.name}" already exists in this simulation`
       );
@@ -96,7 +111,8 @@ export async function createSubgroup(
       WHERE simulation_id = ${simulationId}
     `;
 
-    const nextDisplayOrder = (maxOrderResult.rows[0] as any).next_order;
+    const maxOrderArray = normalizeQueryResult(maxOrderResult);
+    const nextDisplayOrder = (maxOrderArray[0] as any).next_order;
 
     // Create the sub-group
     const subgroupResult = await sql`
@@ -117,7 +133,9 @@ export async function createSubgroup(
       RETURNING id, simulation_id as "simulationId", name, display_order as "displayOrder", created_at as "createdAt", updated_at as "updatedAt"
     `;
 
-    const subgroupId = (subgroupResult.rows[0] as any).id;
+    const subgroupArray = normalizeQueryResult(subgroupResult);
+    const subgroupData = subgroupArray[0] as any;
+    const subgroupId = subgroupData.id;
 
     // Insert category associations
     if (request.categoryIds.length > 0) {
@@ -138,12 +156,12 @@ export async function createSubgroup(
     }
 
     return {
-      id: (subgroupResult.rows[0] as any).id,
-      simulationId: (subgroupResult.rows[0] as any).simulationId,
-      name: (subgroupResult.rows[0] as any).name,
-      displayOrder: (subgroupResult.rows[0] as any).displayOrder,
-      createdAt: (subgroupResult.rows[0] as any).createdAt.toISOString(),
-      updatedAt: (subgroupResult.rows[0] as any).updatedAt.toISOString(),
+      id: subgroupData.id,
+      simulationId: subgroupData.simulationId,
+      name: subgroupData.name,
+      displayOrder: subgroupData.displayOrder,
+      createdAt: subgroupData.createdAt.toISOString(),
+      updatedAt: subgroupData.updatedAt.toISOString(),
       categoryIds: request.categoryIds,
     };
   } catch (error) {
@@ -169,11 +187,12 @@ export async function updateSubgroup(
       AND simulation_id = ${simulationId}
     `;
 
-    if (existingSubgroup.rows.length === 0) {
+    const existingArray = normalizeQueryResult(existingSubgroup);
+    if (existingArray.length === 0) {
       throw new Error("Sub-group not found");
     }
 
-    const currentSubgroup = existingSubgroup.rows[0] as any;
+    const currentSubgroup = existingArray[0] as any;
 
     // Validate name if provided
     if (request.name !== undefined && request.name.trim().length === 0) {
@@ -189,7 +208,8 @@ export async function updateSubgroup(
         AND id != ${subgroupId}
       `;
 
-      if (duplicateName.rows.length > 0) {
+      const duplicateArray = normalizeQueryResult(duplicateName);
+      if (duplicateArray.length > 0) {
         throw new Error(
           `Sub-group with name "${request.name}" already exists in this simulation`
         );
@@ -235,9 +255,12 @@ export async function updateSubgroup(
       RETURNING id, simulation_id as "simulationId", name, display_order as "displayOrder", created_at as "createdAt", updated_at as "updatedAt"
     `;
 
-    if (updateResult.rows.length === 0) {
+    const updateArray = normalizeQueryResult(updateResult);
+    if (updateArray.length === 0) {
       throw new Error("Failed to update sub-group");
     }
+
+    const updatedData = updateArray[0] as any;
 
     // Update category associations if provided
     if (request.categoryIds !== undefined) {
@@ -265,12 +288,12 @@ export async function updateSubgroup(
     }
 
     return {
-      id: (updateResult.rows[0] as any).id,
-      simulationId: (updateResult.rows[0] as any).simulationId,
-      name: (updateResult.rows[0] as any).name,
-      displayOrder: (updateResult.rows[0] as any).displayOrder,
-      createdAt: (updateResult.rows[0] as any).createdAt.toISOString(),
-      updatedAt: (updateResult.rows[0] as any).updatedAt.toISOString(),
+      id: updatedData.id,
+      simulationId: updatedData.simulationId,
+      name: updatedData.name,
+      displayOrder: updatedData.displayOrder,
+      createdAt: updatedData.createdAt.toISOString(),
+      updatedAt: updatedData.updatedAt.toISOString(),
       categoryIds: request.categoryIds || [],
     };
   } catch (error) {
@@ -294,7 +317,8 @@ export async function deleteSubgroup(
       AND simulation_id = ${simulationId}
     `;
 
-    if (existingSubgroup.rows.length === 0) {
+    const existingArray = normalizeQueryResult(existingSubgroup);
+    if (existingArray.length === 0) {
       throw new Error("Sub-group not found");
     }
 
@@ -330,7 +354,8 @@ export async function ensureSubgroupTablesExist(): Promise<boolean> {
       ) as exists;
     `;
 
-    const tableExists = (tableCheckResult.rows[0] as any).exists;
+    const tableArray = normalizeQueryResult(tableCheckResult);
+    const tableExists = tableArray.length > 0 && (tableArray[0] as any).exists;
 
     if (tableExists) {
       return true;

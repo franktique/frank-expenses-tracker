@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { ChevronDown, ChevronUp, Trash2, Plus, Check } from "lucide-react";
+import { ChevronDown, ChevronUp, Trash2, Plus, Check, GripVertical } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import type { Subtotals } from "@/lib/subgroup-calculations";
 
@@ -21,6 +21,13 @@ interface SubgroupHeaderRowProps {
   onDoneAddingCategories?: (subgroupId: string) => void;
   onCancelAddingCategories?: (subgroupId: string) => void;
   canAddCategories?: boolean;
+  isDragging?: boolean;
+  isDragOver?: boolean;
+  onDragStart?: (e: React.DragEvent) => void;
+  onDragOver?: (e: React.DragEvent) => void;
+  onDragLeave?: (e: React.DragEvent) => void;
+  onDrop?: (e: React.DragEvent, position: "before" | "after") => void;
+  onDragEnd?: (e: React.DragEvent) => void;
 }
 
 export function SubgroupHeaderRow({
@@ -38,6 +45,13 @@ export function SubgroupHeaderRow({
   onDoneAddingCategories,
   onCancelAddingCategories,
   canAddCategories = true,
+  isDragging = false,
+  isDragOver = false,
+  onDragStart,
+  onDragOver,
+  onDragLeave,
+  onDrop,
+  onDragEnd,
 }: SubgroupHeaderRowProps) {
   const handleDeleteClick = () => {
     if (onDeleteClick) {
@@ -65,13 +79,38 @@ export function SubgroupHeaderRow({
     }
   };
 
+  const handleDropClick = (position: "before" | "after") => {
+    return (e: React.DragEvent) => {
+      if (onDrop) {
+        onDrop(e, position);
+      }
+    };
+  };
+
   return (
     <TableRow
-      className="bg-accent/50 hover:bg-accent/70 font-medium"
+      draggable={!isInAddMode}
+      className={`group bg-accent/50 hover:bg-accent/70 font-medium transition-all ${
+        isDragging ? "opacity-50 bg-accent" : ""
+      } ${isDragOver ? "bg-blue-50 dark:bg-blue-950" : ""}`}
       data-testid={`subgroup-header-${subgroupId}`}
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDragLeave={onDragLeave}
+      onDrop={handleDropClick("before")}
+      onDragEnd={onDragEnd}
     >
-      {/* Expand/Collapse Icon */}
+      {/* Drag Handle Icon */}
       <TableCell className="w-8 pl-2">
+        {!isInAddMode && (
+          <div className="cursor-move opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+            <GripVertical className="h-4 w-4 text-muted-foreground" />
+          </div>
+        )}
+      </TableCell>
+
+      {/* Expand/Collapse Icon */}
+      <TableCell className="w-8">
         <Button
           variant="ghost"
           size="sm"

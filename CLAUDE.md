@@ -340,3 +340,91 @@ The **Simulation Sub-Groups Enhancement** allows users to dynamically add and re
 - API updates sub-group atomically (sends all category IDs at once)
 - Toast notifications for success/error feedback
 - Confirmation dialogs prevent accidental category removal
+
+#### Simulation Sub-Groups - Drag & Drop Reordering
+The **Simulation Sub-Groups Drag & Drop Reordering** feature allows users to reorganize sub-groups and reorder them relative to each other and uncategorized categories through intuitive drag-and-drop interactions.
+
+**Features**:
+- **Drag Sub-Group Headers**: Click and drag sub-group headers to move entire groups above/below other sub-groups
+- **Move Relative to Categories**: Sub-groups can be positioned above, below, or between uncategorized categories
+- **Visual Drag Feedback**:
+  - Drag handle icon (GripVertical) appears on sub-group headers on hover
+  - Dragged row shows reduced opacity (50%) and accent background color
+  - Drop zones highlight with blue background (light blue-50 for light theme, dark blue-950 for dark theme)
+  - Cursor changes to move cursor while dragging
+- **Custom Order Persistence**: Sub-group ordering is saved to browser localStorage and restored across sessions
+  - Key format: `simulation_${simulationId}_subgroup_order`
+  - Persists across browser sessions, page reloads, and tab closures
+- **Collapsed Groups Support**: Can drag sub-groups even when collapsed; categories move together with header
+- **Disabled During Operations**: Dragging is disabled when:
+  - In add/edit mode for any sub-group
+  - Auto-save or manual save is in progress
+  - Sub-group is being deleted
+- **Balance Calculations**: Running balances automatically recalculate based on new sub-group order
+
+**Data Structures**:
+- `subgroupOrder`: `string[]` - Array of sub-group IDs in custom order
+- `subgroupDragState`: Object tracking drag operations with `draggedItemId`, `draggedItemType`, `dropZoneIndex`
+- `uncategorizedCategoryOrder`: `(string | number)[]` - For future uncategorized category reordering
+
+**State Management**:
+- `subgroupOrder` is initialized from localStorage or database `displayOrder`
+- Auto-saves to localStorage on every change
+- Validated against existing sub-groups to handle deleted items
+- Separate from database `displayOrder` - UI-only state
+
+**Handlers**:
+- `handleSubgroupDragStart()` - Initiate drag with validation
+- `handleSubgroupDragOver()` - Manage drop zone feedback
+- `handleSubgroupDrop()` - Execute reordering logic
+- `handleSubgroupDragEnd()` - Clean up drag state
+- `isSubgroupDraggingDisabled()` - Check if drag is allowed
+
+**Component Integration**:
+- `SubgroupHeaderRow` (props on lines 24-30) - Accepts drag handlers and visual state props
+  - `isDragging`: Applied opacity-50 and accent background
+  - `isDragOver`: Applied blue-50 background for drop zones
+  - `onDragStart`, `onDragOver`, `onDrop`, `onDragEnd` - Drag event handlers
+- Table rendering (lines 1795-1803) - Uses `reorganizeTableRowsWithSubgroupOrder()` when custom order exists
+- Visual updates (lines 1836-1837) - Tracks which row is being dragged/dropped
+
+**Utilities** (`/lib/subgroup-reordering-utils.ts`):
+- `moveSubgroupInOrder()` - Reorder sub-groups in array
+- `reorganizeTableRowsWithSubgroupOrder()` - Apply custom order to table rows
+- `validateSubgroupId()` - Check if sub-group exists
+- `cleanupSubgroupOrder()` - Remove deleted sub-groups from order
+- `initializeSubgroupOrder()` - Create initial order from database
+
+**Browser Compatibility**:
+- Uses HTML5 Drag & Drop API
+- Works in all modern browsers (Chrome, Firefox, Safari, Edge)
+- Gracefully falls back to database order if localStorage unavailable
+
+**Usage Example**:
+```tsx
+// Users drag sub-group headers to reorder:
+1. Hover over sub-group header to see drag handle icon
+2. Click and drag the header to move the sub-group
+3. Drop above/below another sub-group or uncategorized section
+4. Order automatically saves to localStorage
+5. Refresh page - custom order is restored
+```
+
+**Performance Considerations**:
+- Sub-group reordering uses memoized table row organization
+- Drag events don't trigger API calls (UI-only reordering)
+- Balance recalculation is automatic via existing memoized selector
+- Each simulation maintains independent order (per-browser/device)
+
+**Integration with Existing Features**:
+- **Tipo Gasto Sorting**: Subgroups maintain relative order when tipo_gasto sort is applied
+- **Category Drag-Drop**: Individual categories within subgroups use existing category-level drag (doesn't interfere)
+- **Auto-Save**: Captures new sub-group order in auto-save operations
+- **Excel Export**: Exported files respect custom sub-group order
+- **Collapsed State**: Order is independent of expand/collapse state
+
+**Known Limitations**:
+- Custom order is browser/device-specific (not synced across devices)
+- Order is not stored in database (stored only in localStorage)
+- Clearing browser data will reset order to default
+- Uncategorized categories reordering is not yet implemented

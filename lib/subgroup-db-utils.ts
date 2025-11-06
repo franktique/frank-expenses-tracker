@@ -342,26 +342,39 @@ export async function deleteSubgroup(
 
 /**
  * Check if tables exist and create them if needed
- * Used for migration endpoint
+ * Ensures both simulation_subgroups and subgroup_categories tables exist
+ * Handles partial migrations by creating any missing tables
  */
 export async function ensureSubgroupTablesExist(): Promise<boolean> {
   try {
     // Check if simulation_subgroups table exists
-    const tableCheckResult = await sql`
+    const simulationSubgroupsCheckResult = await sql`
       SELECT EXISTS (
         SELECT 1 FROM information_schema.tables
         WHERE table_name = 'simulation_subgroups'
       ) as exists;
     `;
 
-    const tableArray = normalizeQueryResult(tableCheckResult);
-    const tableExists = tableArray.length > 0 && (tableArray[0] as any).exists;
+    const simulationSubgroupsArray = normalizeQueryResult(simulationSubgroupsCheckResult);
+    const simulationSubgroupsExists = simulationSubgroupsArray.length > 0 && (simulationSubgroupsArray[0] as any).exists;
 
-    if (tableExists) {
+    // Check if subgroup_categories table exists
+    const subgroupCategoriesCheckResult = await sql`
+      SELECT EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_name = 'subgroup_categories'
+      ) as exists;
+    `;
+
+    const subgroupCategoriesArray = normalizeQueryResult(subgroupCategoriesCheckResult);
+    const subgroupCategoriesExists = subgroupCategoriesArray.length > 0 && (subgroupCategoriesArray[0] as any).exists;
+
+    // If both tables exist, we're done
+    if (simulationSubgroupsExists && subgroupCategoriesExists) {
       return true;
     }
 
-    // Create simulation_subgroups table
+    // Create or ensure simulation_subgroups table exists
     await sql`
       CREATE TABLE IF NOT EXISTS simulation_subgroups (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -374,7 +387,7 @@ export async function ensureSubgroupTablesExist(): Promise<boolean> {
       );
     `;
 
-    // Create subgroup_categories table
+    // Create or ensure subgroup_categories table exists
     await sql`
       CREATE TABLE IF NOT EXISTS subgroup_categories (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -385,7 +398,7 @@ export async function ensureSubgroupTablesExist(): Promise<boolean> {
       );
     `;
 
-    // Create indexes
+    // Create or ensure all indexes exist
     await sql`
       CREATE INDEX IF NOT EXISTS idx_simulation_subgroups_simulation_id
       ON simulation_subgroups(simulation_id);

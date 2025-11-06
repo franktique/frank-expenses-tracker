@@ -22,11 +22,11 @@ import type {
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string; subgroupId: string } }
+  { params }: { params: Promise<{ id: string; subgroupId: string }> }
 ): Promise<NextResponse<SubgroupResponse>> {
   try {
-    const simulationId = parseInt(params.id, 10);
-    const subgroupId = params.subgroupId;
+    const { id, subgroupId } = await params;
+    const simulationId = parseInt(id, 10);
 
     if (isNaN(simulationId)) {
       return NextResponse.json(
@@ -144,11 +144,11 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; subgroupId: string } }
+  { params }: { params: Promise<{ id: string; subgroupId: string }> }
 ): Promise<NextResponse<DeleteSubgroupResponse>> {
   try {
-    const simulationId = parseInt(params.id, 10);
-    const subgroupId = params.subgroupId;
+    const { id, subgroupId } = await params;
+    const simulationId = parseInt(id, 10);
 
     if (isNaN(simulationId)) {
       return NextResponse.json(

@@ -3,7 +3,7 @@
  * Handles database operations for simulation sub-groups
  */
 
-import { sql } from "@neondatabase/serverless";
+import { sql } from "@/lib/db";
 import type {
   Subgroup,
   CreateSubgroupRequest,

@@ -392,7 +392,7 @@ export async function ensureSubgroupTablesExist(): Promise<boolean> {
       CREATE TABLE IF NOT EXISTS subgroup_categories (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
         subgroup_id UUID NOT NULL REFERENCES simulation_subgroups(id) ON DELETE CASCADE,
-        category_id INTEGER NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
+        category_id UUID NOT NULL REFERENCES categories(id) ON DELETE CASCADE,
         order_within_subgroup INTEGER DEFAULT 0,
         UNIQUE(subgroup_id, category_id)
       );

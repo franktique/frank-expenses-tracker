@@ -27,7 +27,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, Save, Calculator, AlertCircle, Download, ArrowUpDown, GripVertical, Filter, X } from "lucide-react";
+import { Loader2, Save, Calculator, AlertCircle, Download, ArrowUpDown, GripVertical, Filter, X, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import type { Subgroup } from "@/types/simulation";
 import { exportSimulationToExcel } from "@/lib/excel-export-utils";
 import {
   validateBudgetAmountInput,
@@ -40,6 +41,11 @@ import { DataConsistencyAlert } from "@/components/simulation-fallback-component
 import { TipoGastoBadge } from "@/components/tipo-gasto-badge";
 import type { TipoGasto } from "@/types/funds";
 import { TIPO_GASTO_SORT_ORDERS } from "@/types/funds";
+import { SubgroupNameDialog } from "@/components/subgroup-name-dialog";
+import { SubgroupHeaderRow } from "@/components/subgroup-header-row";
+import { SubgroupSubtotalRow } from "@/components/subgroup-subtotal-row";
+import { organizeTableRowsWithSubgroups, shouldShowRow, getSubgroupForCategory } from "@/lib/subgroup-table-utils";
+import { calculateSubgroupSubtotals, getSubgroupCategoryCount } from "@/lib/subgroup-calculations";
 
 // Types
 type Category = {
@@ -131,6 +137,15 @@ export function SimulationBudgetForm({
   const [hideEmptyCategories, setHideEmptyCategories] = useState(false);
   const [excludedCategoryIds, setExcludedCategoryIds] = useState<(string | number)[]>([]);
   const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+
+  // Sub-group state management
+  const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
+  const [isLoadingSubgroups, setIsLoadingSubgroups] = useState(false);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<(string | number)[]>([]);
+  const [isSubgroupCreationMode, setIsSubgroupCreationMode] = useState(false);
+  const [expandedSubgroups, setExpandedSubgroups] = useState<Set<string>>(new Set());
+  const [isSubgroupNameDialogOpen, setIsSubgroupNameDialogOpen] = useState(false);
+  const [isCreatingSubgroup, setIsCreatingSubgroup] = useState(false);
 
   // Load categories and existing budget data
   useEffect(() => {
@@ -301,6 +316,177 @@ export function SimulationBudgetForm({
     const storageKey = `simulation_${simulationId}_excluded_categories`;
     localStorage.setItem(storageKey, JSON.stringify(excludedCategoryIds));
   }, [excludedCategoryIds, simulationId]);
+
+  // Load sub-groups from database
+  useEffect(() => {
+    const loadSubgroups = async () => {
+      setIsLoadingSubgroups(true);
+      try {
+        const response = await fetch(`/api/simulations/${simulationId}/subgroups`);
+        if (!response.ok) {
+          throw new Error("Error al cargar subgrupos");
+        }
+        const data = await response.json();
+        setSubgroups(data.subgroups || []);
+      } catch (error) {
+        console.error("Error loading subgroups:", error);
+        // Don't show error toast for subgroups, as they are optional
+        setSubgroups([]);
+      } finally {
+        setIsLoadingSubgroups(false);
+      }
+    };
+
+    loadSubgroups();
+  }, [simulationId]);
+
+  // Helper function to toggle subgroup expansion
+  const toggleSubgroupExpanded = useCallback((subgroupId: string) => {
+    setExpandedSubgroups((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(subgroupId)) {
+        newSet.delete(subgroupId);
+      } else {
+        newSet.add(subgroupId);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Helper function to toggle category selection in creation mode
+  const toggleCategorySelection = useCallback((categoryId: string | number) => {
+    setSelectedCategoryIds((prev) => {
+      const id = String(categoryId);
+      if (prev.includes(id)) {
+        return prev.filter((cId) => cId !== id);
+      } else {
+        return [...prev, id];
+      }
+    });
+  }, []);
+
+  // Helper function to reset creation mode
+  const resetSubgroupCreationMode = useCallback(() => {
+    setIsSubgroupCreationMode(false);
+    setSelectedCategoryIds([]);
+  }, []);
+
+  // Handler for creating a sub-group
+  const handleCreateSubgroup = useCallback(
+    async (name: string) => {
+      if (selectedCategoryIds.length === 0) {
+        throw new Error("Debe seleccionar al menos una categoría");
+      }
+
+      setIsCreatingSubgroup(true);
+      try {
+        const response = await fetch(
+          `/api/simulations/${simulationId}/subgroups`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name,
+              categoryIds: selectedCategoryIds,
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(
+            errorData.error || "Error al crear el subgrupo"
+          );
+        }
+
+        const result = await response.json();
+
+        // Add the new subgroup to the list
+        if (result.data) {
+          setSubgroups((prev) => [...prev, result.data]);
+          // Auto-expand the newly created subgroup
+          setExpandedSubgroups((prev) => new Set(prev).add(result.data.id));
+        }
+
+        // Reset creation mode
+        resetSubgroupCreationMode();
+
+        // Show success toast
+        toast({
+          title: "Subgrupo creado",
+          description: `El subgrupo "${name}" se ha creado correctamente`,
+          variant: "default",
+        });
+
+        // Close the dialog
+        setIsSubgroupNameDialogOpen(false);
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Error al crear el subgrupo";
+        throw new Error(errorMessage);
+      } finally {
+        setIsCreatingSubgroup(false);
+      }
+    },
+    [simulationId, selectedCategoryIds, resetSubgroupCreationMode, toast]
+  );
+
+  // Handler for deleting a sub-group
+  const handleDeleteSubgroup = useCallback(
+    async (subgroupId: string) => {
+      // Confirm deletion
+      const subgroup = subgroups.find((sg) => sg.id === subgroupId);
+      if (!subgroup) return;
+
+      const confirmDelete = window.confirm(
+        `¿Estás seguro de que deseas eliminar el subgrupo "${subgroup.name}"? Esto no eliminará las categorías, solo desagruparlas.`
+      );
+
+      if (!confirmDelete) return;
+
+      try {
+        const response = await fetch(
+          `/api/simulations/${simulationId}/subgroups/${subgroupId}`,
+          {
+            method: "DELETE",
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Error al eliminar el subgrupo");
+        }
+
+        // Remove subgroup from list
+        setSubgroups((prev) => prev.filter((sg) => sg.id !== subgroupId));
+
+        // Remove from expanded set
+        setExpandedSubgroups((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(subgroupId);
+          return newSet;
+        });
+
+        // Show success toast
+        toast({
+          title: "Subgrupo eliminado",
+          description: `El subgrupo "${subgroup.name}" se ha eliminado correctamente`,
+          variant: "default",
+        });
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Error al eliminar el subgrupo";
+        toast({
+          title: "Error",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+    },
+    [simulationId, subgroups, toast]
+  );
 
   // Auto-save functionality
   const performSave = useCallback(
@@ -1145,6 +1331,58 @@ export function SimulationBudgetForm({
               )}
             </div>
 
+            {/* Sub-group creation controls */}
+            <div className="mb-6 flex gap-3 items-center">
+              {isSubgroupCreationMode ? (
+                <>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      setIsSubgroupNameDialogOpen(true);
+                    }}
+                    disabled={selectedCategoryIds.length === 0 || isCreatingSubgroup}
+                    className="gap-2"
+                  >
+                    {isCreatingSubgroup ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Creando...
+                      </>
+                    ) : (
+                      <>
+                        Finalizar Crear Subgrupo
+                        <span className="ml-2 text-xs bg-red-900 px-2 py-1 rounded">
+                          {selectedCategoryIds.length} seleccionadas
+                        </span>
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      resetSubgroupCreationMode();
+                    }}
+                    disabled={isCreatingSubgroup}
+                  >
+                    Cancelar
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setIsSubgroupCreationMode(true);
+                  }}
+                  className="gap-2"
+                >
+                  Crear Subgrupo
+                </Button>
+              )}
+            </div>
+
             <Table>
               <TableHeader>
                 <TableRow>
@@ -1192,257 +1430,327 @@ export function SimulationBudgetForm({
                   <TableHead className="text-right w-1/6">Ahorro Esperado</TableHead>
                   <TableHead className="text-right w-1/6">Total</TableHead>
                   <TableHead className="text-right w-1/6">Balance</TableHead>
+                  <TableHead className="w-8"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {getSortedCategories.map((category) => {
-                    const categoryData = budgetData[String(category.id)];
-                    const categoryErrors = errors[String(category.id)];
-                    const categoryTotal = getCategoryTotal(category.id);
+                {(() => {
+                  // Organize table rows with subgroups
+                  const tableRows = organizeTableRowsWithSubgroups(
+                    subgroups,
+                    getSortedCategories,
+                    excludedCategoryIds
+                  );
 
+                  if (tableRows.length === 0) {
                     return (
-                      <TableRow
-                        key={category.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, category.id, category.tipo_gasto)}
-                        onDragOver={(e) => handleDragOver(e, category.id, category.tipo_gasto)}
-                        onDrop={(e) => handleDrop(e, category.id, category.tipo_gasto)}
-                        onDragEnd={handleDragEnd}
-                        className={`cursor-move group ${
-                          draggedCategoryId === category.id
-                            ? "opacity-50 bg-accent"
-                            : ""
-                        } ${
-                          draggedCategoryId &&
-                          draggedTipoGasto === category.tipo_gasto &&
-                          draggedCategoryId !== category.id
-                            ? isValidDropTarget
-                              ? "bg-blue-50 dark:bg-blue-950"
-                              : ""
-                            : ""
-                        }`}
-                      >
-                        <TableCell className="font-medium w-8 pl-2">
-                          <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                        </TableCell>
-                        <TableCell className="font-medium">
-                          <div>
-                            <div>{category.name}</div>
-                            {category.fund_name && (
-                              <div className="text-xs text-muted-foreground">
-                                Fondo: {category.fund_name}
-                              </div>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          {category.tipo_gasto ? (
-                            <TipoGastoBadge tipoGasto={category.tipo_gasto} />
-                          ) : (
-                            <span className="text-muted-foreground text-sm">-</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="space-y-1">
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={categoryData?.efectivo_amount || "0"}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                // Ensure we have a valid category ID
-                                if (category.id) {
-                                  handleInputChange(
-                                    category.id,
-                                    "efectivo_amount",
-                                    value
-                                  );
-                                } else {
-                                  console.error(
-                                    "Invalid category ID:",
-                                    category.id
-                                  );
-                                }
-                              }}
-                              onBlur={(e) => {
-                                const value = e.target.value;
-                                // Ensure we have a valid category ID
-                                if (category.id) {
-                                  handleInputBlur(
-                                    category.id,
-                                    "efectivo_amount",
-                                    value
-                                  );
-                                } else {
-                                  console.error(
-                                    "Invalid category ID:",
-                                    category.id
-                                  );
-                                }
-                              }}
-                              className={`w-full text-right ${
-                                categoryErrors?.efectivo
-                                  ? "border-destructive"
-                                  : ""
-                              }`}
-                              placeholder="0.00"
-                            />
-                            {categoryErrors?.efectivo && (
-                              <p className="text-xs text-destructive">
-                                {categoryErrors.efectivo}
-                              </p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="space-y-1">
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={categoryData?.credito_amount || "0"}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                // Ensure we have a valid category ID
-                                if (category.id) {
-                                  handleInputChange(
-                                    category.id,
-                                    "credito_amount",
-                                    value
-                                  );
-                                } else {
-                                  console.error(
-                                    "Invalid category ID:",
-                                    category.id
-                                  );
-                                }
-                              }}
-                              onBlur={(e) => {
-                                const value = e.target.value;
-                                // Ensure we have a valid category ID
-                                if (category.id) {
-                                  handleInputBlur(
-                                    category.id,
-                                    "credito_amount",
-                                    value
-                                  );
-                                } else {
-                                  console.error(
-                                    "Invalid category ID:",
-                                    category.id
-                                  );
-                                }
-                              }}
-                              className={`w-full text-right ${
-                                categoryErrors?.credito
-                                  ? "border-destructive"
-                                  : ""
-                              }`}
-                              placeholder="0.00"
-                            />
-                            {categoryErrors?.credito && (
-                              <p className="text-xs text-destructive">
-                                {categoryErrors.credito}
-                              </p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="space-y-1">
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              max={parseFloat(categoryData?.efectivo_amount || "0")}
-                              value={categoryData?.expected_savings || "0"}
-                              onChange={(e) => {
-                                const value = e.target.value;
-                                // Ensure we have a valid category ID
-                                if (category.id) {
-                                  handleInputChange(
-                                    category.id,
-                                    "expected_savings",
-                                    value
-                                  );
-                                } else {
-                                  console.error(
-                                    "Invalid category ID:",
-                                    category.id
-                                  );
-                                }
-                              }}
-                              onBlur={(e) => {
-                                const value = e.target.value;
-                                // Ensure we have a valid category ID
-                                if (category.id) {
-                                  handleInputBlur(
-                                    category.id,
-                                    "expected_savings",
-                                    value
-                                  );
-                                } else {
-                                  console.error(
-                                    "Invalid category ID:",
-                                    category.id
-                                  );
-                                }
-                              }}
-                              className={`w-full text-right ${
-                                categoryErrors?.expected_savings
-                                  ? "border-destructive"
-                                  : parseFloat(categoryData?.expected_savings || "0") > 0
-                                  ? "text-purple-600 font-semibold"
-                                  : ""
-                              }`}
-                              placeholder="0.00"
-                            />
-                            {categoryErrors?.expected_savings && (
-                              <p className="text-xs text-destructive">
-                                {categoryErrors.expected_savings}
-                              </p>
-                            )}
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-right font-medium">
-                          <span
-                            className={
-                              categoryTotal > 0
-                                ? "text-primary"
-                                : "text-muted-foreground"
-                            }
-                          >
-                            {formatCurrency(categoryTotal)}
-                          </span>
-                        </TableCell>
-                        <TableCell className="text-right font-bold">
-                          <span
-                            className={getBalanceColor(
-                              categoryBalances.get(String(category.id)) || 0
-                            )}
-                          >
-                            {formatCurrency(
-                              categoryBalances.get(String(category.id)) || 0
-                            )}
-                          </span>
+                      <TableRow>
+                        <TableCell
+                          colSpan={9}
+                          className="text-center py-4 text-muted-foreground"
+                        >
+                          No hay categorías disponibles
                         </TableCell>
                       </TableRow>
                     );
-                  })}
-                {getSortedCategories.length === 0 && (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      className="text-center py-4 text-muted-foreground"
-                    >
-                      No hay categorías disponibles
-                    </TableCell>
-                  </TableRow>
-                )}
+                  }
+
+                  return tableRows.map((row, index) => {
+                    // Check if row should be visible (for expand/collapse)
+                    if (!shouldShowRow(row, tableRows, expandedSubgroups)) {
+                      return null;
+                    }
+
+                    // Render subgroup header
+                    if (row.type === "subgroup_header") {
+                      const subgroup = subgroups.find((sg) => sg.id === row.subgroupId);
+                      if (!subgroup) return null;
+
+                      const subtotals = calculateSubgroupSubtotals(
+                        subgroup,
+                        budgetData
+                      );
+
+                      return (
+                        <SubgroupHeaderRow
+                          key={`header-${row.subgroupId}`}
+                          subgroupId={row.subgroupId!}
+                          subgroupName={row.subgroupName!}
+                          isExpanded={expandedSubgroups.has(row.subgroupId!)}
+                          onToggleExpand={toggleSubgroupExpanded}
+                          onDelete={handleDeleteSubgroup}
+                          subtotals={subtotals}
+                          categoryCount={row.categoryCount || 0}
+                        />
+                      );
+                    }
+
+                    // Render subgroup subtotal
+                    if (row.type === "subgroup_subtotal") {
+                      const subgroup = subgroups.find((sg) => sg.id === row.subgroupId);
+                      if (!subgroup) return null;
+
+                      const subtotals = calculateSubgroupSubtotals(
+                        subgroup,
+                        budgetData
+                      );
+
+                      return (
+                        <SubgroupSubtotalRow
+                          key={`subtotal-${row.subgroupId}`}
+                          subgroupId={row.subgroupId!}
+                          subtotals={subtotals}
+                        />
+                      );
+                    }
+
+                    // Render category row
+                    if (row.type === "category") {
+                      const category = getSortedCategories.find(
+                        (c) => String(c.id) === String(row.categoryId)
+                      );
+                      if (!category) return null;
+
+                      const categoryData = budgetData[String(category.id)];
+                      const categoryErrors = errors[String(category.id)];
+                      const categoryTotal = getCategoryTotal(category.id);
+
+                      return (
+                        <TableRow
+                          key={`category-${category.id}`}
+                          draggable
+                          onDragStart={(e) =>
+                            handleDragStart(e, category.id, category.tipo_gasto)
+                          }
+                          onDragOver={(e) =>
+                            handleDragOver(e, category.id, category.tipo_gasto)
+                          }
+                          onDrop={(e) =>
+                            handleDrop(e, category.id, category.tipo_gasto)
+                          }
+                          onDragEnd={handleDragEnd}
+                          className={`cursor-move group ${
+                            draggedCategoryId === category.id
+                              ? "opacity-50 bg-accent"
+                              : ""
+                          } ${
+                            draggedCategoryId &&
+                            draggedTipoGasto === category.tipo_gasto &&
+                            draggedCategoryId !== category.id
+                              ? isValidDropTarget
+                                ? "bg-blue-50 dark:bg-blue-950"
+                                : ""
+                              : ""
+                          }`}
+                        >
+                          <TableCell className="font-medium w-8 pl-2">
+                            {isSubgroupCreationMode ? (
+                              <Checkbox
+                                checked={selectedCategoryIds.includes(
+                                  category.id
+                                )}
+                                onCheckedChange={() =>
+                                  toggleCategorySelection(category.id)
+                                }
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label={`Select ${category.name} for subgroup`}
+                              />
+                            ) : (
+                              <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                            )}
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            <div>
+                              <div>{category.name}</div>
+                              {category.fund_name && (
+                                <div className="text-xs text-muted-foreground">
+                                  Fondo: {category.fund_name}
+                                </div>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            {category.tipo_gasto ? (
+                              <TipoGastoBadge tipoGasto={category.tipo_gasto} />
+                            ) : (
+                              <span className="text-muted-foreground text-sm">
+                                -
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="space-y-1">
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={categoryData?.efectivo_amount || "0"}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  if (category.id) {
+                                    handleInputChange(
+                                      category.id,
+                                      "efectivo_amount",
+                                      value
+                                    );
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  const value = e.target.value;
+                                  if (category.id) {
+                                    handleInputBlur(
+                                      category.id,
+                                      "efectivo_amount",
+                                      value
+                                    );
+                                  }
+                                }}
+                                className={`w-full text-right ${
+                                  categoryErrors?.efectivo
+                                    ? "border-destructive"
+                                    : ""
+                                }`}
+                                placeholder="0.00"
+                              />
+                              {categoryErrors?.efectivo && (
+                                <p className="text-xs text-destructive">
+                                  {categoryErrors.efectivo}
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="space-y-1">
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={categoryData?.credito_amount || "0"}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  if (category.id) {
+                                    handleInputChange(
+                                      category.id,
+                                      "credito_amount",
+                                      value
+                                    );
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  const value = e.target.value;
+                                  if (category.id) {
+                                    handleInputBlur(
+                                      category.id,
+                                      "credito_amount",
+                                      value
+                                    );
+                                  }
+                                }}
+                                className={`w-full text-right ${
+                                  categoryErrors?.credito
+                                    ? "border-destructive"
+                                    : ""
+                                }`}
+                                placeholder="0.00"
+                              />
+                              {categoryErrors?.credito && (
+                                <p className="text-xs text-destructive">
+                                  {categoryErrors.credito}
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="space-y-1">
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                max={parseFloat(
+                                  categoryData?.efectivo_amount || "0"
+                                )}
+                                value={categoryData?.expected_savings || "0"}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  if (category.id) {
+                                    handleInputChange(
+                                      category.id,
+                                      "expected_savings",
+                                      value
+                                    );
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  const value = e.target.value;
+                                  if (category.id) {
+                                    handleInputBlur(
+                                      category.id,
+                                      "expected_savings",
+                                      value
+                                    );
+                                  }
+                                }}
+                                className={`w-full text-right ${
+                                  categoryErrors?.expected_savings
+                                    ? "border-destructive"
+                                    : parseFloat(
+                                        categoryData?.expected_savings || "0"
+                                      ) > 0
+                                    ? "text-purple-600 font-semibold"
+                                    : ""
+                                }`}
+                                placeholder="0.00"
+                              />
+                              {categoryErrors?.expected_savings && (
+                                <p className="text-xs text-destructive">
+                                  {categoryErrors.expected_savings}
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right font-medium">
+                            <span
+                              className={
+                                categoryTotal > 0
+                                  ? "text-primary"
+                                  : "text-muted-foreground"
+                              }
+                            >
+                              {formatCurrency(categoryTotal)}
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right font-bold">
+                            <span
+                              className={getBalanceColor(
+                                categoryBalances.get(String(category.id)) || 0
+                              )}
+                            >
+                              {formatCurrency(
+                                categoryBalances.get(String(category.id)) || 0
+                              )}
+                            </span>
+                          </TableCell>
+                          <TableCell className="w-8 pl-2"></TableCell>
+                        </TableRow>
+                      );
+                    }
+
+                    return null;
+                  });
+                })()}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
+
+        {/* Sub-group Name Dialog */}
+        <SubgroupNameDialog
+          isOpen={isSubgroupNameDialogOpen}
+          isLoading={isCreatingSubgroup}
+          onClose={() => setIsSubgroupNameDialogOpen(false)}
+          onConfirm={handleCreateSubgroup}
+          existingNames={subgroups.map((sg) => sg.name)}
+        />
 
         {/* Action Buttons */}
         <div className="flex justify-end space-x-2">

@@ -57,6 +57,20 @@ export async function GET(
       SELECT id, name FROM categories ORDER BY name
     `;
 
+    // Get sub-groups for this simulation (with all associated categories)
+    const subgroups = await sql`
+      SELECT
+        ss.id,
+        ss.name,
+        ss.display_order,
+        array_agg(sc.category_id) as category_ids
+      FROM simulation_subgroups ss
+      LEFT JOIN subgroup_categories sc ON ss.id = sc.subgroup_id
+      WHERE ss.simulation_id = ${simulationId}
+      GROUP BY ss.id, ss.name, ss.display_order
+      ORDER BY ss.display_order
+    `;
+
     // Get simulation budgets with category information
     const budgets = await sql`
       SELECT
@@ -113,6 +127,12 @@ export async function GET(
       })),
       totalIncome,
       budgets: budgetsWithBalances,
+      subgroups: subgroups.map((sg) => ({
+        id: sg.id,
+        name: sg.name,
+        displayOrder: sg.display_order,
+        categoryIds: sg.category_ids || [],
+      })),
       totals: {
         efectivo: totalEfectivo,
         credito: totalCredito,

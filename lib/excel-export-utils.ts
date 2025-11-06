@@ -22,6 +22,12 @@ export interface SimulationExportData {
     total: number;
     balance: number;
   }>;
+  subgroups?: Array<{
+    id: string;
+    name: string;
+    displayOrder: number;
+    categoryIds: (string | number)[];
+  }>;
   totals: {
     efectivo: number;
     credito: number;
@@ -145,16 +151,102 @@ export function generateSimulationExcel(
 
   const budgetData: any[][] = [budgetHeaders];
 
-  // Add budget rows with raw numeric values
-  data.budgets.forEach((budget) => {
-    budgetData.push([
-      budget.category_name,
-      budget.efectivo_amount, // Raw number for Excel formulas
-      budget.credito_amount,
-      budget.total,
-      budget.balance,
-    ]);
-  });
+  // Helper function to calculate subgroup subtotals
+  const calculateSubgroupSubtotals = (categoryIds: (string | number)[]): { efectivo: number; credito: number; total: number } => {
+    let efectivo = 0;
+    let credito = 0;
+
+    categoryIds.forEach((categoryId) => {
+      const budget = data.budgets.find((b) => String(b.category_id) === String(categoryId));
+      if (budget) {
+        efectivo += budget.efectivo_amount;
+        credito += budget.credito_amount;
+      }
+    });
+
+    return {
+      efectivo,
+      credito,
+      total: efectivo + credito,
+    };
+  };
+
+  // Get all categorized IDs from subgroups
+  const categorizedIds = new Set<string | number>();
+  if (data.subgroups && data.subgroups.length > 0) {
+    data.subgroups.forEach((subgroup) => {
+      subgroup.categoryIds.forEach((id) => categorizedIds.add(id));
+    });
+  }
+
+  // If we have subgroups, organize budgets by subgroups
+  if (data.subgroups && data.subgroups.length > 0) {
+    data.subgroups.forEach((subgroup) => {
+      // Add subgroup header row (with indent formatting)
+      budgetData.push([
+        `  [${subgroup.name}]`, // Indent with spaces
+        "", // Efectivo
+        "", // Crédito
+        "", // Total
+        "", // Balance
+      ]);
+
+      // Add categories within the subgroup
+      subgroup.categoryIds.forEach((categoryId) => {
+        const budget = data.budgets.find((b) => String(b.category_id) === String(categoryId));
+        if (budget) {
+          budgetData.push([
+            `    ${budget.category_name}`, // Extra indent for categories within subgroup
+            budget.efectivo_amount,
+            budget.credito_amount,
+            budget.total,
+            budget.balance,
+          ]);
+        }
+      });
+
+      // Add subgroup subtotal row
+      const subtotals = calculateSubgroupSubtotals(subgroup.categoryIds);
+      budgetData.push([
+        `  Subtotal: ${subgroup.name}`,
+        subtotals.efectivo,
+        subtotals.credito,
+        subtotals.total,
+        "", // No balance for subtotals
+      ]);
+
+      // Add empty row for spacing
+      budgetData.push(["", "", "", "", ""]);
+    });
+  }
+
+  // Add uncategorized categories (those not in any subgroup)
+  if (categorizedIds.size < data.budgets.length) {
+    budgetData.push(["Categorías Sin Grupo", "", "", "", ""]);
+    data.budgets.forEach((budget) => {
+      if (!categorizedIds.has(budget.category_id)) {
+        budgetData.push([
+          budget.category_name,
+          budget.efectivo_amount,
+          budget.credito_amount,
+          budget.total,
+          budget.balance,
+        ]);
+      }
+    });
+    budgetData.push(["", "", "", "", ""]);
+  } else if (!data.subgroups || data.subgroups.length === 0) {
+    // If no subgroups, add all budgets normally
+    data.budgets.forEach((budget) => {
+      budgetData.push([
+        budget.category_name,
+        budget.efectivo_amount,
+        budget.credito_amount,
+        budget.total,
+        budget.balance,
+      ]);
+    });
+  }
 
   // Add totals row with raw numeric values
   budgetData.push([
@@ -183,14 +275,20 @@ export function generateSimulationExcel(
       const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
       if (!budgetSheet[cellAddress]) continue;
 
+      const cellValue = budgetSheet[cellAddress].v;
+      const isSubgroupHeader = typeof cellValue === "string" && cellValue.startsWith("  [");
+      const isSubgroupSubtotal = typeof cellValue === "string" && cellValue.includes("Subtotal:");
+      const isSectionHeader = typeof cellValue === "string" && cellValue === "Categorías Sin Grupo";
+      const isEmpty = cellValue === "" || cellValue === undefined;
+
       // Apply currency format to numeric columns (B=Efectivo, C=Crédito, D=Total, E=Balance)
-      // Skip header row (R === 0)
-      if (R > 0 && C >= 1 && C <= 4) {
+      // Skip header row (R === 0), section headers, subgroup rows, and empty rows
+      if (R > 0 && C >= 1 && C <= 4 && !isEmpty && !isSubgroupHeader && !isSectionHeader && !isSubgroupSubtotal) {
         applyCurrencyFormat(budgetSheet, cellAddress);
       }
 
-      // Bold style for headers and totals row
-      if (R === 0 || R === budgetData.length - 1) {
+      // Bold style for main header row
+      if (R === 0) {
         if (!budgetSheet[cellAddress].s) {
           budgetSheet[cellAddress].s = {};
         }
@@ -198,6 +296,58 @@ export function generateSimulationExcel(
           ...budgetSheet[cellAddress].s,
           font: { bold: true },
           fill: { fgColor: { rgb: "E8F4F8" } },
+        };
+      }
+
+      // Bold style for totals row (last row)
+      if (R === budgetData.length - 1) {
+        if (!budgetSheet[cellAddress].s) {
+          budgetSheet[cellAddress].s = {};
+        }
+        budgetSheet[cellAddress].s = {
+          ...budgetSheet[cellAddress].s,
+          font: { bold: true },
+          fill: { fgColor: { rgb: "D4E4F8" } },
+        };
+      }
+
+      // Styling for subgroup headers (light blue background)
+      if (isSubgroupHeader) {
+        if (!budgetSheet[cellAddress].s) {
+          budgetSheet[cellAddress].s = {};
+        }
+        budgetSheet[cellAddress].s = {
+          ...budgetSheet[cellAddress].s,
+          font: { bold: true, color: { rgb: "1F4E78" } },
+          fill: { fgColor: { rgb: "E7F0F7" } },
+        };
+      }
+
+      // Styling for subgroup subtotals (italics and light gray)
+      if (isSubgroupSubtotal) {
+        if (!budgetSheet[cellAddress].s) {
+          budgetSheet[cellAddress].s = {};
+        }
+        budgetSheet[cellAddress].s = {
+          ...budgetSheet[cellAddress].s,
+          font: { italic: true, color: { rgb: "595959" } },
+          fill: { fgColor: { rgb: "F2F2F2" } },
+        };
+        // Apply currency format to subtotal numeric cells
+        if (C >= 1 && C <= 3) {
+          applyCurrencyFormat(budgetSheet, cellAddress);
+        }
+      }
+
+      // Styling for section headers
+      if (isSectionHeader) {
+        if (!budgetSheet[cellAddress].s) {
+          budgetSheet[cellAddress].s = {};
+        }
+        budgetSheet[cellAddress].s = {
+          ...budgetSheet[cellAddress].s,
+          font: { bold: true, color: { rgb: "4472C4" } },
+          fill: { fgColor: { rgb: "E7E6E6" } },
         };
       }
     }

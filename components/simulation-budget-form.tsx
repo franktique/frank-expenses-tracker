@@ -46,6 +46,7 @@ import { SubgroupHeaderRow } from "@/components/subgroup-header-row";
 import { SubgroupSubtotalRow } from "@/components/subgroup-subtotal-row";
 import { organizeTableRowsWithSubgroups, shouldShowRow, getSubgroupForCategory } from "@/lib/subgroup-table-utils";
 import { calculateSubgroupSubtotals, getSubgroupCategoryCount } from "@/lib/subgroup-calculations";
+import { reorganizeTableRowsWithSubgroupOrder, initializeSubgroupOrder, cleanupSubgroupOrder } from "@/lib/subgroup-reordering-utils";
 
 // Types
 type Category = {
@@ -151,6 +152,19 @@ export function SimulationBudgetForm({
   const [addingToSubgroupId, setAddingToSubgroupId] = useState<string | null>(null);
   const [categoriesToAddToSubgroup, setCategoriesToAddToSubgroup] = useState<(string | number)[]>([]);
   const [isAddingCategoriesLoading, setIsAddingCategoriesLoading] = useState(false);
+
+  // Sub-group drag & drop reordering state management
+  const [subgroupOrder, setSubgroupOrder] = useState<string[]>([]);
+  const [uncategorizedCategoryOrder, setUncategorizedCategoryOrder] = useState<(string | number)[]>([]);
+  const [subgroupDragState, setSubgroupDragState] = useState<{
+    draggedItemId: string | null;
+    draggedItemType: "subgroup" | "uncategorized" | null;
+    dropZoneIndex: number | null;
+  }>({
+    draggedItemId: null,
+    draggedItemType: null,
+    dropZoneIndex: null,
+  });
 
   // Load categories and existing budget data
   useEffect(() => {
@@ -344,6 +358,65 @@ export function SimulationBudgetForm({
 
     loadSubgroups();
   }, [simulationId]);
+
+  // Initialize subgroupOrder from localStorage or database displayOrder
+  useEffect(() => {
+    if (subgroups.length > 0) {
+      try {
+        // Try to load saved order from localStorage
+        const storageKey = `simulation_${simulationId}_subgroup_order`;
+        const savedOrder = localStorage.getItem(storageKey);
+
+        if (savedOrder) {
+          const parsedOrder = JSON.parse(savedOrder);
+          if (Array.isArray(parsedOrder)) {
+            // Validate that all IDs in saved order still exist
+            // and add any new subgroups
+            const cleanedOrder = cleanupSubgroupOrder(parsedOrder, subgroups);
+            const newSubgroupIds = subgroups
+              .filter((sg) => !cleanedOrder.includes(sg.id))
+              .sort((a, b) => a.displayOrder - b.displayOrder)
+              .map((sg) => sg.id);
+            const updatedOrder = [...cleanedOrder, ...newSubgroupIds];
+            setSubgroupOrder(updatedOrder);
+          } else {
+            // Fallback to database order
+            setSubgroupOrder(initializeSubgroupOrder(subgroups));
+          }
+        } else if (subgroupOrder.length === 0) {
+          // Only initialize if not already set
+          setSubgroupOrder(initializeSubgroupOrder(subgroups));
+        } else {
+          // Update existing order with any new subgroups
+          const newSubgroupIds = subgroups
+            .filter((sg) => !subgroupOrder.includes(sg.id))
+            .sort((a, b) => a.displayOrder - b.displayOrder)
+            .map((sg) => sg.id);
+          if (newSubgroupIds.length > 0) {
+            setSubgroupOrder([...subgroupOrder, ...newSubgroupIds]);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading subgroup order from localStorage:", error);
+        // Fallback to database order
+        if (subgroupOrder.length === 0) {
+          setSubgroupOrder(initializeSubgroupOrder(subgroups));
+        }
+      }
+    }
+  }, [subgroups, simulationId]);
+
+  // Save subgroupOrder to localStorage whenever it changes
+  useEffect(() => {
+    if (subgroupOrder.length > 0) {
+      try {
+        const storageKey = `simulation_${simulationId}_subgroup_order`;
+        localStorage.setItem(storageKey, JSON.stringify(subgroupOrder));
+      } catch (error) {
+        console.error("Error saving subgroup order to localStorage:", error);
+      }
+    }
+  }, [subgroupOrder, simulationId]);
 
   // Helper function to toggle subgroup expansion
   const toggleSubgroupExpanded = useCallback((subgroupId: string) => {
@@ -1033,29 +1106,69 @@ export function SimulationBudgetForm({
     return sorted;
   }, [categories, sortField, sortDirection, tipoGastoSortState, categoryOrder, hideEmptyCategories, excludedCategoryIds, budgetData]);
 
-  // Calculate balances for each category (running balance)
+  // Calculate balances for each category respecting sub-group order
   const categoryBalances = useMemo(() => {
     const balances = new Map<string, number>();
     let runningBalance = totalIncome;
 
-    getSortedCategories.forEach((category) => {
-      const categoryData = budgetData[String(category.id)];
-      if (categoryData) {
-        // Calculate net spend: Efectivo - Expected Savings
-        const efectivoAmount = parseFloat(categoryData.efectivo_amount) || 0;
-        const expectedSavings = parseFloat(categoryData.expected_savings) || 0;
-        const netSpend = efectivoAmount - expectedSavings;
+    // Build the display order including sub-group reordering
+    let displayOrder: (string | number)[] = [];
 
-        // Decrease balance by net spend (actual amount after savings)
-        runningBalance -= netSpend;
-        balances.set(String(category.id), runningBalance);
-      } else {
-        balances.set(String(category.id), runningBalance);
+    if (subgroupOrder.length > 0) {
+      // Include sub-group order
+      const subgroupMap = new Map<string, Subgroup>();
+      for (const sg of subgroups) {
+        subgroupMap.set(sg.id, sg);
+      }
+
+      // Process in sub-group order
+      for (const sgId of subgroupOrder) {
+        const sg = subgroupMap.get(sgId);
+        if (sg) {
+          displayOrder.push(...sg.categoryIds);
+        }
+      }
+
+      // Add uncategorized categories
+      const categoriesInSubgroups = new Set<string | number>();
+      for (const sg of subgroups) {
+        for (const catId of sg.categoryIds) {
+          categoriesInSubgroups.add(catId);
+        }
+      }
+
+      for (const cat of getSortedCategories) {
+        if (!categoriesInSubgroups.has(cat.id)) {
+          displayOrder.push(cat.id);
+        }
+      }
+    } else {
+      // Use default sorted order (no sub-group reordering)
+      displayOrder = getSortedCategories.map((c) => c.id);
+    }
+
+    // Calculate balances in display order
+    displayOrder.forEach((categoryId) => {
+      const category = getSortedCategories.find((c) => c.id === categoryId);
+      if (category) {
+        const categoryData = budgetData[String(category.id)];
+        if (categoryData) {
+          // Calculate net spend: Efectivo - Expected Savings
+          const efectivoAmount = parseFloat(categoryData.efectivo_amount) || 0;
+          const expectedSavings = parseFloat(categoryData.expected_savings) || 0;
+          const netSpend = efectivoAmount - expectedSavings;
+
+          // Decrease balance by net spend (actual amount after savings)
+          runningBalance -= netSpend;
+          balances.set(String(category.id), runningBalance);
+        } else {
+          balances.set(String(category.id), runningBalance);
+        }
       }
     });
 
     return balances;
-  }, [budgetData, getSortedCategories, totalIncome]);
+  }, [budgetData, getSortedCategories, totalIncome, subgroups, subgroupOrder]);
 
   // Helper function to get uncategorized categories (not in any sub-group)
   const getUncategorizedCategories = useCallback((): Category[] => {
@@ -1293,6 +1406,112 @@ export function SimulationBudgetForm({
     setDraggedTipoGasto(undefined);
     setDropTargetIndex(null);
     setIsValidDropTarget(false);
+  }, []);
+
+  // Helper function to check if subgroup dragging is allowed
+  const isSubgroupDraggingDisabled = useCallback(
+    (subgroupId: string): boolean => {
+      // Disable dragging if:
+      // 1. In add mode for any subgroup
+      // 2. Currently saving or loading
+      // 3. Sub-group is being deleted
+      // 4. Sub-group doesn't exist
+      return (
+        !!addingToSubgroupId ||
+        isSaving ||
+        isAutoSaving ||
+        isSavingOnBlur ||
+        !subgroups.some((sg) => sg.id === subgroupId)
+      );
+    },
+    [addingToSubgroupId, isSaving, isAutoSaving, isSavingOnBlur, subgroups]
+  );
+
+  // Sub-group Drag & Drop Event Handlers
+  const handleSubgroupDragStart = useCallback(
+    (e: React.DragEvent, subgroupId: string) => {
+      // Prevent drag if disabled
+      if (isSubgroupDraggingDisabled(subgroupId)) {
+        e.preventDefault();
+        return;
+      }
+
+      setSubgroupDragState({
+        draggedItemId: subgroupId,
+        draggedItemType: "subgroup",
+        dropZoneIndex: null,
+      });
+      e.dataTransfer.effectAllowed = "move";
+      e.dataTransfer.setData("text/html", "");
+    },
+    [isSubgroupDraggingDisabled]
+  );
+
+  const handleSubgroupDragOver = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      // Allow drop on any valid target
+      if (subgroupDragState.draggedItemType === "subgroup") {
+        e.dataTransfer.dropEffect = "move";
+      } else {
+        e.dataTransfer.dropEffect = "none";
+      }
+    },
+    [subgroupDragState.draggedItemType]
+  );
+
+  const handleSubgroupDrop = useCallback(
+    (e: React.DragEvent, targetSubgroupId: string | null, position: "before" | "after") => {
+      e.preventDefault();
+
+      if (!subgroupDragState.draggedItemId || subgroupDragState.draggedItemType !== "subgroup") {
+        return;
+      }
+
+      const draggedId = subgroupDragState.draggedItemId;
+      const currentOrder = subgroupOrder.length > 0 ? subgroupOrder : subgroups.map((s) => s.id);
+      const newOrder = [...currentOrder];
+
+      // Find indices
+      const draggedIndex = newOrder.indexOf(draggedId);
+      if (draggedIndex === -1) return;
+
+      // Remove dragged item
+      const [draggedItem] = newOrder.splice(draggedIndex, 1);
+
+      // Find target index based on position
+      let targetIndex = newOrder.length;
+      if (targetSubgroupId) {
+        targetIndex = newOrder.indexOf(targetSubgroupId);
+        if (targetIndex === -1) {
+          newOrder.push(draggedItem);
+        } else {
+          if (position === "after") {
+            targetIndex += 1;
+          }
+          newOrder.splice(targetIndex, 0, draggedItem);
+        }
+      } else {
+        // Drop at end
+        newOrder.push(draggedItem);
+      }
+
+      setSubgroupOrder(newOrder);
+      setSubgroupDragState({
+        draggedItemId: null,
+        draggedItemType: null,
+        dropZoneIndex: null,
+      });
+    },
+    [subgroupDragState, subgroupOrder, subgroups]
+  );
+
+  const handleSubgroupDragEnd = useCallback(() => {
+    setSubgroupDragState({
+      draggedItemId: null,
+      draggedItemType: null,
+      dropZoneIndex: null,
+    });
   }, []);
 
   if (isLoading) {
@@ -1648,12 +1867,23 @@ export function SimulationBudgetForm({
               </TableHeader>
               <TableBody>
                 {(() => {
-                  // Organize table rows with subgroups
-                  const tableRows = organizeTableRowsWithSubgroups(
+                  // Organize table rows with subgroups and custom ordering
+                  let tableRows = organizeTableRowsWithSubgroups(
                     subgroups,
                     getSortedCategories,
                     excludedCategoryIds
                   );
+
+                  // Apply custom subgroup ordering if available
+                  if (subgroupOrder.length > 0) {
+                    tableRows = reorganizeTableRowsWithSubgroupOrder(
+                      subgroups,
+                      subgroupOrder,
+                      getSortedCategories,
+                      expandedSubgroups,
+                      excludedCategoryIds
+                    );
+                  }
 
                   if (tableRows.length === 0) {
                     return (
@@ -1685,6 +1915,8 @@ export function SimulationBudgetForm({
                       );
 
                       const uncategorizedCount = getUncategorizedCategories().length;
+                      const isDraggingThisSubgroup = subgroupDragState.draggedItemId === row.subgroupId;
+                      const isDragOverThisSubgroup = subgroupDragState.draggedItemId && subgroupDragState.draggedItemId !== row.subgroupId;
 
                       return (
                         <SubgroupHeaderRow
@@ -1701,6 +1933,19 @@ export function SimulationBudgetForm({
                           onDoneAddingCategories={handleDoneAddingToSubgroup}
                           onCancelAddingCategories={handleCancelAddToSubgroup}
                           canAddCategories={uncategorizedCount > 0}
+                          isDragging={isDraggingThisSubgroup}
+                          isDragOver={isDragOverThisSubgroup}
+                          onDragStart={(e) => handleSubgroupDragStart(e, row.subgroupId!)}
+                          onDragOver={handleSubgroupDragOver}
+                          onDragLeave={() => {
+                            // Clear drag over state when leaving
+                            setSubgroupDragState((prev) => ({
+                              ...prev,
+                              dropZoneIndex: null,
+                            }));
+                          }}
+                          onDrop={(e, position) => handleSubgroupDrop(e, row.subgroupId || null, position)}
+                          onDragEnd={handleSubgroupDragEnd}
                         />
                       );
                     }

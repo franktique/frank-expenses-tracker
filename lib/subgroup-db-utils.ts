@@ -224,36 +224,50 @@ export async function updateSubgroup(
       throw new Error("Sub-group must contain at least one category");
     }
 
-    // Update sub-group
-    const updateData: any = {
-      updated_at: new Date(),
-    };
+    // Build UPDATE query with conditional SET clauses
+    let updateResult;
 
-    if (request.name !== undefined) {
-      updateData.name = request.name.trim();
+    if (request.name !== undefined && request.displayOrder !== undefined) {
+      // Both name and displayOrder are being updated
+      updateResult = await sql`
+        UPDATE simulation_subgroups
+        SET name = ${request.name.trim()},
+            display_order = ${request.displayOrder},
+            updated_at = NOW()
+        WHERE id = ${subgroupId}
+        AND simulation_id = ${simulationId}
+        RETURNING id, simulation_id as "simulationId", name, display_order as "displayOrder", created_at as "createdAt", updated_at as "updatedAt"
+      `;
+    } else if (request.name !== undefined) {
+      // Only name is being updated
+      updateResult = await sql`
+        UPDATE simulation_subgroups
+        SET name = ${request.name.trim()},
+            updated_at = NOW()
+        WHERE id = ${subgroupId}
+        AND simulation_id = ${simulationId}
+        RETURNING id, simulation_id as "simulationId", name, display_order as "displayOrder", created_at as "createdAt", updated_at as "updatedAt"
+      `;
+    } else if (request.displayOrder !== undefined) {
+      // Only displayOrder is being updated
+      updateResult = await sql`
+        UPDATE simulation_subgroups
+        SET display_order = ${request.displayOrder},
+            updated_at = NOW()
+        WHERE id = ${subgroupId}
+        AND simulation_id = ${simulationId}
+        RETURNING id, simulation_id as "simulationId", name, display_order as "displayOrder", created_at as "createdAt", updated_at as "updatedAt"
+      `;
+    } else {
+      // Only categoryIds are being updated (no name or displayOrder changes)
+      updateResult = await sql`
+        UPDATE simulation_subgroups
+        SET updated_at = NOW()
+        WHERE id = ${subgroupId}
+        AND simulation_id = ${simulationId}
+        RETURNING id, simulation_id as "simulationId", name, display_order as "displayOrder", created_at as "createdAt", updated_at as "updatedAt"
+      `;
     }
-
-    if (request.displayOrder !== undefined) {
-      updateData.display_order = request.displayOrder;
-    }
-
-    const updateResult = await sql`
-      UPDATE simulation_subgroups
-      SET ${
-        request.name !== undefined
-          ? sql`name = ${request.name.trim()},`
-          : sql``
-      }
-      ${
-        request.displayOrder !== undefined
-          ? sql`display_order = ${request.displayOrder},`
-          : sql``
-      }
-      updated_at = NOW()
-      WHERE id = ${subgroupId}
-      AND simulation_id = ${simulationId}
-      RETURNING id, simulation_id as "simulationId", name, display_order as "displayOrder", created_at as "createdAt", updated_at as "updatedAt"
-    `;
 
     const updateArray = normalizeQueryResult(updateResult);
     if (updateArray.length === 0) {

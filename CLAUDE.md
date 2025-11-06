@@ -288,3 +288,55 @@ The **Simulation Sub-Groups** feature allows users to organize budget categories
 - Sub-group subtotal calculations use `useMemo` to prevent unnecessary recalculations
 - Table organization is O(n + s) where n = categories and s = sub-groups
 - Expand/collapse is O(1) state toggle with no data fetching
+
+#### Simulation Sub-Groups - Add/Remove Categories
+The **Simulation Sub-Groups Enhancement** allows users to dynamically add and remove categories from existing sub-groups within the budget simulation form.
+
+**Features**:
+- **Add Categories Button**: '+' button on sub-group headers enters "add mode" to select uncategorized categories
+- **Done Button**: Replaces '+' button during add mode; clicking it adds selected categories to the sub-group
+- **Cancel Functionality**: 'X' button exits add mode without saving changes
+- **Remove Categories**: Small trash icons appear on category rows within sub-groups for easy removal
+- **Visual Feedback**: Selected categories highlight with blue background during add mode
+- **Disabled State**: '+' button disables when no uncategorized categories are available
+
+**State Management**:
+- `addingToSubgroupId: string | null` - Tracks which sub-group is in add mode (only one at a time)
+- `categoriesToAddToSubgroup: (string | number)[]` - Categories selected for addition
+- `isAddingCategoriesLoading: boolean` - Loading state during API operations
+
+**Handlers**:
+- `getUncategorizedCategories()` - Returns categories not in any sub-group (filtered by current sort/filters)
+- `getSubgroupForCategory()` - Finds which sub-group a category belongs to
+- `handleAddToSubgroupClick()` - Enters add mode for a sub-group
+- `handleDoneAddingToSubgroup()` - Saves selected categories to sub-group via API
+- `handleRemoveCategoryFromSubgroup()` - Removes category from sub-group with confirmation
+- `handleCancelAddToSubgroup()` - Exits add mode without saving
+- `toggleCategoryForAddition()` - Toggles category selection during add mode
+
+**Component Integration**:
+- `SubgroupHeaderRow` - Updated with new props: `isInAddMode`, `onAddCategories`, `onDoneAddingCategories`, `onCancelAddingCategories`, `canAddCategories`
+- Category rows show checkboxes for uncategorized categories when in add mode
+- Category rows show delete buttons for categorized items in expanded sub-groups
+
+**API Operations**:
+- `PATCH /api/simulations/[id]/subgroups/[subgroupId]` - Adds categories (sends full categoryIds array)
+- Automatic UI update after successful API call
+- Confirmation dialog before removing categories
+
+**User Flow**:
+1. User sees '+' button on sub-group header (disabled if no uncategorized categories)
+2. Click '+' to enter add mode - checkboxes appear on uncategorized categories
+3. Select desired categories via checkboxes
+4. Click 'Done' to add them to the sub-group (button shows in header)
+5. Or click 'X' to cancel and exit add mode
+6. To remove categories: click trash icon on any categorized row
+7. Confirm removal in dialog, category moves back to uncategorized section
+
+**Key Implementation Details**:
+- Uncategorized categories are filtered by current view (respects hideEmptyCategories, excludedCategoryIds, sort order)
+- Only one sub-group can be in add mode at a time
+- Selected categories get visual blue highlight background
+- API updates sub-group atomically (sends all category IDs at once)
+- Toast notifications for success/error feedback
+- Confirmation dialogs prevent accidental category removal

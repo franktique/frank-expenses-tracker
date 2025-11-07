@@ -7,11 +7,13 @@ import type { Subtotals } from "@/lib/subgroup-calculations";
 interface SubgroupSubtotalRowProps {
   subgroupId: string;
   subtotals: Subtotals;
+  subgroupBalance: number;
 }
 
 export function SubgroupSubtotalRow({
   subgroupId,
   subtotals,
+  subgroupBalance,
 }: SubgroupSubtotalRowProps) {
   return (
     <TableRow
@@ -61,7 +63,9 @@ export function SubgroupSubtotalRow({
 
       {/* Balance column */}
       <TableCell className="text-right">
-        <span className="text-muted-foreground">-</span>
+        <span className="font-semibold text-accent">
+          {formatCurrency(subgroupBalance)}
+        </span>
       </TableCell>
 
       {/* Delete button column */}

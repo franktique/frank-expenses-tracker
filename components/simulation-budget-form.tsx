@@ -1170,6 +1170,82 @@ export function SimulationBudgetForm({
     return balances;
   }, [budgetData, getSortedCategories, totalIncome, subgroups, subgroupOrder]);
 
+  // Calculate balance after each sub-group (for display in subtotal rows)
+  const subgroupBalances = useMemo(() => {
+    const balances = new Map<string, number>();
+    let runningBalance = totalIncome;
+
+    // Build the display order including sub-group reordering
+    let displayOrder: (string | number)[] = [];
+
+    if (subgroupOrder.length > 0) {
+      // Include sub-group order
+      const subgroupMap = new Map<string, Subgroup>();
+      for (const sg of subgroups) {
+        subgroupMap.set(sg.id, sg);
+      }
+
+      // Process in sub-group order
+      for (const sgId of subgroupOrder) {
+        const sg = subgroupMap.get(sgId);
+        if (sg) {
+          displayOrder.push(...sg.categoryIds);
+        }
+      }
+
+      // Add uncategorized categories
+      const categoriesInSubgroups = new Set<string | number>();
+      for (const sg of subgroups) {
+        for (const catId of sg.categoryIds) {
+          categoriesInSubgroups.add(catId);
+        }
+      }
+
+      for (const cat of getSortedCategories) {
+        if (!categoriesInSubgroups.has(cat.id)) {
+          displayOrder.push(cat.id);
+        }
+      }
+    } else {
+      // Use default sorted order (no sub-group reordering)
+      displayOrder = getSortedCategories.map((c) => c.id);
+    }
+
+    // Calculate balances and track which subgroup each category belongs to
+    let currentSubgroupId: string | null = null;
+    displayOrder.forEach((categoryId) => {
+      // Find which subgroup this category belongs to
+      const subgroupForCategory = subgroups.find((sg) =>
+        sg.categoryIds.includes(categoryId as string & number)
+      );
+
+      if (subgroupForCategory && subgroupForCategory.id !== currentSubgroupId) {
+        currentSubgroupId = subgroupForCategory.id;
+      }
+
+      const category = getSortedCategories.find((c) => c.id === categoryId);
+      if (category) {
+        const categoryData = budgetData[String(category.id)];
+        if (categoryData) {
+          // Calculate net spend: Efectivo - Expected Savings
+          const efectivoAmount = parseFloat(categoryData.efectivo_amount) || 0;
+          const expectedSavings = parseFloat(categoryData.expected_savings) || 0;
+          const netSpend = efectivoAmount - expectedSavings;
+
+          // Decrease balance by net spend (actual amount after savings)
+          runningBalance -= netSpend;
+
+          // After processing a category, store the balance for its subgroup
+          if (currentSubgroupId) {
+            balances.set(currentSubgroupId, runningBalance);
+          }
+        }
+      }
+    });
+
+    return balances;
+  }, [budgetData, getSortedCategories, totalIncome, subgroups, subgroupOrder]);
+
   // Helper function to get uncategorized categories (not in any sub-group)
   const getUncategorizedCategories = useCallback((): Category[] => {
     const categorizedCategoryIds = new Set<string | number>();
@@ -1960,11 +2036,14 @@ export function SimulationBudgetForm({
                         budgetData
                       );
 
+                      const subgroupBalance = subgroupBalances.get(row.subgroupId!) ?? 0;
+
                       return (
                         <SubgroupSubtotalRow
                           key={`subtotal-${row.subgroupId}`}
                           subgroupId={row.subgroupId!}
                           subtotals={subtotals}
+                          subgroupBalance={subgroupBalance}
                         />
                       );
                     }

@@ -2004,6 +2004,7 @@ export function SimulationBudgetForm({
                           onDelete={handleDeleteSubgroup}
                           subtotals={subtotals}
                           categoryCount={row.categoryCount || 0}
+                          totalIncome={totalIncome}
                           isInAddMode={addingToSubgroupId === row.subgroupId}
                           onAddCategories={handleAddToSubgroupClick}
                           onDoneAddingCategories={handleDoneAddingToSubgroup}

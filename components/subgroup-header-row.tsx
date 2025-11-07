@@ -14,6 +14,7 @@ interface SubgroupHeaderRowProps {
   onDelete: (subgroupId: string) => void;
   subtotals: Subtotals;
   categoryCount: number;
+  totalIncome: number;
   isLoading?: boolean;
   onDeleteClick?: () => void;
   isInAddMode?: boolean;
@@ -38,6 +39,7 @@ export function SubgroupHeaderRow({
   onDelete,
   subtotals,
   categoryCount,
+  totalIncome,
   isLoading = false,
   onDeleteClick,
   isInAddMode = false,
@@ -87,6 +89,24 @@ export function SubgroupHeaderRow({
     };
   };
 
+  // Calculate percentages
+  const ahorroEsperadoPercentage =
+    subtotals.total > 0
+      ? ((subtotals.expectedSavings / subtotals.total) * 100)
+      : 0;
+
+  const totalPercentage =
+    totalIncome > 0
+      ? ((subtotals.total / totalIncome) * 100)
+      : 0;
+
+  // Format percentage with 2 decimal places
+  const formatPercentage = (percentage: number): string => {
+    if (percentage === 0) return "0%";
+    if (percentage < 0.01) return "< 0.01%";
+    return `${percentage.toFixed(2)}%`;
+  };
+
   return (
     <TableRow
       draggable={!isInAddMode}
@@ -109,27 +129,23 @@ export function SubgroupHeaderRow({
         )}
       </TableCell>
 
-      {/* Expand/Collapse Icon */}
-      <TableCell className="w-8">
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-5 w-5 p-0"
-          onClick={() => onToggleExpand(subgroupId)}
-          disabled={isLoading}
-          aria-label={isExpanded ? "Collapse sub-group" : "Expand sub-group"}
-        >
-          {isExpanded ? (
-            <ChevronUp className="h-4 w-4" />
-          ) : (
-            <ChevronDown className="h-4 w-4" />
-          )}
-        </Button>
-      </TableCell>
-
-      {/* Sub-group Name */}
+      {/* Sub-group Name with Expand/Collapse Icon */}
       <TableCell>
         <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-5 w-5 p-0 flex-shrink-0"
+            onClick={() => onToggleExpand(subgroupId)}
+            disabled={isLoading}
+            aria-label={isExpanded ? "Collapse sub-group" : "Expand sub-group"}
+          >
+            {isExpanded ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </Button>
           <span>{subgroupName}</span>
           <span className="text-xs text-muted-foreground">
             ({categoryCount})
@@ -158,16 +174,26 @@ export function SubgroupHeaderRow({
 
       {/* Expected Savings */}
       <TableCell className="text-right">
-        <span className="text-sm font-semibold">
-          {formatCurrency(subtotals.expectedSavings)}
-        </span>
+        <div className="flex flex-col items-end">
+          <span className="text-sm font-semibold">
+            {formatCurrency(subtotals.expectedSavings)}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {formatPercentage(ahorroEsperadoPercentage)}
+          </span>
+        </div>
       </TableCell>
 
       {/* Total */}
       <TableCell className="text-right">
-        <span className="text-sm font-semibold">
-          {formatCurrency(subtotals.total)}
-        </span>
+        <div className="flex flex-col items-end">
+          <span className="text-sm font-semibold">
+            {formatCurrency(subtotals.total)}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {formatPercentage(totalPercentage)}
+          </span>
+        </div>
       </TableCell>
 
       {/* Balance */}

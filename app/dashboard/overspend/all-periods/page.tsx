@@ -25,6 +25,7 @@ import type { AllPeriodsOverspendResponse } from "@/types/funds";
 
 const CASH_METHODS = ["cash", "debit"];
 const CREDIT_METHODS = ["credit"];
+const STORAGE_KEY = "overspend_all_periods_excluded_categories";
 
 function getMethodFilter(option: string) {
   if (option === "cash") return CASH_METHODS;
@@ -58,6 +59,27 @@ export default function AllPeriodsOverspendDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
+
+  // Load excluded categories from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        setExcludedCategories(JSON.parse(stored));
+      }
+    } catch (error) {
+      console.warn("Failed to load excluded categories from localStorage:", error);
+    }
+  }, []);
+
+  // Save excluded categories to localStorage whenever they change
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(excludedCategories));
+    } catch (error) {
+      console.warn("Failed to save excluded categories to localStorage:", error);
+    }
+  }, [excludedCategories]);
 
   // Fetch all-periods overspend data
   useEffect(() => {

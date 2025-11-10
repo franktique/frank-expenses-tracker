@@ -10,8 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Cell,
+} from "recharts";
 import { CategoryExclusionFilter } from "@/components/category-exclusion-filter";
-import { Settings, Loader2, ChevronRight } from "lucide-react";
+import { Settings, Loader2 } from "lucide-react";
 import type { AllPeriodsOverspendResponse } from "@/types/funds";
 
 const CASH_METHODS = ["cash", "debit"];
@@ -201,6 +210,15 @@ export default function AllPeriodsOverspendDashboard() {
     );
   }
 
+  // Prepare chart data
+  const chartData = useMemo(() => {
+    return periodSummaries.map((period) => ({
+      periodId: period.periodId,
+      name: period.periodName,
+      overspend: period.totalOverspend,
+    }));
+  }, [periodSummaries]);
+
   return (
     <div className="space-y-8">
       {/* Filters */}
@@ -240,77 +258,60 @@ export default function AllPeriodsOverspendDashboard() {
         </div>
       )}
 
-      {/* Timeline/Periods Grid */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4">Periodos</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {periodSummaries.map((period) => {
-            const isSelected = selectedPeriodId === period.periodId;
-            const hasOverspend = period.totalOverspend > 0;
-
-            return (
-              <button
-                key={period.periodId}
-                onClick={() => setSelectedPeriodId(period.periodId)}
-                className={`p-4 rounded-lg border-2 transition-all text-left ${
-                  isSelected
-                    ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
-                    : "border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-600"
-                } ${hasOverspend && !isSelected ? "opacity-70" : ""}`}
+      {/* Bar Chart Timeline */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Timeline de Overspend por Periodo</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div style={{ width: "100%", height: 400 }}>
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart
+                data={chartData}
+                margin={{ top: 20, right: 30, left: 0, bottom: 60 }}
               >
-                {/* Period Header */}
-                <div className="font-semibold text-sm mb-2">
-                  {period.periodName}
-                </div>
-
-                {/* Overspend Value */}
-                <div className="mb-3">
-                  <div className="text-xs text-muted-foreground">Overspend</div>
-                  <div
-                    className={`text-2xl font-bold ${
-                      period.totalOverspend > 0 ? "text-red-600" : "text-green-600"
-                    }`}
-                  >
-                    $
-                    {Math.abs(period.totalOverspend).toLocaleString("es-MX", {
+                <XAxis
+                  dataKey="name"
+                  angle={-45}
+                  textAnchor="end"
+                  height={100}
+                />
+                <YAxis />
+                <Tooltip
+                  formatter={(value: number) =>
+                    `$${value.toLocaleString("es-MX", {
                       minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}
-                  </div>
-                </div>
-
-                {/* Summary */}
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Planeado:</span>
-                    <span className="font-medium">
-                      ${period.totalPlanned.toLocaleString("es-MX", {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      })}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Gastado:</span>
-                    <span className="font-medium">
-                      ${period.totalSpent.toLocaleString("es-MX", {
-                        minimumFractionDigits: 0,
-                        maximumFractionDigits: 0,
-                      })}
-                    </span>
-                  </div>
-                </div>
-
-                {isSelected && (
-                  <div className="mt-3 flex items-center text-blue-600 text-xs font-semibold">
-                    Ver detalle <ChevronRight className="h-3 w-3 ml-1" />
-                  </div>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+                    })}`
+                  }
+                  cursor={{ fill: "rgba(59, 130, 246, 0.1)" }}
+                />
+                <Bar
+                  dataKey="overspend"
+                  name="Overspend"
+                  onClick={(data) => {
+                    setSelectedPeriodId(data.periodId);
+                  }}
+                  cursor="pointer"
+                  radius={[8, 8, 0, 0]}
+                >
+                  {chartData.map((entry) => (
+                    <Cell
+                      key={`cell-${entry.periodId}`}
+                      fill={
+                        selectedPeriodId === entry.periodId
+                          ? "#2563eb"
+                          : entry.overspend > 0
+                            ? "#ef4444"
+                            : "#22c55e"
+                      }
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Selected Period Details */}
       {selectedPeriod && (

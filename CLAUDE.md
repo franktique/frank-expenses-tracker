@@ -548,25 +548,28 @@ The **Overspend Actual** dashboard provides two views for analyzing spending ove
 - Categories sorted by overspend amount (highest to lowest)
 
 **All Periods View** (`/dashboard/overspend/all-periods`):
-- Aggregates overspend data across all available periods in an intuitive timeline interface
-- **Period Cards Timeline**:
-  - Grid of clickable period cards showing overspend values
-  - Each card displays:
-    - Period name
-    - Total overspend amount (red/green color coded)
-    - Total planned and spent amounts
-  - Cards sorted by newest periods first (year and month)
-  - Selected period highlighted with blue border
-  - Responsive grid (1-4 columns depending on screen size)
+- Aggregates overspend data across all available periods with interactive timeline visualization
+- **Bar Chart Timeline**:
+  - Interactive bar chart showing overspend for each period
+  - Bars color-coded by status:
+    - 🔴 Red bars for periods with overspend
+    - 🟢 Green bars for periods under budget
+    - 🔵 Blue bar for selected period
+  - X-axis shows period names (rotated 45° for readability)
+  - Y-axis shows overspend amounts
+  - Click any bar to select that period and view details
+  - Hover tooltips show exact overspend amounts
+  - Responsive height (400px) with full-width responsive layout
 - **Detail Breakdown Table**:
-  - Shows when a period is selected
-  - Displays all categories with overspend for that period
-  - Includes columns for planned, spent, overspend, and percentage
+  - Displays below bar chart when a period is selected
+  - Shows all categories with their overspend for selected period
+  - Includes columns: Categoría | Planeado | Gastado | Overspend | %
   - Categories sorted by overspend amount (highest first)
-  - Rows highlighted if category has overspend
-- Same filtering options as current period view:
+  - Rows highlighted in light red if category has overspend
+- Filtering options:
   - Payment method filtering (Todos, Efectivo/Débito, Tarjeta Crédito)
   - Category exclusion filtering via Settings button
+  - Filters update both chart and detail table in real-time
 - Loading and error states for data fetching
 
 **API Endpoint**:
@@ -592,18 +595,24 @@ The **Overspend Actual** dashboard provides two views for analyzing spending ove
 
 **User Flow - All Periods View**:
 1. Navigate to "Overspend Actual" → "Todos los Periodos" in sidebar
-2. Page loads showing a grid of period cards with overspend values
-3. Each period card displays:
-   - Period name
-   - Total overspend amount in large font (red if overspent, green if under budget)
-   - Summary of planned vs spent amounts
-4. Click on any period card to select it and view details
-5. Selected period shows:
-   - Period card highlighted with blue border
-   - Detailed breakdown table below showing all categories
+2. Page loads showing interactive bar chart timeline of all periods
+3. Bar chart displays:
+   - Each period as a bar (colored red/green/blue based on status)
+   - Period names on X-axis (rotated for readability)
+   - Overspend amounts on Y-axis
+4. Hover over any bar to see exact overspend amount in tooltip
+5. Click any bar to select that period:
+   - Selected bar turns blue
+   - Detail breakdown table appears below chart
+6. Detail table shows for selected period:
+   - All categories with their overspend amounts
+   - Columns: Category | Planned | Spent | Overspend | %
    - Categories sorted by highest overspend first
-6. Use payment method dropdown to filter data by payment type (affects all periods)
-7. Click "Filtros" button to show category exclusion filter
-8. Select categories to exclude from calculations
-9. Period cards and detail table automatically update as filters change
-10. Click on a different period to switch detailed view
+7. Use payment method dropdown to filter data by payment type:
+   - Updates all bars in chart
+   - Updates detail table with filtered data
+8. Click "Filtros" button to show category exclusion filter
+9. Select categories to exclude from calculations:
+   - Chart updates immediately
+   - Detail table updates with excluded categories removed
+10. Click on different period bar to switch detail view

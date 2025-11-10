@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useBudget } from "@/context/budget-context";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ const PAYMENT_METHOD_LABELS: Record<string, string> = {
 
 const CASH_METHODS = ["cash", "debit"];
 const CREDIT_METHODS = ["credit"];
+const STORAGE_KEY = "overspend_current_period_excluded_categories";
 
 function getMethodFilter(option: string) {
   if (option === "cash") return CASH_METHODS;
@@ -44,6 +45,36 @@ export default function OverspendDashboard() {
   const [methodFilter, setMethodFilter] = useState<string>("all");
   const [excludedCategories, setExcludedCategories] = useState<string[]>([]);
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
+  const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
+
+  // Load excluded categories from localStorage on mount
+  useEffect(() => {
+    if (typeof window === "undefined") return; // Skip on server-side rendering
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        console.log("📂 Loaded excluded categories from localStorage:", parsed);
+        setExcludedCategories(parsed);
+      }
+      setHasLoadedFromStorage(true);
+    } catch (error) {
+      console.warn("Failed to load excluded categories from localStorage:", error);
+      setHasLoadedFromStorage(true);
+    }
+  }, []);
+
+  // Save excluded categories to localStorage whenever they change (but not during initial load)
+  useEffect(() => {
+    if (typeof window === "undefined") return; // Skip on server-side rendering
+    if (!hasLoadedFromStorage) return; // Don't save until we've attempted to load
+    try {
+      console.log("💾 Saving excluded categories to localStorage:", excludedCategories);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(excludedCategories));
+    } catch (error) {
+      console.warn("Failed to save excluded categories to localStorage:", error);
+    }
+  }, [excludedCategories, hasLoadedFromStorage]);
 
   // Filter by active period & payment method
   const filteredExpenses = useMemo(() => {

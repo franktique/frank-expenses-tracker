@@ -530,3 +530,89 @@ The **Visibility Toggle** feature allows users to hide specific sub-groups and c
 - Not stored in database (UI-only state in localStorage)
 - Clearing browser localStorage will reset visibility state
 - Visibility is per-simulation (independent tracking for each simulation)
+
+#### Overspend Analysis - Current Period vs All Periods
+The **Overspend Actual** dashboard provides two views for analyzing spending overage across budgets:
+
+**Menu Structure**:
+- "Overspend Actual" submenu in sidebar with two options:
+  - **Periodo Actual** - Shows overspend data for the currently active period only
+  - **Todos los Periodos** - Shows aggregated overspend across all existing periods
+
+**Current Period View** (`/dashboard/overspend`):
+- Displays overspend for the active period with horizontal bar chart
+- Shows Planeado (Budgeted) vs Excedente (Overspend) side-by-side
+- Filters: Payment method (Todos, Efectivo/Débito, Tarjeta Crédito)
+- Category exclusion filter available via Settings button
+- KPI cards for total overspend by payment method
+- Categories sorted by overspend amount (highest to lowest)
+
+**All Periods View** (`/dashboard/overspend/all-periods`):
+- Aggregates overspend data across all available periods with interactive timeline visualization
+- **Bar Chart Timeline**:
+  - Interactive bar chart showing overspend for each period
+  - Bars color-coded by status:
+    - 🔴 Red bars for periods with overspend
+    - 🟢 Green bars for periods under budget
+    - 🔵 Blue bar for selected period
+  - X-axis shows period names (rotated 45° for readability)
+  - Y-axis shows overspend amounts
+  - Click any bar to select that period and view details
+  - Hover tooltips show exact overspend amounts
+  - Responsive height (400px) with full-width responsive layout
+- **Detail Breakdown Table**:
+  - Displays below bar chart when a period is selected
+  - Shows all categories with their overspend for selected period
+  - Includes columns: Categoría | Planeado | Gastado | Overspend | %
+  - Categories sorted by overspend amount (highest first)
+  - Rows highlighted in light red if category has overspend
+- Filtering options:
+  - Payment method filtering (Todos, Efectivo/Débito, Tarjeta Crédito)
+  - Category exclusion filtering via Settings button
+  - Filters update both chart and detail table in real-time
+- Loading and error states for data fetching
+
+**API Endpoint**:
+- `GET /api/overspend/all-periods` - Fetches aggregated overspend data
+  - Query Parameters:
+    - `paymentMethod` (optional): "cash", "credit", or undefined for all
+    - `excludedCategories` (optional): Comma-separated list of category IDs to exclude
+  - Response: `AllPeriodsOverspendResponse` with:
+    - `overspendByCategory[]` - Array of categories with period-wise breakdown
+    - `summary` - Aggregate totals and payment method breakdown
+
+**Data Types** (`/types/funds.ts`):
+- `PeriodOverspendData` - Single period's overspend data for a category
+- `CategoryOverspendRow` - Category with all periods' overspend data
+- `AllPeriodsOverspendResponse` - Complete API response structure
+
+**Implementation Details**:
+- Uses client-side data fetching (no BudgetContext dependency)
+- Automatic data refresh when filters change
+- Responsive design supports mobile, tablet, and desktop views
+- Memoized calculations for performance optimization
+- Chart labels show currency formatted amounts (es-MX locale)
+
+**User Flow - All Periods View**:
+1. Navigate to "Overspend Actual" → "Todos los Periodos" in sidebar
+2. Page loads showing interactive bar chart timeline of all periods
+3. Bar chart displays:
+   - Each period as a bar (colored red/green/blue based on status)
+   - Period names on X-axis (rotated for readability)
+   - Overspend amounts on Y-axis
+4. Hover over any bar to see exact overspend amount in tooltip
+5. Click any bar to select that period:
+   - Selected bar turns blue
+   - Detail breakdown table appears below chart
+6. Detail table shows for selected period:
+   - All categories with their overspend amounts
+   - Columns: Category | Planned | Spent | Overspend | %
+   - Categories sorted by highest overspend first
+7. Use payment method dropdown to filter data by payment type:
+   - Updates all bars in chart
+   - Updates detail table with filtered data
+8. Click "Filtros" button to show category exclusion filter
+9. Select categories to exclude from calculations:
+   - Chart updates immediately
+   - Detail table updates with excluded categories removed
+10. Click on different period bar to switch detail view

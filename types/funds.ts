@@ -613,3 +613,38 @@ export const TIPO_GASTO_ERROR_MESSAGES = {
   TYPE_REQUIRED: "El tipo de gasto es obligatorio",
   TYPE_NOT_FOUND: "El tipo de gasto especificado no existe",
 } as const;
+
+// All-Periods Overspend Data Types
+export interface PeriodOverspendData {
+  periodId: string;
+  periodName: string;
+  month: number;
+  year: number;
+  planeado: number;
+  actual: number;
+  overspend: number;
+}
+
+export interface CategoryOverspendRow {
+  categoryId: string;
+  categoryName: string;
+  tipoGasto?: string;
+  periods: PeriodOverspendData[];
+  totalPlaneado: number;
+  totalActual: number;
+  totalOverspend: number;
+}
+
+export interface AllPeriodsOverspendResponse {
+  overspendByCategory: CategoryOverspendRow[];
+  summary: {
+    totalPlaneado: number;
+    totalActual: number;
+    totalOverspend: number;
+    overspendByPaymentMethod: {
+      cash: number;
+      debit: number;
+      credit: number;
+    };
+  };
+}

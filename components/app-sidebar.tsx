@@ -15,9 +15,11 @@ import {
   Wallet,
   Zap,
   Receipt,
+  ChevronRight,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useState } from "react";
 
 import {
   Sidebar,
@@ -27,7 +29,14 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubItem,
 } from "@/components/ui/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { LogoutButton } from "@/components/logout-button";
 import { useAuth } from "@/lib/auth-context";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -35,6 +44,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 export function AppSidebar() {
   const pathname = usePathname();
   const { isAuthenticated } = useAuth();
+  const [overspendOpen, setOverspendOpen] = useState(false);
 
   const isActive = (path: string) => {
     if (path === "/estudios") {
@@ -42,6 +52,12 @@ export function AppSidebar() {
     }
     if (path === "/simular") {
       return pathname === "/simular" || pathname.startsWith("/simular/");
+    }
+    if (path === "/dashboard/overspend") {
+      return (
+        pathname === "/dashboard/overspend" ||
+        pathname.startsWith("/dashboard/overspend/")
+      );
     }
     return pathname === path;
   };
@@ -200,15 +216,50 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={isActive("/dashboard/overspend")}
+            <Collapsible
+              open={overspendOpen}
+              onOpenChange={setOverspendOpen}
+              className="w-full"
             >
-              <Link href="/dashboard/overspend">
-                <BarChart3 className="h-4 w-4" />
-                <span>Overspend Actual</span>
-              </Link>
-            </SidebarMenuButton>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton
+                  isActive={isActive("/dashboard/overspend")}
+                  className="w-full"
+                >
+                  <BarChart3 className="h-4 w-4" />
+                  <span>Overspend Actual</span>
+                  <ChevronRight
+                    className={`ml-auto h-4 w-4 transition-transform ${
+                      overspendOpen ? "rotate-90" : ""
+                    }`}
+                  />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === "/dashboard/overspend"}
+                    >
+                      <Link href="/dashboard/overspend">
+                        <span>Periodo Actual</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === "/dashboard/overspend/all-periods"}
+                    >
+                      <Link href="/dashboard/overspend/all-periods">
+                        <span>Todos los Periodos</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </Collapsible>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive("/setup")}>

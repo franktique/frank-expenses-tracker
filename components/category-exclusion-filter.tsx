@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Check,
   ChevronDown,
@@ -35,45 +35,68 @@ export function CategoryExclusionFilter({
   className,
 }: CategoryExclusionFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [tempExcludedCategories, setTempExcludedCategories] = useState<string[]>(excludedCategories);
+
+  // Sync temp state with actual excluded categories when popover opens
+  useEffect(() => {
+    if (isOpen) {
+      setTempExcludedCategories(excludedCategories);
+    }
+  }, [isOpen, excludedCategories]);
 
   // Sort categories alphabetically by name
   const sortedCategories = [...categories].sort((a, b) =>
     a.name.localeCompare(b.name)
   );
 
-  // Check if all categories are excluded
-  const isAllExcluded = excludedCategories.length === categories.length;
+  // Check if all categories are excluded (in temp state)
+  const isAllExcluded = tempExcludedCategories.length === categories.length;
 
-  // Check if some (but not all) categories are excluded
-  const isIndeterminate = excludedCategories.length > 0 && !isAllExcluded;
+  // Check if some (but not all) categories are excluded (in temp state)
+  const isIndeterminate = tempExcludedCategories.length > 0 && !isAllExcluded;
+
+  // Check if there are unsaved changes
+  const hasChanges = JSON.stringify(tempExcludedCategories.sort()) !== JSON.stringify(excludedCategories.sort());
 
   // Handle "Exclude All" toggle
   const handleExcludeAll = () => {
     if (isAllExcluded) {
       // Include all (exclude none)
-      onExclusionChange([]);
+      setTempExcludedCategories([]);
     } else {
       // Exclude all
-      onExclusionChange(categories.map((c) => c.id));
+      setTempExcludedCategories(categories.map((c) => c.id));
     }
   };
 
-  // Handle individual category exclusion
+  // Handle individual category exclusion (update temp state only)
   const handleCategoryToggle = (categoryId: string) => {
-    const isExcluded = excludedCategories.includes(categoryId);
+    const isExcluded = tempExcludedCategories.includes(categoryId);
 
     if (isExcluded) {
       // Include this category (remove from exclusion)
-      onExclusionChange(excludedCategories.filter((id) => id !== categoryId));
+      setTempExcludedCategories(tempExcludedCategories.filter((id) => id !== categoryId));
     } else {
       // Exclude this category (add to exclusion)
-      onExclusionChange([...excludedCategories, categoryId]);
+      setTempExcludedCategories([...tempExcludedCategories, categoryId]);
     }
   };
 
-  // Clear all exclusions
+  // Apply changes and close popover
+  const handleApply = () => {
+    onExclusionChange(tempExcludedCategories);
+    setIsOpen(false);
+  };
+
+  // Clear all exclusions (in temp state)
   const handleClearAll = () => {
-    onExclusionChange([]);
+    setTempExcludedCategories([]);
+  };
+
+  // Cancel and revert temp state
+  const handleCancel = () => {
+    setTempExcludedCategories(excludedCategories);
+    setIsOpen(false);
   };
 
   // Get display text for the trigger button
@@ -169,7 +192,7 @@ export function CategoryExclusionFilter({
               </div>
             ) : (
               sortedCategories.map((category) => {
-                const isExcluded = excludedCategories.includes(category.id);
+                const isExcluded = tempExcludedCategories.includes(category.id);
 
                 return (
                   <div
@@ -196,14 +219,14 @@ export function CategoryExclusionFilter({
             )}
           </div>
 
-          {/* Footer with exclusion count */}
+          {/* Footer with exclusion count and action buttons */}
           {sortedCategories.length > 0 && (
             <>
               <div className="h-px bg-border my-1" />
               <div className="px-2 py-1 text-xs text-muted-foreground">
-                {excludedCategories.length} de {categories.length} excluidas
+                {tempExcludedCategories.length} de {categories.length} excluidas
               </div>
-              {excludedCategories.length > 0 && (
+              {tempExcludedCategories.length > 0 && (
                 <div className="px-2 py-1">
                   <Button
                     variant="ghost"
@@ -215,6 +238,27 @@ export function CategoryExclusionFilter({
                   </Button>
                 </div>
               )}
+              {/* Action buttons */}
+              <div className="h-px bg-border my-1" />
+              <div className="flex gap-2 px-2 py-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCancel}
+                  className="flex-1 h-7 text-xs"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleApply}
+                  disabled={!hasChanges}
+                  className="flex-1 h-7 text-xs"
+                >
+                  Aplicar
+                </Button>
+              </div>
             </>
           )}
         </div>

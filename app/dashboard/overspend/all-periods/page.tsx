@@ -171,6 +171,15 @@ export default function AllPeriodsOverspendDashboard() {
     );
   }, [selectedPeriod]);
 
+  // Prepare chart data
+  const chartData = useMemo(() => {
+    return periodSummaries.map((period) => ({
+      periodId: period.periodId,
+      name: period.periodName,
+      overspend: period.totalOverspend,
+    }));
+  }, [periodSummaries]);
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-96 space-y-4">
@@ -209,15 +218,6 @@ export default function AllPeriodsOverspendDashboard() {
       </div>
     );
   }
-
-  // Prepare chart data
-  const chartData = useMemo(() => {
-    return periodSummaries.map((period) => ({
-      periodId: period.periodId,
-      name: period.periodName,
-      overspend: period.totalOverspend,
-    }));
-  }, [periodSummaries]);
 
   return (
     <div className="space-y-8">

@@ -9,35 +9,41 @@ The Budget Tracker is a sophisticated financial management tool that implements 
 ## Key Features
 
 ### 💰 Fund Management System
+
 - **Multi-Fund Architecture**: Create and manage multiple financial funds with individual balances
 - **Fund Transfers**: Transfer money between funds through expense transactions
 - **Balance Tracking**: Automatic calculation and tracking of fund balances with transaction history
 - **Category-Fund Relationships**: Associate spending categories with specific funds or multiple funds
 
 ### 📊 Budget Planning & Tracking
+
 - **Period-Based Budgeting**: Create budgets for specific time periods (monthly, quarterly, etc.)
 - **Category Budgets**: Set spending limits for different expense categories
 - **Budget vs Actual Analysis**: Compare planned vs actual spending with visual indicators
 - **Overspend Monitoring**: Track and alert when categories exceed budget limits
 
 ### 💳 Expense Management
+
 - **Source Fund Tracking**: Record which fund money comes from for each expense
 - **Category Organization**: Organize expenses into customizable categories
 - **Expense Validation**: Ensure expenses are assigned to appropriate funds
 - **CSV Import/Export**: Bulk import expenses and export financial data
 
 ### 📈 Income Tracking
+
 - **Fund-Specific Income**: Record income directly to specific funds
 - **Period Tracking**: Monitor income across different time periods
 - **Income vs Expense Analysis**: Compare earnings against spending
 
 ### 📋 Advanced Analytics
+
 - **Interactive Charts**: Recharts-powered visualizations for spending patterns
 - **Fund Balance Trends**: Track how fund balances change over time
 - **Category Analysis**: Detailed breakdowns of spending by category
 - **Period Comparisons**: Compare financial performance across different periods
 
 ### 🎯 Groupers & Studies (Agrupadores & Estudios)
+
 - **Expense Grouping**: Create custom groupings of expenses for analysis
 - **Financial Studies**: Conduct detailed financial analysis across different scenarios
 - **Performance Tracking**: Monitor financial goals and targets
@@ -56,6 +62,7 @@ The Budget Tracker is a sophisticated financial management tool that implements 
 ## Core Architecture
 
 ### Fund-Based Financial System
+
 The application's unique selling point is its sophisticated fund management:
 
 - **Default Fund**: "Disponible" fund for general spending
@@ -64,6 +71,7 @@ The application's unique selling point is its sophisticated fund management:
 - **Fund Validation**: Ensures financial integrity across all transactions
 
 ### Database Schema
+
 - **Funds**: Financial pools with initial and current balances
 - **Categories**: Expense categories with fund associations
 - **Periods**: Time-based budgeting periods
@@ -72,7 +80,9 @@ The application's unique selling point is its sophisticated fund management:
 - **Budgets**: Spending limits per category and period
 
 ### API Architecture
+
 RESTful API endpoints with specialized fund management:
+
 - Category-fund relationship management
 - Fund balance recalculation
 - Expense validation and fund assignment
@@ -81,36 +91,42 @@ RESTful API endpoints with specialized fund management:
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+ 
+
+- Node.js 18+
 - PostgreSQL database (Neon recommended)
 - npm or pnpm package manager
 
 ### Installation
 
 1. Clone the repository
+
 ```bash
 git clone <repository-url>
 cd budget-tracker
 ```
 
 2. Install dependencies
+
 ```bash
 npm install
 ```
 
 3. Set up environment variables
+
 ```bash
 # Copy and configure your database connection
 cp .env.example .env.local
 ```
 
 4. Initialize the database
+
 ```bash
 npm run dev
 # Navigate to /api/setup-db to initialize schema
 ```
 
 5. Start the development server
+
 ```bash
 npm run dev
 ```
@@ -128,41 +144,49 @@ npm run dev
 ## Key Pages & Features
 
 ### Dashboard (`/dashboard`)
+
 - Overview of all financial data
 - Fund balance summaries
 - Spending trends and analytics
 - Quick access to common actions
 
 ### Funds (`/fondos`)
+
 - Create and manage financial funds
 - View fund balances and transaction history
 - Transfer money between funds
 
 ### Expenses (`/gastos`)
+
 - Add and categorize expenses
 - Assign expenses to source funds
 - Import expenses via CSV
 
 ### Income (`/ingresos`)
+
 - Record income by fund
 - Track income trends over time
 
 ### Categories (`/categorias`)
+
 - Manage expense categories
 - Configure category-fund relationships
 
 ### Budgets (`/presupuestos`)
+
 - Set spending limits by category
 - Monitor budget performance
 - Compare across periods
 
 ### Periods (`/periodos`)
+
 - Manage budgeting time periods
 - Open/close periods for data integrity
 
 ## Database Migrations
 
 The application includes comprehensive migration system:
+
 - `/api/migrate-fondos` - Initialize fund system
 - `/api/migrate-category-fund-relationships` - Set up category-fund mapping
 - `/api/migrate-expense-source-funds` - Add source fund tracking to expenses

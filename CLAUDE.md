@@ -428,3 +428,105 @@ The **Simulation Sub-Groups Drag & Drop Reordering** feature allows users to reo
 - Order is not stored in database (stored only in localStorage)
 - Clearing browser data will reset order to default
 - Uncategorized categories reordering is not yet implemented
+
+#### Simulation Budget - Visibility Toggle
+The **Visibility Toggle** feature allows users to hide specific sub-groups and categories in the budget simulation form, with hidden items automatically excluded from balance calculations and displayed with strikethrough text styling.
+
+**Features**:
+- **Eye Icon Toggle**: Eye icon appears on:
+  - Sub-group headers (left side, visible on hover)
+  - Individual category rows (right side, visible on hover)
+- **Visual Feedback**: Hidden items display with:
+  - Strikethrough (line-through) text styling
+  - Reduced opacity (60%) for visual de-emphasis
+- **Smart Calculations**: Hidden items are automatically excluded from:
+  - Sub-group subtotals
+  - Running balance calculations
+  - Total budget calculations
+- **Hierarchy Awareness**:
+  - Hiding a sub-group hides all its contained categories
+  - Individual categories can be hidden independently within expanded sub-groups
+  - Parent sub-group visibility is respected when calculating category visibility
+- **Persistence**: Visibility state saved to browser localStorage with key format:
+  - `simulation_${simulationId}_visibility_state`
+  - Persists across browser sessions and page reloads
+
+**State Management**:
+- `visibilityState`: `Record<string | number, boolean>` - Maps item IDs to visibility state
+  - Default: items visible (true) unless explicitly hidden in state
+  - Stores both subgroup IDs and category IDs
+- Initialized from localStorage on component mount
+- Auto-saves to localStorage whenever state changes
+
+**Visibility Logic**:
+- **Sub-group Visibility**: Direct visibility state
+  - Item hidden if `visibilityState[subgroupId] === false`
+- **Category Visibility**: Considers both item and parent sub-group
+  - Item hidden if own visibility is false OR parent subgroup is hidden
+  - Uses `isCategoryVisible(categoryId, parentSubgroupId, visibilityState)` utility
+
+**Component Updates**:
+- `SubgroupHeaderRow` - Added `isVisible` prop and `onToggleVisibility` callback
+  - Eye/EyeOff icon button with purple hover color
+  - Button hidden during add-category mode
+  - Icon shows on hover with smooth opacity transition
+- `SubgroupSubtotalRow` - Added `isSubgroupVisible` prop
+  - Displays strikethrough styling when parent subgroup is hidden
+- Category rows - Added visibility toggle button in last cell
+  - Eye/EyeOff icon button with purple hover color
+  - Updates when category is hidden
+
+**Utilities** (`/lib/visibility-calculation-utils.ts`):
+- `isItemVisible()` - Check if item is visible (defaults to visible)
+- `isSubgroupVisible()` - Check subgroup visibility
+- `isCategoryVisible()` - Check category visibility (considers parent)
+- `toggleVisibility()` - Toggle visibility state for an item
+- `filterVisibleCategories()` - Get only visible categories from a list
+- `countVisibleCategories()` - Count visible categories (for header display)
+- `saveVisibilityToStorage()` - Persist to localStorage
+- `loadVisibilityFromStorage()` - Load from localStorage
+
+**Calculation Updates**:
+- `categoryBalances` memo updated to skip hidden categories
+  - Uses `isCategoryVisible()` check before including in balance calculation
+  - Excludes net spend from hidden items
+- `subgroupBalances` memo updated to skip hidden categories
+  - Only counts visible categories toward subgroup balance
+- `calculateSubgroupSubtotals()` function accepts optional `visibilityState` parameter
+  - Checks both subgroup and category visibility before summing
+  - Maintains backward compatibility (optional parameter)
+
+**Styling**:
+- Strikethrough: CSS `line-through` class applied to hidden rows
+- Opacity: `opacity-60` applied to hidden rows
+- Eye icon color: Purple hover background (`hover:bg-purple-100 dark:hover:bg-purple-900/20`)
+- Icon size: `h-4 w-4` (consistent with other icons)
+
+**User Interaction Flow**:
+1. User hovers over subgroup header or category row
+2. Eye icon appears with smooth opacity transition
+3. User clicks eye icon to toggle visibility
+4. Item immediately shows strikethrough styling if hidden
+5. Balance calculations update automatically
+6. Visibility state persists to localStorage
+
+**Integration with Existing Features**:
+- **Sub-group Management**: Works with create/edit/delete operations
+  - Visibility independent of sub-group organization
+  - Hidden categories can still be added/removed from sub-groups
+- **Drag & Drop**: Compatible with category and sub-group reordering
+  - Can drag hidden items (visibility doesn't affect dragging)
+  - Dropped items retain their visibility state
+- **Tipo Gasto Sorting**: Visibility independent of sort order
+  - Hidden items stay hidden after sorting
+  - Sort order applies within visible items
+- **Excel Export**: Respects visibility state
+  - Only visible items included in exported data
+- **Auto-Save**: Captures visibility state in saved simulations
+  - Visibility persists independently of other budget changes
+
+**Known Limitations**:
+- Visibility state is browser/device-specific (not synced across devices)
+- Not stored in database (UI-only state in localStorage)
+- Clearing browser localStorage will reset visibility state
+- Visibility is per-simulation (independent tracking for each simulation)

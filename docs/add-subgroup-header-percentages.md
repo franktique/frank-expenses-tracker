@@ -58,23 +58,23 @@ Example for "Bebe Jacobo" sub-group:
 ## Implementation Plan
 
 ### Phase 1: Data Preparation
-- [-] Pass `totalIncome` prop to `SubgroupHeaderRow` component
-- [-] Verify `subtotals` object contains required values (efectivoAmount, creditoAmount, expectedSavings, total)
-- [-] Ensure calculations handle edge cases (division by zero, null values)
+- [x] Pass `totalIncome` prop to `SubgroupHeaderRow` component
+- [x] Verify `subtotals` object contains required values (efectivoAmount, creditoAmount, expectedSavings, total)
+- [x] Ensure calculations handle edge cases (division by zero, null values)
 
 ### Phase 2: UI Implementation
-- [-] Update `SubgroupHeaderRow` component to calculate percentages
-- [-] Modify "Ahorro Esperado" cell to display percentage below value
-- [-] Modify "Total" cell to display percentage below value
-- [-] Add CSS styling for percentage text (smaller font, different color)
-- [-] Ensure percentage text doesn't break table layout
+- [x] Update `SubgroupHeaderRow` component to calculate percentages
+- [x] Modify "Ahorro Esperado" cell to display percentage below value
+- [x] Modify "Total" cell to display percentage below value
+- [x] Add CSS styling for percentage text (smaller font, different color)
+- [x] Ensure percentage text doesn't break table layout
 
 ### Phase 3: Testing & Validation
-- [-] Test with various sub-group configurations
-- [-] Verify percentage calculations are accurate
-- [-] Test with edge cases (0 values, very small/large numbers)
-- [-] Verify visual appearance on different screen sizes
-- [-] Test that percentages update when sub-group data changes
+- [x] Test with various sub-group configurations
+- [x] Verify percentage calculations are accurate
+- [x] Test with edge cases (0 values, very small/large numbers)
+- [x] Verify visual appearance on different screen sizes
+- [x] Test that percentages update when sub-group data changes
 
 ## Technical Details
 
@@ -174,9 +174,66 @@ $ 405.000 (1.09%)
 - Closes: Column alignment issue (previously fixed in fix-subgroup-header-column-alignment.md)
 - Builds upon: SubgroupHeaderRow refactoring
 
+## Implementation Summary
+
+**Status**: ✓ COMPLETED
+
+**Commit**: 038367c
+**Branch**: feature/subgroup-header-percentages
+**PR**: #63
+
+### What Was Built
+
+Percentage indicators now appear next to "Ahorro Esperado" and "Total" values in sub-group headers:
+
+```
+Sub-group Header Example:
+Servicios (4) | - | $ 582.980 | $ 0 | $ 0 (0%) | $ 592.980 (1.60%) | -
+                                             ↑                    ↑
+                                  Ahorro % (of subgroup)   Total % (of income)
+```
+
+### Key Implementation Details
+
+1. **Percentage Calculations**:
+   - Ahorro Esperado %: `(expectedSavings / total) × 100`
+   - Total %: `(subgroupTotal / totalIncome) × 100`
+
+2. **UI Styling**:
+   - Percentages displayed below monetary values
+   - Font size: `text-xs` (smaller than values)
+   - Color: `text-muted-foreground` (muted, less prominent)
+   - Layout: Flex column with right alignment
+
+3. **Edge Case Handling**:
+   - Zero values: Display as "0%"
+   - Very small values (< 0.01%): Display as "< 0.01%"
+   - Normal values: Display with 2 decimal places "XX.XX%"
+
+### Files Modified
+
+1. `components/subgroup-header-row.tsx` (25 lines added)
+   - Added `totalIncome` prop (required)
+   - Added percentage calculation logic
+   - Updated Expected Savings cell with percentage display
+   - Updated Total cell with percentage display
+
+2. `components/simulation-budget-form.tsx` (1 line added)
+   - Pass `totalIncome` prop to SubgroupHeaderRow
+
+### Testing Verification
+
+- [x] Percentages calculate correctly
+- [x] Edge cases handled properly
+- [x] Visual layout doesn't break existing alignment
+- [x] Percentages are readable and properly positioned
+- [x] No console errors or warnings
+- [x] Works across all sub-group configurations
+
 ## Future Enhancements
 
 - [ ] Add option to hide/show percentages (user preference)
 - [ ] Add percentage trend indicators (arrow up/down)
 - [ ] Color code percentages based on budget allocation rules
 - [ ] Export percentages in Excel export feature
+- [ ] Show percentage change from previous period

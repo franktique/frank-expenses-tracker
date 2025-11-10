@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { TableCell, TableRow } from "@/components/ui/table";
-import { ChevronDown, ChevronUp, Trash2, Plus, Check, GripVertical } from "lucide-react";
+import { ChevronDown, ChevronUp, Trash2, Plus, Check, GripVertical, Eye, EyeOff } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import type { Subtotals } from "@/lib/subgroup-calculations";
 
@@ -29,6 +29,8 @@ interface SubgroupHeaderRowProps {
   onDragLeave?: (e: React.DragEvent) => void;
   onDrop?: (e: React.DragEvent, position: "before" | "after") => void;
   onDragEnd?: (e: React.DragEvent) => void;
+  isVisible?: boolean;
+  onToggleVisibility?: (subgroupId: string) => void;
 }
 
 export function SubgroupHeaderRow({
@@ -54,6 +56,8 @@ export function SubgroupHeaderRow({
   onDragLeave,
   onDrop,
   onDragEnd,
+  isVisible = true,
+  onToggleVisibility,
 }: SubgroupHeaderRowProps) {
   const handleDeleteClick = () => {
     if (onDeleteClick) {
@@ -78,6 +82,12 @@ export function SubgroupHeaderRow({
   const handleCancelClick = () => {
     if (onCancelAddingCategories) {
       onCancelAddingCategories(subgroupId);
+    }
+  };
+
+  const handleVisibilityClick = () => {
+    if (onToggleVisibility) {
+      onToggleVisibility(subgroupId);
     }
   };
 
@@ -110,7 +120,9 @@ export function SubgroupHeaderRow({
   return (
     <TableRow
       draggable={!isInAddMode}
-      className={`group bg-accent/50 hover:bg-accent/70 font-medium transition-all ${
+      className={`group font-medium transition-all ${
+        !isVisible ? "bg-gray-200 dark:bg-gray-800 opacity-60 line-through" : "bg-accent/50 hover:bg-accent/70"
+      } ${
         isDragging ? "opacity-50 bg-accent" : ""
       } ${isDragOver ? "bg-blue-50 dark:bg-blue-950" : ""}`}
       data-testid={`subgroup-header-${subgroupId}`}
@@ -230,6 +242,17 @@ export function SubgroupHeaderRow({
           </>
         ) : (
           <>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-purple-100 hover:text-purple-600 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+              onClick={handleVisibilityClick}
+              disabled={isLoading}
+              aria-label={isVisible ? `Hide sub-group ${subgroupName}` : `Show sub-group ${subgroupName}`}
+              title={isVisible ? "Hide sub-group" : "Show sub-group"}
+            >
+              {isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+            </Button>
             <Button
               variant="ghost"
               size="sm"

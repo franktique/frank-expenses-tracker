@@ -73,3 +73,19 @@ export type DeleteSubgroupResponse = {
   error?: string;
   statusCode: number;
 };
+
+/**
+ * VisibilityState - Tracks which items are visible (true) or hidden (false)
+ * Key format: subgroup ID or category ID (can be string UUID or number)
+ */
+export type VisibilityState = Record<string, boolean>;
+
+/**
+ * VisibilityToggleItem - Represents an item that can be toggled for visibility
+ * Used for subgroups and categories within subgroups
+ */
+export type VisibilityToggleItem = {
+  id: string | number; // Item ID (subgroup ID or category ID)
+  type: "subgroup" | "category"; // Type of item being toggled
+  isVisible: boolean; // Current visibility state
+};

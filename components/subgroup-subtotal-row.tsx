@@ -8,16 +8,20 @@ interface SubgroupSubtotalRowProps {
   subgroupId: string;
   subtotals: Subtotals;
   subgroupBalance: number;
+  isSubgroupVisible?: boolean;
 }
 
 export function SubgroupSubtotalRow({
   subgroupId,
   subtotals,
   subgroupBalance,
+  isSubgroupVisible = true,
 }: SubgroupSubtotalRowProps) {
   return (
     <TableRow
-      className="bg-muted/30 border-y border-dashed font-medium text-sm"
+      className={`bg-muted/30 border-y border-dashed font-medium text-sm ${
+        !isSubgroupVisible ? "opacity-60 line-through" : ""
+      }`}
       data-testid={`subgroup-subtotal-${subgroupId}`}
     >
       {/* Empty cell for expand/collapse */}

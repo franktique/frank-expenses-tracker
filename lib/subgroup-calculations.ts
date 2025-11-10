@@ -3,7 +3,7 @@
  * Handles calculations for sub-group subtotals and aggregations
  */
 
-import type { Subgroup } from "@/types/simulation";
+import type { Subgroup, VisibilityState } from "@/types/simulation";
 
 /**
  * Subtotal data structure for display
@@ -28,11 +28,13 @@ export type CategoryBudgetData = {
  * Calculate subtotals for a sub-group
  * @param subgroup - The sub-group to calculate subtotals for
  * @param budgetData - Object mapping category IDs to budget data
+ * @param visibilityState - Optional visibility state to exclude hidden categories
  * @returns Subtotals object with calculated values
  */
 export function calculateSubgroupSubtotals(
   subgroup: Subgroup,
-  budgetData: Record<string, CategoryBudgetData>
+  budgetData: Record<string, CategoryBudgetData>,
+  visibilityState?: VisibilityState
 ): Subtotals {
   let efectivoAmount = 0;
   let creditoAmount = 0;
@@ -42,6 +44,15 @@ export function calculateSubgroupSubtotals(
   for (const categoryId of subgroup.categoryIds) {
     const categoryKey = String(categoryId);
     const data = budgetData[categoryKey];
+
+    // Skip hidden categories if visibility state is provided
+    if (visibilityState) {
+      const isSubgroupVisible = visibilityState[subgroup.id] !== false;
+      const isCategoryVisible = visibilityState[categoryKey] !== false;
+      if (!isSubgroupVisible || !isCategoryVisible) {
+        continue;
+      }
+    }
 
     if (data) {
       const efectivo = parseFloat(String(data.efectivo_amount)) || 0;

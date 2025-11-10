@@ -27,8 +27,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, Save, Calculator, AlertCircle, Download, ArrowUpDown, GripVertical, Filter, X, Trash2, ChevronDown, ChevronUp } from "lucide-react";
-import type { Subgroup } from "@/types/simulation";
+import { Loader2, Save, Calculator, AlertCircle, Download, ArrowUpDown, GripVertical, Filter, X, Trash2, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
+import type { Subgroup, VisibilityState } from "@/types/simulation";
 import { exportSimulationToExcel } from "@/lib/excel-export-utils";
 import {
   validateBudgetAmountInput,
@@ -47,6 +47,14 @@ import { SubgroupSubtotalRow } from "@/components/subgroup-subtotal-row";
 import { organizeTableRowsWithSubgroups, shouldShowRow, getSubgroupForCategory } from "@/lib/subgroup-table-utils";
 import { calculateSubgroupSubtotals, getSubgroupCategoryCount } from "@/lib/subgroup-calculations";
 import { reorganizeTableRowsWithSubgroupOrder, initializeSubgroupOrder, cleanupSubgroupOrder } from "@/lib/subgroup-reordering-utils";
+import {
+  toggleVisibility,
+  loadVisibilityFromStorage,
+  saveVisibilityToStorage,
+  isSubgroupVisible,
+  isCategoryVisible,
+  filterVisibleCategories
+} from "@/lib/visibility-calculation-utils";
 
 // Types
 type Category = {
@@ -165,6 +173,9 @@ export function SimulationBudgetForm({
     draggedItemType: null,
     dropZoneIndex: null,
   });
+
+  // Visibility state management
+  const [visibilityState, setVisibilityState] = useState<VisibilityState>({});
 
   // Load categories and existing budget data
   useEffect(() => {
@@ -417,6 +428,22 @@ export function SimulationBudgetForm({
       }
     }
   }, [subgroupOrder, simulationId]);
+
+  // Load visibility state from localStorage on mount
+  useEffect(() => {
+    const savedVisibility = loadVisibilityFromStorage(simulationId);
+    setVisibilityState(savedVisibility);
+  }, [simulationId]);
+
+  // Save visibility state to localStorage whenever it changes
+  useEffect(() => {
+    saveVisibilityToStorage(simulationId, visibilityState);
+  }, [visibilityState, simulationId]);
+
+  // Helper function to toggle visibility for a subgroup or category
+  const handleToggleVisibility = useCallback((itemId: string | number) => {
+    setVisibilityState((prev) => toggleVisibility(prev, itemId));
+  }, []);
 
   // Helper function to toggle subgroup expansion
   const toggleSubgroupExpanded = useCallback((subgroupId: string) => {
@@ -1106,6 +1133,17 @@ export function SimulationBudgetForm({
     return sorted;
   }, [categories, sortField, sortDirection, tipoGastoSortState, categoryOrder, hideEmptyCategories, excludedCategoryIds, budgetData]);
 
+  // Helper function to find which sub-group a category belongs to
+  // Moved before categoryBalances memo to avoid reference error
+  const getSubgroupForCategory = (
+    subgroupsList: Subgroup[],
+    categoryId: string | number
+  ): Subgroup | undefined => {
+    return subgroupsList.find((sg) =>
+      sg.categoryIds.some((cid) => String(cid) === String(categoryId))
+    );
+  };
+
   // Calculate balances for each category respecting sub-group order
   const categoryBalances = useMemo(() => {
     const balances = new Map<string, number>();
@@ -1147,12 +1185,16 @@ export function SimulationBudgetForm({
       displayOrder = getSortedCategories.map((c) => c.id);
     }
 
-    // Calculate balances in display order
+    // Calculate balances in display order, excluding hidden items
     displayOrder.forEach((categoryId) => {
       const category = getSortedCategories.find((c) => c.id === categoryId);
       if (category) {
+        // Check if category is visible (considering parent subgroup visibility)
+        const parentSubgroupId = getSubgroupForCategory(subgroups, category.id)?.id;
+        const isVisible = isCategoryVisible(category.id, parentSubgroupId, visibilityState);
+
         const categoryData = budgetData[String(category.id)];
-        if (categoryData) {
+        if (categoryData && isVisible) {
           // Calculate net spend: Efectivo - Expected Savings
           const efectivoAmount = parseFloat(categoryData.efectivo_amount) || 0;
           const expectedSavings = parseFloat(categoryData.expected_savings) || 0;
@@ -1168,7 +1210,7 @@ export function SimulationBudgetForm({
     });
 
     return balances;
-  }, [budgetData, getSortedCategories, totalIncome, subgroups, subgroupOrder]);
+  }, [budgetData, getSortedCategories, totalIncome, subgroups, subgroupOrder, visibilityState]);
 
   // Calculate balance after each sub-group (for display in subtotal rows)
   const subgroupBalances = useMemo(() => {
@@ -1225,8 +1267,12 @@ export function SimulationBudgetForm({
 
       const category = getSortedCategories.find((c) => c.id === categoryId);
       if (category) {
+        // Check if category is visible (considering parent subgroup visibility)
+        const parentSubgroupId = getSubgroupForCategory(subgroups, category.id)?.id;
+        const isVisible = isCategoryVisible(category.id, parentSubgroupId, visibilityState);
+
         const categoryData = budgetData[String(category.id)];
-        if (categoryData) {
+        if (categoryData && isVisible) {
           // Calculate net spend: Efectivo - Expected Savings
           const efectivoAmount = parseFloat(categoryData.efectivo_amount) || 0;
           const expectedSavings = parseFloat(categoryData.expected_savings) || 0;
@@ -1244,7 +1290,7 @@ export function SimulationBudgetForm({
     });
 
     return balances;
-  }, [budgetData, getSortedCategories, totalIncome, subgroups, subgroupOrder]);
+  }, [budgetData, getSortedCategories, totalIncome, subgroups, subgroupOrder, visibilityState]);
 
   // Helper function to get uncategorized categories (not in any sub-group)
   const getUncategorizedCategories = useCallback((): Category[] => {
@@ -1258,16 +1304,6 @@ export function SimulationBudgetForm({
       (c) => !categorizedCategoryIds.has(c.id)
     );
   }, [subgroups, getSortedCategories]);
-
-  // Helper function to find which sub-group a category belongs to
-  const getSubgroupForCategory = (
-    subgroupsList: Subgroup[],
-    categoryId: string | number
-  ): Subgroup | undefined => {
-    return subgroupsList.find((sg) =>
-      sg.categoryIds.some((cid) => String(cid) === String(categoryId))
-    );
-  };
 
   // Get balance color based on value
   const getBalanceColor = (balance: number): string => {
@@ -1987,7 +2023,8 @@ export function SimulationBudgetForm({
 
                       const subtotals = calculateSubgroupSubtotals(
                         subgroup,
-                        budgetData
+                        budgetData,
+                        visibilityState
                       );
 
                       const uncategorizedCount = getUncategorizedCategories().length;
@@ -2023,6 +2060,8 @@ export function SimulationBudgetForm({
                           }}
                           onDrop={(e, position) => handleSubgroupDrop(e, row.subgroupId || null, position)}
                           onDragEnd={handleSubgroupDragEnd}
+                          isVisible={isSubgroupVisible(row.subgroupId!, visibilityState)}
+                          onToggleVisibility={handleToggleVisibility}
                         />
                       );
                     }
@@ -2034,7 +2073,8 @@ export function SimulationBudgetForm({
 
                       const subtotals = calculateSubgroupSubtotals(
                         subgroup,
-                        budgetData
+                        budgetData,
+                        visibilityState
                       );
 
                       const subgroupBalance = subgroupBalances.get(row.subgroupId!) ?? 0;
@@ -2045,6 +2085,7 @@ export function SimulationBudgetForm({
                           subgroupId={row.subgroupId!}
                           subtotals={subtotals}
                           subgroupBalance={subgroupBalance}
+                          isSubgroupVisible={isSubgroupVisible(row.subgroupId!, visibilityState)}
                         />
                       );
                     }
@@ -2062,6 +2103,12 @@ export function SimulationBudgetForm({
 
                       const isBeingAddedToSubgroup = categoriesToAddToSubgroup.includes(
                         String(category.id)
+                      );
+
+                      const isCategoryHidden = !isCategoryVisible(
+                        category.id,
+                        getSubgroupForCategory(subgroups, category.id)?.id,
+                        visibilityState
                       );
 
                       return (
@@ -2094,6 +2141,8 @@ export function SimulationBudgetForm({
                             isBeingAddedToSubgroup
                               ? "bg-blue-50 dark:bg-blue-950"
                               : ""
+                          } ${
+                            isCategoryHidden ? "opacity-60 line-through" : ""
                           }`}
                         >
                           <TableCell className="font-medium w-8 pl-2">
@@ -2311,7 +2360,19 @@ export function SimulationBudgetForm({
                               )}
                             </span>
                           </TableCell>
-                          <TableCell className="w-8 pl-2"></TableCell>
+                          <TableCell className="w-8 pl-2 flex items-center justify-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-purple-100 hover:text-purple-600 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+                              onClick={() => handleToggleVisibility(category.id)}
+                              disabled={isSaving || isAutoSaving}
+                              aria-label={isCategoryHidden ? `Show ${category.name}` : `Hide ${category.name}`}
+                              title={isCategoryHidden ? "Show category" : "Hide category"}
+                            >
+                              {isCategoryHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            </Button>
+                          </TableCell>
                         </TableRow>
                       );
                     }

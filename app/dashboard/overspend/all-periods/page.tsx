@@ -62,10 +62,13 @@ export default function AllPeriodsOverspendDashboard() {
 
   // Load excluded categories from localStorage on mount
   useEffect(() => {
+    if (typeof window === "undefined") return; // Skip on server-side rendering
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
-        setExcludedCategories(JSON.parse(stored));
+        const parsed = JSON.parse(stored);
+        console.log("Loaded excluded categories from localStorage:", parsed);
+        setExcludedCategories(parsed);
       }
     } catch (error) {
       console.warn("Failed to load excluded categories from localStorage:", error);
@@ -74,7 +77,9 @@ export default function AllPeriodsOverspendDashboard() {
 
   // Save excluded categories to localStorage whenever they change
   useEffect(() => {
+    if (typeof window === "undefined") return; // Skip on server-side rendering
     try {
+      console.log("Saving excluded categories to localStorage:", excludedCategories);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(excludedCategories));
     } catch (error) {
       console.warn("Failed to save excluded categories to localStorage:", error);

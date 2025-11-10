@@ -548,19 +548,25 @@ The **Overspend Actual** dashboard provides two views for analyzing spending ove
 - Categories sorted by overspend amount (highest to lowest)
 
 **All Periods View** (`/dashboard/overspend/all-periods`):
-- Aggregates overspend data across all available periods
-- Multiple visualization options:
-  - **Bar Chart**: Total overspend per category across all periods
-  - **Trend Line Chart**: Shows overspend trend over time with three metrics:
-    - Total Planeado (blue line) - Total budgeted across all periods
-    - Total Gastado (red line) - Total spent across all periods
-    - Total Overspend (orange dashed line) - Total overspend trend
-  - **Summary Table**: Detailed breakdown with:
-    - Category name
-    - Total planned vs actual amounts
-    - Total overspend amount and percentage
-- Same filtering options as current period view
-- KPI cards show aggregate totals across all periods
+- Aggregates overspend data across all available periods in an intuitive timeline interface
+- **Period Cards Timeline**:
+  - Grid of clickable period cards showing overspend values
+  - Each card displays:
+    - Period name
+    - Total overspend amount (red/green color coded)
+    - Total planned and spent amounts
+  - Cards sorted by newest periods first (year and month)
+  - Selected period highlighted with blue border
+  - Responsive grid (1-4 columns depending on screen size)
+- **Detail Breakdown Table**:
+  - Shows when a period is selected
+  - Displays all categories with overspend for that period
+  - Includes columns for planned, spent, overspend, and percentage
+  - Categories sorted by overspend amount (highest first)
+  - Rows highlighted if category has overspend
+- Same filtering options as current period view:
+  - Payment method filtering (Todos, Efectivo/Débito, Tarjeta Crédito)
+  - Category exclusion filtering via Settings button
 - Loading and error states for data fetching
 
 **API Endpoint**:
@@ -586,9 +592,18 @@ The **Overspend Actual** dashboard provides two views for analyzing spending ove
 
 **User Flow - All Periods View**:
 1. Navigate to "Overspend Actual" → "Todos los Periodos" in sidebar
-2. Data loads with all categories and all available periods
-3. Use payment method dropdown to filter by payment type
-4. Click "Filtros" button to show category exclusion filter
-5. Select categories to exclude from calculations
-6. View bar chart, trend line, and summary table
-7. Charts and table automatically update as filters change
+2. Page loads showing a grid of period cards with overspend values
+3. Each period card displays:
+   - Period name
+   - Total overspend amount in large font (red if overspent, green if under budget)
+   - Summary of planned vs spent amounts
+4. Click on any period card to select it and view details
+5. Selected period shows:
+   - Period card highlighted with blue border
+   - Detailed breakdown table below showing all categories
+   - Categories sorted by highest overspend first
+6. Use payment method dropdown to filter data by payment type (affects all periods)
+7. Click "Filtros" button to show category exclusion filter
+8. Select categories to exclude from calculations
+9. Period cards and detail table automatically update as filters change
+10. Click on a different period to switch detailed view

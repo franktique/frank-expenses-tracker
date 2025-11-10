@@ -59,6 +59,7 @@ export default function AllPeriodsOverspendDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
+  const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
 
   // Load excluded categories from localStorage on mount
   useEffect(() => {
@@ -67,24 +68,27 @@ export default function AllPeriodsOverspendDashboard() {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        console.log("Loaded excluded categories from localStorage:", parsed);
+        console.log("📂 Loaded excluded categories from localStorage:", parsed);
         setExcludedCategories(parsed);
       }
+      setHasLoadedFromStorage(true);
     } catch (error) {
       console.warn("Failed to load excluded categories from localStorage:", error);
+      setHasLoadedFromStorage(true);
     }
   }, []);
 
-  // Save excluded categories to localStorage whenever they change
+  // Save excluded categories to localStorage whenever they change (but not during initial load)
   useEffect(() => {
     if (typeof window === "undefined") return; // Skip on server-side rendering
+    if (!hasLoadedFromStorage) return; // Don't save until we've attempted to load
     try {
-      console.log("Saving excluded categories to localStorage:", excludedCategories);
+      console.log("💾 Saving excluded categories to localStorage:", excludedCategories);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(excludedCategories));
     } catch (error) {
       console.warn("Failed to save excluded categories to localStorage:", error);
     }
-  }, [excludedCategories]);
+  }, [excludedCategories, hasLoadedFromStorage]);
 
   // Fetch all-periods overspend data
   useEffect(() => {

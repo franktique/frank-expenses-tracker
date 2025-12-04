@@ -669,3 +669,28 @@ export interface AllPeriodsOverspendResponse {
     };
   };
 }
+
+// Projected Budget Execution types
+export interface BudgetExecutionData {
+  date: string; // YYYY-MM-DD for daily view
+  amount: number; // Total budget for this date
+  weekNumber?: number; // Week number (1-53) for weekly view
+  weekStart?: string; // Start date of week (YYYY-MM-DD)
+  weekEnd?: string; // End date of week (YYYY-MM-DD)
+  dayOfWeek?: number; // 0-6 (for display purposes)
+}
+
+export type BudgetExecutionViewMode = "daily" | "weekly";
+
+export interface BudgetExecutionResponse {
+  periodId: string;
+  periodName: string;
+  viewMode: BudgetExecutionViewMode;
+  data: BudgetExecutionData[];
+  summary: {
+    totalBudget: number;
+    averagePerDay: number;
+    peakDate: string;
+    peakAmount: number;
+  };
+}

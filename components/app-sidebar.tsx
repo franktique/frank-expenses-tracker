@@ -262,6 +262,17 @@ export function AppSidebar() {
             </Collapsible>
           </SidebarMenuItem>
           <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive("/dashboard/projected-execution")}
+            >
+              <Link href="/dashboard/projected-execution">
+                <TrendingUp className="h-4 w-4" />
+                <span>Ejecución Proyectada</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
             <SidebarMenuButton asChild isActive={isActive("/setup")}>
               <Link href="/setup">
                 <Database className="h-4 w-4" />

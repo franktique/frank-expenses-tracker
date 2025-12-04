@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { UpdateCategorySchema, DEFAULT_FUND_NAME } from "@/types/funds";
+import { updateBudgetDefaultDatesForCategory } from "@/lib/category-budget-sync";
 
 export async function GET(
   request: NextRequest,
@@ -73,7 +74,7 @@ export async function PUT(
       );
     }
 
-    const { name, fund_id, fund_ids, tipo_gasto } = validationResult.data;
+    const { name, fund_id, fund_ids, tipo_gasto, default_day } = validationResult.data;
 
     // Check if category exists
     const [existingCategory] =
@@ -211,10 +212,60 @@ export async function PUT(
     // Build update query based on provided fields
     let updatedCategory;
 
-    if (name !== undefined && fund_id !== undefined && tipo_gasto !== undefined) {
+    // Handle updates by building multiple conditional queries
+    if (
+      name !== undefined &&
+      fund_id !== undefined &&
+      tipo_gasto !== undefined &&
+      default_day !== undefined
+    ) {
+      [updatedCategory] = await sql`
+        UPDATE categories
+        SET name = ${name}, fund_id = ${validationResult.data.fund_id}, tipo_gasto = ${tipo_gasto}, default_day = ${default_day}
+        WHERE id = ${id}
+        RETURNING *
+      `;
+    } else if (
+      name !== undefined &&
+      fund_id !== undefined &&
+      tipo_gasto !== undefined
+    ) {
       [updatedCategory] = await sql`
         UPDATE categories
         SET name = ${name}, fund_id = ${validationResult.data.fund_id}, tipo_gasto = ${tipo_gasto}
+        WHERE id = ${id}
+        RETURNING *
+      `;
+    } else if (
+      name !== undefined &&
+      fund_id !== undefined &&
+      default_day !== undefined
+    ) {
+      [updatedCategory] = await sql`
+        UPDATE categories
+        SET name = ${name}, fund_id = ${validationResult.data.fund_id}, default_day = ${default_day}
+        WHERE id = ${id}
+        RETURNING *
+      `;
+    } else if (
+      name !== undefined &&
+      tipo_gasto !== undefined &&
+      default_day !== undefined
+    ) {
+      [updatedCategory] = await sql`
+        UPDATE categories
+        SET name = ${name}, tipo_gasto = ${tipo_gasto}, default_day = ${default_day}
+        WHERE id = ${id}
+        RETURNING *
+      `;
+    } else if (
+      fund_id !== undefined &&
+      tipo_gasto !== undefined &&
+      default_day !== undefined
+    ) {
+      [updatedCategory] = await sql`
+        UPDATE categories
+        SET fund_id = ${validationResult.data.fund_id}, tipo_gasto = ${tipo_gasto}, default_day = ${default_day}
         WHERE id = ${id}
         RETURNING *
       `;
@@ -232,10 +283,31 @@ export async function PUT(
         WHERE id = ${id}
         RETURNING *
       `;
+    } else if (name !== undefined && default_day !== undefined) {
+      [updatedCategory] = await sql`
+        UPDATE categories
+        SET name = ${name}, default_day = ${default_day}
+        WHERE id = ${id}
+        RETURNING *
+      `;
     } else if (fund_id !== undefined && tipo_gasto !== undefined) {
       [updatedCategory] = await sql`
         UPDATE categories
         SET fund_id = ${validationResult.data.fund_id}, tipo_gasto = ${tipo_gasto}
+        WHERE id = ${id}
+        RETURNING *
+      `;
+    } else if (fund_id !== undefined && default_day !== undefined) {
+      [updatedCategory] = await sql`
+        UPDATE categories
+        SET fund_id = ${validationResult.data.fund_id}, default_day = ${default_day}
+        WHERE id = ${id}
+        RETURNING *
+      `;
+    } else if (tipo_gasto !== undefined && default_day !== undefined) {
+      [updatedCategory] = await sql`
+        UPDATE categories
+        SET tipo_gasto = ${tipo_gasto}, default_day = ${default_day}
         WHERE id = ${id}
         RETURNING *
       `;
@@ -257,6 +329,13 @@ export async function PUT(
       [updatedCategory] = await sql`
         UPDATE categories
         SET tipo_gasto = ${tipo_gasto}
+        WHERE id = ${id}
+        RETURNING *
+      `;
+    } else if (default_day !== undefined) {
+      [updatedCategory] = await sql`
+        UPDATE categories
+        SET default_day = ${default_day}
         WHERE id = ${id}
         RETURNING *
       `;
@@ -308,9 +387,16 @@ export async function PUT(
       ORDER BY f.name
     `;
 
+    // If default_day was updated, sync all related budget default_dates
+    if (default_day !== undefined) {
+      const syncResult = await updateBudgetDefaultDatesForCategory(id, default_day);
+      console.log(`Budget sync result: ${syncResult.message}`);
+    }
+
     const enhancedCategory = {
       ...categoryWithFund,
       associated_funds: associatedFunds,
+      budgets_updated: default_day !== undefined ? true : undefined,
     };
 
     return NextResponse.json(enhancedCategory);

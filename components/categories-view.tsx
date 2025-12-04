@@ -76,6 +76,8 @@ export function CategoriesView() {
   const [editCategory, setEditCategory] = useState<Category | null>(null);
   const [editCategoryFunds, setEditCategoryFunds] = useState<Fund[]>([]);
   const [editCategoryTipoGasto, setEditCategoryTipoGasto] = useState<TipoGasto>();
+  const [editCategoryDefaultDay, setEditCategoryDefaultDay] = useState<number | null>(null);
+  const [newCategoryDefaultDay, setNewCategoryDefaultDay] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteValidation, setDeleteValidation] = useState<{
     hasExpenses: boolean;
@@ -291,13 +293,17 @@ export function CategoriesView() {
     loadingState.setLoading("editCategory", true, "Actualizando categoría...");
 
     try {
-      // Build update payload with all fields including tipo_gasto
+      // Build update payload with all fields including tipo_gasto and default_day
       const updatePayload: any = {
         name: editCategory.name,
       };
 
       if (editCategoryTipoGasto !== undefined) {
         updatePayload.tipo_gasto = editCategoryTipoGasto;
+      }
+
+      if (editCategoryDefaultDay !== undefined) {
+        updatePayload.default_day = editCategoryDefaultDay;
       }
 
       // Update category using API call
@@ -322,6 +328,7 @@ export function CategoriesView() {
       setEditCategory(null);
       setEditCategoryFunds([]);
       setEditCategoryTipoGasto(undefined);
+      setEditCategoryDefaultDay(null);
       setIsEditOpen(false);
 
       // Show success toast
@@ -415,6 +422,8 @@ export function CategoriesView() {
     }
     // Set tipo_gasto
     setEditCategoryTipoGasto(category.tipo_gasto);
+    // Set default_day
+    setEditCategoryDefaultDay(category.default_day || null);
     setIsEditOpen(true);
   };
 
@@ -528,6 +537,7 @@ export function CategoriesView() {
                 <TableHead>Nombre</TableHead>
                 <TableHead>Fondo</TableHead>
                 <TableHead>Tipo Gasto</TableHead>
+                <TableHead>Día por Defecto</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
@@ -554,6 +564,13 @@ export function CategoriesView() {
                     <TableCell>
                       <TipoGastoBadge tipoGasto={category.tipo_gasto} />
                     </TableCell>
+                    <TableCell>
+                      {category.default_day ? (
+                        <span className="text-sm font-medium">{category.default_day}</span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">-</span>
+                      )}
+                    </TableCell>
                     <TableCell className="text-right">
                       <Button
                         variant="ghost"
@@ -579,7 +596,7 @@ export function CategoriesView() {
               {(!filteredCategories || filteredCategories.length === 0) && (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={5}
                     className="text-center py-4 text-muted-foreground"
                   >
                     {fundFilter
@@ -633,6 +650,31 @@ export function CategoriesView() {
                 placeholder="Selecciona el tipo de gasto"
               />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-default-day">Día por Defecto (opcional)</Label>
+              <Input
+                id="edit-default-day"
+                type="number"
+                min="1"
+                max="31"
+                placeholder="Ej: 15"
+                value={editCategoryDefaultDay || ""}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === "") {
+                    setEditCategoryDefaultDay(null);
+                  } else {
+                    const numValue = parseInt(value, 10);
+                    if (!isNaN(numValue) && numValue >= 1 && numValue <= 31) {
+                      setEditCategoryDefaultDay(numValue);
+                    }
+                  }
+                }}
+              />
+              <p className="text-xs text-muted-foreground">
+                Especifica el día preferido del mes (1-31) para los gastos de esta categoría
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -642,6 +684,7 @@ export function CategoriesView() {
                 setEditCategory(null);
                 setEditCategoryFunds([]);
                 setEditCategoryTipoGasto(undefined);
+                setEditCategoryDefaultDay(null);
               }}
               disabled={loadingState.isLoading("editCategory")}
             >

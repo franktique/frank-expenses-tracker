@@ -128,6 +128,7 @@ export interface Category {
   fund_name?: string; // Populated in joins
   associated_funds?: Fund[]; // New field for multiple fund relationships
   tipo_gasto?: TipoGasto; // Expense type: F (Fijo), V (Variable), SF (Semi Fijo)
+  default_day?: number | null; // Preferred day of month for category expenses (1-31)
 }
 
 // Category-Fund relationship interface
@@ -173,6 +174,13 @@ export const CreateCategorySchema = z.object({
       }),
     })
     .optional(),
+  default_day: z
+    .number()
+    .int("El día debe ser un número entero")
+    .min(1, "El día debe estar entre 1 y 31")
+    .max(31, "El día debe estar entre 1 y 31")
+    .nullable()
+    .optional(), // Preferred day of month (1-31)
 });
 
 // Category update schema
@@ -192,6 +200,13 @@ export const UpdateCategorySchema = z.object({
       }),
     })
     .optional(),
+  default_day: z
+    .number()
+    .int("El día debe ser un número entero")
+    .min(1, "El día debe estar entre 1 y 31")
+    .max(31, "El día debe estar entre 1 y 31")
+    .nullable()
+    .optional(), // Preferred day of month (1-31)
 });
 
 // Category-Fund relationship schemas
@@ -376,6 +391,7 @@ export interface Budget {
   period_id: string;
   expected_amount: number;
   payment_method: PaymentMethod;
+  default_date?: Date | string | null; // Calculated date based on category default_day
 }
 
 export const BudgetSchema = z.object({
@@ -384,6 +400,11 @@ export const BudgetSchema = z.object({
   period_id: z.string().uuid(),
   expected_amount: z.number().min(0, "El monto esperado no puede ser negativo"),
   payment_method: PaymentMethodEnum,
+  default_date: z
+    .string()
+    .refine((date) => !isNaN(Date.parse(date)), "Fecha inválida")
+    .nullable()
+    .optional(), // Calculated date based on category default_day
 });
 
 // Fund balance calculation types

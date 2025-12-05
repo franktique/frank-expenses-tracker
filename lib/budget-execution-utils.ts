@@ -55,12 +55,39 @@ export function formatChartData(
 ) {
   return data.map((item) => {
     if (viewMode === "daily") {
-      const date = parseISO(item.date);
-      return {
-        ...item,
-        displayDate: format(date, "dd/MM", { locale: es }),
-        fullDate: format(date, "dd 'de' MMMM 'de' yyyy", { locale: es }),
-      };
+      // Validate that date is in proper format (YYYY-MM-DD)
+      // If it's a weekly format (week-X), skip it
+      if (item.date.startsWith("week-")) {
+        return {
+          ...item,
+          displayDate: item.date,
+          fullDate: item.date,
+        };
+      }
+
+      try {
+        const date = parseISO(item.date);
+        // Check if date is valid
+        if (isNaN(date.getTime())) {
+          return {
+            ...item,
+            displayDate: item.date,
+            fullDate: item.date,
+          };
+        }
+        return {
+          ...item,
+          displayDate: format(date, "dd/MM", { locale: es }),
+          fullDate: format(date, "dd 'de' MMMM 'de' yyyy", { locale: es }),
+        };
+      } catch (error) {
+        // Fallback for invalid dates
+        return {
+          ...item,
+          displayDate: item.date,
+          fullDate: item.date,
+        };
+      }
     } else {
       // Weekly view
       const weekStart = item.weekStart ? parseISO(item.weekStart) : null;

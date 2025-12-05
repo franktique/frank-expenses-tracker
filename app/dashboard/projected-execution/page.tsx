@@ -47,6 +47,8 @@ export default function ProjectedExecutionDashboard() {
       try {
         setIsLoading(true);
         setError(null);
+        // Clear old data to prevent stale data rendering with wrong viewMode
+        setBudgetExecutionData(null);
         const data = await fetchBudgetExecutionData(activePeriod.id, viewMode);
         setBudgetExecutionData(data);
       } catch (err) {

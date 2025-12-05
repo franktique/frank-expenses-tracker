@@ -74,7 +74,7 @@ export async function PUT(
       );
     }
 
-    const { name, fund_id, fund_ids, tipo_gasto, default_day } = validationResult.data;
+    const { name, fund_id, fund_ids, tipo_gasto, default_day, recurrence_frequency } = validationResult.data;
 
     // Check if category exists
     const [existingCategory] =
@@ -212,133 +212,45 @@ export async function PUT(
     // Build update query based on provided fields
     let updatedCategory;
 
-    // Handle updates by building multiple conditional queries
-    if (
-      name !== undefined &&
-      fund_id !== undefined &&
-      tipo_gasto !== undefined &&
-      default_day !== undefined
-    ) {
-      [updatedCategory] = await sql`
+    // Build dynamic SET clause parts
+    const setClauses: string[] = [];
+    const values: any[] = [];
+
+    if (name !== undefined) {
+      setClauses.push(`name = $${values.length + 1}`);
+      values.push(name);
+    }
+    if (fund_id !== undefined) {
+      setClauses.push(`fund_id = $${values.length + 1}`);
+      values.push(validationResult.data.fund_id);
+    }
+    if (tipo_gasto !== undefined) {
+      setClauses.push(`tipo_gasto = $${values.length + 1}`);
+      values.push(tipo_gasto);
+    }
+    if (default_day !== undefined) {
+      setClauses.push(`default_day = $${values.length + 1}`);
+      values.push(default_day);
+    }
+    if (recurrence_frequency !== undefined) {
+      setClauses.push(`recurrence_frequency = $${values.length + 1}`);
+      values.push(recurrence_frequency);
+    }
+
+    // Only execute update if there are fields to update
+    if (setClauses.length > 0) {
+      // Build the query string
+      const query = `
         UPDATE categories
-        SET name = ${name}, fund_id = ${validationResult.data.fund_id}, tipo_gasto = ${tipo_gasto}, default_day = ${default_day}
-        WHERE id = ${id}
+        SET ${setClauses.join(', ')}
+        WHERE id = $${values.length + 1}
         RETURNING *
       `;
-    } else if (
-      name !== undefined &&
-      fund_id !== undefined &&
-      tipo_gasto !== undefined
-    ) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET name = ${name}, fund_id = ${validationResult.data.fund_id}, tipo_gasto = ${tipo_gasto}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (
-      name !== undefined &&
-      fund_id !== undefined &&
-      default_day !== undefined
-    ) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET name = ${name}, fund_id = ${validationResult.data.fund_id}, default_day = ${default_day}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (
-      name !== undefined &&
-      tipo_gasto !== undefined &&
-      default_day !== undefined
-    ) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET name = ${name}, tipo_gasto = ${tipo_gasto}, default_day = ${default_day}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (
-      fund_id !== undefined &&
-      tipo_gasto !== undefined &&
-      default_day !== undefined
-    ) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET fund_id = ${validationResult.data.fund_id}, tipo_gasto = ${tipo_gasto}, default_day = ${default_day}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (name !== undefined && fund_id !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET name = ${name}, fund_id = ${validationResult.data.fund_id}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (name !== undefined && tipo_gasto !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET name = ${name}, tipo_gasto = ${tipo_gasto}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (name !== undefined && default_day !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET name = ${name}, default_day = ${default_day}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (fund_id !== undefined && tipo_gasto !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET fund_id = ${validationResult.data.fund_id}, tipo_gasto = ${tipo_gasto}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (fund_id !== undefined && default_day !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET fund_id = ${validationResult.data.fund_id}, default_day = ${default_day}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (tipo_gasto !== undefined && default_day !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET tipo_gasto = ${tipo_gasto}, default_day = ${default_day}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (name !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET name = ${name}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (fund_id !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET fund_id = ${validationResult.data.fund_id}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (tipo_gasto !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET tipo_gasto = ${tipo_gasto}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (default_day !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET default_day = ${default_day}
-        WHERE id = ${id}
-        RETURNING *
-      `;
+      values.push(id);
+
+      // Execute using neon's query method
+      const result = await sql.query(query, values);
+      updatedCategory = result[0];
     } else if (fund_ids === undefined) {
       return NextResponse.json(
         { error: "No fields to update" },

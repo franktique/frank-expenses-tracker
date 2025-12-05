@@ -4,6 +4,7 @@ import type {
   BudgetExecutionViewMode,
   BudgetExecutionResponse,
   BudgetExecutionData,
+  BudgetDetail,
 } from "@/types/funds";
 import {
   format,
@@ -14,6 +15,8 @@ import {
   getDaysInMonth,
 } from "date-fns";
 import { es } from "date-fns/locale";
+import { expandBudgetPayments } from "@/lib/budget-recurrence-utils";
+import type { ExpandedBudgetPayment } from "@/types/funds";
 
 /**
  * GET /api/budget-execution/[periodId]
@@ -26,10 +29,10 @@ import { es } from "date-fns/locale";
  */
 export async function GET(
   request: NextRequest,
-  context: { params: { periodId: string } }
+  context: { params: Promise<{ periodId: string }> }
 ) {
   try {
-    const { periodId } = context.params;
+    const { periodId } = await context.params;
     const viewMode = (request.nextUrl.searchParams.get("viewMode") ||
       "daily") as BudgetExecutionViewMode;
 
@@ -57,17 +60,22 @@ export async function GET(
 
     const period = periodResult[0];
 
-    // Fetch all budgets for the period with their default_date
-    // If no default_date, we'll use day 1 of the period
+    // Fetch all budgets for the period with their category's recurrence parameters
     const budgets = await sql`
       SELECT
         b.id,
         b.expected_amount,
         b.default_date,
+        c.recurrence_frequency,
+        c.default_day,
+        c.name as category_name,
+        b.category_id,
+        b.payment_method,
         p.month,
         p.year
       FROM budgets b
       JOIN periods p ON b.period_id = p.id
+      JOIN categories c ON b.category_id = c.id
       WHERE b.period_id = ${periodId}
       ORDER BY COALESCE(b.default_date,
         MAKE_DATE(p.year, p.month + 1, 1)) ASC
@@ -86,6 +94,7 @@ export async function GET(
           peakDate: "",
           peakAmount: 0,
         },
+        budgetDetails: {},
       } as BudgetExecutionResponse);
     }
 
@@ -95,26 +104,63 @@ export async function GET(
     const daysInMonth = getDaysInMonth(periodStartDate);
     const periodEndDate = new Date(period.year, period.month, daysInMonth);
 
-    // Group budgets by date or week
+    // Expand all budgets into individual payments (virtual expansion)
+    const allPayments: ExpandedBudgetPayment[] = [];
+
+    for (const budget of budgets) {
+      // Determine the start day for the payment(s)
+      let startDay: number | null = null;
+
+      // Priority: category.default_day > budget.default_date > day 1
+      if (budget.default_day) {
+        startDay = budget.default_day;
+      } else if (budget.default_date) {
+        const defaultDate = new Date(budget.default_date);
+        startDay = defaultDate.getDate();
+      } else {
+        startDay = 1; // Default to day 1
+      }
+
+      const payments = expandBudgetPayments({
+        budgetId: budget.id,
+        categoryId: budget.category_id,
+        periodId,
+        totalAmount: Number(budget.expected_amount),
+        paymentMethod: budget.payment_method,
+        recurrenceFrequency: budget.recurrence_frequency,
+        recurrenceStartDay: startDay,
+        periodMonth: budget.month,
+        periodYear: budget.year,
+      });
+
+      allPayments.push(...payments);
+    }
+
+    // Group expanded payments by date or week
     const aggregated: Record<string, number> = {};
+    const budgetDetails: Record<string, BudgetDetail[]> = {};
     const dateToWeekMap: Record<string, { weekNumber: number; weekStart: string; weekEnd: string }> =
       {};
 
-    for (const budget of budgets) {
-      let dateKey: string;
+    // Create a map to lookup budget info by budget ID
+    const budgetInfoMap = new Map(
+      budgets.map((b) => [
+        b.id,
+        {
+          categoryName: b.category_name,
+          categoryId: b.category_id,
+          paymentMethod: b.payment_method,
+        },
+      ])
+    );
 
-      // Determine the budget execution date
-      let executionDate: Date;
-      if (budget.default_date) {
-        executionDate = new Date(budget.default_date);
-      } else {
-        // Default to day 1 of the period
-        executionDate = new Date(period.year, period.month, 1);
-      }
+    for (const payment of allPayments) {
+      let dateKey: string;
+      const executionDate = parseISO(payment.date);
 
       if (viewMode === "daily") {
         // Use YYYY-MM-DD format
-        dateKey = format(executionDate, "yyyy-MM-dd");
+        dateKey = payment.date;
       } else {
         // Weekly view: group by ISO week
         const weekNum = getWeek(executionDate, { locale: es });
@@ -131,7 +177,24 @@ export async function GET(
 
       // Aggregate amounts
       aggregated[dateKey] =
-        (aggregated[dateKey] || 0) + Number(budget.expected_amount);
+        (aggregated[dateKey] || 0) + payment.amount;
+
+      // Build budget details for this date/week
+      const budgetInfo = budgetInfoMap.get(payment.budgetId);
+      if (budgetInfo) {
+        if (!budgetDetails[dateKey]) {
+          budgetDetails[dateKey] = [];
+        }
+
+        budgetDetails[dateKey].push({
+          budgetId: payment.budgetId,
+          categoryId: budgetInfo.categoryId,
+          categoryName: budgetInfo.categoryName,
+          amount: payment.amount,
+          date: payment.date, // Keep specific date even in weekly view
+          paymentMethod: budgetInfo.paymentMethod,
+        });
+      }
     }
 
     // Convert to array and format response
@@ -183,6 +246,7 @@ export async function GET(
       viewMode,
       data,
       summary,
+      budgetDetails,
     } as BudgetExecutionResponse);
   } catch (error) {
     console.error("Error fetching budget execution data:", error);

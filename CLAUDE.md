@@ -656,14 +656,45 @@ The **Projected Budget Execution** dashboard (`/dashboard/projected-execution`) 
 - Loading states with spinner feedback
 - Empty state messaging when no data available
 
+**Interactive Features**:
+- **Click on Bars**: Click any bar in the chart to view detailed budget breakdown for that day/week
+- **Detail Table**: Displays category names and amounts for selected period
+- **Visual Feedback**: Selected bar highlights in blue, peak bars in orange, normal bars in indigo
+- **Toggle Selection**: Click same bar again to hide detail table
+- **Auto-Clear**: Selection clears when switching between daily and weekly views
+- **Responsive**: Works seamlessly on mobile devices
+
 **Data Flow**:
 1. Component mounts with active period from `BudgetContext`
 2. `fetchBudgetExecutionData()` calls API endpoint
-3. API aggregates budgets by date/week based on viewMode
-4. Response includes data array and summary statistics
+3. API aggregates budgets by date/week based on viewMode + collects budget details
+4. Response includes data array, summary statistics, and `budgetDetails` mapping
 5. `formatChartData()` transforms for Recharts compatibility
 6. Chart and KPI cards render with formatted data
-7. User toggles viewMode → re-fetches and updates chart
+7. User clicks bar → `handleBarClick()` extracts date → updates `selectedDate` state
+8. Detail table renders conditionally with filtered budget details
+9. User toggles viewMode → clears selection and re-fetches data
+
+**API Response Structure**:
+```typescript
+interface BudgetExecutionResponse {
+  periodId: string;
+  periodName: string;
+  viewMode: "daily" | "weekly";
+  data: BudgetExecutionData[];           // For chart rendering
+  summary: { ... };                      // KPI statistics
+  budgetDetails: Record<string, BudgetDetail[]>; // For detail table
+}
+
+interface BudgetDetail {
+  budgetId: string;
+  categoryId: string;
+  categoryName: string;
+  amount: number;
+  date: string;        // YYYY-MM-DD (preserved even in weekly view)
+  paymentMethod: string;
+}
+```
 
 **Integration Notes**:
 - Requires active period to be selected (displays warning otherwise)
@@ -671,3 +702,4 @@ The **Projected Budget Execution** dashboard (`/dashboard/projected-execution`) 
 - Uses existing `BudgetContext` for period management
 - Follows established dashboard patterns (see category-bars, overspend dashboards)
 - No database updates needed - read-only visualization
+- Interactive detail view with budget breakdown information

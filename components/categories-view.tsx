@@ -57,9 +57,16 @@ import {
   CategoryFundInfoPanel,
   CategoryFundInfoCompact,
 } from "@/components/category-fund-info-panel";
-import { Fund, Category, TipoGasto } from "@/types/funds";
+import { Fund, Category, TipoGasto, RecurrenceFrequency, RECURRENCE_LABELS } from "@/types/funds";
 import { TipoGastoBadge } from "@/components/tipo-gasto-badge";
 import { TipoGastoSelect } from "@/components/tipo-gasto-select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function CategoriesView() {
   const { categories, addCategory, updateCategory, deleteCategory, funds, refreshData } =
@@ -77,7 +84,9 @@ export function CategoriesView() {
   const [editCategoryFunds, setEditCategoryFunds] = useState<Fund[]>([]);
   const [editCategoryTipoGasto, setEditCategoryTipoGasto] = useState<TipoGasto>();
   const [editCategoryDefaultDay, setEditCategoryDefaultDay] = useState<number | null>(null);
+  const [editCategoryRecurrenceFrequency, setEditCategoryRecurrenceFrequency] = useState<RecurrenceFrequency>(null);
   const [newCategoryDefaultDay, setNewCategoryDefaultDay] = useState<number | null>(null);
+  const [newCategoryRecurrenceFrequency, setNewCategoryRecurrenceFrequency] = useState<RecurrenceFrequency>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteValidation, setDeleteValidation] = useState<{
     hasExpenses: boolean;
@@ -234,6 +243,8 @@ export function CategoriesView() {
           name: newCategoryName,
           fund_ids: fundIds.length > 0 ? fundIds : undefined,
           tipo_gasto: newCategoryTipoGasto || undefined,
+          default_day: newCategoryDefaultDay || undefined,
+          recurrence_frequency: newCategoryRecurrenceFrequency || undefined,
         }),
       });
 
@@ -256,6 +267,8 @@ export function CategoriesView() {
       setNewCategoryName("");
       setNewCategoryFunds([]);
       setNewCategoryTipoGasto(undefined);
+      setNewCategoryDefaultDay(null);
+      setNewCategoryRecurrenceFrequency(null);
       setIsAddOpen(false);
 
       // Show success toast
@@ -293,7 +306,7 @@ export function CategoriesView() {
     loadingState.setLoading("editCategory", true, "Actualizando categoría...");
 
     try {
-      // Build update payload with all fields including tipo_gasto and default_day
+      // Build update payload with all fields including tipo_gasto, default_day, and recurrence
       const updatePayload: any = {
         name: editCategory.name,
       };
@@ -304,6 +317,10 @@ export function CategoriesView() {
 
       if (editCategoryDefaultDay !== undefined) {
         updatePayload.default_day = editCategoryDefaultDay;
+      }
+
+      if (editCategoryRecurrenceFrequency !== undefined) {
+        updatePayload.recurrence_frequency = editCategoryRecurrenceFrequency;
       }
 
       // Update category using API call
@@ -329,6 +346,7 @@ export function CategoriesView() {
       setEditCategoryFunds([]);
       setEditCategoryTipoGasto(undefined);
       setEditCategoryDefaultDay(null);
+      setEditCategoryRecurrenceFrequency(null);
       setIsEditOpen(false);
 
       // Show success toast
@@ -424,6 +442,8 @@ export function CategoriesView() {
     setEditCategoryTipoGasto(category.tipo_gasto);
     // Set default_day
     setEditCategoryDefaultDay(category.default_day || null);
+    // Set recurrence frequency
+    setEditCategoryRecurrenceFrequency(category.recurrence_frequency || null);
     setIsEditOpen(true);
   };
 
@@ -487,6 +507,64 @@ export function CategoriesView() {
                     placeholder="Selecciona el tipo de gasto"
                   />
                 </div>
+                {/* Recurrence Frequency */}
+                <div className="grid gap-2">
+                  <Label htmlFor="new-recurrence-frequency">Frecuencia de Pago (opcional)</Label>
+                  <Select
+                    value={newCategoryRecurrenceFrequency || "none"}
+                    onValueChange={(value) => {
+                      if (value === "none") {
+                        setNewCategoryRecurrenceFrequency(null);
+                      } else {
+                        setNewCategoryRecurrenceFrequency(value as RecurrenceFrequency);
+                      }
+                    }}
+                  >
+                    <SelectTrigger id="new-recurrence-frequency">
+                      <SelectValue placeholder="Selecciona frecuencia" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">Un solo pago (predeterminado)</SelectItem>
+                      <SelectItem value="weekly">Semanal (cada 7 días)</SelectItem>
+                      <SelectItem value="bi-weekly">Quincenal (cada 14 días)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Define si esta categoría se paga múltiples veces al mes
+                  </p>
+                </div>
+
+                <div className="grid gap-2">
+                  <Label htmlFor="new-default-day">
+                    {newCategoryRecurrenceFrequency
+                      ? "Día del Primer Pago"
+                      : "Día por Defecto (opcional)"}
+                  </Label>
+                  <Input
+                    id="new-default-day"
+                    type="number"
+                    min="1"
+                    max="31"
+                    placeholder={newCategoryRecurrenceFrequency ? "Ej: 5" : "Ej: 15"}
+                    value={newCategoryDefaultDay || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === "") {
+                        setNewCategoryDefaultDay(null);
+                      } else {
+                        const numValue = parseInt(value, 10);
+                        if (!isNaN(numValue) && numValue >= 1 && numValue <= 31) {
+                          setNewCategoryDefaultDay(numValue);
+                        }
+                      }
+                    }}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    {newCategoryRecurrenceFrequency
+                      ? "Los pagos subsecuentes se calcularán automáticamente según la frecuencia"
+                      : "Día preferido del mes para gastos de esta categoría"}
+                  </p>
+                </div>
               </div>
               <DialogFooter>
                 <Button
@@ -496,6 +574,9 @@ export function CategoriesView() {
                     setNewCategoryName("");
                     setNewCategoryFunds([]);
                     setNewCategoryTipoGasto(undefined);
+                    setNewCategoryDefaultDay(null);
+                    setNewCategoryRecurrenceFrequency(null);
+                    setNewCategoryRecurrenceStartDay(null);
                   }}
                   disabled={loadingState.isLoading("addCategory")}
                 >
@@ -650,14 +731,45 @@ export function CategoriesView() {
                 placeholder="Selecciona el tipo de gasto"
               />
             </div>
+            {/* Recurrence Frequency */}
             <div className="grid gap-2">
-              <Label htmlFor="edit-default-day">Día por Defecto (opcional)</Label>
+              <Label htmlFor="edit-recurrence-frequency">Frecuencia de Pago (opcional)</Label>
+              <Select
+                value={editCategoryRecurrenceFrequency || "none"}
+                onValueChange={(value) => {
+                  if (value === "none") {
+                    setEditCategoryRecurrenceFrequency(null);
+                  } else {
+                    setEditCategoryRecurrenceFrequency(value as RecurrenceFrequency);
+                  }
+                }}
+              >
+                <SelectTrigger id="edit-recurrence-frequency">
+                  <SelectValue placeholder="Selecciona frecuencia" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">Un solo pago (predeterminado)</SelectItem>
+                  <SelectItem value="weekly">Semanal (cada 7 días)</SelectItem>
+                  <SelectItem value="bi-weekly">Quincenal (cada 14 días)</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground">
+                Define si esta categoría se paga múltiples veces al mes
+              </p>
+            </div>
+
+            <div className="grid gap-2">
+              <Label htmlFor="edit-default-day">
+                {editCategoryRecurrenceFrequency
+                  ? "Día del Primer Pago"
+                  : "Día por Defecto (opcional)"}
+              </Label>
               <Input
                 id="edit-default-day"
                 type="number"
                 min="1"
                 max="31"
-                placeholder="Ej: 15"
+                placeholder={editCategoryRecurrenceFrequency ? "Ej: 5" : "Ej: 15"}
                 value={editCategoryDefaultDay || ""}
                 onChange={(e) => {
                   const value = e.target.value;
@@ -672,7 +784,9 @@ export function CategoriesView() {
                 }}
               />
               <p className="text-xs text-muted-foreground">
-                Especifica el día preferido del mes (1-31) para los gastos de esta categoría
+                {editCategoryRecurrenceFrequency
+                  ? "Los pagos subsecuentes se calcularán automáticamente según la frecuencia"
+                  : "Especifica el día preferido del mes (1-31) para los gastos de esta categoría"}
               </p>
             </div>
           </div>
@@ -685,6 +799,8 @@ export function CategoriesView() {
                 setEditCategoryFunds([]);
                 setEditCategoryTipoGasto(undefined);
                 setEditCategoryDefaultDay(null);
+                setEditCategoryRecurrenceFrequency(null);
+                setEditCategoryRecurrenceStartDay(null);
               }}
               disabled={loadingState.isLoading("editCategory")}
             >

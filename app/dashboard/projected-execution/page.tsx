@@ -26,6 +26,7 @@ import {
   formatCurrency,
   calculateBudgetStats,
 } from "@/lib/budget-execution-utils";
+import { BudgetDetailTable } from "@/components/budget-detail-table";
 
 export default function ProjectedExecutionDashboard() {
   const { activePeriod } = useBudget();
@@ -34,6 +35,7 @@ export default function ProjectedExecutionDashboard() {
   const [error, setError] = useState<string | null>(null);
   const [budgetExecutionData, setBudgetExecutionData] =
     useState<BudgetExecutionResponse | null>(null);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   // Fetch data when period or viewMode changes
   useEffect(() => {
@@ -119,6 +121,27 @@ export default function ProjectedExecutionDashboard() {
       setViewMode("weekly");
     }
   }, [daysInPeriod]);
+
+  // Clear selection when viewMode changes
+  useEffect(() => {
+    setSelectedDate(null);
+  }, [viewMode]);
+
+  // Handle bar click to select/deselect a date
+  const handleBarClick = (data: any) => {
+    if (data && data.activePayload && data.activePayload[0]) {
+      const clickedDate = data.activePayload[0].payload.date;
+      // Toggle selection: if same date is clicked, deselect it
+      setSelectedDate(clickedDate === selectedDate ? null : clickedDate);
+    }
+  };
+
+  // Get bar color based on selection and peak status
+  const getBarColor = (date: string, amount: number) => {
+    if (date === selectedDate) return "#3b82f6"; // Blue for selected
+    if (amount === stats.peak) return "#f97316"; // Orange for peak
+    return "#6366f1"; // Indigo for normal
+  };
 
   if (!activePeriod) {
     return (
@@ -257,6 +280,8 @@ export default function ProjectedExecutionDashboard() {
                     <BarChart
                       data={chartData}
                       margin={{ top: 16, right: 32, left: 8, bottom: 60 }}
+                      onClick={handleBarClick}
+                      style={{ cursor: "pointer" }}
                     >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis
@@ -291,6 +316,9 @@ export default function ProjectedExecutionDashboard() {
                                 Presupuesto:{" "}
                                 {formatCurrency(payload[0].value as number)}
                               </div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                Haz clic para ver detalles
+                              </div>
                             </div>
                           );
                         }}
@@ -299,11 +327,7 @@ export default function ProjectedExecutionDashboard() {
                         {chartData.map((entry, index) => (
                           <Cell
                             key={`cell-${index}`}
-                            fill={
-                              entry.amount === stats.peak
-                                ? "#f97316"
-                                : "#6366f1"
-                            }
+                            fill={getBarColor(entry.date, entry.amount)}
                           />
                         ))}
                       </Bar>
@@ -314,6 +338,25 @@ export default function ProjectedExecutionDashboard() {
             )}
           </CardContent>
         </Card>
+
+        {/* Budget Detail Table - Conditionally rendered */}
+        {selectedDate && budgetExecutionData?.budgetDetails?.[selectedDate] && (
+          <BudgetDetailTable
+            budgets={budgetExecutionData.budgetDetails[selectedDate]}
+            selectedDate={selectedDate}
+            viewMode={viewMode}
+            weekStart={
+              viewMode === "weekly"
+                ? chartData.find((item) => item.date === selectedDate)?.weekStart
+                : undefined
+            }
+            weekEnd={
+              viewMode === "weekly"
+                ? chartData.find((item) => item.date === selectedDate)?.weekEnd
+                : undefined
+            }
+          />
+        )}
       </div>
     </div>
   );

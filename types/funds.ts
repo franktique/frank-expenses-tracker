@@ -120,6 +120,27 @@ export const TIPO_GASTO_SORT_ORDERS = {
   } as const,
 } as const;
 
+// Recurrence frequency types (must be defined before CategorySchema)
+export const RECURRENCE_FREQUENCIES = {
+  WEEKLY: "weekly",
+  BI_WEEKLY: "bi-weekly",
+} as const;
+
+export type RecurrenceFrequency =
+  | typeof RECURRENCE_FREQUENCIES.WEEKLY
+  | typeof RECURRENCE_FREQUENCIES.BI_WEEKLY
+  | null;
+
+export const RECURRENCE_LABELS = {
+  weekly: "Semanal (cada 7 días)",
+  "bi-weekly": "Quincenal (cada 14 días)",
+} as const;
+
+export const RecurrenceFrequencyEnum = z
+  .enum(["weekly", "bi-weekly"])
+  .nullable()
+  .optional();
+
 // Enhanced Category interface with fund support
 export interface Category {
   id: string;
@@ -128,7 +149,8 @@ export interface Category {
   fund_name?: string; // Populated in joins
   associated_funds?: Fund[]; // New field for multiple fund relationships
   tipo_gasto?: TipoGasto; // Expense type: F (Fijo), V (Variable), SF (Semi Fijo)
-  default_day?: number | null; // Preferred day of month for category expenses (1-31)
+  default_day?: number | null; // Preferred day of month for category expenses (1-31). When recurrence_frequency is set, this becomes the first payment day
+  recurrence_frequency?: RecurrenceFrequency; // Payment frequency for this category
 }
 
 // Category-Fund relationship interface
@@ -156,6 +178,7 @@ export const CategorySchema = z.object({
       }),
     })
     .optional(),
+  recurrence_frequency: RecurrenceFrequencyEnum,
 });
 
 // Category creation schema
@@ -181,6 +204,7 @@ export const CreateCategorySchema = z.object({
     .max(31, "El día debe estar entre 1 y 31")
     .nullable()
     .optional(), // Preferred day of month (1-31)
+  recurrence_frequency: RecurrenceFrequencyEnum,
 });
 
 // Category update schema
@@ -207,6 +231,7 @@ export const UpdateCategorySchema = z.object({
     .max(31, "El día debe estar entre 1 y 31")
     .nullable()
     .optional(), // Preferred day of month (1-31)
+  recurrence_frequency: RecurrenceFrequencyEnum,
 });
 
 // Category-Fund relationship schemas
@@ -389,9 +414,23 @@ export interface Budget {
   id: string;
   category_id: string;
   period_id: string;
-  expected_amount: number;
+  expected_amount: number; // TOTAL monthly amount
   payment_method: PaymentMethod;
   default_date?: Date | string | null; // Calculated date based on category default_day
+  // Note: recurrence settings come from the category, not stored on budget
+}
+
+// Virtual expanded budget for display (calculated on-the-fly)
+export interface ExpandedBudgetPayment {
+  budgetId: string;
+  categoryId: string;
+  periodId: string;
+  date: string; // YYYY-MM-DD
+  amount: number; // Split amount
+  paymentMethod: PaymentMethod;
+  isRecurring: boolean;
+  occurrenceNumber?: number; // 1, 2, 3...
+  totalOccurrences?: number; // Total payments
 }
 
 export const BudgetSchema = z.object({
@@ -405,6 +444,7 @@ export const BudgetSchema = z.object({
     .refine((date) => !isNaN(Date.parse(date)), "Fecha inválida")
     .nullable()
     .optional(), // Calculated date based on category default_day
+  // Note: recurrence settings validated at category level
 });
 
 // Fund balance calculation types
@@ -682,6 +722,16 @@ export interface BudgetExecutionData {
 
 export type BudgetExecutionViewMode = "daily" | "weekly";
 
+// Budget detail for a specific date/week (used in detail view)
+export interface BudgetDetail {
+  budgetId: string;
+  categoryId: string;
+  categoryName: string;
+  amount: number;
+  date: string; // Specific date (YYYY-MM-DD)
+  paymentMethod: string;
+}
+
 export interface BudgetExecutionResponse {
   periodId: string;
   periodName: string;
@@ -693,4 +743,5 @@ export interface BudgetExecutionResponse {
     peakDate: string;
     peakAmount: number;
   };
+  budgetDetails: Record<string, BudgetDetail[]>; // Map of date/week to budget details
 }

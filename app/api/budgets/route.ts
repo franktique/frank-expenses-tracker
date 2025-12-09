@@ -18,7 +18,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { categoryId, periodId, expectedAmount, paymentMethod } = await request.json()
+    const {
+      categoryId,
+      periodId,
+      expectedAmount,
+      paymentMethod
+    } = await request.json()
 
     if (!categoryId || !periodId || !paymentMethod) {
       return NextResponse.json({ error: "Category ID, Period ID, and Payment Method are required" }, { status: 400 })
@@ -28,9 +33,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Expected amount must be a positive number" }, { status: 400 })
     }
 
+    // Note: Recurrence settings are read from the category table, not stored on budget
+
     // Check if budget already exists for this category, period, and payment method
     const [existingBudget] = await sql`
-      SELECT * FROM budgets 
+      SELECT * FROM budgets
       WHERE category_id = ${categoryId} AND period_id = ${periodId} AND payment_method = ${paymentMethod}
     `
 
@@ -46,8 +53,18 @@ export async function POST(request: NextRequest) {
     } else {
       // Create new budget
       const [newBudget] = await sql`
-        INSERT INTO budgets (category_id, period_id, expected_amount, payment_method)
-        VALUES (${categoryId}, ${periodId}, ${expectedAmount}, ${paymentMethod})
+        INSERT INTO budgets (
+          category_id,
+          period_id,
+          expected_amount,
+          payment_method
+        )
+        VALUES (
+          ${categoryId},
+          ${periodId},
+          ${expectedAmount},
+          ${paymentMethod}
+        )
         RETURNING *
       `
       return NextResponse.json(newBudget)

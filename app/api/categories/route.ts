@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, fund_id, tipo_gasto } = validationResult.data;
+    const { name, fund_id, tipo_gasto, default_day, recurrence_frequency } = validationResult.data;
     const { fund_ids } = body; // Extract fund_ids from raw body
 
     // Determine which fund approach to use
@@ -126,8 +126,8 @@ export async function POST(request: NextRequest) {
 
     // Create the category
     const [newCategory] = await sql`
-      INSERT INTO categories (name, fund_id, tipo_gasto)
-      VALUES (${name}, ${finalFundId}, ${tipo_gasto || null})
+      INSERT INTO categories (name, fund_id, tipo_gasto, default_day, recurrence_frequency)
+      VALUES (${name}, ${finalFundId}, ${tipo_gasto || null}, ${default_day || null}, ${recurrence_frequency || null})
       RETURNING *
     `;
 

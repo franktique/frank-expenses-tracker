@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { sql } from "@/lib/db";
 import { UpdateCategorySchema, DEFAULT_FUND_NAME } from "@/types/funds";
+import { updateBudgetDefaultDatesForCategory } from "@/lib/category-budget-sync";
 
 export async function GET(
   request: NextRequest,
@@ -73,7 +74,7 @@ export async function PUT(
       );
     }
 
-    const { name, fund_id, fund_ids, tipo_gasto } = validationResult.data;
+    const { name, fund_id, fund_ids, tipo_gasto, default_day, recurrence_frequency } = validationResult.data;
 
     // Check if category exists
     const [existingCategory] =
@@ -211,55 +212,45 @@ export async function PUT(
     // Build update query based on provided fields
     let updatedCategory;
 
-    if (name !== undefined && fund_id !== undefined && tipo_gasto !== undefined) {
-      [updatedCategory] = await sql`
+    // Build dynamic SET clause parts
+    const setClauses: string[] = [];
+    const values: any[] = [];
+
+    if (name !== undefined) {
+      setClauses.push(`name = $${values.length + 1}`);
+      values.push(name);
+    }
+    if (fund_id !== undefined) {
+      setClauses.push(`fund_id = $${values.length + 1}`);
+      values.push(validationResult.data.fund_id);
+    }
+    if (tipo_gasto !== undefined) {
+      setClauses.push(`tipo_gasto = $${values.length + 1}`);
+      values.push(tipo_gasto);
+    }
+    if (default_day !== undefined) {
+      setClauses.push(`default_day = $${values.length + 1}`);
+      values.push(default_day);
+    }
+    if (recurrence_frequency !== undefined) {
+      setClauses.push(`recurrence_frequency = $${values.length + 1}`);
+      values.push(recurrence_frequency);
+    }
+
+    // Only execute update if there are fields to update
+    if (setClauses.length > 0) {
+      // Build the query string
+      const query = `
         UPDATE categories
-        SET name = ${name}, fund_id = ${validationResult.data.fund_id}, tipo_gasto = ${tipo_gasto}
-        WHERE id = ${id}
+        SET ${setClauses.join(', ')}
+        WHERE id = $${values.length + 1}
         RETURNING *
       `;
-    } else if (name !== undefined && fund_id !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET name = ${name}, fund_id = ${validationResult.data.fund_id}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (name !== undefined && tipo_gasto !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET name = ${name}, tipo_gasto = ${tipo_gasto}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (fund_id !== undefined && tipo_gasto !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET fund_id = ${validationResult.data.fund_id}, tipo_gasto = ${tipo_gasto}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (name !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET name = ${name}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (fund_id !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET fund_id = ${validationResult.data.fund_id}
-        WHERE id = ${id}
-        RETURNING *
-      `;
-    } else if (tipo_gasto !== undefined) {
-      [updatedCategory] = await sql`
-        UPDATE categories
-        SET tipo_gasto = ${tipo_gasto}
-        WHERE id = ${id}
-        RETURNING *
-      `;
+      values.push(id);
+
+      // Execute using neon's query method
+      const result = await sql.query(query, values);
+      updatedCategory = result[0];
     } else if (fund_ids === undefined) {
       return NextResponse.json(
         { error: "No fields to update" },
@@ -308,9 +299,16 @@ export async function PUT(
       ORDER BY f.name
     `;
 
+    // If default_day was updated, sync all related budget default_dates
+    if (default_day !== undefined) {
+      const syncResult = await updateBudgetDefaultDatesForCategory(id, default_day);
+      console.log(`Budget sync result: ${syncResult.message}`);
+    }
+
     const enhancedCategory = {
       ...categoryWithFund,
       associated_funds: associatedFunds,
+      budgets_updated: default_day !== undefined ? true : undefined,
     };
 
     return NextResponse.json(enhancedCategory);

@@ -192,3 +192,9 @@ Provide:
 Think deeply about the codebase structure and provide comprehensive insights that would be valuable for new developers joining the project or for architectural decision-making.
 
 At the end, write all of the output into a file called "codebase_analysis.md"
+
+looking for dead code on billing info - make small report
+
+comparin responses for endpoints of agewncy-account (differences in the clearcache)
+
+veriry status of ES6 sintaxius on agewncy-account , the legacy one are exposing secrets in the response.

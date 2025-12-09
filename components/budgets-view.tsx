@@ -290,6 +290,7 @@ export function BudgetsView() {
                       </TableHead>
                     </>
                   )}
+                  <TableHead className="text-center">Fecha por Defecto</TableHead>
                   <TableHead className="text-right">Efectivo</TableHead>
                   <TableHead className="text-right">Crédito</TableHead>
                   <TableHead className="text-right">Total</TableHead>
@@ -355,6 +356,14 @@ export function BudgetsView() {
                             </TableCell>
                           </>
                         )}
+                        <TableCell className="text-center text-sm">
+                          {cashBudget?.default_date
+                            ? new Date(cashBudget.default_date).toLocaleDateString(
+                                "es-MX",
+                                { month: "short", day: "numeric" }
+                              )
+                            : "-"}
+                        </TableCell>
                         <TableCell className="text-right">
                           {cashBudget
                             ? formatCurrency(cashBudget.expected_amount)

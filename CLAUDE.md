@@ -616,3 +616,90 @@ The **Overspend Actual** dashboard provides two views for analyzing spending ove
    - Chart updates immediately
    - Detail table updates with excluded categories removed
 10. Click on different period bar to switch detail view
+
+#### Projected Budget Execution Dashboard
+The **Projected Budget Execution** dashboard (`/dashboard/projected-execution`) visualizes when budgets are scheduled to be executed during the active period, helping with cash flow planning.
+
+**Features**:
+- **Daily/Weekly Toggle**: Switch between daily granularity (all individual dates) and weekly aggregation (by ISO week)
+- **Interactive Bar Chart**: Shows budgeted amounts distribution across period dates
+  - X-axis: Date (daily) or Week number (weekly)
+  - Y-axis: Total budget amount (currency formatted)
+  - Peak bar highlighted in orange, others in indigo
+  - Responsive with rotated labels for readability
+- **KPI Cards**: Display key metrics
+  - Total budgeted amount for the period
+  - Average per day/week
+  - Peak budget amount with date/week
+  - Minimum budget amount
+- **Smart Defaults**: Budgets without `default_date` automatically use day 1 of the period
+- **Auto-switching**: Weekly view auto-enables if period spans more than 31 days
+- **Responsive Design**: Optimized for mobile, tablet, and desktop screens
+
+**Data Aggregation Logic**:
+- Fetches all budgets for the active period
+- Groups by `default_date` if set, otherwise uses period start date (day 1)
+- Daily view: Direct date aggregation (sums all budgets with same date)
+- Weekly view: Groups dates by ISO week number (Monday=1), aggregates weekly totals
+- Automatic calculation of statistics: total, average, peak, minimum
+
+**API Endpoint** (`GET /api/budget-execution/[periodId]`):
+- Query Parameter: `viewMode=daily|weekly`
+- Returns: `BudgetExecutionResponse` with aggregated data and summary statistics
+- Handles edge cases: no budgets, missing default_dates, empty periods
+
+**Implementation Details**:
+- Uses Recharts `BarChart` for data visualization
+- Locale-formatted dates (es-MX) for display
+- Memoized calculations for performance optimization
+- Error handling with user-friendly messages
+- Loading states with spinner feedback
+- Empty state messaging when no data available
+
+**Interactive Features**:
+- **Click on Bars**: Click any bar in the chart to view detailed budget breakdown for that day/week
+- **Detail Table**: Displays category names and amounts for selected period
+- **Visual Feedback**: Selected bar highlights in blue, peak bars in orange, normal bars in indigo
+- **Toggle Selection**: Click same bar again to hide detail table
+- **Auto-Clear**: Selection clears when switching between daily and weekly views
+- **Responsive**: Works seamlessly on mobile devices
+
+**Data Flow**:
+1. Component mounts with active period from `BudgetContext`
+2. `fetchBudgetExecutionData()` calls API endpoint
+3. API aggregates budgets by date/week based on viewMode + collects budget details
+4. Response includes data array, summary statistics, and `budgetDetails` mapping
+5. `formatChartData()` transforms for Recharts compatibility
+6. Chart and KPI cards render with formatted data
+7. User clicks bar → `handleBarClick()` extracts date → updates `selectedDate` state
+8. Detail table renders conditionally with filtered budget details
+9. User toggles viewMode → clears selection and re-fetches data
+
+**API Response Structure**:
+```typescript
+interface BudgetExecutionResponse {
+  periodId: string;
+  periodName: string;
+  viewMode: "daily" | "weekly";
+  data: BudgetExecutionData[];           // For chart rendering
+  summary: { ... };                      // KPI statistics
+  budgetDetails: Record<string, BudgetDetail[]>; // For detail table
+}
+
+interface BudgetDetail {
+  budgetId: string;
+  categoryId: string;
+  categoryName: string;
+  amount: number;
+  date: string;        // YYYY-MM-DD (preserved even in weekly view)
+  paymentMethod: string;
+}
+```
+
+**Integration Notes**:
+- Requires active period to be selected (displays warning otherwise)
+- Works seamlessly with `default_date` feature (previous implementation)
+- Uses existing `BudgetContext` for period management
+- Follows established dashboard patterns (see category-bars, overspend dashboards)
+- No database updates needed - read-only visualization
+- Interactive detail view with budget breakdown information

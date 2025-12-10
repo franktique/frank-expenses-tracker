@@ -44,6 +44,9 @@ import { TIPO_GASTO_SORT_ORDERS } from "@/types/funds";
 import { SubgroupNameDialog } from "@/components/subgroup-name-dialog";
 import { SubgroupHeaderRow } from "@/components/subgroup-header-row";
 import { SubgroupSubtotalRow } from "@/components/subgroup-subtotal-row";
+import { TemplateSelector } from "@/components/template-selector";
+import { SaveAsTemplateDialog } from "@/components/save-as-template-dialog";
+import { TemplateManager } from "@/components/template-manager";
 import { organizeTableRowsWithSubgroups, shouldShowRow, getSubgroupForCategory } from "@/lib/subgroup-table-utils";
 import { calculateSubgroupSubtotals, getSubgroupCategoryCount } from "@/lib/subgroup-calculations";
 import { reorganizeTableRowsWithSubgroupOrder, initializeSubgroupOrder, cleanupSubgroupOrder } from "@/lib/subgroup-reordering-utils";
@@ -176,6 +179,11 @@ export function SimulationBudgetForm({
 
   // Visibility state management
   const [visibilityState, setVisibilityState] = useState<VisibilityState>({});
+
+  // Template state management
+  const [currentTemplateId, setCurrentTemplateId] = useState<string | null>(null);
+  const [currentTemplateName, setCurrentTemplateName] = useState<string | null>(null);
+  const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
 
   // Load categories and existing budget data
   useEffect(() => {
@@ -369,6 +377,78 @@ export function SimulationBudgetForm({
 
     loadSubgroups();
   }, [simulationId]);
+
+  // Load currently applied template info
+  useEffect(() => {
+    const loadAppliedTemplate = async () => {
+      try {
+        const response = await fetch(`/api/simulations/${simulationId}/applied-template`);
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.appliedTemplate) {
+            setCurrentTemplateId(data.appliedTemplate.templateId);
+            setCurrentTemplateName(data.appliedTemplate.templateName);
+          }
+        }
+      } catch (error) {
+        console.error("Error loading applied template:", error);
+        // Non-critical, don't show error to user
+      }
+    };
+
+    loadAppliedTemplate();
+  }, [simulationId]);
+
+  // One-time localStorage migration to database
+  useEffect(() => {
+    const migrateLocalStorageData = async () => {
+      // Check if migration already completed
+      const migrationKey = `simulation_${simulationId}_migrated_db_v1`;
+      if (localStorage.getItem(migrationKey)) {
+        return; // Already migrated
+      }
+
+      try {
+        // Read localStorage data
+        const subgroupOrderKey = `simulation_${simulationId}_subgroup_order`;
+        const visibilityKey = `simulation_${simulationId}_visibility_state`;
+        const savedOrder = localStorage.getItem(subgroupOrderKey);
+        const savedVisibility = localStorage.getItem(visibilityKey);
+
+        // Only migrate if there's data to migrate
+        if (!savedOrder && !savedVisibility) {
+          localStorage.setItem(migrationKey, 'true');
+          return;
+        }
+
+        // Send to API for migration
+        const response = await fetch(`/api/simulations/${simulationId}/migrate-localstorage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subgroupOrder: savedOrder ? JSON.parse(savedOrder) : undefined,
+            visibilityState: savedVisibility ? JSON.parse(savedVisibility) : undefined,
+          }),
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          console.log('localStorage data migrated to database:', data.details);
+          localStorage.setItem(migrationKey, 'true');
+          toast({
+            title: "Data Migrated",
+            description: "Your subgroup settings have been saved to the database",
+          });
+        }
+      } catch (error) {
+        console.error('Failed to migrate localStorage data:', error);
+        // Don't block UI, just log error
+      }
+    };
+
+    migrateLocalStorageData();
+  }, [simulationId, toast]);
 
   // Initialize subgroupOrder from localStorage or database displayOrder
   useEffect(() => {
@@ -1673,6 +1753,44 @@ export function SimulationBudgetForm({
               )}
           </div>
         </div>
+
+        {/* Template Selection and Management */}
+        <div className="flex items-center justify-between gap-4 pb-4 border-b">
+          <div className="flex items-center gap-3">
+            <TemplateSelector
+              simulationId={simulationId}
+              currentTemplateId={currentTemplateId}
+              currentTemplateName={currentTemplateName}
+              onTemplateApplied={() => {
+                // Reload subgroups after template application
+                window.location.reload();
+              }}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsTemplateManagerOpen(true)}
+            >
+              Manage Templates
+            </Button>
+          </div>
+          <SaveAsTemplateDialog
+            simulationId={simulationId}
+            subgroupCount={subgroups.length}
+            onTemplateSaved={() => {
+              toast({
+                title: "Success",
+                description: "Template saved successfully. You can now apply it to other simulations.",
+              });
+            }}
+          />
+        </div>
+
+        {/* Template Manager Dialog */}
+        <TemplateManager
+          isOpen={isTemplateManagerOpen}
+          onClose={() => setIsTemplateManagerOpen(false)}
+        />
 
         {/* Validation Feedback */}
         {validationFeedback && validationFeedback.totalErrors > 0 && (

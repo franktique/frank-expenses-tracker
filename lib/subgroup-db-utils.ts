@@ -39,6 +39,9 @@ export async function getSubgroupsBySimulation(
         sg.display_order as "displayOrder",
         sg.created_at as "createdAt",
         sg.updated_at as "updatedAt",
+        sg.template_subgroup_id as "templateSubgroupId",
+        sg.custom_order as "customOrder",
+        sg.custom_visibility as "customVisibility",
         COALESCE(
           json_agg(
             json_build_object(
@@ -51,7 +54,7 @@ export async function getSubgroupsBySimulation(
       FROM simulation_subgroups sg
       LEFT JOIN subgroup_categories sc ON sg.id = sc.subgroup_id
       WHERE sg.simulation_id = ${simulationId}
-      GROUP BY sg.id, sg.simulation_id, sg.name, sg.display_order, sg.created_at, sg.updated_at
+      GROUP BY sg.id, sg.simulation_id, sg.name, sg.display_order, sg.created_at, sg.updated_at, sg.template_subgroup_id, sg.custom_order, sg.custom_visibility
       ORDER BY sg.display_order ASC
     `;
 
@@ -63,6 +66,9 @@ export async function getSubgroupsBySimulation(
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
       categoryIds: (row.categories as any[]).map((cat: any) => cat.categoryId),
+      templateSubgroupId: row.templateSubgroupId,
+      customOrder: row.customOrder,
+      customVisibility: row.customVisibility !== null ? row.customVisibility : true,
     }));
   } catch (error) {
     console.error(

@@ -87,9 +87,10 @@ export async function GET(request: NextRequest) {
           WHERE c.fund_id = ${fundId}
           GROUP BY c.id
         )
-        SELECT 
+        SELECT
           ce.category_id,
           ce.category_name,
+          c.default_day,
           cb.credit_budget,
           cb.cash_debit_budget,
           cb.expected_amount,
@@ -100,6 +101,7 @@ export async function GET(request: NextRequest) {
           (cb.expected_amount - ce.total_amount) as remaining
         FROM category_expenses ce
         JOIN category_budgets cb ON ce.category_id = cb.category_id
+        JOIN categories c ON ce.category_id = c.id
         WHERE cb.expected_amount > 0 OR ce.total_amount > 0
         ORDER BY ce.category_name
       `;
@@ -127,9 +129,10 @@ export async function GET(request: NextRequest) {
           LEFT JOIN budgets b ON c.id = b.category_id AND b.period_id = ${activePeriod.id}
           GROUP BY c.id
         )
-        SELECT 
+        SELECT
           ce.category_id,
           ce.category_name,
+          c.default_day,
           cb.credit_budget,
           cb.cash_debit_budget,
           cb.expected_amount,
@@ -140,6 +143,7 @@ export async function GET(request: NextRequest) {
           (cb.expected_amount - ce.total_amount) as remaining
         FROM category_expenses ce
         JOIN category_budgets cb ON ce.category_id = cb.category_id
+        JOIN categories c ON ce.category_id = c.id
         WHERE cb.expected_amount > 0 OR ce.total_amount > 0
         ORDER BY ce.category_name
       `;
@@ -171,6 +175,7 @@ export async function GET(request: NextRequest) {
         (item: any): BudgetSummaryItem => ({
           category_id: item.category_id,
           category_name: item.category_name,
+          default_day: item.default_day ?? null,
           credit_budget: parseFloat(item.credit_budget) || 0,
           cash_debit_budget: parseFloat(item.cash_debit_budget) || 0,
           expected_amount: parseFloat(item.expected_amount) || 0,

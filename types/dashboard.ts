@@ -8,6 +8,7 @@ import { PaymentMethod } from "./estudios";
 export interface BudgetSummaryItem {
   category_id: string;
   category_name: string;
+  default_day?: number | null; // Default day of month for category (1-31)
 
   // Split budget fields - Requirements 1.2, 1.3
   credit_budget: number; // Sum of all credit budgets for this category

@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   AlertCircle,
+  ArrowDown,
+  ArrowUp,
   BarChart3,
   CalendarRange,
   CreditCard,
@@ -99,6 +101,41 @@ export function DashboardView() {
   );
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
+  // Sorting state for default_day column
+  const [sortBy, setSortBy] = useState<'default_day' | null>(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+
+  // Memoized sorted and filtered budget summary
+  const sortedBudgetSummary = useMemo(() => {
+    if (!dashboardData?.budgetSummary) return [];
+
+    const filtered = dashboardData.budgetSummary.filter(
+      (item) => !excludedCategories.includes(item.category_id)
+    );
+
+    if (!sortBy) return filtered;
+
+    return [...filtered].sort((a, b) => {
+      const aValue = a.default_day ?? 1;
+      const bValue = b.default_day ?? 1;
+
+      if (sortDirection === 'asc') {
+        return aValue - bValue;
+      } else {
+        return bValue - aValue;
+      }
+    });
+  }, [dashboardData?.budgetSummary, excludedCategories, sortBy, sortDirection]);
+
+  // Memoized filtered budget summary (unsorted) for calculations
+  const filteredBudgetSummary = useMemo(() => {
+    if (!dashboardData?.budgetSummary) return [];
+
+    return dashboardData.budgetSummary.filter(
+      (item) => !excludedCategories.includes(item.category_id)
+    );
+  }, [dashboardData?.budgetSummary, excludedCategories]);
+
   // Reset fund filter to "All Funds" on page refresh
   useEffect(() => {
     setFundFilter(null);
@@ -175,6 +212,7 @@ export function DashboardView() {
             (item: any): BudgetSummaryItem => ({
               category_id: item.category_id || "",
               category_name: item.category_name || "",
+              default_day: item.default_day ?? null,
               credit_budget: isNaN(Number(item.credit_budget))
                 ? 0
                 : Number(item.credit_budget),
@@ -380,15 +418,22 @@ export function DashboardView() {
 
   const { totalIncome, totalExpenses, budgetSummary } = dashboardData;
 
-  // Filter budget summary by excluded categories
-  const filteredBudgetSummary = budgetSummary.filter(
-    (item) => !excludedCategories.includes(item.category_id)
-  );
-
   // Handle excluded categories change
   const handleExcludedCategoriesChange = (categoryIds: string[]) => {
     setExcludedCategories(categoryIds);
     saveExcludedCategories(categoryIds);
+  };
+
+  // Handle default_day column sort
+  const handleDefaultDaySort = () => {
+    if (sortBy !== 'default_day') {
+      setSortBy('default_day');
+      setSortDirection('asc');
+    } else if (sortDirection === 'asc') {
+      setSortDirection('desc');
+    } else {
+      setSortBy(null); // Clear sorting
+    }
   };
 
   // Get available categories for the filter
@@ -617,6 +662,19 @@ export function DashboardView() {
                 <TableHeader className="sticky top-0 bg-muted z-10">
                   <TableRow>
                     <TableHead>Categoria</TableHead>
+                    <TableHead
+                      className="text-center cursor-pointer hover:bg-accent transition-colors"
+                      onClick={handleDefaultDaySort}
+                    >
+                      <div className="flex items-center justify-center gap-1">
+                        Día por Defecto
+                        {sortBy === 'default_day' && (
+                          sortDirection === 'asc'
+                            ? <ArrowUp className="h-4 w-4" />
+                            : <ArrowDown className="h-4 w-4" />
+                        )}
+                      </div>
+                    </TableHead>
                     <TableHead className="text-right">
                       Presupuesto Crédito
                     </TableHead>
@@ -639,7 +697,7 @@ export function DashboardView() {
                     let runningBalance = totalIncome;
 
                     // Return the mapped array
-                    return filteredBudgetSummary.map((item) => {
+                    return sortedBudgetSummary.map((item) => {
                       // Calculate the effective expense for this row (debit + cash only)
                       const effectiveExpense =
                         item.debit_amount + item.cash_amount;
@@ -689,6 +747,9 @@ export function DashboardView() {
                               </Button>
                             </div>
                           </TableCell>
+                          <TableCell className="text-center">
+                            {item.default_day ?? 1}
+                          </TableCell>
                           <TableCell className="text-right">
                             {formatCurrency(item.credit_budget)}
                           </TableCell>
@@ -727,28 +788,29 @@ export function DashboardView() {
                   })()}
 
                   {/* Totals Row */}
-                  {filteredBudgetSummary.length > 0 && (
+                  {sortedBudgetSummary.length > 0 && (
                     <>
                       <TableRow className="bg-muted/50 font-bold">
                         <TableCell className="font-bold">TOTAL</TableCell>
+                        <TableCell className="text-center"></TableCell>
                         <TableCell className="text-right">
                           {/* Sum of all credit budgets - Requirement 2.1 */}
                           {(() => {
-                            const totals = calculateBudgetTotals(filteredBudgetSummary);
+                            const totals = calculateBudgetTotals(sortedBudgetSummary);
                             return formatCurrency(totals.totalCreditBudget);
                           })()}
                         </TableCell>
                         <TableCell className="text-right">
                           {/* Sum of all cash/debit budgets - Requirement 2.2 */}
                           {(() => {
-                            const totals = calculateBudgetTotals(filteredBudgetSummary);
+                            const totals = calculateBudgetTotals(sortedBudgetSummary);
                             return formatCurrency(totals.totalCashDebitBudget);
                           })()}
                         </TableCell>
                         <TableCell className="text-right">
                           {(() => {
                             // Calculate totals using utility function - Requirement 2.3
-                            const totals = calculateBudgetTotals(filteredBudgetSummary);
+                            const totals = calculateBudgetTotals(sortedBudgetSummary);
 
                             // Verify that credit + cash/debit budgets equal total budget
                             const splitBudgetSum =
@@ -777,32 +839,32 @@ export function DashboardView() {
                         </TableCell>
                         <TableCell className="text-right">
                           {(() => {
-                            const totals = calculateBudgetTotals(filteredBudgetSummary);
+                            const totals = calculateBudgetTotals(sortedBudgetSummary);
                             return formatCurrency(totals.totalCreditAmount);
                           })()}
                         </TableCell>
                         <TableCell className="text-right">
                           {(() => {
-                            const totals = calculateBudgetTotals(filteredBudgetSummary);
+                            const totals = calculateBudgetTotals(sortedBudgetSummary);
                             return formatCurrency(totals.totalDebitAmount);
                           })()}
                         </TableCell>
                         <TableCell className="text-right">
                           {(() => {
-                            const totals = calculateBudgetTotals(filteredBudgetSummary);
+                            const totals = calculateBudgetTotals(sortedBudgetSummary);
                             return formatCurrency(totals.totalCashAmount);
                           })()}
                         </TableCell>
                         <TableCell className="text-right">
                           {(() => {
-                            const totals = calculateBudgetTotals(filteredBudgetSummary);
+                            const totals = calculateBudgetTotals(sortedBudgetSummary);
                             return formatCurrency(totals.totalRemaining);
                           })()}
                         </TableCell>
                         <TableCell className="text-right">
                           {formatCurrency(
                             totalIncome -
-                              filteredBudgetSummary.reduce(
+                              sortedBudgetSummary.reduce(
                                 (sum, item) =>
                                   sum + (item.debit_amount + item.cash_amount),
                                 0
@@ -838,7 +900,7 @@ export function DashboardView() {
                   {filteredBudgetSummary.length === 0 && budgetSummary.length > 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={9}
+                        colSpan={10}
                         className="text-center py-4 text-muted-foreground"
                       >
                         Todas las categorías están excluidas. Selecciona algunas categorías para mostrar.
@@ -849,7 +911,7 @@ export function DashboardView() {
                   {budgetSummary.length === 0 && (
                     <TableRow>
                       <TableCell
-                        colSpan={9}
+                        colSpan={10}
                         className="text-center py-4 text-muted-foreground"
                       >
                         No hay datos para mostrar. Agrega categorías y

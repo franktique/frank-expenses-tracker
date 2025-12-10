@@ -25,6 +25,9 @@ export type Subgroup = {
   createdAt: string; // ISO timestamp
   updatedAt: string; // ISO timestamp
   isExpanded?: boolean; // UI-only state, not persisted to database
+  templateSubgroupId?: string | null; // FK to template_subgroups (if from template)
+  customOrder?: number | null; // Per-simulation custom ordering (migrated from localStorage)
+  customVisibility?: boolean; // Per-simulation visibility state (migrated from localStorage)
 };
 
 /**

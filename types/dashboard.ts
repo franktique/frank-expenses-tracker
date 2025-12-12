@@ -19,12 +19,14 @@ export interface BudgetSummaryItem {
 
   // Expense amounts by payment method
   total_amount: number; // Total expenses across all payment methods
+  confirmed_amount: number; // Confirmed expenses (excluding pending)
+  pending_amount: number; // Pending expenses
   credit_amount: number; // Credit card expenses
   debit_amount: number; // Debit card expenses
   cash_amount: number; // Cash expenses
 
   // Calculated field
-  remaining: number; // Budget remaining (expected_amount - total_amount)
+  remaining: number; // Budget remaining (expected_amount - total_amount + pending_amount)
 }
 
 /**

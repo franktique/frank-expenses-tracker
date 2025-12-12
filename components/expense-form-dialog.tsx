@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Popover,
   PopoverContent,
@@ -148,6 +149,7 @@ export function ExpenseFormDialog({
   );
   const [newExpenseCreditCard, setNewExpenseCreditCard] =
     useState<CreditCard | null>(null);
+  const [newExpensePending, setNewExpensePending] = useState(false);
 
   // State for dynamic fund filtering
   const [availableFundsForNewExpense, setAvailableFundsForNewExpense] =
@@ -217,6 +219,7 @@ export function ExpenseFormDialog({
       setNewExpenseSourceFund(null);
       setNewExpenseDestinationFund(null);
       setNewExpenseCreditCard(null);
+      setNewExpensePending(false);
       setCategorySearch("");
       setAvailableFundsForNewExpense(funds || []);
       setIsFundSectionOpen(false);
@@ -234,6 +237,7 @@ export function ExpenseFormDialog({
     setNewExpenseSourceFund(null);
     setNewExpenseDestinationFund(null);
     setNewExpenseCreditCard(null);
+    setNewExpensePending(false);
     setCategorySearch("");
     setAvailableFundsForNewExpense(funds || []);
     setIsFundSectionOpen(false);
@@ -291,7 +295,8 @@ export function ExpenseFormDialog({
         amount,
         newExpenseSourceFund.id,
         newExpenseDestinationFund?.id,
-        newExpenseCreditCard?.id
+        newExpenseCreditCard?.id,
+        newExpensePending
       );
 
       resetForm();
@@ -553,6 +558,20 @@ export function ExpenseFormDialog({
               value={newExpenseAmount}
               onChange={(e) => setNewExpenseAmount(e.target.value)}
               placeholder="0.00"
+            />
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg border p-3">
+            <div className="space-y-0.5">
+              <Label htmlFor="pending">Pendiente</Label>
+              <p className="text-sm text-muted-foreground">
+                Marcar como gasto pendiente de confirmación
+              </p>
+            </div>
+            <Switch
+              id="pending"
+              checked={newExpensePending}
+              onCheckedChange={setNewExpensePending}
             />
           </div>
 

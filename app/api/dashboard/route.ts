@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
     }
     const [incomeSummary] = await incomeQuery;
 
-    // Get total expenses for active period (with optional fund filtering)
+    // Get total expenses for active period (excluding pending, with optional fund filtering)
     let expenseQuery;
     if (fundId) {
       expenseQuery = sql`
@@ -49,12 +49,14 @@ export async function GET(request: NextRequest) {
         JOIN categories c ON e.category_id = c.id
         WHERE e.period_id = ${activePeriod.id}
           AND c.fund_id = ${fundId}
+          AND (e.pending IS NULL OR e.pending = false)
       `;
     } else {
       expenseQuery = sql`
         SELECT COALESCE(SUM(amount), 0) as total_expenses
         FROM expenses
         WHERE period_id = ${activePeriod.id}
+          AND (pending IS NULL OR pending = false)
       `;
     }
     const [expenseSummary] = await expenseQuery;
@@ -64,13 +66,14 @@ export async function GET(request: NextRequest) {
     if (fundId) {
       budgetQuery = sql`
         WITH category_expenses AS (
-          SELECT 
+          SELECT
             c.id as category_id,
             c.name as category_name,
             COALESCE(SUM(e.amount), 0) as total_amount,
             SUM(CASE WHEN e.payment_method = 'credit' THEN e.amount ELSE 0 END) as credit_amount,
             SUM(CASE WHEN e.payment_method = 'debit' THEN e.amount ELSE 0 END) as debit_amount,
-            SUM(CASE WHEN e.payment_method = 'cash' THEN e.amount ELSE 0 END) as cash_amount
+            SUM(CASE WHEN e.payment_method = 'cash' THEN e.amount ELSE 0 END) as cash_amount,
+            COALESCE(SUM(CASE WHEN e.pending = true THEN e.amount ELSE 0 END), 0) as pending_amount
           FROM categories c
           LEFT JOIN expenses e ON c.id = e.category_id AND e.period_id = ${activePeriod.id}
           WHERE c.fund_id = ${fundId}
@@ -94,11 +97,13 @@ export async function GET(request: NextRequest) {
           cb.credit_budget,
           cb.cash_debit_budget,
           cb.expected_amount,
+          ce.total_amount - ce.pending_amount as confirmed_amount,
+          ce.pending_amount,
           ce.total_amount,
           ce.credit_amount,
           ce.debit_amount,
           ce.cash_amount,
-          (cb.expected_amount - ce.total_amount) as remaining
+          (cb.expected_amount - ce.total_amount + ce.pending_amount) as remaining
         FROM category_expenses ce
         JOIN category_budgets cb ON ce.category_id = cb.category_id
         JOIN categories c ON ce.category_id = c.id
@@ -108,13 +113,14 @@ export async function GET(request: NextRequest) {
     } else {
       budgetQuery = sql`
         WITH category_expenses AS (
-          SELECT 
+          SELECT
             c.id as category_id,
             c.name as category_name,
             COALESCE(SUM(e.amount), 0) as total_amount,
             SUM(CASE WHEN e.payment_method = 'credit' THEN e.amount ELSE 0 END) as credit_amount,
             SUM(CASE WHEN e.payment_method = 'debit' THEN e.amount ELSE 0 END) as debit_amount,
-            SUM(CASE WHEN e.payment_method = 'cash' THEN e.amount ELSE 0 END) as cash_amount
+            SUM(CASE WHEN e.payment_method = 'cash' THEN e.amount ELSE 0 END) as cash_amount,
+            COALESCE(SUM(CASE WHEN e.pending = true THEN e.amount ELSE 0 END), 0) as pending_amount
           FROM categories c
           LEFT JOIN expenses e ON c.id = e.category_id AND e.period_id = ${activePeriod.id}
           GROUP BY c.id, c.name
@@ -136,11 +142,13 @@ export async function GET(request: NextRequest) {
           cb.credit_budget,
           cb.cash_debit_budget,
           cb.expected_amount,
+          ce.total_amount - ce.pending_amount as confirmed_amount,
+          ce.pending_amount,
           ce.total_amount,
           ce.credit_amount,
           ce.debit_amount,
           ce.cash_amount,
-          (cb.expected_amount - ce.total_amount) as remaining
+          (cb.expected_amount - ce.total_amount + ce.pending_amount) as remaining
         FROM category_expenses ce
         JOIN category_budgets cb ON ce.category_id = cb.category_id
         JOIN categories c ON ce.category_id = c.id
@@ -180,6 +188,8 @@ export async function GET(request: NextRequest) {
           cash_debit_budget: parseFloat(item.cash_debit_budget) || 0,
           expected_amount: parseFloat(item.expected_amount) || 0,
           total_amount: parseFloat(item.total_amount) || 0,
+          confirmed_amount: parseFloat(item.confirmed_amount) || 0,
+          pending_amount: parseFloat(item.pending_amount) || 0,
           credit_amount: parseFloat(item.credit_amount) || 0,
           debit_amount: parseFloat(item.debit_amount) || 0,
           cash_amount: parseFloat(item.cash_amount) || 0,

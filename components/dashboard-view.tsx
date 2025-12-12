@@ -225,6 +225,12 @@ export function DashboardView() {
               total_amount: isNaN(Number(item.total_amount))
                 ? 0
                 : Number(item.total_amount),
+              confirmed_amount: isNaN(Number(item.confirmed_amount))
+                ? 0
+                : Number(item.confirmed_amount),
+              pending_amount: isNaN(Number(item.pending_amount))
+                ? 0
+                : Number(item.pending_amount),
               credit_amount: isNaN(Number(item.credit_amount))
                 ? 0
                 : Number(item.credit_amount),
@@ -705,31 +711,43 @@ export function DashboardView() {
                       // Update the running balance by subtracting this row's expenses
                       runningBalance -= effectiveExpense;
 
+                      // Build className string
+                      const categoryNameStyle = getCategoryNameStyle(item);
+                      let backgroundClass = "";
+
+                      if (item.pending_amount > 0) {
+                        backgroundClass = "bg-purple-200 dark:bg-purple-900";
+                      } else if (item.total_amount === 0) {
+                        backgroundClass = "bg-white dark:bg-gray-800";
+                      } else if (item.remaining <= 0) {
+                        if (item.remaining < 0 && Math.abs(item.remaining) >= item.expected_amount * 0.3) {
+                          backgroundClass = "bg-red-100 dark:bg-red-950/50";
+                        } else if (item.remaining < 0 && Math.abs(item.remaining) > item.expected_amount * 0.1) {
+                          backgroundClass = "bg-yellow-100 dark:bg-yellow-950/50";
+                        } else {
+                          backgroundClass = "bg-green-100 dark:bg-green-950/50";
+                        }
+                      }
+
+                      const fullClassName = `font-medium ${categoryNameStyle} ${backgroundClass}`;
+
+                      // Debug logging for Ayuno and Diezmo
+                      if (item.category_name === "Ayuno" || item.category_name === "Diezmo") {
+                        console.log(`[DEBUG ${new Date().toISOString()}] ${item.category_name}:`, {
+                          pending_amount: item.pending_amount,
+                          pending_amount_type: typeof item.pending_amount,
+                          total_amount: item.total_amount,
+                          remaining: item.remaining,
+                          condition_check: item.pending_amount > 0,
+                          backgroundClass: backgroundClass,
+                          fullClassName: fullClassName
+                        });
+                      }
+
                       return (
                         <TableRow key={item.category_id} className="group">
-                          <TableCell
-                            className={`font-medium ${getCategoryNameStyle(
-                              item
-                            )} ${
-                              // White background for categories with no expenses
-                              item.total_amount === 0
-                                ? "bg-white dark:bg-gray-800"
-                                : // Green: remaining is equal to or less than 0
-                                item.remaining <= 0
-                                ? // Red: remaining is less than 0 and absolute value is >= 30% of budget
-                                  item.remaining < 0 &&
-                                  Math.abs(item.remaining) >=
-                                    item.expected_amount * 0.3
-                                  ? "bg-red-100 dark:bg-red-950/50"
-                                  : // Yellow: remaining is less than 0 and absolute value is > 10% of budget
-                                  item.remaining < 0 &&
-                                    Math.abs(item.remaining) >
-                                      item.expected_amount * 0.1
-                                  ? "bg-yellow-100 dark:bg-yellow-950/50"
-                                  : "bg-green-100 dark:bg-green-950/50"
-                                : ""
-                            }`}
-                          >
+                          <TableCell className={fullClassName}>
+
                             <div className="flex items-center gap-2">
                               <span>{item.category_name}</span>
                               <Button

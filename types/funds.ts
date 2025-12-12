@@ -323,6 +323,7 @@ export interface Expense {
     franchise: string;
     last_four_digits: string;
   }; // Populated in joins when credit card is associated
+  pending?: boolean; // New field for pending status
 }
 
 export const ExpenseSchema = z.object({
@@ -349,6 +350,7 @@ export const ExpenseSchema = z.object({
       last_four_digits: z.string(),
     })
     .optional(), // Populated in joins when credit card is associated
+  pending: z.boolean().optional(), // New field for pending status
 });
 
 // Expense creation schema
@@ -366,6 +368,7 @@ export const CreateExpenseSchema = z.object({
   source_fund_id: z.string().uuid(), // Required source fund field
   destination_fund_id: z.string().uuid().optional(),
   credit_card_id: z.string().uuid().nullable().optional(), // Optional credit card field
+  pending: z.boolean().optional(), // New field for pending status
 });
 
 // Expense update schema
@@ -386,6 +389,7 @@ export const UpdateExpenseSchema = z.object({
   source_fund_id: z.string().uuid().optional(), // Optional source fund field for updates
   destination_fund_id: z.string().uuid().optional(),
   credit_card_id: z.string().uuid().nullable().optional(), // Optional credit card field for updates
+  pending: z.boolean().optional(), // New field for pending status
 });
 
 // Existing interfaces that don't need fund support but are included for completeness

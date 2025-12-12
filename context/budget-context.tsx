@@ -123,7 +123,8 @@ type BudgetContextType = {
     amount: number,
     sourceFundId: string,
     destinationFundId?: string,
-    creditCardId?: string
+    creditCardId?: string,
+    pending?: boolean
   ) => Promise<void>;
   updateExpense: (
     id: string,
@@ -135,7 +136,8 @@ type BudgetContextType = {
     amount: number,
     sourceFundId?: string,
     destinationFundId?: string,
-    creditCardId?: string
+    creditCardId?: string,
+    pending?: boolean
   ) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   addFund: (
@@ -1481,7 +1483,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     amount: number,
     sourceFundId: string,
     destinationFundId?: string,
-    creditCardId?: string
+    creditCardId?: string,
+    pending?: boolean
   ) => {
     try {
       // Validate fund transfer - prevent same fund transfers
@@ -1505,6 +1508,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           source_fund_id: sourceFundId,
           destination_fund_id: destinationFundId,
           credit_card_id: creditCardId,
+          pending,
         }),
       });
 
@@ -1534,7 +1538,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     amount: number,
     sourceFundId?: string,
     destinationFundId?: string,
-    creditCardId?: string
+    creditCardId?: string,
+    pending?: boolean
   ) => {
     try {
       // Validate fund transfer - prevent same fund transfers
@@ -1561,6 +1566,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           source_fund_id: sourceFundId,
           destination_fund_id: destinationFundId,
           credit_card_id: creditCardId,
+          pending,
         }),
       });
 

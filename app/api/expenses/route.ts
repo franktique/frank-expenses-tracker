@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
     if (creditCardFilter) {
       // Filter expenses by credit card
       expenses = await sql`
-        SELECT 
+        SELECT
           e.id,
           e.category_id,
           e.period_id,
@@ -26,6 +26,7 @@ export async function GET(request: NextRequest) {
           e.source_fund_id,
           e.destination_fund_id,
           e.credit_card_id,
+          e.pending,
           c.name as category_name,
           p.name as period_name,
           sf.name as source_fund_name,
@@ -46,7 +47,7 @@ export async function GET(request: NextRequest) {
     } else if (fundFilter) {
       // Filter expenses by fund (through source fund or category fund relationships)
       expenses = await sql`
-        SELECT 
+        SELECT
           e.id,
           e.category_id,
           e.period_id,
@@ -58,6 +59,7 @@ export async function GET(request: NextRequest) {
           e.source_fund_id,
           e.destination_fund_id,
           e.credit_card_id,
+          e.pending,
           c.name as category_name,
           p.name as period_name,
           sf.name as source_fund_name,
@@ -74,7 +76,7 @@ export async function GET(request: NextRequest) {
         LEFT JOIN credit_cards cc ON e.credit_card_id = cc.id
         WHERE e.source_fund_id = ${fundFilter}
            OR EXISTS (
-             SELECT 1 FROM category_fund_relationships cfr 
+             SELECT 1 FROM category_fund_relationships cfr
              WHERE cfr.category_id = e.category_id AND cfr.fund_id = ${fundFilter}
            )
            OR c.fund_id = ${fundFilter}
@@ -83,7 +85,7 @@ export async function GET(request: NextRequest) {
     } else {
       // Get all expenses with fund and credit card information
       expenses = await sql`
-        SELECT 
+        SELECT
           e.id,
           e.category_id,
           e.period_id,
@@ -95,6 +97,7 @@ export async function GET(request: NextRequest) {
           e.source_fund_id,
           e.destination_fund_id,
           e.credit_card_id,
+          e.pending,
           c.name as category_name,
           p.name as period_name,
           sf.name as source_fund_name,
@@ -165,6 +168,7 @@ export async function POST(request: NextRequest) {
       source_fund_id,
       destination_fund_id,
       credit_card_id,
+      pending,
     } = validationResult.data;
 
     // Enhanced validation using the validation library
@@ -202,12 +206,12 @@ export async function POST(request: NextRequest) {
 
     // Insert the expense
     const [newExpense] = await sql`
-      INSERT INTO expenses (category_id, period_id, date, event, payment_method, description, amount, source_fund_id, destination_fund_id, credit_card_id)
+      INSERT INTO expenses (category_id, period_id, date, event, payment_method, description, amount, source_fund_id, destination_fund_id, credit_card_id, pending)
       VALUES (${category_id}, ${period_id}, ${dateToSave}, ${
       event || null
     }, ${payment_method}, ${description}, ${amount}, ${source_fund_id}, ${
       destination_fund_id || null
-    }, ${credit_card_id || null})
+    }, ${credit_card_id || null}, ${pending || false})
       RETURNING *
     `;
 
@@ -230,7 +234,7 @@ export async function POST(request: NextRequest) {
 
     // Fetch the expense with fund and credit card information
     const [expenseWithFunds] = await sql`
-      SELECT 
+      SELECT
         e.*,
         c.name as category_name,
         p.name as period_name,

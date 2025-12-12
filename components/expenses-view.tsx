@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Popover,
   PopoverContent,
@@ -200,6 +201,7 @@ export function ExpensesView() {
     sourceFundId?: string;
     destinationFundId?: string;
     creditCardId?: string;
+    pending: boolean;
   } | null>(null);
   const [editExpenseDestinationFund, setEditExpenseDestinationFund] =
     useState<Fund | null>(null);
@@ -382,7 +384,8 @@ export function ExpensesView() {
       amount,
       editExpenseSourceFund?.id,
       editExpenseDestinationFund?.id,
-      editExpenseCreditCard?.id
+      editExpenseCreditCard?.id,
+      editExpense.pending
     );
 
     setEditExpense(null);
@@ -788,6 +791,7 @@ export function ExpensesView() {
                             sourceFundId: expense.source_fund_id,
                             destinationFundId: expense.destination_fund_id,
                             creditCardId: expense.credit_card_id,
+                            pending: expense.pending || false,
                           });
                           // Set the source fund for editing
                           const sourceFund = expense.source_fund_id
@@ -1080,6 +1084,25 @@ export function ExpensesView() {
                 }
               />
             </div>
+
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div className="space-y-0.5">
+                <Label htmlFor="edit-pending">Pendiente</Label>
+                <p className="text-sm text-muted-foreground">
+                  Marcar como gasto pendiente de confirmación
+                </p>
+              </div>
+              <Switch
+                id="edit-pending"
+                checked={editExpense?.pending || false}
+                onCheckedChange={(checked) =>
+                  setEditExpense((prev) =>
+                    prev ? { ...prev, pending: checked } : null
+                  )
+                }
+              />
+            </div>
+
             <div className="grid gap-2">
               <Label htmlFor="edit-credit-card">
                 Tarjeta de Crédito (opcional)

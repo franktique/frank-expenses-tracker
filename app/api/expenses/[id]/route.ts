@@ -5,10 +5,10 @@ import { validateSourceFundUpdate } from "@/lib/source-fund-validation";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
     const [expense] = await sql`
       SELECT 
         e.*,
@@ -60,10 +60,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
     const body = await request.json();
 
     // Validate request body
@@ -96,6 +96,7 @@ export async function PUT(
       source_fund_id,
       destination_fund_id,
       credit_card_id,
+      pending,
     } = validationResult.data;
 
     // Use existing values if not provided
@@ -114,6 +115,7 @@ export async function PUT(
       credit_card_id !== undefined
         ? credit_card_id
         : existingExpense.credit_card_id;
+    pending = pending !== undefined ? pending : existingExpense.pending;
 
     // Enhanced validation for expense updates
     const validation = await validateSourceFundUpdate(
@@ -170,7 +172,7 @@ export async function PUT(
     // Update the expense
     const [updatedExpense] = await sql`
       UPDATE expenses
-      SET 
+      SET
         category_id = ${category_id},
         date = ${date},
         event = ${event || null},
@@ -179,7 +181,8 @@ export async function PUT(
         amount = ${amount},
         source_fund_id = ${source_fund_id},
         destination_fund_id = ${destination_fund_id || null},
-        credit_card_id = ${credit_card_id || null}
+        credit_card_id = ${credit_card_id || null},
+        pending = ${pending || false}
       WHERE id = ${id}
       RETURNING *
     `;
@@ -253,10 +256,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const id = params.id;
+    const { id } = await params;
 
     // Get the expense before deleting to update fund balances
     const [expenseToDelete] = await sql`

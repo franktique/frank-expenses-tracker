@@ -403,8 +403,45 @@ export async function ensureSubgroupTablesExist(): Promise<boolean> {
         display_order INTEGER DEFAULT 0,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        template_subgroup_id UUID,
+        custom_order JSONB,
+        custom_visibility BOOLEAN DEFAULT TRUE,
         UNIQUE(simulation_id, name)
       );
+    `;
+
+    // Add missing columns if table already exists (for existing databases)
+    // Using DO block to handle ALTER TABLE IF NOT EXISTS pattern
+    await sql`
+      DO $$
+      BEGIN
+        -- Add template_subgroup_id if it doesn't exist
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'simulation_subgroups'
+          AND column_name = 'template_subgroup_id'
+        ) THEN
+          ALTER TABLE simulation_subgroups ADD COLUMN template_subgroup_id UUID;
+        END IF;
+
+        -- Add custom_order if it doesn't exist
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'simulation_subgroups'
+          AND column_name = 'custom_order'
+        ) THEN
+          ALTER TABLE simulation_subgroups ADD COLUMN custom_order JSONB;
+        END IF;
+
+        -- Add custom_visibility if it doesn't exist
+        IF NOT EXISTS (
+          SELECT 1 FROM information_schema.columns
+          WHERE table_name = 'simulation_subgroups'
+          AND column_name = 'custom_visibility'
+        ) THEN
+          ALTER TABLE simulation_subgroups ADD COLUMN custom_visibility BOOLEAN DEFAULT TRUE;
+        END IF;
+      END $$;
     `;
 
     // Create or ensure subgroup_categories table exists

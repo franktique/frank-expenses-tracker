@@ -1099,7 +1099,7 @@ export function SimulationBudgetForm({
       totalEfectivo += efectivo;
       totalCredito += credito;
       totalExpectedSavings += expectedSavings;
-      totalGeneral += efectivo + credito;
+      totalGeneral += efectivo + credito - expectedSavings;
     });
 
     const totalNetSpend = totalEfectivo - totalExpectedSavings;
@@ -1120,7 +1120,8 @@ export function SimulationBudgetForm({
 
     const efectivo = parseFloat(data.efectivo_amount) || 0;
     const credito = parseFloat(data.credito_amount) || 0;
-    return efectivo + credito;
+    const expectedSavings = parseFloat(data.expected_savings) || 0;
+    return efectivo + credito - expectedSavings;
   };
 
   // Helper function to get numeric sort value for tipo_gasto based on current sort state

@@ -100,9 +100,10 @@ export function SubgroupHeaderRow({
   };
 
   // Calculate percentages
+  const grossTotal = subtotals.efectivoAmount + subtotals.creditoAmount;
   const ahorroEsperadoPercentage =
-    subtotals.total > 0
-      ? ((subtotals.expectedSavings / subtotals.total) * 100)
+    grossTotal > 0
+      ? ((subtotals.expectedSavings / grossTotal) * 100)
       : 0;
 
   const totalPercentage =

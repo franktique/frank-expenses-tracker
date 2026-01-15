@@ -184,22 +184,17 @@ export function SimulationList({ onSelect }: SimulationListProps) {
     }
   };
 
-  // Handle duplicate simulation
+  // Handle duplicate simulation - copies all data including budgets, incomes, and subgroups
   const handleDuplicateSimulation = async (simulation: Simulation) => {
     setIsDuplicating(simulation.id);
 
     try {
-      // Create a new simulation with modified name
-      const duplicateName = `${simulation.name} (Copia)`;
-      const response = await fetch("/api/simulations", {
+      // Call the copy API endpoint which handles all data copying server-side
+      const response = await fetch(`/api/simulations/${simulation.id}/copy`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
-          name: duplicateName,
-          description: simulation.description,
-        }),
       });
 
       if (!response.ok) {
@@ -207,23 +202,36 @@ export function SimulationList({ onSelect }: SimulationListProps) {
         throw new Error(errorData.error || "Error al duplicar la simulación");
       }
 
-      const duplicatedSimulation = await response.json();
-
-      // If original simulation has budgets, we would copy them here
-      // For now, we'll just create the empty simulation
-      // TODO: Copy simulation budgets when budget API is available
+      const result = await response.json();
 
       // Refresh the list
       await fetchSimulations();
 
+      // Build description with copied data counts
+      const copiedItems = [];
+      if (result.copied?.budgets_count > 0) {
+        copiedItems.push(`${result.copied.budgets_count} presupuestos`);
+      }
+      if (result.copied?.incomes_count > 0) {
+        copiedItems.push(`${result.copied.incomes_count} ingresos`);
+      }
+      if (result.copied?.subgroups_count > 0) {
+        copiedItems.push(`${result.copied.subgroups_count} subgrupos`);
+      }
+
+      const description =
+        copiedItems.length > 0
+          ? `Se copiaron: ${copiedItems.join(", ")}`
+          : "Simulación copiada (sin datos adicionales)";
+
       toast({
         title: "Simulación duplicada",
-        description: "La simulación ha sido duplicada exitosamente",
+        description,
       });
 
       // Auto-select the duplicated simulation if callback provided
-      if (onSelect) {
-        onSelect(duplicatedSimulation.id);
+      if (onSelect && result.simulation?.id) {
+        onSelect(result.simulation.id);
       }
     } catch (error) {
       toast({

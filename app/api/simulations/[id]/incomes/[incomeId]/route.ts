@@ -69,25 +69,8 @@ export async function PUT(
       );
     }
 
-    // Build update query dynamically based on provided fields
-    const updates: string[] = [];
-    const values: any[] = [];
-
-    if (description !== undefined) {
-      updates.push("description = $" + (values.length + 1));
-      values.push(description);
-    }
-
-    if (amount !== undefined) {
-      updates.push("amount = $" + (values.length + 1));
-      values.push(amount);
-    }
-
-    // Always update the updated_at timestamp
-    updates.push("updated_at = CURRENT_TIMESTAMP");
-
-    if (updates.length === 1) {
-      // Only updated_at, nothing to update
+    // Check if there's anything to update
+    if (description === undefined && amount === undefined) {
       return NextResponse.json({
         success: true,
         message: "No hay cambios para actualizar",
@@ -95,17 +78,17 @@ export async function PUT(
       });
     }
 
-    // Update income entry
-    const updateQuery = `
+    // Update income entry with the provided values
+    // Use COALESCE to keep existing values if not provided
+    const [updatedIncome] = await sql`
       UPDATE simulation_incomes
-      SET ${updates.join(", ")}
-      WHERE id = $${values.length + 1} AND simulation_id = $${values.length + 2}
+      SET
+        description = COALESCE(${description ?? null}, description),
+        amount = COALESCE(${amount ?? null}, amount),
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${incomeIdNum} AND simulation_id = ${simulationId}
       RETURNING *
     `;
-
-    values.push(incomeIdNum, simulationId);
-
-    const [updatedIncome] = await sql.unsafe(updateQuery, values);
 
     // Update simulation's updated_at timestamp
     await sql`

@@ -13,12 +13,15 @@ import {
 } from "@/components/ui/tooltip";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/hooks/use-toast";
+import { useSidebar } from "@/components/ui/sidebar";
 
 export function LogoutButton() {
   const [isLoading, setIsLoading] = useState(false);
   const { logout } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const { state } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   const handleLogout = async () => {
     try {
@@ -61,10 +64,12 @@ export function LogoutButton() {
         <TooltipTrigger asChild>
           <Button
             variant="ghost"
-            size="sm"
+            size={isCollapsed ? "icon" : "sm"}
             onClick={handleLogout}
             disabled={isLoading}
-            className="w-full justify-start gap-2 text-muted-foreground hover:text-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors"
+            className={`text-muted-foreground hover:text-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-colors ${
+              isCollapsed ? "h-8 w-8 p-0" : "w-full justify-start gap-2"
+            }`}
             aria-label={
               isLoading
                 ? "Cerrando sesión, por favor espera"
@@ -82,7 +87,7 @@ export function LogoutButton() {
             }}
           >
             <LogOut className="h-4 w-4" aria-hidden="true" />
-            <span>{isLoading ? "Cerrando..." : "Cerrar Sesión"}</span>
+            {!isCollapsed && <span>{isLoading ? "Cerrando..." : "Cerrar Sesión"}</span>}
           </Button>
         </TooltipTrigger>
         <TooltipContent id="logout-tooltip" side="right" align="center">

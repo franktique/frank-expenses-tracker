@@ -16,6 +16,8 @@ import {
   Zap,
   Receipt,
   ChevronRight,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -31,7 +33,9 @@ import {
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -45,6 +49,8 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { isAuthenticated } = useAuth();
   const [overspendOpen, setOverspendOpen] = useState(false);
+  const { toggleSidebar, state } = useSidebar();
+  const isCollapsed = state === "collapsed";
 
   const isActive = (path: string) => {
     if (path === "/estudios") {
@@ -63,20 +69,47 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader className="border-b">
-        <div className="flex items-center justify-between px-4 py-2">
-          <div className="flex items-center gap-2">
-            <DollarSign className="h-6 w-6" />
-            <span className="text-lg font-semibold">Budget Tracker</span>
+        <div className="flex items-center justify-between px-2 py-2">
+          <div className="flex items-center gap-2 overflow-hidden">
+            <DollarSign className="h-6 w-6 shrink-0" />
+            <span className={`text-lg font-semibold whitespace-nowrap transition-opacity duration-200 ${isCollapsed ? "opacity-0 w-0" : "opacity-100"}`}>
+              Budget Tracker
+            </span>
           </div>
-          <ThemeToggle />
+          <div className={`flex items-center gap-1 ${isCollapsed ? "hidden" : ""}`}>
+            <ThemeToggle />
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={toggleSidebar}
+              title="Collapse sidebar (Ctrl+B)"
+            >
+              <PanelLeftClose className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
+        {isCollapsed && (
+          <div className="flex flex-col items-center gap-1 py-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7"
+              onClick={toggleSidebar}
+              title="Expand sidebar (Ctrl+B)"
+            >
+              <PanelLeft className="h-4 w-4" />
+            </Button>
+            <ThemeToggle />
+          </div>
+        )}
       </SidebarHeader>
       <SidebarContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/")}>
+            <SidebarMenuButton asChild isActive={isActive("/")} tooltip="Dashboard">
               <Link href="/">
                 <Home className="h-4 w-4" />
                 <span>Dashboard</span>
@@ -84,7 +117,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/categorias")}>
+            <SidebarMenuButton asChild isActive={isActive("/categorias")} tooltip="Categorias">
               <Link href="/categorias">
                 <PieChart className="h-4 w-4" />
                 <span>Categorias</span>
@@ -92,7 +125,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/periodos")}>
+            <SidebarMenuButton asChild isActive={isActive("/periodos")} tooltip="Periodos">
               <Link href="/periodos">
                 <CalendarRange className="h-4 w-4" />
                 <span>Periodos</span>
@@ -100,7 +133,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/presupuestos")}>
+            <SidebarMenuButton asChild isActive={isActive("/presupuestos")} tooltip="Presupuestos">
               <Link href="/presupuestos">
                 <Calculator className="h-4 w-4" />
                 <span>Presupuestos</span>
@@ -108,7 +141,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/ingresos")}>
+            <SidebarMenuButton asChild isActive={isActive("/ingresos")} tooltip="Ingresos">
               <Link href="/ingresos">
                 <TrendingUp className="h-4 w-4" />
                 <span>Ingresos</span>
@@ -116,7 +149,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/gastos")}>
+            <SidebarMenuButton asChild isActive={isActive("/gastos")} tooltip="Gastos">
               <Link href="/gastos">
                 <Receipt className="h-4 w-4" />
                 <span>Gastos</span>
@@ -124,7 +157,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/tarjetas-credito")}>
+            <SidebarMenuButton asChild isActive={isActive("/tarjetas-credito")} tooltip="Tarjetas de Crédito">
               <Link href="/tarjetas-credito">
                 <CreditCard className="h-4 w-4" />
                 <span>Tarjetas de Crédito</span>
@@ -132,7 +165,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/fondos")}>
+            <SidebarMenuButton asChild isActive={isActive("/fondos")} tooltip="Fondos">
               <Link href="/fondos">
                 <Wallet className="h-4 w-4" />
                 <span>Fondos</span>
@@ -140,7 +173,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/agrupadores")}>
+            <SidebarMenuButton asChild isActive={isActive("/agrupadores")} tooltip="Agrupadores">
               <Link href="/agrupadores">
                 <LayersIcon className="h-4 w-4" />
                 <span>Agrupadores</span>
@@ -148,7 +181,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/estudios")}>
+            <SidebarMenuButton asChild isActive={isActive("/estudios")} tooltip="Estudios">
               <Link href="/estudios">
                 <BookOpen className="h-4 w-4" />
                 <span>Estudios</span>
@@ -156,7 +189,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/simular")}>
+            <SidebarMenuButton asChild isActive={isActive("/simular")} tooltip="Simular">
               <Link href="/simular">
                 <Zap className="h-4 w-4" />
                 <span>Simular</span>
@@ -167,6 +200,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               asChild
               isActive={isActive("/dashboard/groupers")}
+              tooltip="Dashboard Agrupadores"
             >
               <Link href="/dashboard/groupers">
                 <BarChart3 className="h-4 w-4" />
@@ -175,7 +209,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/dashboard/fondos")}>
+            <SidebarMenuButton asChild isActive={isActive("/dashboard/fondos")} tooltip="Dashboard Fondos">
               <Link href="/dashboard/fondos">
                 <BarChart3 className="h-4 w-4" />
                 <span>Dashboard Fondos</span>
@@ -186,6 +220,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               asChild
               isActive={isActive("/dashboard/remainder")}
+              tooltip="Dashboard Remanentes"
             >
               <Link href="/dashboard/remainder">
                 <TrendingUp className="h-4 w-4" />
@@ -197,6 +232,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               asChild
               isActive={isActive("/dashboard/category-bars")}
+              tooltip="Gastos por Fecha"
             >
               <Link href="/dashboard/category-bars">
                 <BarChart3 className="h-4 w-4" />
@@ -208,6 +244,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               asChild
               isActive={isActive("/dashboard/period-bars")}
+              tooltip="Gastos por Periodo"
             >
               <Link href="/dashboard/period-bars">
                 <BarChart3 className="h-4 w-4" />
@@ -225,6 +262,7 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   isActive={isActive("/dashboard/overspend")}
                   className="w-full"
+                  tooltip="Overspend Actual"
                 >
                   <BarChart3 className="h-4 w-4" />
                   <span>Overspend Actual</span>
@@ -265,6 +303,7 @@ export function AppSidebar() {
             <SidebarMenuButton
               asChild
               isActive={isActive("/dashboard/projected-execution")}
+              tooltip="Ejecución Proyectada"
             >
               <Link href="/dashboard/projected-execution">
                 <TrendingUp className="h-4 w-4" />
@@ -273,7 +312,7 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/setup")}>
+            <SidebarMenuButton asChild isActive={isActive("/setup")} tooltip="Configuración">
               <Link href="/setup">
                 <Database className="h-4 w-4" />
                 <span>Configuración</span>
@@ -282,12 +321,14 @@ export function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className="border-t p-4">
-        <div className="flex flex-col gap-2">
+      <SidebarFooter className={`border-t ${isCollapsed ? "p-2" : "p-4"}`}>
+        <div className={`flex flex-col gap-2 ${isCollapsed ? "items-center" : ""}`}>
           {isAuthenticated && <LogoutButton />}
-          <div className="text-xs text-muted-foreground">
-            Budget Tracker v1.0
-          </div>
+          {!isCollapsed && (
+            <div className="text-xs text-muted-foreground">
+              Budget Tracker v1.0
+            </div>
+          )}
         </div>
       </SidebarFooter>
     </Sidebar>

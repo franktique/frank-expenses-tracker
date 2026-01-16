@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useBudget } from "@/context/budget-context";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
@@ -18,11 +18,14 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Cell,
 } from "recharts";
+import { ExpenseDetailTable } from "@/components/expense-detail-table";
 
 export default function PeriodBarsDashboard() {
   const { categories, expenses, periods } = useBudget();
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
 
   // Compute filtered and grouped data
   const data = useMemo(() => {
@@ -54,6 +57,7 @@ export default function PeriodBarsDashboard() {
       .map(([periodId, { total, year, month }]) => {
         const period = periods.find((p) => p.id === periodId);
         return {
+          periodId,
           period: period ? period.name : periodId,
           total,
           year,
@@ -65,6 +69,47 @@ export default function PeriodBarsDashboard() {
         return a.month - b.month;
       });
   }, [expenses, periods, selectedCategoryId]);
+
+  // Clear selection when category changes
+  useEffect(() => {
+    setSelectedPeriodId(null);
+  }, [selectedCategoryId]);
+
+  // Filtered expenses for detail table (sorted by date)
+  const filteredExpenses = useMemo(() => {
+    if (!selectedPeriodId || !selectedCategoryId) return [];
+    return expenses
+      .filter(
+        (e) =>
+          e.period_id === selectedPeriodId &&
+          e.category_id === selectedCategoryId
+      )
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  }, [expenses, selectedPeriodId, selectedCategoryId]);
+
+  // Get selected period name for display
+  const selectedPeriodName = useMemo(() => {
+    if (!selectedPeriodId) return "";
+    const period = periods.find((p) => p.id === selectedPeriodId);
+    return period?.name || "";
+  }, [periods, selectedPeriodId]);
+
+  // Handle bar click to select/deselect a period
+  const handleBarClick = (data: any) => {
+    if (data?.activePayload?.[0]) {
+      const clickedPeriodId = data.activePayload[0].payload.periodId;
+      // Toggle selection: if same period is clicked, deselect it
+      setSelectedPeriodId((prev) =>
+        prev === clickedPeriodId ? null : clickedPeriodId
+      );
+    }
+  };
+
+  // Get bar color based on selection
+  const getBarColor = (periodId: string) => {
+    if (periodId === selectedPeriodId) return "#3b82f6"; // Blue for selected
+    return "#22d3ee"; // Cyan for normal
+  };
 
   // Default to first category if none selected
   const categoryOptions = categories.map((cat) => ({
@@ -113,6 +158,8 @@ export default function PeriodBarsDashboard() {
                 <BarChart
                   data={data}
                   margin={{ top: 16, right: 16, left: 16, bottom: 32 }}
+                  onClick={handleBarClick}
+                  style={{ cursor: "pointer" }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
@@ -124,26 +171,58 @@ export default function PeriodBarsDashboard() {
                   />
                   <YAxis />
                   <Tooltip
-                    formatter={(value: number) =>
-                      value.toLocaleString("es-CO", {
-                        style: "currency",
-                        currency: "COP",
-                      })
-                    }
+                    content={({ active, payload }) => {
+                      if (!active || !payload || !payload.length) {
+                        return null;
+                      }
+                      const item = payload[0].payload;
+                      return (
+                        <div className="rounded-md bg-white dark:bg-zinc-900 p-3 shadow-lg border border-gray-200 dark:border-zinc-800">
+                          <div className="font-medium text-gray-900 dark:text-gray-100 text-base mb-1">
+                            {item.period}
+                          </div>
+                          <div className="text-gray-900 dark:text-gray-100">
+                            Total:{" "}
+                            {Number(payload[0].value).toLocaleString("es-CO", {
+                              style: "currency",
+                              currency: "COP",
+                            })}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                            Clic para ver detalles
+                          </div>
+                        </div>
+                      );
+                    }}
                   />
                   <Bar
                     dataKey="total"
-                    fill="#22d3ee"
                     name={
                       selectedCategory ? selectedCategory.name : "Categoría"
                     }
-                  />
+                  >
+                    {data.map((entry, index) => (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={getBarColor(entry.periodId)}
+                      />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      {/* Expense Detail Table - Conditionally rendered */}
+      {selectedPeriodId && filteredExpenses.length > 0 && (
+        <ExpenseDetailTable
+          expenses={filteredExpenses}
+          periodName={selectedPeriodName}
+          categoryName={selectedCategory?.name || ""}
+        />
+      )}
     </div>
   );
 }

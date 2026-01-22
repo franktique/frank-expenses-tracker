@@ -703,3 +703,86 @@ interface BudgetDetail {
 - Follows established dashboard patterns (see category-bars, overspend dashboards)
 - No database updates needed - read-only visualization
 - Interactive detail view with budget breakdown information
+
+#### Investment Simulator
+The **Investment Simulator** (`/simular-inversiones`) allows users to project investment growth with compound interest, including regular monthly contributions and multiple rate comparisons.
+
+**Features**:
+- **Real-time Calculations**: All calculations happen client-side as user adjusts parameters
+- **Configurable Parameters**:
+  - Initial amount (monto inicial)
+  - Monthly contribution (aporte mensual)
+  - Term in months (plazo)
+  - Annual effective rate (tasa EA) - configurable unlike reference image
+  - Compounding frequency: Daily or Monthly
+  - Currency selection (COP, USD, EUR, MXN, ARS, GBP)
+- **Interactive Form**: +/- buttons for quick adjustments, similar to reference design
+- **Save When Ready**: Users configure and preview results before saving to database
+- **Rate Comparison**: Add multiple rates to compare final balances and interest earned
+- **Projection Chart**: Area chart showing capital vs accumulated interest over time
+- **Period Detail Table**: Month-by-month breakdown with pagination
+
+**Data Model**:
+- `investment_scenarios` table: `id`, `name`, `initial_amount`, `monthly_contribution`, `term_months`, `annual_rate`, `compounding_frequency`, `currency`, `created_at`, `updated_at`
+- `investment_rate_comparisons` table: `id`, `investment_scenario_id`, `rate`, `label`, `created_at`
+
+**API Endpoints**:
+- `GET /api/invest-scenarios` - List all scenarios with projected balances
+- `POST /api/invest-scenarios` - Create new scenario
+- `GET /api/invest-scenarios/[id]` - Get scenario by ID
+- `PUT /api/invest-scenarios/[id]` - Update scenario
+- `DELETE /api/invest-scenarios/[id]` - Delete scenario (cascades to comparisons)
+- `GET /api/invest-scenarios/[id]/projection` - Full projection with schedule
+- `GET /api/invest-scenarios/[id]/rate-comparisons` - Get rate comparisons
+- `POST /api/invest-scenarios/[id]/rate-comparisons` - Add rate comparison
+- `DELETE /api/invest-scenarios/[id]/rate-comparisons` - Remove rate comparison
+- `POST /api/migrate-invest-simulator` - Initialize database tables
+
+**Components** (`/components/invest-simulator/`):
+- `InvestCalculator` - Main component integrating all features
+- `InvestCalculatorForm` - Form with +/- buttons for parameters
+- `InvestSummaryCards` - KPI cards showing projected results
+- `InvestProjectionChart` - Area chart with capital vs interest
+- `InvestmentScheduleTable` - Period-by-period breakdown
+- `RateComparisonPanel` - Add/remove rates, comparison table
+- `SaveScenarioDialog` - Modal for naming and saving
+- `InvestScenarioList` - Collapsible list of saved scenarios
+
+**Calculation Functions** (`/lib/invest-calculations.ts`):
+- `convertEAToPeriodicRate(rate, frequency)` - EA to daily/monthly rate
+- `calculateFutureValue(principal, rate, periods, contribution)` - FV with contributions
+- `generateProjectionSchedule(scenario)` - Full period-by-period detail
+- `generateMonthlySummarySchedule(scenario)` - Monthly summary for charts
+- `calculateInvestmentSummary(scenario)` - Summary statistics
+- `compareRates(scenario, additionalRates)` - Multi-rate comparison
+- `calculateTimeToTarget(target, scenario)` - Time to reach goal
+- `calculateRequiredContribution(target, ...)` - Required monthly amount
+
+**Type Definitions** (`/types/invest-simulator.ts`):
+- `InvestmentScenario` - Scenario configuration
+- `InvestmentSummary` - Calculated totals
+- `InvestmentPeriodDetail` - Single period breakdown
+- `RateComparison` / `RateComparisonResult` - Rate comparison data
+- Zod schemas for validation
+
+**Financial Formulas**:
+- EA to Monthly Rate: `(1 + EA)^(1/12) - 1`
+- EA to Daily Rate: `(1 + EA)^(1/365) - 1`
+- Future Value: `P(1+r)^n + PMT × ((1+r)^n - 1) / r`
+
+**User Flow**:
+1. Navigate to `/simular-inversiones`
+2. Adjust parameters using form (calculations update in real-time)
+3. View summary cards, chart, and period detail
+4. Add comparison rates to see alternatives
+5. Click "Guardar Simulación" when satisfied
+6. Enter name in dialog, confirm save
+7. Access saved scenarios via collapsible list
+8. Click "Cargar" to load existing scenario for editing
+
+**Integration Notes**:
+- No BudgetContext dependency - standalone feature
+- Auto-migrates tables on first use if not exist
+- Purple theme consistent with financial tools
+- Supports both daily and monthly compounding
+- Rate comparisons work in real-time without saving

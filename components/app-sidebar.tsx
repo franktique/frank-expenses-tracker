@@ -9,6 +9,7 @@ import {
   Database,
   DollarSign,
   Home,
+  Landmark,
   Layers as LayersIcon,
   PieChart,
   TrendingUp,
@@ -58,6 +59,12 @@ export function AppSidebar() {
     }
     if (path === "/simular") {
       return pathname === "/simular" || pathname.startsWith("/simular/");
+    }
+    if (path === "/simular-prestamos") {
+      return (
+        pathname === "/simular-prestamos" ||
+        pathname.startsWith("/simular-prestamos/")
+      );
     }
     if (path === "/dashboard/overspend") {
       return (
@@ -193,6 +200,18 @@ export function AppSidebar() {
               <Link href="/simular">
                 <Zap className="h-4 w-4" />
                 <span>Simular</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive("/simular-prestamos")}
+              tooltip="Simular Préstamos"
+            >
+              <Link href="/simular-prestamos">
+                <Landmark className="h-4 w-4" />
+                <span>Simular Préstamos</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

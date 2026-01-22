@@ -66,6 +66,12 @@ export function AppSidebar() {
         pathname.startsWith("/simular-prestamos/")
       );
     }
+    if (path === "/simular-inversiones") {
+      return (
+        pathname === "/simular-inversiones" ||
+        pathname.startsWith("/simular-inversiones/")
+      );
+    }
     if (path === "/dashboard/overspend") {
       return (
         pathname === "/dashboard/overspend" ||
@@ -212,6 +218,18 @@ export function AppSidebar() {
               <Link href="/simular-prestamos">
                 <Landmark className="h-4 w-4" />
                 <span>Simular Préstamos</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive("/simular-inversiones")}
+              tooltip="Simular Inversiones"
+            >
+              <Link href="/simular-inversiones">
+                <TrendingUp className="h-4 w-4" />
+                <span>Simular Inversiones</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

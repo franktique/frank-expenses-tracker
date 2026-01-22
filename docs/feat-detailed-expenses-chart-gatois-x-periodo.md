@@ -2,12 +2,12 @@
 
 **Branch:** `feat/detailed-expenses-chart-gatois-x-periodo`
 **Created:** 2026-01-16
-**Status:** Complete
+**Status:** Planning
 
 ## Overview
 
 Add click-to-show-details functionality to the "Gastos por Periodo" bar chart. When a user clicks on a bar representing a period, a table should appear below the chart showing the detailed expenses for that period, ordered by date.
-
+/get
 ## Current State
 
 The current implementation (`/app/dashboard/period-bars/page.tsx`) displays:
@@ -36,41 +36,41 @@ Follow the established pattern from the "Projected Budget Execution" dashboard (
 
 ### Phase 1: State Management & Click Handler
 
-- [x] Add `selectedPeriodId` state to track selected period
-- [x] Import `Cell` component from recharts for individual bar styling
-- [x] Add `onClick` handler to `BarChart` component
-- [x] Implement `handleBarClick` function to set/toggle selected period
-- [x] Clear selection when category changes
+- [ ] Add `selectedPeriodId` state to track selected period
+- [ ] Import `Cell` component from recharts for individual bar styling
+- [ ] Add `onClick` handler to `BarChart` component
+- [ ] Implement `handleBarClick` function to set/toggle selected period
+- [ ] Clear selection when category changes
 
 ### Phase 2: Visual Feedback
 
-- [x] Add `getBarColor` function to determine bar fill color
-- [x] Implement bar coloring logic:
+- [ ] Add `getBarColor` function to determine bar fill color
+- [ ] Implement bar coloring logic:
   - Selected bar: Blue (#3b82f6)
   - Normal bars: Cyan (#22d3ee - current color)
-- [x] Add cursor pointer style to chart
-- [x] Map bars with `Cell` component for individual colors
-- [x] Update tooltip to show "Click para ver detalles" hint
+- [ ] Add cursor pointer style to chart
+- [ ] Map bars with `Cell` component for individual colors
+- [ ] Update tooltip to show "Click para ver detalles" hint
 
 ### Phase 3: Expense Detail Table
 
-- [x] Create `ExpenseDetailTable` component (`/components/expense-detail-table.tsx`)
+- [ ] Create `ExpenseDetailTable` component (`/components/expense-detail-table.tsx`)
   - Props: `expenses`, `selectedPeriodName`
   - Columns: Fecha | Descripción | Evento | Monto | Método de Pago
   - Sort by date (ascending)
   - Currency formatting for amounts
   - Responsive design with proper styling
-- [x] Filter expenses by selected period and category
-- [x] Memoize filtered expenses for performance
-- [x] Render table conditionally when period is selected
+- [ ] Filter expenses by selected period and category
+- [ ] Memoize filtered expenses for performance
+- [ ] Render table conditionally when period is selected
 
 ### Phase 4: Integration & Polish
 
-- [x] Import and render `ExpenseDetailTable` below the chart
-- [x] Add smooth visual transition when table appears/disappears
-- [x] Test with various categories and periods
-- [x] Verify empty state handling (no expenses for period)
-- [x] Ensure mobile responsiveness
+- [ ] Import and render `ExpenseDetailTable` below the chart
+- [ ] Add smooth visual transition when table appears/disappears
+- [ ] Test with various categories and periods
+- [ ] Verify empty state handling (no expenses for period)
+- [ ] Ensure mobile responsiveness
 
 ## Technical Details
 

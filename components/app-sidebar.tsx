@@ -11,6 +11,7 @@ import {
   Home,
   Landmark,
   Layers as LayersIcon,
+  Percent,
   PieChart,
   TrendingUp,
   Wallet,
@@ -70,6 +71,12 @@ export function AppSidebar() {
       return (
         pathname === "/simular-inversiones" ||
         pathname.startsWith("/simular-inversiones/")
+      );
+    }
+    if (path === "/simular-tasas") {
+      return (
+        pathname === "/simular-tasas" ||
+        pathname.startsWith("/simular-tasas/")
       );
     }
     if (path === "/dashboard/overspend") {
@@ -230,6 +237,18 @@ export function AppSidebar() {
               <Link href="/simular-inversiones">
                 <TrendingUp className="h-4 w-4" />
                 <span>Simular Inversiones</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive("/simular-tasas")}
+              tooltip="Simular Tasas"
+            >
+              <Link href="/simular-tasas">
+                <Percent className="h-4 w-4" />
+                <span>Simular Tasas</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

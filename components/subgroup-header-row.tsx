@@ -101,9 +101,13 @@ export function SubgroupHeaderRow({
 
   // Calculate percentages
   const grossTotal = subtotals.efectivoAmount + subtotals.creditoAmount;
-  const ahorroEsperadoPercentage =
-    grossTotal > 0
-      ? ((subtotals.expectedSavings / grossTotal) * 100)
+  const ahorroEfectivoPercentage =
+    subtotals.efectivoAmount > 0
+      ? ((subtotals.ahorroEfectivoAmount / subtotals.efectivoAmount) * 100)
+      : 0;
+  const ahorroCreditoPercentage =
+    subtotals.creditoAmount > 0
+      ? ((subtotals.ahorroCreditoAmount / subtotals.creditoAmount) * 100)
       : 0;
 
   const totalPercentage =
@@ -185,14 +189,26 @@ export function SubgroupHeaderRow({
         </span>
       </TableCell>
 
-      {/* Expected Savings */}
+      {/* Ahorro Efectivo */}
       <TableCell className="text-right">
         <div className="flex flex-col items-end">
           <span className="text-sm font-semibold">
-            {formatCurrency(subtotals.expectedSavings)}
+            {formatCurrency(subtotals.ahorroEfectivoAmount)}
           </span>
           <span className="text-xs text-muted-foreground">
-            {formatPercentage(ahorroEsperadoPercentage)}
+            {formatPercentage(ahorroEfectivoPercentage)}
+          </span>
+        </div>
+      </TableCell>
+
+      {/* Ahorro Crédito */}
+      <TableCell className="text-right">
+        <div className="flex flex-col items-end">
+          <span className="text-sm font-semibold">
+            {formatCurrency(subtotals.ahorroCreditoAmount)}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {formatPercentage(ahorroCreditoPercentage)}
           </span>
         </div>
       </TableCell>

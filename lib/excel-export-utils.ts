@@ -19,6 +19,8 @@ export interface SimulationExportData {
     category_name: string;
     efectivo_amount: number;
     credito_amount: number;
+    ahorro_efectivo_amount: number;
+    ahorro_credito_amount: number;
     total: number;
     balance: number;
   }>;
@@ -31,6 +33,8 @@ export interface SimulationExportData {
   totals: {
     efectivo: number;
     credito: number;
+    ahorro_efectivo: number;
+    ahorro_credito: number;
     general: number;
   };
   categoryCount: number;
@@ -98,6 +102,8 @@ export function generateSimulationExcel(
     ["PRESUPUESTOS"],
     ["Total Efectivo", data.totals.efectivo],
     ["Total Crédito", data.totals.credito],
+    ["Total Ahorro Efectivo", data.totals.ahorro_efectivo],
+    ["Total Ahorro Crédito", data.totals.ahorro_credito],
     ["Total General", data.totals.general],
     [],
     ["Categorías Configuradas", data.categoryCount],
@@ -145,6 +151,8 @@ export function generateSimulationExcel(
     "Categoría",
     "Efectivo",
     "Crédito",
+    "Ahorro Efectivo",
+    "Ahorro Crédito",
     "Total",
     "Balance",
   ];
@@ -152,22 +160,34 @@ export function generateSimulationExcel(
   const budgetData: any[][] = [budgetHeaders];
 
   // Helper function to calculate subgroup subtotals
-  const calculateSubgroupSubtotals = (categoryIds: (string | number)[]): { efectivo: number; credito: number; total: number } => {
+  const calculateSubgroupSubtotals = (categoryIds: (string | number)[]): {
+    efectivo: number;
+    credito: number;
+    ahorro_efectivo: number;
+    ahorro_credito: number;
+    total: number;
+  } => {
     let efectivo = 0;
     let credito = 0;
+    let ahorroEfectivo = 0;
+    let ahorroCredito = 0;
 
     categoryIds.forEach((categoryId) => {
       const budget = data.budgets.find((b) => String(b.category_id) === String(categoryId));
       if (budget) {
         efectivo += budget.efectivo_amount;
         credito += budget.credito_amount;
+        ahorroEfectivo += budget.ahorro_efectivo_amount;
+        ahorroCredito += budget.ahorro_credito_amount;
       }
     });
 
     return {
       efectivo,
       credito,
-      total: efectivo + credito,
+      ahorro_efectivo: ahorroEfectivo,
+      ahorro_credito: ahorroCredito,
+      total: efectivo + credito - ahorroEfectivo - ahorroCredito,
     };
   };
 
@@ -187,6 +207,8 @@ export function generateSimulationExcel(
         `  [${subgroup.name}]`, // Indent with spaces
         "", // Efectivo
         "", // Crédito
+        "", // Ahorro Efectivo
+        "", // Ahorro Crédito
         "", // Total
         "", // Balance
       ]);
@@ -199,6 +221,8 @@ export function generateSimulationExcel(
             `    ${budget.category_name}`, // Extra indent for categories within subgroup
             budget.efectivo_amount,
             budget.credito_amount,
+            budget.ahorro_efectivo_amount,
+            budget.ahorro_credito_amount,
             budget.total,
             budget.balance,
           ]);
@@ -211,30 +235,34 @@ export function generateSimulationExcel(
         `  Subtotal: ${subgroup.name}`,
         subtotals.efectivo,
         subtotals.credito,
+        subtotals.ahorro_efectivo,
+        subtotals.ahorro_credito,
         subtotals.total,
         "", // No balance for subtotals
       ]);
 
       // Add empty row for spacing
-      budgetData.push(["", "", "", "", ""]);
+      budgetData.push(["", "", "", "", "", "", ""]);
     });
   }
 
   // Add uncategorized categories (those not in any subgroup)
   if (categorizedIds.size < data.budgets.length) {
-    budgetData.push(["Categorías Sin Grupo", "", "", "", ""]);
+    budgetData.push(["Categorías Sin Grupo", "", "", "", "", "", ""]);
     data.budgets.forEach((budget) => {
       if (!categorizedIds.has(budget.category_id)) {
         budgetData.push([
           budget.category_name,
           budget.efectivo_amount,
           budget.credito_amount,
+          budget.ahorro_efectivo_amount,
+          budget.ahorro_credito_amount,
           budget.total,
           budget.balance,
         ]);
       }
     });
-    budgetData.push(["", "", "", "", ""]);
+    budgetData.push(["", "", "", "", "", "", ""]);
   } else if (!data.subgroups || data.subgroups.length === 0) {
     // If no subgroups, add all budgets normally
     data.budgets.forEach((budget) => {
@@ -242,6 +270,8 @@ export function generateSimulationExcel(
         budget.category_name,
         budget.efectivo_amount,
         budget.credito_amount,
+        budget.ahorro_efectivo_amount,
+        budget.ahorro_credito_amount,
         budget.total,
         budget.balance,
       ]);
@@ -253,6 +283,8 @@ export function generateSimulationExcel(
     "TOTALES",
     data.totals.efectivo,
     data.totals.credito,
+    data.totals.ahorro_efectivo,
+    data.totals.ahorro_credito,
     data.totals.general,
     "", // No balance for totals
   ]);
@@ -264,6 +296,8 @@ export function generateSimulationExcel(
     { wch: 30 }, // Categoría
     { wch: 18 }, // Efectivo
     { wch: 18 }, // Crédito
+    { wch: 18 }, // Ahorro Efectivo
+    { wch: 18 }, // Ahorro Crédito
     { wch: 18 }, // Total
     { wch: 18 }, // Balance
   ];
@@ -281,9 +315,9 @@ export function generateSimulationExcel(
       const isSectionHeader = typeof cellValue === "string" && cellValue === "Categorías Sin Grupo";
       const isEmpty = cellValue === "" || cellValue === undefined;
 
-      // Apply currency format to numeric columns (B=Efectivo, C=Crédito, D=Total, E=Balance)
+      // Apply currency format to numeric columns (B=Efectivo, C=Crédito, D=Ahorro Efectivo, E=Ahorro Crédito, F=Total, G=Balance)
       // Skip header row (R === 0), section headers, subgroup rows, and empty rows
-      if (R > 0 && C >= 1 && C <= 4 && !isEmpty && !isSubgroupHeader && !isSectionHeader && !isSubgroupSubtotal) {
+      if (R > 0 && C >= 1 && C <= 6 && !isEmpty && !isSubgroupHeader && !isSectionHeader && !isSubgroupSubtotal) {
         applyCurrencyFormat(budgetSheet, cellAddress);
       }
 
@@ -334,7 +368,7 @@ export function generateSimulationExcel(
           fill: { fgColor: { rgb: "F2F2F2" } },
         };
         // Apply currency format to subtotal numeric cells
-        if (C >= 1 && C <= 3) {
+        if (C >= 1 && C <= 5) {
           applyCurrencyFormat(budgetSheet, cellAddress);
         }
       }

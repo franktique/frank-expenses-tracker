@@ -81,7 +81,9 @@ type BudgetFormData = {
     // Use string to support UUID category IDs
     efectivo_amount: string;
     credito_amount: string;
-    expected_savings: string;
+    ahorro_efectivo_amount: string;
+    ahorro_credito_amount: string;
+    expected_savings: string; // Keep for backward compatibility
   };
 };
 
@@ -233,6 +235,8 @@ export function SimulationBudgetForm({
           // Ensure amounts are valid numbers
           const efectivoAmount = existingBudget?.efectivo_amount;
           const creditoAmount = existingBudget?.credito_amount;
+          const ahorroEfectivoAmount = existingBudget?.ahorro_efectivo_amount;
+          const ahorroCreditoAmount = existingBudget?.ahorro_credito_amount;
           const expectedSavings = existingBudget?.expected_savings;
 
           initialBudgetData[String(category.id)] = {
@@ -247,6 +251,23 @@ export function SimulationBudgetForm({
               creditoAmount !== undefined &&
               !isNaN(creditoAmount)
                 ? creditoAmount.toString()
+                : "0",
+            ahorro_efectivo_amount:
+              ahorroEfectivoAmount !== null &&
+              ahorroEfectivoAmount !== undefined &&
+              !isNaN(ahorroEfectivoAmount)
+                ? ahorroEfectivoAmount.toString()
+                : // Fallback to expected_savings for backward compatibility
+                  expectedSavings !== null &&
+                  expectedSavings !== undefined &&
+                  !isNaN(expectedSavings)
+                  ? expectedSavings.toString()
+                  : "0",
+            ahorro_credito_amount:
+              ahorroCreditoAmount !== null &&
+              ahorroCreditoAmount !== undefined &&
+              !isNaN(ahorroCreditoAmount)
+                ? ahorroCreditoAmount.toString()
                 : "0",
             expected_savings:
               expectedSavings !== null &&
@@ -888,7 +909,9 @@ export function SimulationBudgetForm({
             category_id: parsedCategoryId,
             efectivo_amount: parseFloat(data.efectivo_amount) || 0,
             credito_amount: parseFloat(data.credito_amount) || 0,
-            expected_savings: parseFloat(data.expected_savings) || 0,
+            ahorro_efectivo_amount: parseFloat(data.ahorro_efectivo_amount) || 0,
+            ahorro_credito_amount: parseFloat(data.ahorro_credito_amount) || 0,
+            expected_savings: parseFloat(data.expected_savings) || 0, // Keep for backward compatibility
           };
         });
 
@@ -992,7 +1015,12 @@ export function SimulationBudgetForm({
   // Handle input changes with validation
   const handleInputChange = (
     categoryId: string | number,
-    field: "efectivo_amount" | "credito_amount" | "expected_savings",
+    field:
+      | "efectivo_amount"
+      | "credito_amount"
+      | "ahorro_efectivo_amount"
+      | "ahorro_credito_amount"
+      | "expected_savings",
     value: string
   ) => {
     // Ensure categoryId is valid (can be string UUID or number)
@@ -1013,6 +1041,8 @@ export function SimulationBudgetForm({
       [categoryKey]: {
         efectivo_amount: prev[categoryKey]?.efectivo_amount ?? "0",
         credito_amount: prev[categoryKey]?.credito_amount ?? "0",
+        ahorro_efectivo_amount: prev[categoryKey]?.ahorro_efectivo_amount ?? "0",
+        ahorro_credito_amount: prev[categoryKey]?.ahorro_credito_amount ?? "0",
         expected_savings: prev[categoryKey]?.expected_savings ?? "0",
         [field]: sanitizedValue,
       },
@@ -1023,7 +1053,16 @@ export function SimulationBudgetForm({
 
     // Validate and update errors for the changed field only (with typing flag)
     const error = validateField(sanitizedValue, true);
-    const errorFieldName = field === "efectivo_amount" ? "efectivo" : field === "credito_amount" ? "credito" : "expected_savings";
+    const errorFieldName =
+      field === "efectivo_amount"
+        ? "efectivo"
+        : field === "credito_amount"
+          ? "credito"
+          : field === "ahorro_efectivo_amount"
+            ? "ahorro_efectivo"
+            : field === "ahorro_credito_amount"
+              ? "ahorro_credito"
+              : "expected_savings";
     setErrors((prev) => ({
       ...prev,
       [categoryKey]: {
@@ -1037,7 +1076,12 @@ export function SimulationBudgetForm({
   const handleInputBlur = useCallback(
     async (
       categoryId: string | number,
-      field: "efectivo_amount" | "credito_amount" | "expected_savings",
+      field:
+        | "efectivo_amount"
+        | "credito_amount"
+        | "ahorro_efectivo_amount"
+        | "ahorro_credito_amount"
+        | "expected_savings",
       value: string
     ) => {
       // Ensure categoryId is valid
@@ -1051,7 +1095,16 @@ export function SimulationBudgetForm({
 
       // Final validation without typing flag (stricter validation)
       const error = validateField(value, false);
-      const errorFieldName = field === "efectivo_amount" ? "efectivo" : field === "credito_amount" ? "credito" : "expected_savings";
+      const errorFieldName =
+        field === "efectivo_amount"
+          ? "efectivo"
+          : field === "credito_amount"
+            ? "credito"
+            : field === "ahorro_efectivo_amount"
+              ? "ahorro_efectivo"
+              : field === "ahorro_credito_amount"
+                ? "ahorro_credito"
+                : "expected_savings";
       setErrors((prev) => ({
         ...prev,
         [categoryKey]: {
@@ -1088,26 +1141,30 @@ export function SimulationBudgetForm({
   const totals = useMemo(() => {
     let totalEfectivo = 0;
     let totalCredito = 0;
-    let totalExpectedSavings = 0;
+    let totalAhorroEfectivo = 0;
+    let totalAhorroCredito = 0;
     let totalGeneral = 0;
 
     Object.entries(budgetData).forEach(([categoryId, data]) => {
       const efectivo = parseFloat(data.efectivo_amount) || 0;
       const credito = parseFloat(data.credito_amount) || 0;
-      const expectedSavings = parseFloat(data.expected_savings) || 0;
+      const ahorroEfectivo = parseFloat(data.ahorro_efectivo_amount) || 0;
+      const ahorroCredito = parseFloat(data.ahorro_credito_amount) || 0;
 
       totalEfectivo += efectivo;
       totalCredito += credito;
-      totalExpectedSavings += expectedSavings;
-      totalGeneral += efectivo + credito - expectedSavings;
+      totalAhorroEfectivo += ahorroEfectivo;
+      totalAhorroCredito += ahorroCredito;
+      totalGeneral += efectivo + credito - ahorroEfectivo - ahorroCredito;
     });
 
-    const totalNetSpend = totalEfectivo - totalExpectedSavings;
+    const totalNetSpend = totalEfectivo - totalAhorroEfectivo;
 
     return {
       efectivo: totalEfectivo,
       credito: totalCredito,
-      expectedSavings: totalExpectedSavings,
+      ahorroEfectivo: totalAhorroEfectivo,
+      ahorroCredito: totalAhorroCredito,
       netSpend: totalNetSpend,
       general: totalGeneral,
     };
@@ -1120,8 +1177,9 @@ export function SimulationBudgetForm({
 
     const efectivo = parseFloat(data.efectivo_amount) || 0;
     const credito = parseFloat(data.credito_amount) || 0;
-    const expectedSavings = parseFloat(data.expected_savings) || 0;
-    return efectivo + credito - expectedSavings;
+    const ahorroEfectivo = parseFloat(data.ahorro_efectivo_amount) || 0;
+    const ahorroCredito = parseFloat(data.ahorro_credito_amount) || 0;
+    return efectivo + credito - ahorroEfectivo - ahorroCredito;
   };
 
   // Helper function to get numeric sort value for tipo_gasto based on current sort state
@@ -1276,10 +1334,10 @@ export function SimulationBudgetForm({
 
         const categoryData = budgetData[String(category.id)];
         if (categoryData && isVisible) {
-          // Calculate net spend: Efectivo - Expected Savings
+          // Calculate net spend: Efectivo - Ahorro Efectivo (only efectivo savings affect balance)
           const efectivoAmount = parseFloat(categoryData.efectivo_amount) || 0;
-          const expectedSavings = parseFloat(categoryData.expected_savings) || 0;
-          const netSpend = efectivoAmount - expectedSavings;
+          const ahorroEfectivo = parseFloat(categoryData.ahorro_efectivo_amount) || 0;
+          const netSpend = efectivoAmount - ahorroEfectivo;
 
           // Decrease balance by net spend (actual amount after savings)
           runningBalance -= netSpend;
@@ -1354,10 +1412,10 @@ export function SimulationBudgetForm({
 
         const categoryData = budgetData[String(category.id)];
         if (categoryData && isVisible) {
-          // Calculate net spend: Efectivo - Expected Savings
+          // Calculate net spend: Efectivo - Ahorro Efectivo
           const efectivoAmount = parseFloat(categoryData.efectivo_amount) || 0;
-          const expectedSavings = parseFloat(categoryData.expected_savings) || 0;
-          const netSpend = efectivoAmount - expectedSavings;
+          const ahorroEfectivo = parseFloat(categoryData.ahorro_efectivo_amount) || 0;
+          const netSpend = efectivoAmount - ahorroEfectivo;
 
           // Decrease balance by net spend (actual amount after savings)
           runningBalance -= netSpend;
@@ -1843,16 +1901,33 @@ export function SimulationBudgetForm({
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
-                Ahorro Esperado
+                Ahorro Efectivo
               </CardTitle>
               <Calculator className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-purple-600">
-                {formatCurrency(totals.expectedSavings)}
+                {formatCurrency(totals.ahorroEfectivo)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                Gasto neto: {formatCurrency(totals.netSpend)}
+                Gasto neto efectivo: {formatCurrency(totals.efectivo - totals.ahorroEfectivo)}
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">
+                Ahorro Crédito
+              </CardTitle>
+              <Calculator className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600">
+                {formatCurrency(totals.ahorroCredito)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Gasto neto crédito: {formatCurrency(totals.credito - totals.ahorroCredito)}
               </p>
             </CardContent>
           </Card>
@@ -2051,7 +2126,7 @@ export function SimulationBudgetForm({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-8 pl-2"></TableHead>
-                  <TableHead className="w-1/6">
+                  <TableHead className="w-1/5">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -2064,7 +2139,7 @@ export function SimulationBudgetForm({
                       )}
                     </Button>
                   </TableHead>
-                  <TableHead className="w-1/6">
+                  <TableHead className="w-24 text-center">
                     <Button
                       variant="ghost"
                       size="sm"
@@ -2089,11 +2164,12 @@ export function SimulationBudgetForm({
                       )}
                     </Button>
                   </TableHead>
-                  <TableHead className="text-right w-1/6">Efectivo</TableHead>
-                  <TableHead className="text-right w-1/6">Crédito</TableHead>
-                  <TableHead className="text-right w-1/6">Ahorro Esperado</TableHead>
-                  <TableHead className="text-right w-1/6">Total</TableHead>
-                  <TableHead className="text-right w-1/6">Balance</TableHead>
+                  <TableHead className="text-right">Efectivo</TableHead>
+                  <TableHead className="text-right">Crédito</TableHead>
+                  <TableHead className="text-right">Ahorro Efectivo</TableHead>
+                  <TableHead className="text-right">Ahorro Crédito</TableHead>
+                  <TableHead className="text-right">Total</TableHead>
+                  <TableHead className="text-right">Balance</TableHead>
                   <TableHead className="w-8"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -2121,7 +2197,7 @@ export function SimulationBudgetForm({
                     return (
                       <TableRow>
                         <TableCell
-                          colSpan={9}
+                          colSpan={10}
                           className="text-center py-4 text-muted-foreground"
                         >
                           No hay categorías disponibles
@@ -2419,13 +2495,13 @@ export function SimulationBudgetForm({
                                 max={parseFloat(
                                   categoryData?.efectivo_amount || "0"
                                 )}
-                                value={categoryData?.expected_savings || "0"}
+                                value={categoryData?.ahorro_efectivo_amount || "0"}
                                 onChange={(e) => {
                                   const value = e.target.value;
                                   if (category.id) {
                                     handleInputChange(
                                       category.id,
-                                      "expected_savings",
+                                      "ahorro_efectivo_amount",
                                       value
                                     );
                                   }
@@ -2435,25 +2511,73 @@ export function SimulationBudgetForm({
                                   if (category.id) {
                                     handleInputBlur(
                                       category.id,
-                                      "expected_savings",
+                                      "ahorro_efectivo_amount",
                                       value
                                     );
                                   }
                                 }}
                                 className={`w-full text-right ${
-                                  categoryErrors?.expected_savings
+                                  categoryErrors?.ahorro_efectivo
                                     ? "border-destructive"
                                     : parseFloat(
-                                        categoryData?.expected_savings || "0"
+                                        categoryData?.ahorro_efectivo_amount || "0"
                                       ) > 0
                                     ? "text-purple-600 font-semibold"
                                     : ""
                                 }`}
                                 placeholder="0.00"
                               />
-                              {categoryErrors?.expected_savings && (
+                              {categoryErrors?.ahorro_efectivo && (
                                 <p className="text-xs text-destructive">
-                                  {categoryErrors.expected_savings}
+                                  {categoryErrors.ahorro_efectivo}
+                                </p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="space-y-1">
+                              <Input
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                max={parseFloat(
+                                  categoryData?.credito_amount || "0"
+                                )}
+                                value={categoryData?.ahorro_credito_amount || "0"}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  if (category.id) {
+                                    handleInputChange(
+                                      category.id,
+                                      "ahorro_credito_amount",
+                                      value
+                                    );
+                                  }
+                                }}
+                                onBlur={(e) => {
+                                  const value = e.target.value;
+                                  if (category.id) {
+                                    handleInputBlur(
+                                      category.id,
+                                      "ahorro_credito_amount",
+                                      value
+                                    );
+                                  }
+                                }}
+                                className={`w-full text-right ${
+                                  categoryErrors?.ahorro_credito
+                                    ? "border-destructive"
+                                    : parseFloat(
+                                        categoryData?.ahorro_credito_amount || "0"
+                                      ) > 0
+                                    ? "text-purple-600 font-semibold"
+                                    : ""
+                                }`}
+                                placeholder="0.00"
+                              />
+                              {categoryErrors?.ahorro_credito && (
+                                <p className="text-xs text-destructive">
+                                  {categoryErrors.ahorro_credito}
                                 </p>
                               )}
                             </div>

@@ -51,10 +51,17 @@ export function SubgroupSubtotalRow({
         </span>
       </TableCell>
 
-      {/* Expected Savings Subtotal */}
+      {/* Ahorro Efectivo Subtotal */}
       <TableCell className="text-right">
-        <span className="font-semibold">
-          {formatCurrency(subtotals.expectedSavings)}
+        <span className="font-semibold text-purple-600">
+          {formatCurrency(subtotals.ahorroEfectivoAmount)}
+        </span>
+      </TableCell>
+
+      {/* Ahorro Crédito Subtotal */}
+      <TableCell className="text-right">
+        <span className="font-semibold text-purple-600">
+          {formatCurrency(subtotals.ahorroCreditoAmount)}
         </span>
       </TableCell>
 

@@ -47,12 +47,21 @@ export const SimulationBudgetSchema = z.object({
   ),
   efectivo_amount: SimulationBudgetAmountSchema,
   credito_amount: SimulationBudgetAmountSchema,
+  ahorro_efectivo_amount: SimulationBudgetAmountSchema.optional().default(0),
+  ahorro_credito_amount: SimulationBudgetAmountSchema.optional().default(0),
+  // Legacy field - keep for backward compatibility
   expected_savings: SimulationBudgetAmountSchema.optional().default(0),
 }).refine(
-  (data) => data.expected_savings <= data.efectivo_amount,
+  (data) => data.ahorro_efectivo_amount <= data.efectivo_amount,
   {
-    message: "El ahorro esperado no puede ser mayor al presupuesto en efectivo",
-    path: ["expected_savings"],
+    message: "El ahorro efectivo no puede ser mayor al presupuesto en efectivo",
+    path: ["ahorro_efectivo_amount"],
+  }
+).refine(
+  (data) => data.ahorro_credito_amount <= data.credito_amount,
+  {
+    message: "El ahorro crédito no puede ser mayor al presupuesto en crédito",
+    path: ["ahorro_credito_amount"],
   }
 );
 
@@ -479,21 +488,43 @@ export function validateBudgetFormData(formData: {
   [categoryId: string]: {
     efectivo_amount: string;
     credito_amount: string;
-    expected_savings?: string;
+    ahorro_efectivo_amount?: string;
+    ahorro_credito_amount?: string;
+    expected_savings?: string; // Legacy - for backward compatibility
   };
 }): {
   isValid: boolean;
-  errors: { [categoryId: string]: { efectivo?: string; credito?: string; expected_savings?: string } };
+  errors: {
+    [categoryId: string]: {
+      efectivo?: string;
+      credito?: string;
+      ahorro_efectivo?: string;
+      ahorro_credito?: string;
+      expected_savings?: string;
+    }
+  };
   totalErrors: number;
 } {
   const errors: {
-    [categoryId: string]: { efectivo?: string; credito?: string; expected_savings?: string };
+    [categoryId: string]: {
+      efectivo?: string;
+      credito?: string;
+      ahorro_efectivo?: string;
+      ahorro_credito?: string;
+      expected_savings?: string;
+    };
   } = {};
   let totalErrors = 0;
 
   Object.entries(formData).forEach(([categoryIdStr, data]) => {
     const categoryId = categoryIdStr; // Keep as string since it can be a UUID
-    const categoryErrors: { efectivo?: string; credito?: string; expected_savings?: string } = {};
+    const categoryErrors: {
+      efectivo?: string;
+      credito?: string;
+      ahorro_efectivo?: string;
+      ahorro_credito?: string;
+      expected_savings?: string;
+    } = {};
 
     // Ensure data exists and has the expected structure
     if (!data || typeof data !== "object") {
@@ -532,29 +563,64 @@ export function validateBudgetFormData(formData: {
       totalErrors++;
     }
 
-    // Validate expected_savings amount
-    const expectedSavings = data.expected_savings ?? "0";
-    const savingsValidation = validateBudgetAmountInput(expectedSavings);
-    if (!savingsValidation.isValid) {
+    // Validate ahorro_efectivo_amount
+    const ahorroEfectivo = data.ahorro_efectivo_amount ?? "0";
+    const ahorroEfectivoValidation = validateBudgetAmountInput(ahorroEfectivo);
+    if (!ahorroEfectivoValidation.isValid) {
       console.warn(
-        "Expected savings validation failed for category",
+        "Ahorro efectivo validation failed for category",
         categoryId,
         "value:",
-        expectedSavings,
+        ahorroEfectivo,
         "error:",
-        savingsValidation.error
+        ahorroEfectivoValidation.error
       );
-      categoryErrors.expected_savings = savingsValidation.error;
+      categoryErrors.ahorro_efectivo = ahorroEfectivoValidation.error;
       totalErrors++;
-    } else if (savingsValidation.numericValue !== undefined && efectivoValidation.numericValue !== undefined) {
-      // Cross-field validation: expected_savings <= efectivo_amount
-      if (savingsValidation.numericValue > efectivoValidation.numericValue) {
-        categoryErrors.expected_savings = "El ahorro esperado no puede ser mayor al presupuesto en efectivo";
+    } else if (
+      ahorroEfectivoValidation.numericValue !== undefined &&
+      efectivoValidation.numericValue !== undefined
+    ) {
+      // Cross-field validation: ahorro_efectivo <= efectivo_amount
+      if (ahorroEfectivoValidation.numericValue > efectivoValidation.numericValue) {
+        categoryErrors.ahorro_efectivo =
+          "El ahorro efectivo no puede ser mayor al presupuesto en efectivo";
         totalErrors++;
       }
     }
 
-    if (categoryErrors.efectivo || categoryErrors.credito || categoryErrors.expected_savings) {
+    // Validate ahorro_credito_amount
+    const ahorroCredito = data.ahorro_credito_amount ?? "0";
+    const ahorroCreditoValidation = validateBudgetAmountInput(ahorroCredito);
+    if (!ahorroCreditoValidation.isValid) {
+      console.warn(
+        "Ahorro credito validation failed for category",
+        categoryId,
+        "value:",
+        ahorroCredito,
+        "error:",
+        ahorroCreditoValidation.error
+      );
+      categoryErrors.ahorro_credito = ahorroCreditoValidation.error;
+      totalErrors++;
+    } else if (
+      ahorroCreditoValidation.numericValue !== undefined &&
+      creditoValidation.numericValue !== undefined
+    ) {
+      // Cross-field validation: ahorro_credito <= credito_amount
+      if (ahorroCreditoValidation.numericValue > creditoValidation.numericValue) {
+        categoryErrors.ahorro_credito =
+          "El ahorro crédito no puede ser mayor al presupuesto en crédito";
+        totalErrors++;
+      }
+    }
+
+    if (
+      categoryErrors.efectivo ||
+      categoryErrors.credito ||
+      categoryErrors.ahorro_efectivo ||
+      categoryErrors.ahorro_credito
+    ) {
       errors[categoryId] = categoryErrors;
     }
   });

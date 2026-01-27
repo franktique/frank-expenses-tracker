@@ -77,7 +77,9 @@ export async function GET(
         sb.category_id,
         c.name as category_name,
         sb.efectivo_amount,
-        sb.credito_amount
+        sb.credito_amount,
+        sb.ahorro_efectivo_amount,
+        sb.ahorro_credito_amount
       FROM simulation_budgets sb
       JOIN categories c ON sb.category_id = c.id
       WHERE sb.simulation_id = ${simulationId}
@@ -87,30 +89,38 @@ export async function GET(
     // Calculate totals and balances
     let totalEfectivo = 0;
     let totalCredito = 0;
+    let totalAhorroEfectivo = 0;
+    let totalAhorroCredito = 0;
     let runningBalance = totalIncome;
 
     const budgetsWithBalances = budgets.map((budget) => {
       const efectivoAmount = Number(budget.efectivo_amount) || 0;
       const creditoAmount = Number(budget.credito_amount) || 0;
-      const total = efectivoAmount + creditoAmount;
+      const ahorroEfectivoAmount = Number(budget.ahorro_efectivo_amount) || 0;
+      const ahorroCreditoAmount = Number(budget.ahorro_credito_amount) || 0;
+      const total = efectivoAmount + creditoAmount - ahorroEfectivoAmount - ahorroCreditoAmount;
 
       totalEfectivo += efectivoAmount;
       totalCredito += creditoAmount;
+      totalAhorroEfectivo += ahorroEfectivoAmount;
+      totalAhorroCredito += ahorroCreditoAmount;
 
-      // Running balance only decreases with efectivo (cash) amounts
-      runningBalance -= efectivoAmount;
+      // Running balance only decreases with efectivo (cash) amounts minus efectivo savings
+      runningBalance -= (efectivoAmount - ahorroEfectivoAmount);
 
       return {
         category_id: budget.category_id,
         category_name: budget.category_name,
         efectivo_amount: efectivoAmount,
         credito_amount: creditoAmount,
+        ahorro_efectivo_amount: ahorroEfectivoAmount,
+        ahorro_credito_amount: ahorroCreditoAmount,
         total: total,
         balance: runningBalance,
       };
     });
 
-    const totalGeneral = totalEfectivo + totalCredito;
+    const totalGeneral = totalEfectivo + totalCredito - totalAhorroEfectivo - totalAhorroCredito;
 
     // Count categories with budget
     const categoryCount = budgetsWithBalances.filter((b) => b.total > 0).length;
@@ -136,6 +146,8 @@ export async function GET(
       totals: {
         efectivo: totalEfectivo,
         credito: totalCredito,
+        ahorro_efectivo: totalAhorroEfectivo,
+        ahorro_credito: totalAhorroCredito,
         general: totalGeneral,
       },
       categoryCount,

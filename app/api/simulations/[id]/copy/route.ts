@@ -31,7 +31,7 @@ interface CopySimulationResponse {
  * POST /api/simulations/[id]/copy
  * Creates a complete copy of a simulation including:
  * - Simulation metadata (name, description)
- * - All simulation_budgets (efectivo_amount, credito_amount, expected_savings)
+ * - All simulation_budgets (efectivo_amount, credito_amount, ahorro_efectivo_amount, ahorro_credito_amount, expected_savings)
  * - All simulation_incomes (description, amount)
  * - All simulation_subgroups and their category associations
  */
@@ -99,7 +99,7 @@ export async function POST(
 
     // 2. Copy simulation_budgets
     const sourceBudgets = await sql`
-      SELECT category_id, efectivo_amount, credito_amount, expected_savings
+      SELECT category_id, efectivo_amount, credito_amount, ahorro_efectivo_amount, ahorro_credito_amount, expected_savings
       FROM simulation_budgets
       WHERE simulation_id = ${sourceSimulationId}
     `;
@@ -110,9 +110,9 @@ export async function POST(
       for (const budget of sourceBudgets) {
         await sql`
           INSERT INTO simulation_budgets
-            (simulation_id, category_id, efectivo_amount, credito_amount, expected_savings, created_at, updated_at)
+            (simulation_id, category_id, efectivo_amount, credito_amount, ahorro_efectivo_amount, ahorro_credito_amount, expected_savings, created_at, updated_at)
           VALUES
-            (${newSimulationId}, ${budget.category_id}, ${budget.efectivo_amount}, ${budget.credito_amount}, ${budget.expected_savings}, NOW(), NOW())
+            (${newSimulationId}, ${budget.category_id}, ${budget.efectivo_amount}, ${budget.credito_amount}, ${budget.ahorro_efectivo_amount || 0}, ${budget.ahorro_credito_amount || 0}, ${budget.expected_savings || 0}, NOW(), NOW())
         `;
         budgetsCopied++;
       }

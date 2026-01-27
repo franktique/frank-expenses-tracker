@@ -10,8 +10,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, FileText, Plus } from "lucide-react";
+import { Loader2, FileText, Plus, Trash2 } from "lucide-react";
 import type { SubgroupTemplate } from "@/types/subgroup-templates";
 
 interface TemplateSelectorProps {
@@ -31,6 +41,8 @@ export function TemplateSelector({
   const [templates, setTemplates] = useState<SubgroupTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isApplying, setIsApplying] = useState(false);
+  const [isRemoving, setIsRemoving] = useState(false);
+  const [showRemoveConfirm, setShowRemoveConfirm] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -102,23 +114,72 @@ export function TemplateSelector({
     }
   };
 
+  const handleRemoveTemplate = async () => {
+    setIsRemoving(true);
+
+    try {
+      const response = await fetch(`/api/simulations/${simulationId}/applied-template`, {
+        method: "DELETE",
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          title: "Template Removed",
+          description: data.message || "Applied template has been removed. You can now apply a different template.",
+        });
+        setShowRemoveConfirm(false);
+        onTemplateApplied();
+      } else {
+        throw new Error(data.error || "Failed to remove template");
+      }
+    } catch (error) {
+      console.error("Error removing template:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to remove template",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRemoving(false);
+    }
+  };
+
   const displayText = currentTemplateName || "None (Custom)";
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="gap-2">
-          <FileText className="h-4 w-4" />
-          Scenario: {displayText}
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Select Template/Scenario</DialogTitle>
-          <DialogDescription>
-            Choose a template to apply to this simulation. This will replace all existing subgroups.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogTrigger asChild>
+          <Button variant="outline" className="gap-2">
+            <FileText className="h-4 w-4" />
+            Scenario: {displayText}
+          </Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Select Template/Scenario</DialogTitle>
+            <DialogDescription>
+              Choose a template to apply to this simulation. This will replace all existing subgroups.
+            </DialogDescription>
+            {currentTemplateId && (
+              <div className="flex items-center justify-between mt-2 p-2 bg-muted rounded">
+                <span className="text-sm">
+                  Current: <strong>{currentTemplateName}</strong>
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowRemoveConfirm(true)}
+                  className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <Trash2 className="h-3 w-3 mr-1" />
+                  Remove
+                </Button>
+              </div>
+            )}
+          </DialogHeader>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
@@ -195,5 +256,36 @@ export function TemplateSelector({
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Remove Template Confirmation Dialog */}
+    <AlertDialog open={showRemoveConfirm} onOpenChange={setShowRemoveConfirm}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove Applied Template?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This will remove the link to the applied template <strong>"{currentTemplateName}"</strong>.
+            Your current subgroups and categories will remain intact - you'll just be able to apply a different template.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={isRemoving}>Cancel</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={handleRemoveTemplate}
+            disabled={isRemoving}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            {isRemoving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Removing...
+              </>
+            ) : (
+              "Remove Template"
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  </>
   );
 }

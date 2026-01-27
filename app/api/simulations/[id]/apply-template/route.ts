@@ -62,16 +62,28 @@ export async function POST(
     }
 
     // Apply template (replace mode)
-    const subgroupsCreated = await applyTemplateToSimulation(
+    const result = await applyTemplateToSimulation(
       simulationId,
       requestBody.templateId
     );
 
+    // Build message with details
+    let message = `Template applied successfully. Created ${result.subgroupsCreated} subgroup(s).`;
+    if (result.categoriesApplied > 0) {
+      message += ` Applied ${result.categoriesApplied} category association(s).`;
+    }
+    if (result.missingCategories.length > 0) {
+      message += ` ${result.missingCategories.length} category(ies) from template not found in simulation.`;
+    }
+
     return NextResponse.json(
       {
         success: true,
-        message: `Template applied successfully. Created ${subgroupsCreated} subgroup(s).`,
-        subgroupsCreated,
+        message,
+        subgroupsCreated: result.subgroupsCreated,
+        categoriesApplied: result.categoriesApplied,
+        categoryMatchResults: result.categoryMatchResults,
+        missingCategories: result.missingCategories,
         statusCode: 200,
       },
       { status: 200 }

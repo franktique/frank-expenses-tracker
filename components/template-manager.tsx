@@ -23,7 +23,8 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Trash2, Edit, Plus, FileText } from "lucide-react";
+import { Loader2, Trash2, Edit, Plus, FileText, RefreshCw } from "lucide-react";
+import { RefreshTemplateDialog } from "@/components/refresh-template-dialog";
 import type { SubgroupTemplate } from "@/types/subgroup-templates";
 
 interface TemplateManagerProps {
@@ -38,6 +39,7 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
   const [deletingTemplateId, setDeletingTemplateId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [refreshingTemplate, setRefreshingTemplate] = useState<SubgroupTemplate | null>(null);
   const { toast } = useToast();
 
   // Form state for editing
@@ -213,13 +215,23 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleEditClick(template)}
+                        title="Edit template"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => setRefreshingTemplate(template)}
+                        title="Refresh template from simulation"
+                      >
+                        <RefreshCw className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleDeleteClick(template.id)}
+                        title="Delete template"
                       >
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
@@ -323,6 +335,23 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Refresh Template Dialog */}
+      <RefreshTemplateDialog
+        isOpen={!!refreshingTemplate}
+        onClose={() => setRefreshingTemplate(null)}
+        template={refreshingTemplate}
+        onTemplateRefreshed={(updatedTemplate) => {
+          // Update the template in the list
+          setTemplates((prev) =>
+            prev.map((t) => (t.id === updatedTemplate.id ? updatedTemplate : t))
+          );
+          toast({
+            title: "Success",
+            description: "Template has been refreshed with updated subgroups and categories.",
+          });
+        }}
+      />
     </>
   );
 }

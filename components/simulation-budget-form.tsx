@@ -1778,6 +1778,7 @@ export function SimulationBudgetForm({
           <SaveAsTemplateDialog
             simulationId={simulationId}
             subgroupCount={subgroups.length}
+            categoryCount={subgroups.reduce((sum, sg) => sum + (sg.categoryIds?.length || 0), 0)}
             onTemplateSaved={() => {
               toast({
                 title: "Success",

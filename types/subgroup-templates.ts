@@ -24,6 +24,20 @@ export type TemplateSubgroup = {
   name: string; // Name of the subgroup
   displayOrder: number; // Order within the template
   createdAt: string; // ISO timestamp
+  categoryIds?: (string | number)[]; // Category IDs associated with this subgroup
+  categories?: TemplateCategory[]; // Full category details (loaded when needed)
+};
+
+/**
+ * TemplateCategory - Represents a category assigned to a template subgroup
+ */
+export type TemplateCategory = {
+  id: string; // UUID
+  templateSubgroupId: string; // FK to template_subgroups
+  categoryId: string | number; // FK to categories
+  categoryName?: string; // Category name (for easier display)
+  orderWithinSubgroup: number; // Order within the subgroup
+  createdAt: string; // ISO timestamp
 };
 
 /**
@@ -41,6 +55,7 @@ export type CreateTemplateRequest = {
 export type CreateTemplateSubgroupRequest = {
   name: string;
   displayOrder?: number;
+  categoryIds?: (string | number)[]; // Category IDs to include in this subgroup
 };
 
 /**
@@ -86,6 +101,9 @@ export type ApplyTemplateResponse = {
   success: boolean;
   message?: string;
   subgroupsCreated?: number;
+  categoriesApplied?: number; // Number of category associations created
+  categoryMatchResults?: CategoryMatchResult[]; // Detailed match results
+  missingCategories?: (string | number)[]; // Categories in template not found in simulation
   error?: string;
   statusCode: number;
 };
@@ -125,4 +143,33 @@ export type AppliedTemplateResponse = {
 export type SaveAsTemplateRequest = {
   name: string;
   description?: string;
+};
+
+/**
+ * RefreshTemplateRequest - Request payload for refreshing a template from a simulation
+ */
+export type RefreshTemplateRequest = {
+  sourceSimulationId: number; // Simulation ID to refresh from
+};
+
+/**
+ * RefreshTemplateResponse - API response for template refresh
+ */
+export type RefreshTemplateResponse = {
+  success: boolean;
+  template?: SubgroupTemplate;
+  message?: string;
+  categoriesUpdated?: number; // Number of category associations updated
+  error?: string;
+  statusCode: number;
+};
+
+/**
+ * CategoryMatchResult - Result of category matching during template application
+ */
+export type CategoryMatchResult = {
+  templateCategoryId: string | number;
+  matchedCategoryId: string | number | null; // null if no match found
+  matchType: "exact" | "name" | "none"; // How the category was matched
+  templateCategoryName?: string; // Category name from template (for reference)
 };

@@ -54,7 +54,7 @@ export async function getTemplates(): Promise<SubgroupTemplate[]> {
 }
 
 /**
- * Get a single template by ID with its subgroups
+ * Get a single template by ID with its subgroups and categories
  */
 export async function getTemplateById(templateId: string): Promise<SubgroupTemplate | null> {
   try {
@@ -77,17 +77,28 @@ export async function getTemplateById(templateId: string): Promise<SubgroupTempl
 
     const templateData = templateArray[0] as any;
 
-    // Get subgroups for this template
+    // Get subgroups for this template with categories
     const subgroupsResult = await sql`
       SELECT
-        id,
-        template_id as "templateId",
-        name,
-        display_order as "displayOrder",
-        created_at as "createdAt"
-      FROM template_subgroups
-      WHERE template_id = ${templateId}
-      ORDER BY display_order ASC
+        ts.id,
+        ts.template_id as "templateId",
+        ts.name,
+        ts.display_order as "displayOrder",
+        ts.created_at as "createdAt",
+        COALESCE(
+          json_agg(
+            json_build_object(
+              'categoryId', tc.category_id,
+              'order', tc.order_within_subgroup
+            ) ORDER BY tc.order_within_subgroup
+          ) FILTER (WHERE tc.id IS NOT NULL),
+          '[]'::json
+        ) as categories
+      FROM template_subgroups ts
+      LEFT JOIN template_categories tc ON ts.id = tc.template_subgroup_id
+      WHERE ts.template_id = ${templateId}
+      GROUP BY ts.id, ts.template_id, ts.name, ts.display_order, ts.created_at
+      ORDER BY ts.display_order ASC
     `;
 
     const subgroups: TemplateSubgroup[] = normalizeQueryResult(subgroupsResult).map((row: any) => ({
@@ -96,6 +107,7 @@ export async function getTemplateById(templateId: string): Promise<SubgroupTempl
       name: row.name,
       displayOrder: row.displayOrder,
       createdAt: row.createdAt.toISOString(),
+      categoryIds: (row.categories as any[]).map((cat: any) => cat.categoryId),
     }));
 
     return {
@@ -113,7 +125,7 @@ export async function getTemplateById(templateId: string): Promise<SubgroupTempl
 }
 
 /**
- * Create a new template with subgroups
+ * Create a new template with subgroups and optional categories
  */
 export async function createTemplate(request: CreateTemplateRequest): Promise<SubgroupTemplate> {
   try {
@@ -183,12 +195,34 @@ export async function createTemplate(request: CreateTemplateRequest): Promise<Su
       const subgroupArray = normalizeQueryResult(subgroupResult);
       const subgroupData = subgroupArray[0] as any;
 
+      // Insert category associations if provided
+      const categoryIds = subgroup.categoryIds || [];
+      if (categoryIds.length > 0) {
+        for (let j = 0; j < categoryIds.length; j++) {
+          await sql`
+            INSERT INTO template_categories (
+              template_subgroup_id,
+              category_id,
+              order_within_subgroup,
+              created_at
+            )
+            VALUES (
+              ${subgroupData.id},
+              ${categoryIds[j]},
+              ${j},
+              NOW()
+            )
+          `;
+        }
+      }
+
       subgroups.push({
         id: subgroupData.id,
         templateId: subgroupData.templateId,
         name: subgroupData.name,
         displayOrder: subgroupData.displayOrder,
         createdAt: subgroupData.createdAt.toISOString(),
+        categoryIds,
       });
     }
 
@@ -440,13 +474,19 @@ export async function removeSubgroupFromTemplate(
 /**
  * Apply a template to a simulation (replace mode)
  * Deletes existing subgroups and creates new ones from template
+ * Optionally creates category associations based on template
  */
 export async function applyTemplateToSimulation(
   simulationId: number,
   templateId: string
-): Promise<number> {
+): Promise<{
+  subgroupsCreated: number;
+  categoriesApplied: number;
+  categoryMatchResults: any[];
+  missingCategories: (string | number)[];
+}> {
   try {
-    // Get template with subgroups
+    // Get template with subgroups and categories
     const template = await getTemplateById(templateId);
     if (!template) {
       throw new Error("Template not found");
@@ -456,6 +496,27 @@ export async function applyTemplateToSimulation(
       throw new Error("Template has no subgroups");
     }
 
+    // Get available categories in the simulation for matching
+    const categoriesResult = await sql`
+      SELECT id, name
+      FROM categories
+      WHERE id IN (
+        SELECT DISTINCT category_id
+        FROM budgets
+        WHERE simulation_id = ${simulationId}
+      )
+      ORDER BY name ASC
+    `;
+    const availableCategories = normalizeQueryResult(categoriesResult);
+
+    // Build category lookup maps for matching
+    const categoryById = new Map<string | number, any>();
+    const categoryByName = new Map<string, any>();
+    for (const cat of availableCategories) {
+      categoryById.set(cat.id, cat);
+      categoryByName.set(cat.name.toLowerCase(), cat);
+    }
+
     // Delete existing simulation_subgroups (CASCADE will handle subgroup_categories)
     await sql`
       DELETE FROM simulation_subgroups
@@ -463,9 +524,9 @@ export async function applyTemplateToSimulation(
     `;
 
     // Create new subgroups from template
-    let createdCount = 0;
+    const createdSubgroups: Array<{ id: string; templateId: string }> = [];
     for (const templateSubgroup of template.subgroups) {
-      await sql`
+      const subgroupResult = await sql`
         INSERT INTO simulation_subgroups (
           simulation_id,
           name,
@@ -482,8 +543,83 @@ export async function applyTemplateToSimulation(
           NOW(),
           NOW()
         )
+        RETURNING id
       `;
-      createdCount++;
+      const subgroupArray = normalizeQueryResult(subgroupResult);
+      createdSubgroups.push({
+        id: subgroupArray[0].id,
+        templateId: templateSubgroup.id,
+      });
+    }
+
+    // Apply categories to subgroups
+    let categoriesApplied = 0;
+    const categoryMatchResults: any[] = [];
+    const missingCategories: (string | number)[] = [];
+
+    for (const createdSubgroup of createdSubgroups) {
+      const templateSubgroup = template.subgroups.find(sg => sg.id === createdSubgroup.templateId);
+      if (!templateSubgroup || !templateSubgroup.categoryIds) continue;
+
+      for (const templateCategoryId of templateSubgroup.categoryIds) {
+        let matchedCategoryId: string | number | null = null;
+        let matchType: "exact" | "name" | "none" = "none";
+        let categoryName: string | undefined;
+
+        // Try exact ID match first
+        if (categoryById.has(templateCategoryId)) {
+          matchedCategoryId = categoryById.get(templateCategoryId).id;
+          matchType = "exact";
+          categoryName = categoryById.get(templateCategoryId).name;
+        }
+        // If no exact match, try to find by name (fetch category name from template_categories)
+        else {
+          // Get category name from template_categories for reference
+          const catNameResult = await sql`
+            SELECT c.name
+            FROM template_categories tc
+            JOIN categories c ON tc.category_id = c.id
+            WHERE tc.template_subgroup_id = ${createdSubgroup.templateId}
+            AND tc.category_id = ${templateCategoryId}
+            LIMIT 1
+          `;
+          const catNameArray = normalizeQueryResult(catNameResult);
+          if (catNameArray.length > 0) {
+            categoryName = catNameArray[0].name;
+            // Try to match by name in target simulation
+            if (categoryByName.has(categoryName.toLowerCase())) {
+              matchedCategoryId = categoryByName.get(categoryName.toLowerCase()).id;
+              matchType = "name";
+            }
+          }
+        }
+
+        // Create category association if match found
+        if (matchedCategoryId !== null) {
+          await sql`
+            INSERT INTO subgroup_categories (
+              subgroup_id,
+              category_id,
+              order_within_subgroup
+            )
+            VALUES (
+              ${createdSubgroup.id},
+              ${matchedCategoryId},
+              ${categoriesApplied}
+            )
+          `;
+          categoriesApplied++;
+        } else {
+          missingCategories.push(templateCategoryId);
+        }
+
+        categoryMatchResults.push({
+          templateCategoryId,
+          matchedCategoryId,
+          matchType,
+          templateCategoryName: categoryName,
+        });
+      }
     }
 
     // Update or insert applied template record
@@ -504,7 +640,12 @@ export async function applyTemplateToSimulation(
         applied_at = NOW()
     `;
 
-    return createdCount;
+    return {
+      subgroupsCreated: createdSubgroups.length,
+      categoriesApplied,
+      categoryMatchResults,
+      missingCategories,
+    };
   } catch (error) {
     console.error("Error applying template to simulation:", error);
     throw error;

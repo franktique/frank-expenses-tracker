@@ -75,12 +75,13 @@ export async function POST(
       );
     }
 
-    // Convert simulation subgroups to template format
+    // Convert simulation subgroups to template format with categories
     const templateSubgroups = existingSubgroups.map((subgroup, index) => ({
       name: subgroup.name,
       displayOrder: subgroup.customOrder !== null && subgroup.customOrder !== undefined
         ? subgroup.customOrder
         : index,
+      categoryIds: subgroup.categoryIds || [],
     }));
 
     // Create the template

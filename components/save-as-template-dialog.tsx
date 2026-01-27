@@ -20,12 +20,14 @@ import { Loader2, Save } from "lucide-react";
 interface SaveAsTemplateDialogProps {
   simulationId: number;
   subgroupCount: number;
+  categoryCount?: number;
   onTemplateSaved?: () => void;
 }
 
 export function SaveAsTemplateDialog({
   simulationId,
   subgroupCount,
+  categoryCount,
   onTemplateSaved,
 }: SaveAsTemplateDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -137,9 +139,12 @@ export function SaveAsTemplateDialog({
             <ul className="list-disc list-inside text-muted-foreground space-y-1">
               <li>{subgroupCount} subgroup{subgroupCount !== 1 ? "s" : ""} with their names</li>
               <li>Subgroup ordering</li>
+              {categoryCount !== undefined && categoryCount > 0 && (
+                <li>{categoryCount} category assignment{categoryCount !== 1 ? "s" : ""}</li>
+              )}
             </ul>
-            <p className="text-muted-foreground mt-2 text-xs">
-              Note: Category assignments are not saved in the template. You'll need to assign categories manually after applying the template.
+            <p className="text-green-600 dark:text-green-400 mt-2 text-xs font-medium">
+              ✓ Category assignments are preserved and will be automatically applied when using this template.
             </p>
           </div>
         </div>

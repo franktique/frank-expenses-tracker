@@ -50,6 +50,8 @@ export async function GET(
         c.name as category_name,
         sb.efectivo_amount,
         sb.credito_amount,
+        sb.ahorro_efectivo_amount,
+        sb.ahorro_credito_amount,
         sb.expected_savings,
         sb.created_at,
         sb.updated_at
@@ -231,17 +233,44 @@ export async function PUT(
     try {
       // Process each budget update/insert
       for (const budget of validatedBudgets) {
-        const { category_id, efectivo_amount, credito_amount, expected_savings = 0 } = budget;
+        const {
+          category_id,
+          efectivo_amount,
+          credito_amount,
+          ahorro_efectivo_amount = 0,
+          ahorro_credito_amount = 0,
+          expected_savings = 0,
+        } = budget;
 
         try {
           // Use UPSERT (INSERT ... ON CONFLICT) to handle updates
           const [result] = await sql`
-            INSERT INTO simulation_budgets (simulation_id, category_id, efectivo_amount, credito_amount, expected_savings, updated_at)
-            VALUES (${simulationId}, ${category_id}, ${efectivo_amount}, ${credito_amount}, ${expected_savings}, CURRENT_TIMESTAMP)
+            INSERT INTO simulation_budgets (
+              simulation_id,
+              category_id,
+              efectivo_amount,
+              credito_amount,
+              ahorro_efectivo_amount,
+              ahorro_credito_amount,
+              expected_savings,
+              updated_at
+            )
+            VALUES (
+              ${simulationId},
+              ${category_id},
+              ${efectivo_amount},
+              ${credito_amount},
+              ${ahorro_efectivo_amount},
+              ${ahorro_credito_amount},
+              ${expected_savings},
+              CURRENT_TIMESTAMP
+            )
             ON CONFLICT (simulation_id, category_id)
             DO UPDATE SET
               efectivo_amount = EXCLUDED.efectivo_amount,
               credito_amount = EXCLUDED.credito_amount,
+              ahorro_efectivo_amount = EXCLUDED.ahorro_efectivo_amount,
+              ahorro_credito_amount = EXCLUDED.ahorro_credito_amount,
               expected_savings = EXCLUDED.expected_savings,
               updated_at = CURRENT_TIMESTAMP
             RETURNING *

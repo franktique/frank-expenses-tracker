@@ -11,7 +11,8 @@ import type { Subgroup, VisibilityState } from "@/types/simulation";
 export type Subtotals = {
   efectivoAmount: number;
   creditoAmount: number;
-  expectedSavings: number;
+  ahorroEfectivoAmount: number;
+  ahorroCreditoAmount: number;
   total: number;
 };
 
@@ -21,7 +22,9 @@ export type Subtotals = {
 export type CategoryBudgetData = {
   efectivo_amount: string | number;
   credito_amount: string | number;
-  expected_savings: string | number;
+  ahorro_efectivo_amount: string | number;
+  ahorro_credito_amount: string | number;
+  expected_savings?: string | number; // Optional for backward compatibility
 };
 
 /**
@@ -38,7 +41,8 @@ export function calculateSubgroupSubtotals(
 ): Subtotals {
   let efectivoAmount = 0;
   let creditoAmount = 0;
-  let expectedSavings = 0;
+  let ahorroEfectivoAmount = 0;
+  let ahorroCreditoAmount = 0;
 
   // Sum values for all categories in the sub-group
   for (const categoryId of subgroup.categoryIds) {
@@ -57,20 +61,23 @@ export function calculateSubgroupSubtotals(
     if (data) {
       const efectivo = parseFloat(String(data.efectivo_amount)) || 0;
       const credito = parseFloat(String(data.credito_amount)) || 0;
-      const savings = parseFloat(String(data.expected_savings)) || 0;
+      const ahorroEfectivo = parseFloat(String(data.ahorro_efectivo_amount)) || 0;
+      const ahorroCredito = parseFloat(String(data.ahorro_credito_amount)) || 0;
 
       efectivoAmount += efectivo;
       creditoAmount += credito;
-      expectedSavings += savings;
+      ahorroEfectivoAmount += ahorroEfectivo;
+      ahorroCreditoAmount += ahorroCredito;
     }
   }
 
-  const total = efectivoAmount + creditoAmount - expectedSavings;
+  const total = efectivoAmount + creditoAmount - ahorroEfectivoAmount - ahorroCreditoAmount;
 
   return {
     efectivoAmount,
     creditoAmount,
-    expectedSavings,
+    ahorroEfectivoAmount,
+    ahorroCreditoAmount,
     total,
   };
 }
@@ -190,7 +197,8 @@ export function formatSubtotalsForDisplay(subtotals: Subtotals) {
   return {
     efectivoAmount: subtotals.efectivoAmount,
     creditoAmount: subtotals.creditoAmount,
-    expectedSavings: subtotals.expectedSavings,
+    ahorroEfectivoAmount: subtotals.ahorroEfectivoAmount,
+    ahorroCreditoAmount: subtotals.ahorroCreditoAmount,
     total: subtotals.total,
   };
 }

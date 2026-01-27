@@ -786,3 +786,88 @@ The **Investment Simulator** (`/simular-inversiones`) allows users to project in
 - Purple theme consistent with financial tools
 - Supports both daily and monthly compounding
 - Rate comparisons work in real-time without saving
+
+#### Interest Rate Simulator
+The **Interest Rate Simulator** (`/simular-tasas`) allows users to convert interest rates between different formats (EA, Mensual, Diaria, Nominal) and save conversions for future reference.
+
+**Features**:
+- **Real-time Conversions**: All conversions happen client-side as user adjusts the rate
+- **Rate Types Supported**:
+  - EA (Efectiva Anual) - Annual Effective Rate
+  - EM (Efectiva Mensual) - Monthly Effective Rate
+  - ED (Efectiva Diaria) - Daily Effective Rate
+  - NM (Nominal Mensual) - Nominal Monthly Rate (annual with monthly compounding)
+  - NA (Nominal Anual) - Nominal Annual Rate
+- **Interactive Form**: +/- buttons for quick rate adjustments, preset buttons for common rates
+- **Educational Display**: Shows conversion formulas for each rate type
+- **Save Scenarios**: Save rate conversions with name and notes for future reference
+- **Scenario Management**: List, load, and delete saved scenarios
+
+**Data Model**:
+- `interest_rate_scenarios` table: `id`, `name`, `input_rate`, `input_rate_type`, `notes`, `created_at`, `updated_at`
+
+**API Endpoints**:
+- `GET /api/interest-rate-scenarios` - List all scenarios with conversions
+- `POST /api/interest-rate-scenarios` - Create new scenario
+- `GET /api/interest-rate-scenarios/[id]` - Get scenario by ID
+- `PUT /api/interest-rate-scenarios/[id]` - Update scenario
+- `DELETE /api/interest-rate-scenarios/[id]` - Delete scenario
+- `POST /api/migrate-interest-rate-simulator` - Initialize database tables
+
+**Components** (`/components/interest-rate-simulator/`):
+- `InterestRateCalculator` - Main component with tabs (Calculator/Scenarios)
+- `InterestRateForm` - Form with rate input, type selector, +/- buttons
+- `InterestRateResults` - Display cards showing all converted rates with formulas
+- `SaveRateDialog` - Modal for naming and saving scenarios
+- `InterestRateScenarioList` - Table of saved scenarios with load/delete actions
+
+**Calculation Functions** (`/lib/interest-rate-calculations.ts`):
+- `convertEAtoEM(ea)` - EA to Monthly Effective: `(1+EA)^(1/12) - 1`
+- `convertEAtoED(ea)` - EA to Daily Effective: `(1+EA)^(1/365) - 1`
+- `convertEAtoNM(ea)` - EA to Nominal Monthly: `12 × EM`
+- `convertEMtoEA(em)` - Monthly to EA: `(1+EM)^12 - 1`
+- `convertEDtoEA(ed)` - Daily to EA: `(1+ED)^365 - 1`
+- `convertNMtoEA(nm)` - Nominal to EA: `(1+NM/12)^12 - 1`
+- `convertRate(rate, fromType)` - Main conversion function returning all equivalents
+- `getConversionDisplay(rate, fromType)` - Conversion results with display metadata
+
+**Type Definitions** (`/types/interest-rate-simulator.ts`):
+- `RATE_TYPES` - Constants with labels and descriptions for each rate type
+- `RateType` - Union type of supported rate types
+- `InterestRateScenario` - Saved scenario data
+- `RateConversionResult` - Object with all converted rates
+- `RateConversionDisplay` - Conversion with formula and isInput flag
+- Zod schemas for create/update validation
+
+**Rate Conversion Formulas**:
+| From | To EA | Formula |
+|------|-------|---------|
+| EA | EA | Input value |
+| EM | EA | `(1 + EM)^12 - 1` |
+| ED | EA | `(1 + ED)^365 - 1` |
+| NM | EA | `(1 + NM/12)^12 - 1` |
+| NA | EA | `(1 + NA/12)^12 - 1` |
+
+| From EA | To | Formula |
+|---------|-----|---------|
+| EA | EM | `(1 + EA)^(1/12) - 1` |
+| EA | ED | `(1 + EA)^(1/365) - 1` |
+| EA | NM | `12 × ((1 + EA)^(1/12) - 1)` |
+
+**User Flow**:
+1. Navigate to `/simular-tasas`
+2. Enter rate value (as percentage, e.g., 12 for 12%)
+3. Select input rate type (EA, EM, ED, NM, NA)
+4. View all equivalent rates instantly with formulas
+5. Click "Guardar Simulación" to save
+6. Enter name and optional notes, confirm save
+7. Switch to "Mis Simulaciones" tab to view saved scenarios
+8. Click "Cargar" to load a saved scenario for editing
+
+**Integration Notes**:
+- No BudgetContext dependency - standalone feature
+- Auto-migrates tables on first use if not exist
+- Purple theme consistent with other financial simulators
+- Rate input stored as decimal (e.g., 0.12 for 12%)
+- Display shows percentages with 4 decimal places
+- All conversions are pure functions (no side effects)

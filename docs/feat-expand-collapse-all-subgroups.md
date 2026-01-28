@@ -194,7 +194,8 @@ On mobile (responsive):
 
 ---
 
-**Status**: Ready for implementation
+**Status**: ✅ Implemented and PR Created
+**Pull Request**: #84 - https://github.com/franktique/frank-expenses-tracker/pull/84
 **Estimated Complexity**: Low (straightforward UI feature with existing patterns)
-**Files to Modify**:
-- `components/simulation-budget-form.tsx` (main implementation)
+**Files Modified**:
+- `components/simulation-budget-form.tsx` (main implementation - 51 lines added)

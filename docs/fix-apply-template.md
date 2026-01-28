@@ -102,6 +102,7 @@ ORDER BY name ASC
 
 ---
 
-**Status**: Ready for implementation
+**Status**: ✅ Implemented and PR Created
+**Pull Request**: #84 - https://github.com/franktique/frank-expenses-tracker/pull/84
 **Priority**: High (blocking template apply feature)
 **Estimated Complexity**: Low (single-line fix with testing)

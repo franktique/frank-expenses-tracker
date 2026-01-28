@@ -122,10 +122,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (agrupadorIds && agrupadorIds.length > 0) {
-      const agrupadores = await sql`
+      const agrupadores = (await sql`
         SELECT name FROM groupers WHERE id = ANY(${agrupadorIds}) ORDER BY name
-      `;
-      agrupadorNames = agrupadores.map((g: any) => g.name);
+      `) as unknown as { name: string }[];
+      agrupadorNames = agrupadores.map((g) => g.name);
     }
 
     const response: RemainderDashboardData = {
@@ -136,9 +136,9 @@ export async function GET(request: NextRequest) {
       categories: processedCategories,
       totals,
       appliedFilters: {
-        fundId,
+        fundId: fundId || undefined,
         fundName,
-        estudioId,
+        estudioId: estudioId ? parseInt(estudioId) : undefined,
         estudioName,
         agrupadorIds,
         agrupadorNames,

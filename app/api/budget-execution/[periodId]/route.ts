@@ -60,8 +60,21 @@ export async function GET(
 
     const period = periodResult[0];
 
+    interface BudgetRow {
+      id: string;
+      expected_amount: number;
+      default_date: string | null;
+      recurrence_frequency: string | null;
+      default_day: number | null;
+      category_name: string;
+      category_id: string;
+      payment_method: string;
+      month: number;
+      year: number;
+    }
+
     // Fetch all budgets for the period with their category's recurrence parameters
-    const budgets = await sql`
+    const budgets = (await sql`
       SELECT
         b.id,
         b.expected_amount,
@@ -79,7 +92,7 @@ export async function GET(
       WHERE b.period_id = ${periodId}
       ORDER BY COALESCE(b.default_date,
         MAKE_DATE(p.year, p.month + 1, 1)) ASC
-    `;
+    `) as unknown as BudgetRow[];
 
     if (!budgets || budgets.length === 0) {
       // Return empty result set
@@ -127,7 +140,7 @@ export async function GET(
         periodId,
         totalAmount: Number(budget.expected_amount),
         paymentMethod: budget.payment_method,
-        recurrenceFrequency: budget.recurrence_frequency,
+        recurrenceFrequency: budget.recurrence_frequency as any, // Cast if needed, or update type
         recurrenceStartDay: startDay,
         periodMonth: budget.month,
         periodYear: budget.year,
@@ -229,9 +242,13 @@ export async function GET(
 
     // Calculate summary statistics
     const totalBudget = data.reduce((sum, item) => sum + item.amount, 0);
-    const peakData = data.reduce((max, item) =>
-      item.amount > max.amount ? item : max
-    );
+    
+    let peakData = { date: "", amount: 0 };
+    if (data.length > 0) {
+      peakData = data.reduce((max, item) =>
+        item.amount > max.amount ? item : max
+      );
+    }
 
     const summary = {
       totalBudget,

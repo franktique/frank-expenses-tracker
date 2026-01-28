@@ -16,8 +16,16 @@ export async function GET(
       );
     }
 
+    interface GrouperRow {
+      id: number;
+      name: string;
+      is_assigned: boolean;
+      percentage: number | null;
+      payment_methods: string[] | null;
+    }
+
     // Get all groupers with their assignment status, percentage, and payment methods for this estudio
-    const groupers = await sql`
+    const groupers = (await sql`
       SELECT 
         g.id, 
         g.name,
@@ -27,7 +35,7 @@ export async function GET(
       FROM groupers g
       LEFT JOIN estudio_groupers eg ON g.id = eg.grouper_id AND eg.estudio_id = ${estudioId}
       ORDER BY g.name
-    `;
+    `) as unknown as GrouperRow[];
 
     // Separate assigned and available groupers
     const assignedGroupers = groupers.filter((g) => g.is_assigned);
@@ -102,13 +110,13 @@ export async function POST(
     }
 
     // Verify all groupers exist
-    const existingGroupers = await sql`
+    const existingGroupers = (await sql`
       SELECT id FROM groupers WHERE id = ANY(${grouperIds})
-    `;
+    `) as unknown as { id: number }[];
 
     if (existingGroupers.length !== grouperIds.length) {
       const existingIds = existingGroupers.map((g) => g.id);
-      const missingIds = grouperIds.filter((id) => !existingIds.includes(id));
+      const missingIds = grouperIds.filter((id: number) => !existingIds.includes(id));
       return NextResponse.json(
         { error: `Agrupadores no encontrados: ${missingIds.join(", ")}` },
         { status: 404 }
@@ -116,10 +124,10 @@ export async function POST(
     }
 
     // Check for existing assignments
-    const existingAssignments = await sql`
+    const existingAssignments = (await sql`
       SELECT grouper_id FROM estudio_groupers 
       WHERE estudio_id = ${estudioId} AND grouper_id = ANY(${grouperIds})
-    `;
+    `) as unknown as { grouper_id: number }[];
 
     const alreadyAssignedIds = existingAssignments.map((a) => a.grouper_id);
     const newAssignments = grouperIds.filter(

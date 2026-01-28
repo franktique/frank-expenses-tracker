@@ -161,7 +161,14 @@ export async function GET(request: NextRequest) {
       `;
     }
 
-    const balanceData = await balanceQuery;
+    interface BalanceRow {
+      date: string;
+      net_change: string | number;
+      balance: string | number;
+      fund_name: string;
+    }
+
+    const balanceData = (await balanceQuery) as unknown as BalanceRow[];
 
     return NextResponse.json({
       fund_id: fundId,
@@ -169,10 +176,10 @@ export async function GET(request: NextRequest) {
       period_days: days,
       start_date: startDateStr,
       end_date: endDateStr,
-      balance_trends: balanceData.map((row) => ({
+      balance_trends: balanceData.map((row: BalanceRow) => ({
         date: row.date,
-        balance: parseFloat(row.balance || 0),
-        net_change: parseFloat(row.net_change || 0),
+        balance: parseFloat(row.balance?.toString() || "0"),
+        net_change: parseFloat(row.net_change?.toString() || "0"),
       })),
     });
   } catch (error) {

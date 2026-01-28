@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 import {
   validateSourceFundForCategory,
   validateExpenseSourceFunds,
@@ -9,19 +9,20 @@ import {
 } from "../source-fund-validation";
 
 // Mock the database
-vi.mock("@/lib/db", () => ({
-  sql: vi.fn(),
+jest.mock("@/lib/db", () => ({
+  sql: jest.fn(),
 }));
 
-const mockSql = vi.mocked(await import("@/lib/db")).sql;
+import { sql } from "@/lib/db";
+const mockSql = jest.mocked(sql);
 
 describe("Source Fund Validation", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   afterEach(() => {
-    vi.resetAllMocks();
+    jest.resetAllMocks();
   });
 
   describe("validateSourceFundForCategory", () => {

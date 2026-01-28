@@ -47,7 +47,7 @@ describe("/api/expenses/[id]", () => {
       const request = new NextRequest(
         "http://localhost:3000/api/expenses/expense-1"
       );
-      const response = await GET(request, { params: { id: "expense-1" } });
+      const response = await GET(request, { params: Promise.resolve({ id: "expense-1" }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -70,7 +70,7 @@ describe("/api/expenses/[id]", () => {
       const request = new NextRequest(
         "http://localhost:3000/api/expenses/nonexistent"
       );
-      const response = await GET(request, { params: { id: "nonexistent" } });
+      const response = await GET(request, { params: Promise.resolve({ id: "nonexistent" }) });
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -83,7 +83,7 @@ describe("/api/expenses/[id]", () => {
       const request = new NextRequest(
         "http://localhost:3000/api/expenses/expense-1"
       );
-      const response = await GET(request, { params: { id: "expense-1" } });
+      const response = await GET(request, { params: Promise.resolve({ id: "expense-1" }) });
       const data = await response.json();
 
       expect(response.status).toBe(500);
@@ -148,7 +148,7 @@ describe("/api/expenses/[id]", () => {
         }
       );
 
-      const response = await PUT(request, { params: { id: "expense-1" } });
+      const response = await PUT(request, { params: Promise.resolve({ id: "expense-1" }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -181,7 +181,7 @@ describe("/api/expenses/[id]", () => {
         }
       );
 
-      await PUT(request, { params: { id: "expense-1" } });
+      await PUT(request, { params: Promise.resolve({ id: "expense-1" }) });
 
       // Check fund balance reversals
       expect(mockSql).toHaveBeenCalledWith(
@@ -230,7 +230,7 @@ describe("/api/expenses/[id]", () => {
         }
       );
 
-      const response = await PUT(request, { params: { id: "expense-1" } });
+      const response = await PUT(request, { params: Promise.resolve({ id: "expense-1" }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -262,7 +262,7 @@ describe("/api/expenses/[id]", () => {
         }
       );
 
-      await PUT(request, { params: { id: "expense-1" } });
+      await PUT(request, { params: Promise.resolve({ id: "expense-1" }) });
 
       // Should only update source fund balance (no destination fund operations)
       expect(mockSql).toHaveBeenCalledTimes(5); // GET, revert source, UPDATE, apply source, SELECT
@@ -279,7 +279,7 @@ describe("/api/expenses/[id]", () => {
         }
       );
 
-      const response = await PUT(request, { params: { id: "nonexistent" } });
+      const response = await PUT(request, { params: Promise.resolve({ id: "nonexistent" }) });
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -297,7 +297,7 @@ describe("/api/expenses/[id]", () => {
         }
       );
 
-      const response = await PUT(request, { params: { id: "expense-1" } });
+      const response = await PUT(request, { params: Promise.resolve({ id: "expense-1" }) });
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -322,7 +322,7 @@ describe("/api/expenses/[id]", () => {
         }
       );
 
-      const response = await PUT(request, { params: { id: "expense-1" } });
+      const response = await PUT(request, { params: Promise.resolve({ id: "expense-1" }) });
       const data = await response.json();
 
       expect(response.status).toBe(400);
@@ -359,7 +359,7 @@ describe("/api/expenses/[id]", () => {
         }
       );
 
-      const response = await PUT(request, { params: { id: "expense-1" } });
+      const response = await PUT(request, { params: Promise.resolve({ id: "expense-1" }) });
 
       expect(response.status).toBe(200);
       expect(consoleSpy).toHaveBeenCalledWith("Expense update warnings:", [
@@ -398,7 +398,7 @@ describe("/api/expenses/[id]", () => {
         }
       );
 
-      const response = await DELETE(request, { params: { id: "expense-1" } });
+      const response = await DELETE(request, { params: Promise.resolve({ id: "expense-1" }) });
       const data = await response.json();
 
       expect(response.status).toBe(200);
@@ -442,7 +442,7 @@ describe("/api/expenses/[id]", () => {
         }
       );
 
-      const response = await DELETE(request, { params: { id: "expense-1" } });
+      const response = await DELETE(request, { params: Promise.resolve({ id: "expense-1" }) });
 
       expect(response.status).toBe(200);
       // Should only update source fund balance (no destination fund operations)
@@ -459,7 +459,7 @@ describe("/api/expenses/[id]", () => {
         }
       );
 
-      const response = await DELETE(request, { params: { id: "nonexistent" } });
+      const response = await DELETE(request, { params: Promise.resolve({ id: "nonexistent" }) });
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -478,7 +478,7 @@ describe("/api/expenses/[id]", () => {
         }
       );
 
-      const response = await DELETE(request, { params: { id: "expense-1" } });
+      const response = await DELETE(request, { params: Promise.resolve({ id: "expense-1" }) });
       const data = await response.json();
 
       expect(response.status).toBe(404);
@@ -497,7 +497,7 @@ describe("/api/expenses/[id]", () => {
         }
       );
 
-      const response = await DELETE(request, { params: { id: "expense-1" } });
+      const response = await DELETE(request, { params: Promise.resolve({ id: "expense-1" }) });
       const data = await response.json();
 
       expect(response.status).toBe(500);

@@ -502,7 +502,7 @@ export async function applyTemplateToSimulation(
       FROM categories
       WHERE id IN (
         SELECT DISTINCT category_id
-        FROM budgets
+        FROM simulation_budgets
         WHERE simulation_id = ${simulationId}
       )
       ORDER BY name ASC

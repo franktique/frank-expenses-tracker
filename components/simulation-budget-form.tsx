@@ -27,7 +27,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { formatCurrency } from "@/lib/utils";
-import { Loader2, Save, Calculator, AlertCircle, Download, ArrowUpDown, GripVertical, Filter, X, Trash2, ChevronDown, ChevronUp, Eye, EyeOff } from "lucide-react";
+import { Loader2, Save, Calculator, AlertCircle, Download, ArrowUpDown, GripVertical, Filter, X, Trash2, ChevronDown, ChevronUp, Eye, EyeOff, ChevronsDown, ChevronsUp } from "lucide-react";
 import type { Subgroup, VisibilityState } from "@/types/simulation";
 import { exportSimulationToExcel } from "@/lib/excel-export-utils";
 import {
@@ -621,6 +621,29 @@ export function SimulationBudgetForm({
       return newSet;
     });
   }, []);
+
+  // Expand all subgroups
+  const expandAllSubgroups = useCallback(() => {
+    const allSubgroupIds = new Set(subgroups.map(sg => sg.id));
+    setExpandedSubgroups(allSubgroupIds);
+  }, [subgroups]);
+
+  // Collapse all subgroups
+  const collapseAllSubgroups = useCallback(() => {
+    setExpandedSubgroups(new Set());
+  }, []);
+
+  // Toggle between expand and collapse all
+  const toggleExpandCollapseAll = useCallback(() => {
+    const allSubgroupIds = subgroups.map(sg => sg.id);
+    const allExpanded = allSubgroupIds.every(id => expandedSubgroups.has(id));
+
+    if (allExpanded) {
+      collapseAllSubgroups();
+    } else {
+      expandAllSubgroups();
+    }
+  }, [subgroups, expandedSubgroups, expandAllSubgroups, collapseAllSubgroups]);
 
   // Helper function to toggle category selection in creation mode
   const toggleCategorySelection = useCallback((categoryId: string | number) => {
@@ -1655,6 +1678,12 @@ export function SimulationBudgetForm({
     return [...categories].sort((a, b) => a.name.localeCompare(b.name));
   }, [categories]);
 
+  // Calculate if all subgroups are expanded
+  const allSubgroupsExpanded = useMemo(() => {
+    if (subgroups.length === 0) return false;
+    return subgroups.every(sg => expandedSubgroups.has(sg.id));
+  }, [subgroups, expandedSubgroups]);
+
   // Drag & Drop Event Handlers
   const handleDragStart = useCallback(
     (e: React.DragEvent, categoryId: string | number, tipoGasto?: TipoGasto) => {
@@ -2047,6 +2076,26 @@ export function SimulationBudgetForm({
                     Ocultar sin presupuesto
                   </Label>
                 </div>
+
+                {/* Expand/Collapse All Subgroups Button */}
+                {subgroups.length > 0 && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleExpandCollapseAll}
+                    className="gap-2"
+                    title={allSubgroupsExpanded ? "Colapsar Todos" : "Expandir Todos"}
+                  >
+                    {allSubgroupsExpanded ? (
+                      <ChevronsUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronsDown className="h-4 w-4" />
+                    )}
+                    <span className="hidden sm:inline">
+                      {allSubgroupsExpanded ? "Colapsar Todos" : "Expandir Todos"}
+                    </span>
+                  </Button>
+                )}
 
                 {/* Category Exclusion Filter Dropdown */}
                 <Popover open={filterDropdownOpen} onOpenChange={setFilterDropdownOpen}>

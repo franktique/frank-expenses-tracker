@@ -70,7 +70,7 @@ describe("Source Fund Migration Scenarios", () => {
       expect(result[1].source_fund_id).toBe("fund-3"); // Only fund for cat-2
     });
   });
-});
+
   describe("Migration with Legacy Fund Relationships", () => {
     it("should fallback to legacy fund_id when no category_fund_relationships exist", async () => {
       const mockExpenses = [

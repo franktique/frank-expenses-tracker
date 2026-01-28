@@ -5,8 +5,10 @@ export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  let id = "";
   try {
-    const { id } = await params;
+    const p = await params;
+    id = p.id;
     const estudioId = parseInt(id);
 
     if (isNaN(estudioId)) {
@@ -51,8 +53,10 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  let id = "";
   try {
-    const { id } = await params;
+    const p = await params;
+    id = p.id;
     const estudioId = parseInt(id);
 
     if (isNaN(estudioId)) {
@@ -161,8 +165,10 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  let id = "";
   try {
-    const { id } = await params;
+    const p = await params;
+    id = p.id;
     const estudioId = parseInt(id);
 
     if (isNaN(estudioId)) {

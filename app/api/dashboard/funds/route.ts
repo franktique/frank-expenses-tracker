@@ -3,8 +3,24 @@ import { sql } from "@/lib/db";
 
 export async function GET() {
   try {
+    interface FundRow {
+      id: number;
+      name: string;
+      description: string | null;
+      initial_balance: number;
+      start_date: string;
+      created_at: string;
+      updated_at: string;
+      current_balance: string | number;
+      total_income: string | number;
+      total_expenses: string | number;
+      total_transfers_in: string | number;
+      total_transfers_out: string | number;
+      category_count: string | number;
+    }
+
     // Get all funds with current balances and basic stats
-    const funds = await sql`
+    const funds = (await sql`
       SELECT 
         f.id,
         f.name,
@@ -69,25 +85,25 @@ export async function GET() {
         GROUP BY fund_id
       ) category_count ON f.id = category_count.fund_id
       ORDER BY f.name
-    `;
+    `) as unknown as FundRow[];
 
     // Calculate total balances for allocation percentages
     const totalBalance = funds.reduce(
-      (sum, fund) => sum + parseFloat(fund.current_balance || 0),
+      (sum: number, fund: FundRow) => sum + parseFloat(fund.current_balance?.toString() || "0"),
       0
     );
 
     // Add allocation percentage to each fund
-    const fundsWithAllocation = funds.map((fund) => ({
+    const fundsWithAllocation = funds.map((fund: FundRow) => ({
       ...fund,
-      current_balance: parseFloat(fund.current_balance || 0),
-      total_income: parseFloat(fund.total_income || 0),
-      total_expenses: parseFloat(fund.total_expenses || 0),
-      total_transfers_in: parseFloat(fund.total_transfers_in || 0),
-      total_transfers_out: parseFloat(fund.total_transfers_out || 0),
+      current_balance: parseFloat(fund.current_balance?.toString() || "0"),
+      total_income: parseFloat(fund.total_income?.toString() || "0"),
+      total_expenses: parseFloat(fund.total_expenses?.toString() || "0"),
+      total_transfers_in: parseFloat(fund.total_transfers_in?.toString() || "0"),
+      total_transfers_out: parseFloat(fund.total_transfers_out?.toString() || "0"),
       allocation_percentage:
         totalBalance > 0
-          ? (parseFloat(fund.current_balance || 0) / totalBalance) * 100
+          ? (parseFloat(fund.current_balance?.toString() || "0") / totalBalance) * 100
           : 0,
     }));
 
@@ -96,19 +112,19 @@ export async function GET() {
       total_funds: funds.length,
       total_balance: totalBalance,
       total_income: funds.reduce(
-        (sum, fund) => sum + parseFloat(fund.total_income || 0),
+        (sum: number, fund: FundRow) => sum + parseFloat(fund.total_income?.toString() || "0"),
         0
       ),
       total_expenses: funds.reduce(
-        (sum, fund) => sum + parseFloat(fund.total_expenses || 0),
+        (sum: number, fund: FundRow) => sum + parseFloat(fund.total_expenses?.toString() || "0"),
         0
       ),
       total_transfers: funds.reduce(
-        (sum, fund) => sum + parseFloat(fund.total_transfers_in || 0),
+        (sum: number, fund: FundRow) => sum + parseFloat(fund.total_transfers_in?.toString() || "0"),
         0
       ),
       total_categories: funds.reduce(
-        (sum, fund) => sum + parseInt(fund.category_count || 0),
+        (sum: number, fund: FundRow) => sum + parseInt(fund.category_count?.toString() || "0"),
         0
       ),
     };

@@ -36,8 +36,14 @@ export async function GET(
       WHERE period_id = ${periodId}
     `;
 
+    interface FundIncomeRow {
+      fund_id: number;
+      fund_name: string;
+      amount: string | number;
+    }
+
     // Get income breakdown by fund for additional context
-    const incomeByFund = await sql`
+    const incomeByFund = (await sql`
       SELECT 
         f.id as fund_id,
         f.name as fund_name,
@@ -47,16 +53,16 @@ export async function GET(
       GROUP BY f.id, f.name
       HAVING SUM(i.amount) > 0
       ORDER BY amount DESC
-    `;
+    `) as unknown as FundIncomeRow[];
 
     return NextResponse.json({
       period_id: periodId,
       period_name: period.name,
       total_income: parseFloat(totalResult.total_income),
-      income_by_fund: incomeByFund.map(fund => ({
+      income_by_fund: incomeByFund.map((fund: FundIncomeRow) => ({
         fund_id: fund.fund_id,
         fund_name: fund.fund_name,
-        amount: parseFloat(fund.amount)
+        amount: parseFloat(fund.amount.toString())
       }))
     });
 

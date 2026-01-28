@@ -86,7 +86,21 @@ export async function GET(request: NextRequest) {
       `;
     }
 
-    const transfers = await transferQuery;
+    interface TransferRow {
+      id: number;
+      date: string;
+      description: string;
+      amount: string | number;
+      transfer_type: string;
+      category_name: string;
+      source_fund_name: string | null;
+      source_fund_id: number | null;
+      destination_fund_name: string | null;
+      destination_fund_id: number | null;
+      created_at: string;
+    }
+
+    const transfers = (await transferQuery) as unknown as TransferRow[];
 
     // Get transfer statistics
     let statsQuery;
@@ -134,9 +148,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       fund_id: fundId,
-      transfers: transfers.map((transfer) => ({
+      transfers: transfers.map((transfer: TransferRow) => ({
         ...transfer,
-        amount: parseFloat(transfer.amount || 0),
+        amount: parseFloat(transfer.amount?.toString() || "0"),
       })),
       pagination: {
         limit,

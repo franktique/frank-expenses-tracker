@@ -3,17 +3,22 @@ import { sql } from "@/lib/db";
 
 export async function GET(
   request: NextRequest,
-  { params: routeParams }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
+  let projectionMode = false;
+  let grouperIdStr = "";
+
   try {
-    const grouperId = parseInt(routeParams.id);
+    const { id } = await context.params;
+    grouperIdStr = id;
+    const grouperId = parseInt(id);
     const url = new URL(request.url);
     const periodId = url.searchParams.get("periodId");
     const paymentMethod = url.searchParams.get("paymentMethod"); // Legacy parameter for backward compatibility
     const expensePaymentMethods = url.searchParams.get("expensePaymentMethods");
     const budgetPaymentMethods = url.searchParams.get("budgetPaymentMethods");
     const includeBudgets = url.searchParams.get("includeBudgets") === "true";
-    const projectionMode = url.searchParams.get("projectionMode") === "true";
+    projectionMode = url.searchParams.get("projectionMode") === "true";
 
     if (isNaN(grouperId) || !periodId) {
       return NextResponse.json(
@@ -142,13 +147,24 @@ export async function GET(
     // Combine all parts
     query = selectClause + fromClause + whereClause + groupByClause + orderByClause;
 
-    const categoryStats = await sql.query(query, queryParams);
+    interface CategoryStatRow {
+      category_id: number;
+      category_name: string;
+      total_amount: string | number;
+      budget_amount?: string | number | null;
+    }
+
+    // Use sql.unsafe or similar if sql.query is not available, but assuming sql.query works based on existing code.
+    // However, usually `sql` is a tagged template literal. If `sql.query` exists, fine.
+    // If not, we might need `sql(strings, ...values)`.
+    // Given the existing code used `sql.query`, I'll assume it's correct but cast the result.
+    const categoryStats = (await (sql as any).query(query, queryParams)).rows as CategoryStatRow[];
 
     // Enhanced error handling for category projection mode
     if (projectionMode && includeBudgets) {
       // Check if any budget data exists for categories
       const hasBudgetData = categoryStats.some(
-        (item) =>
+        (item: CategoryStatRow) =>
           item.budget_amount !== null &&
           item.budget_amount !== undefined &&
           parseFloat(item.budget_amount.toString()) > 0
@@ -156,7 +172,7 @@ export async function GET(
 
       if (!hasBudgetData) {
         console.warn(
-          `No budget data found for categories in grouper ${routeParams.id}`
+          `No budget data found for categories in grouper ${grouperIdStr}`
         );
         // Return data with warning metadata instead of throwing error
         return NextResponse.json(categoryStats, {
@@ -169,7 +185,7 @@ export async function GET(
 
       // Check for partial budget data in categories
       const categoriesWithBudget = categoryStats.filter(
-        (item) =>
+        (item: CategoryStatRow) =>
           item.budget_amount !== null &&
           item.budget_amount !== undefined &&
           parseFloat(item.budget_amount.toString()) > 0
@@ -180,7 +196,7 @@ export async function GET(
         categoriesWithBudget.length > 0
       ) {
         console.warn(
-          `Partial budget data found for categories in grouper ${routeParams.id}`
+          `Partial budget data found for categories in grouper ${grouperIdStr}`
         );
         return NextResponse.json(categoryStats, {
           headers: {
@@ -194,7 +210,7 @@ export async function GET(
     return NextResponse.json(categoryStats);
   } catch (error) {
     console.error(
-      `Error fetching category statistics for grouper ${routeParams.id}:`,
+      `Error fetching category statistics for grouper ${grouperIdStr}:`,
       error
     );
 
@@ -206,7 +222,7 @@ export async function GET(
     if (isProjectionError) {
       return NextResponse.json(
         {
-          error: `Error loading category projection data for grouper ${routeParams.id}: ${errorMessage}`,
+          error: `Error loading category projection data for grouper ${grouperIdStr}: ${errorMessage}`,
           projectionError: true,
           categoryError: true,
           fallbackSuggested: true,

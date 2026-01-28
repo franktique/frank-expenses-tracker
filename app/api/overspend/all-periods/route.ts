@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Query to get all planned amounts across all periods
-    const plannedData = await sql<RowData>`
+    const plannedData = (await sql`
       SELECT
         c.id as category_id,
         c.name as category_name,
@@ -58,10 +58,10 @@ export async function GET(request: NextRequest) {
       LEFT JOIN budgets b ON c.id = b.category_id AND p.id = b.period_id
       GROUP BY c.id, c.name, c.tipo_gasto, p.id, p.name, p.month, p.year
       ORDER BY p.year DESC, p.month DESC, c.name ASC
-    `;
+    `) as unknown as RowData[];
 
     // Query to get all spent amounts across all periods
-    const spentData = await sql<RowData>`
+    const spentData = (await sql`
       SELECT
         c.id as category_id,
         c.name as category_name,
@@ -77,12 +77,12 @@ export async function GET(request: NextRequest) {
       LEFT JOIN expenses e ON c.id = e.category_id AND p.id = e.period_id
       GROUP BY c.id, c.name, c.tipo_gasto, p.id, p.name, p.month, p.year
       ORDER BY p.year DESC, p.month DESC, c.name ASC
-    `;
+    `) as unknown as RowData[];
 
     // Merge planned and spent data
     const mergedData: Record<string, Record<string, RowData>> = {};
 
-    plannedData.forEach((row) => {
+    plannedData.forEach((row: RowData) => {
       const key = `${row.category_id}-${row.period_id}`;
       if (!mergedData[row.category_id]) {
         mergedData[row.category_id] = {};
@@ -90,21 +90,23 @@ export async function GET(request: NextRequest) {
       mergedData[row.category_id][row.period_id] = {
         ...row,
         total_spent: 0,
+        total_planned: parseFloat(row.total_planned.toString()),
       };
     });
 
-    spentData.forEach((row) => {
+    spentData.forEach((row: RowData) => {
       const key = `${row.category_id}-${row.period_id}`;
       if (!mergedData[row.category_id]) {
         mergedData[row.category_id] = {};
       }
       if (mergedData[row.category_id][row.period_id]) {
         mergedData[row.category_id][row.period_id].total_spent =
-          row.total_spent;
+          parseFloat(row.total_spent.toString());
       } else {
         mergedData[row.category_id][row.period_id] = {
           ...row,
           total_planned: 0,
+          total_spent: parseFloat(row.total_spent.toString()),
         };
       }
     });

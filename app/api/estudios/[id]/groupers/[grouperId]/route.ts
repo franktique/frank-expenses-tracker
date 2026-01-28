@@ -254,8 +254,12 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; grouperId: string }> }
 ) {
+  let id = "";
+  let grouperId = "";
   try {
-    const { id, grouperId } = await params;
+    const p = await params;
+    id = p.id;
+    grouperId = p.grouperId;
     const estudioId = parseInt(id);
     const grouperIdInt = parseInt(grouperId);
 

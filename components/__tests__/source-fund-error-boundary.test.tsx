@@ -1,5 +1,6 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import "@testing-library/jest-dom";
 import {
   SourceFundErrorBoundary,
   SourceFundErrorWrapper,
@@ -76,14 +77,14 @@ function TestHookComponent() {
 
 describe("SourceFundErrorBoundary", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
     // Mock console methods to avoid noise in tests
-    vi.spyOn(console, "error").mockImplementation(() => {});
-    vi.spyOn(console, "warn").mockImplementation(() => {});
+    jest.spyOn(console, "error").mockImplementation(() => {});
+    jest.spyOn(console, "warn").mockImplementation(() => {});
   });
 
   afterEach(() => {
-    vi.restoreAllMocks();
+    jest.restoreAllMocks();
   });
 
   describe("Error Boundary Component", () => {
@@ -182,7 +183,7 @@ describe("SourceFundErrorBoundary", () => {
     });
 
     it("should call onError callback when error occurs", () => {
-      const onError = vi.fn();
+      const onError = jest.fn();
 
       render(
         <SourceFundErrorBoundary onError={onError}>
@@ -256,7 +257,7 @@ describe("SourceFundErrorBoundary", () => {
     });
 
     it("should catch errors and log them", () => {
-      const consoleSpy = vi.spyOn(console, "error");
+      const consoleSpy = jest.spyOn(console, "error");
 
       render(
         <SourceFundErrorWrapper context="test wrapper">
@@ -343,7 +344,7 @@ describe("SourceFundErrorBoundary", () => {
   describe("SourceFundErrorFallback Component", () => {
     it("should render validation error fallback", () => {
       const error = new Error("Validation failed");
-      const resetError = vi.fn();
+      const resetError = jest.fn();
 
       render(
         <SourceFundErrorFallback
@@ -398,7 +399,7 @@ describe("SourceFundErrorBoundary", () => {
     });
 
     it("should call resetError when retry button is clicked", () => {
-      const resetError = vi.fn();
+      const resetError = jest.fn();
 
       render(<SourceFundErrorFallback resetError={resetError} />);
 
@@ -409,7 +410,7 @@ describe("SourceFundErrorBoundary", () => {
 
     it("should reload page when reload button is clicked", () => {
       // Mock window.location.reload
-      const reloadMock = vi.fn();
+      const reloadMock = jest.fn();
       Object.defineProperty(window, "location", {
         value: { reload: reloadMock },
         writable: true,
@@ -457,11 +458,11 @@ describe("SourceFundErrorBoundary", () => {
 
   describe("Auto-retry for Network Errors", () => {
     beforeEach(() => {
-      vi.useFakeTimers();
+      jest.useFakeTimers();
     });
 
     afterEach(() => {
-      vi.useRealTimers();
+      jest.useRealTimers();
     });
 
     it("should auto-retry network errors after 5 seconds", () => {
@@ -474,7 +475,7 @@ describe("SourceFundErrorBoundary", () => {
       expect(screen.getByText("Error de conexión")).toBeInTheDocument();
 
       // Fast-forward time by 5 seconds
-      vi.advanceTimersByTime(5000);
+      jest.advanceTimersByTime(5000);
 
       rerender(
         <SourceFundErrorBoundary>

@@ -46,7 +46,15 @@ export async function GET(
 
     // Fetch incomes aggregated by description
     // This groups incomes with the same description and sums their amounts
-    const incomes = await sql`
+    interface IncomeRow {
+      description: string;
+      total_amount: string | number;
+      count: string | number;
+    }
+
+    // Fetch incomes aggregated by description
+    // This groups incomes with the same description and sums their amounts
+    const incomes = (await sql`
       SELECT
         description,
         SUM(amount) as total_amount,
@@ -55,7 +63,7 @@ export async function GET(
       WHERE period_id = ${periodId}
       GROUP BY description
       ORDER BY description
-    `;
+    `) as unknown as IncomeRow[];
 
     // Debug: First check what raw budgets exist for this period
     const rawBudgets = await sql`
@@ -68,11 +76,18 @@ export async function GET(
     console.log(`=== DEBUG: Period ${periodId} raw budgets (first 5) ===`);
     console.log(rawBudgets);
 
+    interface BudgetRow {
+      category_id: number;
+      category_name: string;
+      efectivo_amount: string | number;
+      credito_amount: string | number;
+    }
+
     // Fetch budgets grouped by category and split by payment method
     // This transforms the normalized budget structure into the simulation format
     // payment_method values: 'cash' = efectivo, 'credit' = credito, 'debit' = debito
     // We combine 'cash' and 'debit' as "efectivo_amount" for the simulation
-    const budgets = await sql`
+    const budgets = (await sql`
       SELECT
         b.category_id,
         c.name as category_name,
@@ -83,7 +98,7 @@ export async function GET(
       WHERE b.period_id = ${periodId}
       GROUP BY b.category_id, c.name
       ORDER BY c.name
-    `;
+    `) as unknown as BudgetRow[];
 
     // Debug: Log aggregated budgets
     console.log(`=== DEBUG: Period ${periodId} aggregated budgets (${budgets.length} categories) ===`);
@@ -93,17 +108,17 @@ export async function GET(
 
     // Calculate totals for preview
     const totalIncome = incomes.reduce(
-      (sum, income) => sum + Number(income.total_amount),
+      (sum: number, income: IncomeRow) => sum + Number(income.total_amount),
       0
     );
 
     const totalBudgetEfectivo = budgets.reduce(
-      (sum, budget) => sum + Number(budget.efectivo_amount),
+      (sum: number, budget: BudgetRow) => sum + Number(budget.efectivo_amount),
       0
     );
 
     const totalBudgetCredito = budgets.reduce(
-      (sum, budget) => sum + Number(budget.credito_amount),
+      (sum: number, budget: BudgetRow) => sum + Number(budget.credito_amount),
       0
     );
 
@@ -118,12 +133,12 @@ export async function GET(
         year: period.year,
         is_open: period.is_open,
       },
-      incomes: incomes.map((income) => ({
+      incomes: incomes.map((income: IncomeRow) => ({
         description: income.description,
         total_amount: Number(income.total_amount),
         count: Number(income.count),
       })),
-      budgets: budgets.map((budget) => ({
+      budgets: budgets.map((budget: BudgetRow) => ({
         category_id: budget.category_id,
         category_name: budget.category_name,
         efectivo_amount: Number(budget.efectivo_amount),

@@ -74,6 +74,7 @@ type SimulationBudget = {
   credito_amount: number;
   expected_savings: number;
   tipo_gasto?: TipoGasto;
+  needs_adjustment?: boolean;
 };
 
 type BudgetFormData = {
@@ -84,6 +85,7 @@ type BudgetFormData = {
     ahorro_efectivo_amount: string;
     ahorro_credito_amount: string;
     expected_savings: string; // Keep for backward compatibility
+    needs_adjustment: string; // Boolean as string
   };
 };
 
@@ -238,6 +240,7 @@ export function SimulationBudgetForm({
           const ahorroEfectivoAmount = existingBudget?.ahorro_efectivo_amount;
           const ahorroCreditoAmount = existingBudget?.ahorro_credito_amount;
           const expectedSavings = existingBudget?.expected_savings;
+          const needsAdjustment = existingBudget?.needs_adjustment;
 
           initialBudgetData[String(category.id)] = {
             efectivo_amount:
@@ -275,6 +278,10 @@ export function SimulationBudgetForm({
               !isNaN(expectedSavings)
                 ? expectedSavings.toString()
                 : "0",
+            needs_adjustment:
+              needsAdjustment !== null && needsAdjustment !== undefined
+                ? String(needsAdjustment)
+                : "false",
           };
         });
 
@@ -545,6 +552,62 @@ export function SimulationBudgetForm({
   const handleToggleVisibility = useCallback((itemId: string | number) => {
     setVisibilityState((prev) => toggleVisibility(prev, itemId));
   }, []);
+
+  // Helper function to toggle needs_adjustment for a category
+  const handleToggleNeedsAdjustment = useCallback((categoryId: string | number) => {
+    setBudgetData((prev) => {
+      const categoryKey = String(categoryId);
+      const currentData = prev[categoryKey];
+      if (!currentData) return prev;
+
+      const currentValue = currentData.needs_adjustment === "true";
+      const newBudgetData = {
+        ...prev,
+        [categoryKey]: {
+          ...currentData,
+          needs_adjustment: String(!currentValue),
+        },
+      };
+
+      // Trigger auto-save after a short delay with the updated data
+      setTimeout(async () => {
+        try {
+          // Prepare budgets array from the updated state
+          const budgets = Object.entries(newBudgetData).map(([catId, data]) => {
+            let parsedCategoryId: string | number = catId;
+            if (/^\d+$/.test(catId)) {
+              parsedCategoryId = parseInt(catId);
+            }
+            return {
+              category_id: parsedCategoryId,
+              efectivo_amount: parseFloat(data.efectivo_amount) || 0,
+              credito_amount: parseFloat(data.credito_amount) || 0,
+              ahorro_efectivo_amount: parseFloat(data.ahorro_efectivo_amount) || 0,
+              ahorro_credito_amount: parseFloat(data.ahorro_credito_amount) || 0,
+              expected_savings: parseFloat(data.expected_savings) || 0,
+              needs_adjustment: data.needs_adjustment === "true" || data.needs_adjustment === true,
+            };
+          });
+
+          const response = await fetch(`/api/simulations/${simulationId}/budgets`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ budgets }),
+          });
+
+          if (response.ok) {
+            setLastSaved(new Date());
+            setHasUnsavedChanges(false);
+          }
+        } catch (error) {
+          console.error("Failed to save needs_adjustment:", error);
+        }
+      }, 500);
+
+      return newBudgetData;
+    });
+    setHasUnsavedChanges(true);
+  }, [simulationId]);
 
   // Helper function to toggle subgroup expansion
   const toggleSubgroupExpanded = useCallback((subgroupId: string) => {
@@ -912,6 +975,7 @@ export function SimulationBudgetForm({
             ahorro_efectivo_amount: parseFloat(data.ahorro_efectivo_amount) || 0,
             ahorro_credito_amount: parseFloat(data.ahorro_credito_amount) || 0,
             expected_savings: parseFloat(data.expected_savings) || 0, // Keep for backward compatibility
+            needs_adjustment: data.needs_adjustment === "true" || data.needs_adjustment === true,
           };
         });
 
@@ -2164,13 +2228,14 @@ export function SimulationBudgetForm({
                       )}
                     </Button>
                   </TableHead>
-                  <TableHead className="text-right">Efectivo</TableHead>
-                  <TableHead className="text-right">Crédito</TableHead>
-                  <TableHead className="text-right">Ahorro Efectivo</TableHead>
-                  <TableHead className="text-right">Ahorro Crédito</TableHead>
-                  <TableHead className="text-right">Total</TableHead>
-                  <TableHead className="text-right">Balance</TableHead>
-                  <TableHead className="w-8"></TableHead>
+                  <TableHead className="text-right min-w-[140px]">Efectivo</TableHead>
+                  <TableHead className="text-right min-w-[140px]">Crédito</TableHead>
+                  <TableHead className="text-right min-w-[160px]">Ahorro Efectivo</TableHead>
+                  <TableHead className="text-right min-w-[160px]">Ahorro Crédito</TableHead>
+                  <TableHead className="text-right min-w-[140px]">Total</TableHead>
+                  <TableHead className="text-right min-w-[140px]">Balance</TableHead>
+                  <TableHead className="w-[32px]"></TableHead>
+                  <TableHead className="w-[32px]"></TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -2339,6 +2404,10 @@ export function SimulationBudgetForm({
                               : ""
                           } ${
                             isCategoryHidden ? "opacity-60 line-through" : ""
+                          } ${
+                            categoryData?.needs_adjustment === "true"
+                              ? "bg-yellow-700/40 dark:bg-yellow-800/40"
+                              : ""
                           }`}
                         >
                           <TableCell className="font-medium w-8 pl-2">
@@ -2404,7 +2473,7 @@ export function SimulationBudgetForm({
                               </span>
                             )}
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right min-w-[140px]">
                             <div className="space-y-1">
                               <Input
                                 type="number"
@@ -2445,7 +2514,7 @@ export function SimulationBudgetForm({
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right min-w-[140px]">
                             <div className="space-y-1">
                               <Input
                                 type="number"
@@ -2486,7 +2555,7 @@ export function SimulationBudgetForm({
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right min-w-[160px]">
                             <div className="space-y-1">
                               <Input
                                 type="number"
@@ -2534,7 +2603,7 @@ export function SimulationBudgetForm({
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-right">
+                          <TableCell className="text-right min-w-[160px]">
                             <div className="space-y-1">
                               <Input
                                 type="number"
@@ -2582,7 +2651,7 @@ export function SimulationBudgetForm({
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-right font-medium">
+                          <TableCell className="text-right font-medium min-w-[140px]">
                             <span
                               className={
                                 categoryTotal > 0
@@ -2593,7 +2662,7 @@ export function SimulationBudgetForm({
                               {formatCurrency(categoryTotal)}
                             </span>
                           </TableCell>
-                          <TableCell className="text-right font-bold">
+                          <TableCell className="text-right font-bold min-w-[140px]">
                             <span
                               className={getBalanceColor(
                                 categoryBalances.get(String(category.id)) || 0
@@ -2604,18 +2673,36 @@ export function SimulationBudgetForm({
                               )}
                             </span>
                           </TableCell>
-                          <TableCell className="w-8 pl-2 flex items-center justify-center">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-5 w-5 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-purple-100 hover:text-purple-600 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
-                              onClick={() => handleToggleVisibility(category.id)}
-                              disabled={isSaving || isAutoSaving}
-                              aria-label={isCategoryHidden ? `Show ${category.name}` : `Hide ${category.name}`}
-                              title={isCategoryHidden ? "Show category" : "Hide category"}
-                            >
-                              {isCategoryHidden ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                            </Button>
+                          <TableCell className="w-[32px] px-0">
+                            <div className="flex items-center justify-center">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-purple-100 hover:text-purple-600 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+                                onClick={() => handleToggleVisibility(category.id)}
+                                disabled={isSaving || isAutoSaving}
+                                aria-label={isCategoryHidden ? `Show ${category.name}` : `Hide ${category.name}`}
+                                title={isCategoryHidden ? "Show category" : "Hide category"}
+                              >
+                                {isCategoryHidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="w-[32px] px-0">
+                            <div className="flex items-center justify-center">
+                              <Checkbox
+                                checked={categoryData?.needs_adjustment === "true"}
+                                onCheckedChange={() => handleToggleNeedsAdjustment(category.id)}
+                                disabled={isSaving || isAutoSaving}
+                                className={`${
+                                  categoryData?.needs_adjustment === "true"
+                                    ? "opacity-100"
+                                    : "opacity-0 group-hover:opacity-100"
+                                } transition-opacity h-4 w-4`}
+                                aria-label={`Mark ${category.name} as needing adjustment`}
+                                title="Mark as needing adjustment"
+                              />
+                            </div>
                           </TableCell>
                         </TableRow>
                       );

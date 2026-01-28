@@ -53,6 +53,7 @@ export async function GET(
         sb.ahorro_efectivo_amount,
         sb.ahorro_credito_amount,
         sb.expected_savings,
+        sb.needs_adjustment,
         sb.created_at,
         sb.updated_at
       FROM simulation_budgets sb
@@ -240,6 +241,7 @@ export async function PUT(
           ahorro_efectivo_amount = 0,
           ahorro_credito_amount = 0,
           expected_savings = 0,
+          needs_adjustment = false,
         } = budget;
 
         try {
@@ -253,6 +255,7 @@ export async function PUT(
               ahorro_efectivo_amount,
               ahorro_credito_amount,
               expected_savings,
+              needs_adjustment,
               updated_at
             )
             VALUES (
@@ -263,6 +266,7 @@ export async function PUT(
               ${ahorro_efectivo_amount},
               ${ahorro_credito_amount},
               ${expected_savings},
+              ${needs_adjustment},
               CURRENT_TIMESTAMP
             )
             ON CONFLICT (simulation_id, category_id)
@@ -272,6 +276,7 @@ export async function PUT(
               ahorro_efectivo_amount = EXCLUDED.ahorro_efectivo_amount,
               ahorro_credito_amount = EXCLUDED.ahorro_credito_amount,
               expected_savings = EXCLUDED.expected_savings,
+              needs_adjustment = EXCLUDED.needs_adjustment,
               updated_at = CURRENT_TIMESTAMP
             RETURNING *
           `;

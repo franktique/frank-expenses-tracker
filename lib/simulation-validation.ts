@@ -51,6 +51,8 @@ export const SimulationBudgetSchema = z.object({
   ahorro_credito_amount: SimulationBudgetAmountSchema.optional().default(0),
   // Legacy field - keep for backward compatibility
   expected_savings: SimulationBudgetAmountSchema.optional().default(0),
+  // Needs adjustment flag for UI highlighting
+  needs_adjustment: z.boolean().optional().default(false),
 }).refine(
   (data) => data.ahorro_efectivo_amount <= data.efectivo_amount,
   {
@@ -491,6 +493,7 @@ export function validateBudgetFormData(formData: {
     ahorro_efectivo_amount?: string;
     ahorro_credito_amount?: string;
     expected_savings?: string; // Legacy - for backward compatibility
+    needs_adjustment?: string; // Boolean as string
   };
 }): {
   isValid: boolean;

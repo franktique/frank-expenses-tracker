@@ -448,9 +448,27 @@ export function DashboardView() {
     name: item.category_name,
   }));
 
-  // Calculate total credit card purchases
-  const totalCreditCardPurchases = budgetSummary.reduce(
+  // Calculate total credit card purchases (using filtered summary to respect excluded categories)
+  const totalCreditCardPurchases = filteredBudgetSummary.reduce(
     (sum, item) => sum + item.credit_amount,
+    0
+  );
+
+  // Calculate total cash/debit expenses (actual)
+  const totalCashDebitExpenses = filteredBudgetSummary.reduce(
+    (sum, item) => sum + item.debit_amount + item.cash_amount,
+    0
+  );
+
+  // Calculate remainder for cash/debit (budget - actual)
+  const remainderCashDebit = filteredBudgetSummary.reduce(
+    (sum, item) => sum + item.cash_debit_budget - (item.debit_amount + item.cash_amount),
+    0
+  );
+
+  // Calculate remainder for credit (budget - actual)
+  const remainderCredit = filteredBudgetSummary.reduce(
+    (sum, item) => sum + item.credit_budget - item.credit_amount,
     0
   );
 
@@ -506,7 +524,8 @@ export function DashboardView() {
         </TabsList>
 
         <TabsContent value="summary" className="mt-6">
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+          {/* Row 1: Main Financial Overview */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -561,7 +580,10 @@ export function DashboardView() {
                 <div className="text-2xl font-bold">{budgetSummary.length}</div>
               </CardContent>
             </Card>
+          </div>
 
+          {/* Row 2: Payment Method Breakdown */}
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mt-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -574,6 +596,63 @@ export function DashboardView() {
                   {formatCurrency(totalCreditCardPurchases)}
                 </div>
                 <p className="text-xs text-muted-foreground">Periodo actual</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Total Efectivo
+                </CardTitle>
+                <Wallet className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">
+                  {formatCurrency(totalCashDebitExpenses)}
+                </div>
+                <p className="text-xs text-muted-foreground">Periodo actual</p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Remanente Efectivo
+                </CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${
+                  remainderCashDebit >= 0
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
+                }`}>
+                  {formatCurrency(remainderCashDebit)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Presupuesto disponible
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Remanente Crédito
+                </CardTitle>
+                <CreditCardIcon className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className={`text-2xl font-bold ${
+                  remainderCredit >= 0
+                    ? "text-green-600 dark:text-green-400"
+                    : "text-red-600 dark:text-red-400"
+                }`}>
+                  {formatCurrency(remainderCredit)}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Presupuesto disponible
+                </p>
               </CardContent>
             </Card>
 

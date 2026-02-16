@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET() {
   try {
@@ -89,21 +89,28 @@ export async function GET() {
 
     // Calculate total balances for allocation percentages
     const totalBalance = funds.reduce(
-      (sum: number, fund: FundRow) => sum + parseFloat(fund.current_balance?.toString() || "0"),
+      (sum: number, fund: FundRow) =>
+        sum + parseFloat(fund.current_balance?.toString() || '0'),
       0
     );
 
     // Add allocation percentage to each fund
     const fundsWithAllocation = funds.map((fund: FundRow) => ({
       ...fund,
-      current_balance: parseFloat(fund.current_balance?.toString() || "0"),
-      total_income: parseFloat(fund.total_income?.toString() || "0"),
-      total_expenses: parseFloat(fund.total_expenses?.toString() || "0"),
-      total_transfers_in: parseFloat(fund.total_transfers_in?.toString() || "0"),
-      total_transfers_out: parseFloat(fund.total_transfers_out?.toString() || "0"),
+      current_balance: parseFloat(fund.current_balance?.toString() || '0'),
+      total_income: parseFloat(fund.total_income?.toString() || '0'),
+      total_expenses: parseFloat(fund.total_expenses?.toString() || '0'),
+      total_transfers_in: parseFloat(
+        fund.total_transfers_in?.toString() || '0'
+      ),
+      total_transfers_out: parseFloat(
+        fund.total_transfers_out?.toString() || '0'
+      ),
       allocation_percentage:
         totalBalance > 0
-          ? (parseFloat(fund.current_balance?.toString() || "0") / totalBalance) * 100
+          ? (parseFloat(fund.current_balance?.toString() || '0') /
+              totalBalance) *
+            100
           : 0,
     }));
 
@@ -112,19 +119,23 @@ export async function GET() {
       total_funds: funds.length,
       total_balance: totalBalance,
       total_income: funds.reduce(
-        (sum: number, fund: FundRow) => sum + parseFloat(fund.total_income?.toString() || "0"),
+        (sum: number, fund: FundRow) =>
+          sum + parseFloat(fund.total_income?.toString() || '0'),
         0
       ),
       total_expenses: funds.reduce(
-        (sum: number, fund: FundRow) => sum + parseFloat(fund.total_expenses?.toString() || "0"),
+        (sum: number, fund: FundRow) =>
+          sum + parseFloat(fund.total_expenses?.toString() || '0'),
         0
       ),
       total_transfers: funds.reduce(
-        (sum: number, fund: FundRow) => sum + parseFloat(fund.total_transfers_in?.toString() || "0"),
+        (sum: number, fund: FundRow) =>
+          sum + parseFloat(fund.total_transfers_in?.toString() || '0'),
         0
       ),
       total_categories: funds.reduce(
-        (sum: number, fund: FundRow) => sum + parseInt(fund.category_count?.toString() || "0"),
+        (sum: number, fund: FundRow) =>
+          sum + parseInt(fund.category_count?.toString() || '0'),
         0
       ),
     };
@@ -134,7 +145,7 @@ export async function GET() {
       summary,
     });
   } catch (error) {
-    console.error("Error fetching fund dashboard data:", error);
+    console.error('Error fetching fund dashboard data:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

@@ -1,16 +1,13 @@
 # Implementation Plan
 
 - [x] 1. Create database schema and API foundation
-
   - Create database migration scripts for simulations and simulation_budgets tables
   - Implement basic CRUD API endpoints for simulations management
   - Add database indexes for optimal query performance
   - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
 - [x] 2. Implement simulation management API endpoints
-
   - [x] 2.1 Create simulations CRUD API endpoints
-
     - Implement GET /api/simulations for listing all simulations
     - Implement POST /api/simulations for creating new simulations
     - Implement GET /api/simulations/[id] for individual simulation details
@@ -28,9 +25,7 @@
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7_
 
 - [x] 3. Create simulation management UI components
-
   - [x] 3.1 Implement simulation list component
-
     - Create SimulationList component with create, edit, delete, duplicate actions
     - Add empty state handling for when no simulations exist
     - Implement confirmation dialogs for destructive actions
@@ -45,9 +40,7 @@
     - _Requirements: 1.1, 1.2, 1.3, 5.1, 5.2_
 
 - [x] 4. Build simulation budget configuration interface
-
   - [x] 4.1 Create simulation budget form component
-
     - Build form displaying all categories with Efectivo and Credito input fields
     - Implement real-time validation for positive number inputs
     - Add category totals calculation (Efectivo + Credito per category)
@@ -62,9 +55,7 @@
     - _Requirements: 2.4, 2.5_
 
 - [x] 5. Create main simulation pages and routing
-
   - [x] 5.1 Implement main simulation page
-
     - Create /app/simular/page.tsx with simulation list interface
     - Add navigation integration with existing sidebar
     - Implement responsive design for mobile and desktop
@@ -77,9 +68,7 @@
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 2.7_
 
 - [x] 6. Implement simulation analytics API
-
   - [x] 6.1 Create simulation analytics data endpoint
-
     - Implement GET /api/simulations/[id]/analytics endpoint
     - Add logic to aggregate simulation budgets by grouper
     - Implement payment method filtering for simulation data
@@ -94,9 +83,7 @@
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
 - [x] 7. Build simulation analytics UI components
-
   - [x] 7.1 Create simulation chart components
-
     - Extend existing chart components to handle simulation data
     - Implement visual distinction between historical and simulation data
     - Add simulation-specific tooltips and legends
@@ -111,9 +98,7 @@
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
 
 - [x] 8. Integrate simulation with existing filter system
-
   - [x] 8.1 Extend existing filter components for simulation context
-
     - Modify AgrupadorFilter to work with simulation data
     - Update EstudioFilter to apply to simulation analytics
     - Extend PaymentMethodFilter to handle simulation budget filtering
@@ -128,9 +113,7 @@
     - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
 - [x] 9. Create simulation analytics page
-
   - [x] 9.1 Implement simulation analytics interface
-
     - Create /app/simular/[id]/analytics/page.tsx with chart dashboard
     - Integrate all filter components in simulation context
     - Add tab navigation between different chart types
@@ -145,9 +128,7 @@
     - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 5.1, 5.2, 5.3, 5.4_
 
 - [x] 10. Implement error handling and validation
-
   - [x] 10.1 Add comprehensive error handling
-
     - Implement error boundaries for simulation components
     - Add graceful fallbacks for missing simulation data
     - Create user-friendly error messages for common scenarios
@@ -162,9 +143,7 @@
     - _Requirements: 2.3, 2.6, 2.7_
 
 - [x] 11. Add navigation and menu integration
-
   - [x] 11.1 Integrate simulation menu with existing navigation
-
     - Add "Simular" option to existing sidebar navigation
     - Implement proper active state handling for simulation routes
     - Add breadcrumb navigation for simulation sub-pages

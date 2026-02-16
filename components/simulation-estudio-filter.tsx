@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Check,
   ChevronDown,
   BookOpen,
   AlertCircle,
   RefreshCw,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/popover';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
 
 type EstudioData = {
   id: number;
@@ -62,11 +62,11 @@ export function SimulationEstudioFilter({
     if (persistSelection && simulationContext) {
       try {
         sessionStorage.setItem(
-          "simulation-selectedEstudioId",
+          'simulation-selectedEstudioId',
           estudioId.toString()
         );
       } catch (error) {
-        console.warn("Failed to persist estudio selection:", error);
+        console.warn('Failed to persist estudio selection:', error);
       }
     }
   };
@@ -78,9 +78,9 @@ export function SimulationEstudioFilter({
 
     if (persistSelection && simulationContext) {
       try {
-        sessionStorage.removeItem("simulation-selectedEstudioId");
+        sessionStorage.removeItem('simulation-selectedEstudioId');
       } catch (error) {
-        console.warn("Failed to clear persisted estudio selection:", error);
+        console.warn('Failed to clear persisted estudio selection:', error);
       }
     }
   };
@@ -95,26 +95,26 @@ export function SimulationEstudioFilter({
   // Get display text for the trigger button
   const getDisplayText = () => {
     if (isLoading) {
-      return "Cargando...";
+      return 'Cargando...';
     }
 
     if (error) {
-      return "Error al cargar";
+      return 'Error al cargar';
     }
 
     if (selectedEstudio === null) {
       if (allEstudios.length === 0) {
-        return "No hay estudios disponibles";
+        return 'No hay estudios disponibles';
       }
       return simulationContext
-        ? "Seleccionar estudio para simulación"
-        : "Seleccionar estudio";
+        ? 'Seleccionar estudio para simulación'
+        : 'Seleccionar estudio';
     }
 
     const selectedEstudioData = allEstudios.find(
       (e) => e.id === selectedEstudio
     );
-    return selectedEstudioData?.name || "Estudio no encontrado";
+    return selectedEstudioData?.name || 'Estudio no encontrado';
   };
 
   // Get selected estudio data for display
@@ -130,9 +130,9 @@ export function SimulationEstudioFilter({
           role="combobox"
           aria-expanded={isOpen}
           className={cn(
-            "w-[300px] justify-between",
-            error && "border-destructive text-destructive",
-            simulationContext && "border-blue-200 bg-blue-50/50"
+            'w-[300px] justify-between',
+            error && 'border-destructive text-destructive',
+            simulationContext && 'border-blue-200 bg-blue-50/50'
           )}
           disabled={isLoading || allEstudios.length === 0}
         >
@@ -141,7 +141,7 @@ export function SimulationEstudioFilter({
               <AlertCircle className="h-4 w-4" />
             ) : (
               <BookOpen
-                className={cn("h-4 w-4", simulationContext && "text-blue-600")}
+                className={cn('h-4 w-4', simulationContext && 'text-blue-600')}
               />
             )}
             <span className="truncate">{getDisplayText()}</span>
@@ -152,14 +152,14 @@ export function SimulationEstudioFilter({
       <PopoverContent className="w-[300px] p-0" align="start">
         <div className="p-2">
           {/* Header with context indicator */}
-          <div className="px-2 py-2 text-sm font-medium text-muted-foreground border-b flex items-center justify-between">
+          <div className="flex items-center justify-between border-b px-2 py-2 text-sm font-medium text-muted-foreground">
             <span>
               {simulationContext
-                ? "Estudio para Simulación"
-                : "Seleccionar Estudio"}
+                ? 'Estudio para Simulación'
+                : 'Seleccionar Estudio'}
             </span>
             {simulationContext && (
-              <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+              <div className="rounded bg-blue-50 px-2 py-1 text-xs text-blue-600">
                 Simulación
               </div>
             )}
@@ -181,7 +181,7 @@ export function SimulationEstudioFilter({
                         className="ml-2 h-6 px-2 text-xs"
                         disabled={isLoading}
                       >
-                        <RefreshCw className="h-3 w-3 mr-1" />
+                        <RefreshCw className="mr-1 h-3 w-3" />
                         Reintentar
                       </Button>
                     )}
@@ -189,29 +189,29 @@ export function SimulationEstudioFilter({
                 </Alert>
               </div>
             ) : isLoading ? (
-              <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+              <div className="px-2 py-4 text-center text-sm text-muted-foreground">
                 <div className="flex items-center justify-center gap-2">
                   <RefreshCw className="h-4 w-4 animate-spin" />
                   Cargando estudios...
                 </div>
               </div>
             ) : sortedEstudios.length === 0 ? (
-              <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+              <div className="px-2 py-4 text-center text-sm text-muted-foreground">
                 <div className="space-y-3">
-                  <BookOpen className="h-8 w-8 mx-auto opacity-50" />
+                  <BookOpen className="mx-auto h-8 w-8 opacity-50" />
                   <div>
                     <p className="font-medium">No hay estudios disponibles</p>
-                    <p className="text-xs mt-1">
+                    <p className="mt-1 text-xs">
                       {simulationContext
-                        ? "Crea un estudio para usar en simulaciones"
-                        : "Crea un estudio para comenzar a filtrar agrupadores"}
+                        ? 'Crea un estudio para usar en simulaciones'
+                        : 'Crea un estudio para comenzar a filtrar agrupadores'}
                     </p>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => (window.location.href = "/estudios")}
-                    className="text-xs h-7"
+                    onClick={() => (window.location.href = '/estudios')}
+                    className="h-7 text-xs"
                   >
                     Ir a Estudios
                   </Button>
@@ -223,13 +223,13 @@ export function SimulationEstudioFilter({
                 {selectedEstudio !== null && (
                   <>
                     <div
-                      className="flex items-center space-x-2 px-2 py-2 hover:bg-accent hover:text-accent-foreground rounded-sm cursor-pointer text-muted-foreground"
+                      className="flex cursor-pointer items-center space-x-2 rounded-sm px-2 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                       onClick={handleClearSelection}
                     >
                       <div className="h-4 w-4" /> {/* Spacer */}
                       <span className="text-sm italic">Limpiar selección</span>
                     </div>
-                    <div className="h-px bg-border my-1" />
+                    <div className="my-1 h-px bg-border" />
                   </>
                 )}
 
@@ -241,24 +241,24 @@ export function SimulationEstudioFilter({
                     <div
                       key={estudio.id}
                       className={cn(
-                        "flex items-center space-x-2 px-2 py-2 hover:bg-accent hover:text-accent-foreground rounded-sm cursor-pointer",
+                        'flex cursor-pointer items-center space-x-2 rounded-sm px-2 py-2 hover:bg-accent hover:text-accent-foreground',
                         isSelected &&
                           simulationContext &&
-                          "bg-blue-50 border-l-2 border-blue-600"
+                          'border-l-2 border-blue-600 bg-blue-50'
                       )}
                       onClick={() => handleEstudioSelect(estudio.id)}
                     >
                       <BookOpen
                         className={cn(
-                          "h-4 w-4 text-muted-foreground",
-                          isSelected && simulationContext && "text-blue-600"
+                          'h-4 w-4 text-muted-foreground',
+                          isSelected && simulationContext && 'text-blue-600'
                         )}
                       />
-                      <div className="flex-1 min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div
                           className={cn(
-                            "text-sm font-medium truncate",
-                            isSelected && simulationContext && "text-blue-900"
+                            'truncate text-sm font-medium',
+                            isSelected && simulationContext && 'text-blue-900'
                           )}
                           title={estudio.name}
                         >
@@ -266,21 +266,21 @@ export function SimulationEstudioFilter({
                         </div>
                         <div
                           className={cn(
-                            "text-xs text-muted-foreground",
-                            isSelected && simulationContext && "text-blue-600"
+                            'text-xs text-muted-foreground',
+                            isSelected && simulationContext && 'text-blue-600'
                           )}
                         >
-                          {estudio.grouper_count}{" "}
+                          {estudio.grouper_count}{' '}
                           {estudio.grouper_count === 1
-                            ? "agrupador"
-                            : "agrupadores"}
+                            ? 'agrupador'
+                            : 'agrupadores'}
                         </div>
                       </div>
                       {isSelected && (
                         <Check
                           className={cn(
-                            "h-4 w-4 text-primary",
-                            simulationContext && "text-blue-600"
+                            'h-4 w-4 text-primary',
+                            simulationContext && 'text-blue-600'
                           )}
                         />
                       )}
@@ -294,18 +294,18 @@ export function SimulationEstudioFilter({
           {/* Footer with selection info */}
           {!isLoading && sortedEstudios.length > 0 && selectedEstudioData && (
             <>
-              <div className="h-px bg-border my-1" />
+              <div className="my-1 h-px bg-border" />
               <div
                 className={cn(
-                  "px-2 py-1 text-xs text-muted-foreground",
-                  simulationContext && "text-blue-600"
+                  'px-2 py-1 text-xs text-muted-foreground',
+                  simulationContext && 'text-blue-600'
                 )}
               >
                 Seleccionado: {selectedEstudioData.name} (
-                {selectedEstudioData.grouper_count}{" "}
+                {selectedEstudioData.grouper_count}{' '}
                 {selectedEstudioData.grouper_count === 1
-                  ? "agrupador"
-                  : "agrupadores"}
+                  ? 'agrupador'
+                  : 'agrupadores'}
                 )
                 {simulationContext && (
                   <span className="ml-1">(simulación)</span>

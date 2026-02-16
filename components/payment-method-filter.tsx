@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { ChevronDown, ChevronRight } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { useState } from 'react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface PaymentMethodFilterProps {
   title: string;
@@ -19,9 +19,9 @@ interface PaymentMethodFilterProps {
 }
 
 const PAYMENT_METHODS = [
-  { value: "cash", label: "Efectivo", icon: "💵" },
-  { value: "credit", label: "Crédito", icon: "💳" },
-  { value: "debit", label: "Débito", icon: "💰" },
+  { value: 'cash', label: 'Efectivo', icon: '💵' },
+  { value: 'credit', label: 'Crédito', icon: '💳' },
+  { value: 'debit', label: 'Débito', icon: '💰' },
 ];
 
 export function PaymentMethodFilter({
@@ -55,11 +55,11 @@ export function PaymentMethodFilter({
     if (persistSelection && simulationContext) {
       try {
         sessionStorage.setItem(
-          "simulation-paymentMethods",
+          'simulation-paymentMethods',
           JSON.stringify(newMethods)
         );
       } catch (error) {
-        console.warn("Failed to persist payment method selection:", error);
+        console.warn('Failed to persist payment method selection:', error);
       }
     }
   };
@@ -75,11 +75,11 @@ export function PaymentMethodFilter({
       if (persistSelection) {
         try {
           sessionStorage.setItem(
-            "simulation-paymentMethods",
+            'simulation-paymentMethods',
             JSON.stringify([])
           );
         } catch (error) {
-          console.warn("Failed to persist payment method selection:", error);
+          console.warn('Failed to persist payment method selection:', error);
         }
       }
     } else {
@@ -94,20 +94,20 @@ export function PaymentMethodFilter({
   return (
     <Card
       className={cn(
-        "w-full",
-        simulationContext && "border-blue-200 bg-blue-50/30"
+        'w-full',
+        simulationContext && 'border-blue-200 bg-blue-50/30'
       )}
     >
       <CardHeader
-        className="pb-3 cursor-pointer hover:bg-muted/50 transition-colors"
+        className="cursor-pointer pb-3 transition-colors hover:bg-muted/50"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
-        <CardTitle className="text-sm font-medium flex items-center justify-between">
+        <CardTitle className="flex items-center justify-between text-sm font-medium">
           <span>{title}</span>
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">
               {selectedMethods.length === PAYMENT_METHODS.length
-                ? "Todos"
+                ? 'Todos'
                 : `${selectedMethods.length}/${PAYMENT_METHODS.length}`}
             </span>
             {isCollapsed ? (
@@ -162,8 +162,8 @@ export function PaymentMethodFilter({
                     htmlFor={`${title}-${method.value}`}
                     className={`text-sm ${
                       disabled || isLastSelected
-                        ? "text-muted-foreground"
-                        : "cursor-pointer"
+                        ? 'text-muted-foreground'
+                        : 'cursor-pointer'
                     }`}
                   >
                     {method.label}

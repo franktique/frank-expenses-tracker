@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { Period } from "../types/funds";
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { Period } from '../types/funds';
 import {
   loadActivePeriod,
   loadActivePeriodWithCircuitBreaker,
@@ -9,14 +9,14 @@ import {
   PeriodLoadingError,
   getCircuitBreakerStatus,
   resetCircuitBreaker,
-} from "./active-period-service";
-import { ActivePeriodStorage } from "./active-period-storage";
+} from './active-period-service';
+import { ActivePeriodStorage } from './active-period-storage';
 import {
   showActivePeriodLoadedNotification,
   showActivePeriodErrorNotification,
   showActivePeriodRetryNotification,
   showSessionStorageErrorNotification,
-} from "./active-period-notifications";
+} from './active-period-notifications';
 
 type AuthContextType = {
   isAuthenticated: boolean;
@@ -48,8 +48,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Check for authentication on component mount (from localStorage)
   useEffect(() => {
-    const auth = localStorage.getItem("auth");
-    if (auth === "true") {
+    const auth = localStorage.getItem('auth');
+    if (auth === 'true') {
       setIsAuthenticated(true);
       // Try to load cached active period if user is already authenticated
       loadCachedActivePeriod();
@@ -63,12 +63,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const healthCheck = ActivePeriodStorage.performCacheHealthCheck();
 
       if (!healthCheck.healthy && !healthCheck.repaired) {
-        console.warn("Cache health check failed:", healthCheck.issues);
+        console.warn('Cache health check failed:', healthCheck.issues);
         return;
       }
 
       if (healthCheck.repaired) {
-        console.log("Cache was repaired:", healthCheck.actions);
+        console.log('Cache was repaired:', healthCheck.actions);
       }
 
       // Use fallback-aware storage
@@ -80,17 +80,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setActivePeriodError(null);
 
         if (storage.usingFallback) {
-          console.warn("Using memory fallback for active period storage");
+          console.warn('Using memory fallback for active period storage');
         }
       }
     } catch (error) {
-      console.warn("Failed to load cached active period:", error);
+      console.warn('Failed to load cached active period:', error);
 
       // Attempt cache recovery
       const recovery = ActivePeriodStorage.recoverFromCorruptedCache();
-      console.log("Cache recovery attempt:", recovery);
+      console.log('Cache recovery attempt:', recovery);
 
-      if (recovery.recovered && recovery.action === "reconstructed_cache") {
+      if (recovery.recovered && recovery.action === 'reconstructed_cache') {
         // Try loading again after recovery
         try {
           const storage = ActivePeriodStorage.withFallback();
@@ -98,11 +98,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           if (recoveredPeriod) {
             setActivePeriod(recoveredPeriod);
             setActivePeriodError(null);
-            console.log("Successfully loaded period after cache recovery");
+            console.log('Successfully loaded period after cache recovery');
           }
         } catch (recoveryError) {
           console.warn(
-            "Failed to load period even after recovery:",
+            'Failed to load period even after recovery:',
             recoveryError
           );
         }
@@ -122,14 +122,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const circuitBreakerState = getCircuitBreakerStatus();
       let result: any;
 
-      if (circuitBreakerState.state === "open") {
-        console.log("Circuit breaker is open, using basic retry");
+      if (circuitBreakerState.state === 'open') {
+        console.log('Circuit breaker is open, using basic retry');
         result = await loadActivePeriod(2, 2000); // Reduced retries when circuit is open
       } else if (useAdaptiveRetry) {
-        console.log("Using adaptive retry strategy");
+        console.log('Using adaptive retry strategy');
         result = await loadActivePeriodWithAdaptiveRetry();
       } else {
-        console.log("Using circuit breaker protected loading");
+        console.log('Using circuit breaker protected loading');
         result = await loadActivePeriodWithCircuitBreaker();
       }
 
@@ -146,12 +146,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           storage.saveActivePeriod(result.period);
 
           if (storage.usingFallback) {
-            console.warn("Saved active period using memory fallback");
+            console.warn('Saved active period using memory fallback');
             showSessionStorageErrorNotification();
           }
         } catch (storageError) {
           console.warn(
-            "Failed to save active period to storage:",
+            'Failed to save active period to storage:',
             storageError
           );
           showSessionStorageErrorNotification();
@@ -170,15 +170,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const storage = ActivePeriodStorage.withFallback();
           storage.clearActivePeriod();
         } catch (clearError) {
-          console.warn("Failed to clear stale cache:", clearError);
+          console.warn('Failed to clear stale cache:', clearError);
         }
       }
     } catch (error) {
-      console.error("Unexpected error loading active period:", error);
+      console.error('Unexpected error loading active period:', error);
       setActivePeriod(null);
       setActivePeriodError({
-        type: "unknown",
-        message: "Error inesperado al cargar el periodo activo",
+        type: 'unknown',
+        message: 'Error inesperado al cargar el periodo activo',
         retryable: true,
         timestamp: Date.now(),
       });
@@ -188,7 +188,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const storage = ActivePeriodStorage.withFallback();
         storage.clearActivePeriod();
       } catch (clearError) {
-        console.warn("Failed to clear cache after error:", clearError);
+        console.warn('Failed to clear cache after error:', clearError);
       }
     } finally {
       setIsLoadingActivePeriod(false);
@@ -216,15 +216,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const performCacheHealthCheck = (): void => {
     try {
       const healthCheck = ActivePeriodStorage.performCacheHealthCheck();
-      console.log("Cache health check results:", healthCheck);
+      console.log('Cache health check results:', healthCheck);
 
       if (healthCheck.repaired) {
-        console.log("Cache was automatically repaired");
+        console.log('Cache was automatically repaired');
         // Reload cached period after repair
         loadCachedActivePeriod();
       }
     } catch (error) {
-      console.error("Cache health check failed:", error);
+      console.error('Cache health check failed:', error);
     }
   };
 
@@ -232,7 +232,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const recoverFromCacheCorruption = (): void => {
     try {
       const recovery = ActivePeriodStorage.recoverFromCorruptedCache();
-      console.log("Cache recovery results:", recovery);
+      console.log('Cache recovery results:', recovery);
 
       if (recovery.recovered) {
         // Try to reload after recovery
@@ -244,7 +244,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (error) {
-      console.error("Cache recovery failed:", error);
+      console.error('Cache recovery failed:', error);
     }
   };
 
@@ -263,22 +263,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (password: string): Promise<boolean> => {
     try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ password }),
       });
 
       if (response.ok) {
         setIsAuthenticated(true);
-        localStorage.setItem("auth", "true");
+        localStorage.setItem('auth', 'true');
 
         // Trigger active period loading after successful authentication
         // This runs in the background and doesn't block the login process
         loadActivePeriodFromServer().catch((error) => {
-          console.error("Failed to load active period after login:", error);
+          console.error('Failed to load active period after login:', error);
         });
 
         return true;
@@ -286,14 +286,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error('Login error:', error);
       return false;
     }
   };
 
   const logout = () => {
     setIsAuthenticated(false);
-    localStorage.removeItem("auth");
+    localStorage.removeItem('auth');
 
     // Clear active period state and session storage
     setActivePeriod(null);
@@ -307,23 +307,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (storage.usingFallback) {
         console.log(
-          "Cleared active period using memory fallback during logout"
+          'Cleared active period using memory fallback during logout'
         );
       }
     } catch (error) {
       // Session storage clear errors should not prevent logout
       console.warn(
-        "Failed to clear active period from storage during logout:",
+        'Failed to clear active period from storage during logout:',
         error
       );
 
       // Last resort: try to clear directly
       try {
-        if (typeof window !== "undefined" && window.sessionStorage) {
-          window.sessionStorage.removeItem("budget_tracker_active_period");
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          window.sessionStorage.removeItem('budget_tracker_active_period');
         }
       } catch (directClearError) {
-        console.warn("Direct cache clear also failed:", directClearError);
+        console.warn('Direct cache clear also failed:', directClearError);
       }
     }
 
@@ -331,7 +331,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       resetCircuitBreaker();
     } catch (resetError) {
-      console.warn("Failed to reset circuit breaker:", resetError);
+      console.warn('Failed to reset circuit breaker:', resetError);
     }
   };
 
@@ -359,7 +359,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 }

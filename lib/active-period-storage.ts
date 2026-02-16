@@ -1,8 +1,8 @@
-import { Period } from "@/types/funds";
+import { Period } from '@/types/funds';
 
 // Cache configuration
-const CACHE_KEY = "budget_tracker_active_period";
-const CACHE_VERSION = "1.0.0";
+const CACHE_KEY = 'budget_tracker_active_period';
+const CACHE_VERSION = '1.0.0';
 const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 // Cached period data structure
@@ -15,10 +15,10 @@ interface CachedActivePeriod {
 // Error types for session storage operations
 export interface StorageError {
   type:
-    | "storage_unavailable"
-    | "invalid_data"
-    | "expired_cache"
-    | "parse_error";
+    | 'storage_unavailable'
+    | 'invalid_data'
+    | 'expired_cache'
+    | 'parse_error';
   message: string;
   originalError?: Error;
 }
@@ -33,13 +33,13 @@ export class ActivePeriodStorage {
    */
   private static isStorageAvailable(): boolean {
     try {
-      if (typeof window === "undefined" || !window.sessionStorage) {
+      if (typeof window === 'undefined' || !window.sessionStorage) {
         return false;
       }
 
       // Test storage functionality
-      const testKey = "__storage_test__";
-      window.sessionStorage.setItem(testKey, "test");
+      const testKey = '__storage_test__';
+      window.sessionStorage.setItem(testKey, 'test');
       window.sessionStorage.removeItem(testKey);
       return true;
     } catch {
@@ -51,7 +51,7 @@ export class ActivePeriodStorage {
    * Validate cached period data structure and expiry
    */
   private static validateCachedData(data: any): data is CachedActivePeriod {
-    if (!data || typeof data !== "object") {
+    if (!data || typeof data !== 'object') {
       return false;
     }
 
@@ -76,10 +76,10 @@ export class ActivePeriodStorage {
     if (
       !period.id ||
       !period.name ||
-      typeof period.month !== "number" ||
-      typeof period.year !== "number" ||
-      typeof period.is_open !== "boolean" ||
-      typeof period.isOpen !== "boolean"
+      typeof period.month !== 'number' ||
+      typeof period.year !== 'number' ||
+      typeof period.is_open !== 'boolean' ||
+      typeof period.isOpen !== 'boolean'
     ) {
       return false;
     }
@@ -124,8 +124,8 @@ export class ActivePeriodStorage {
   static saveActivePeriod(period: Period): void {
     if (!this.isStorageAvailable()) {
       throw new StorageError({
-        type: "storage_unavailable",
-        message: "Session storage is not available in this environment",
+        type: 'storage_unavailable',
+        message: 'Session storage is not available in this environment',
       });
     }
 
@@ -139,8 +139,8 @@ export class ActivePeriodStorage {
       window.sessionStorage.setItem(CACHE_KEY, JSON.stringify(cachedData));
     } catch (error) {
       throw new StorageError({
-        type: "storage_unavailable",
-        message: "Failed to save active period to session storage",
+        type: 'storage_unavailable',
+        message: 'Failed to save active period to session storage',
         originalError:
           error instanceof Error ? error : new Error(String(error)),
       });
@@ -205,7 +205,7 @@ export class ActivePeriodStorage {
 
       return {
         timestamp: parsed.timestamp || 0,
-        version: parsed.version || "unknown",
+        version: parsed.version || 'unknown',
         isValid,
       };
     } catch {
@@ -248,8 +248,8 @@ export class ActivePeriodStorage {
       if (!this.isStorageAvailable()) {
         return {
           recovered: false,
-          action: "storage_unavailable",
-          details: "Session storage is not available",
+          action: 'storage_unavailable',
+          details: 'Session storage is not available',
         };
       }
 
@@ -257,8 +257,8 @@ export class ActivePeriodStorage {
       if (!cachedData) {
         return {
           recovered: true,
-          action: "no_cache",
-          details: "No cached data found - nothing to recover",
+          action: 'no_cache',
+          details: 'No cached data found - nothing to recover',
         };
       }
 
@@ -270,13 +270,13 @@ export class ActivePeriodStorage {
         this.clearActivePeriod();
         return {
           recovered: true,
-          action: "cleared_corrupted_json",
-          details: "Cleared corrupted JSON data from cache",
+          action: 'cleared_corrupted_json',
+          details: 'Cleared corrupted JSON data from cache',
         };
       }
 
       // Check if we can partially recover the data
-      if (parsed && typeof parsed === "object") {
+      if (parsed && typeof parsed === 'object') {
         // Try to extract period data even if structure is invalid
         const period = parsed.period;
         if (period && period.id && period.name) {
@@ -303,7 +303,7 @@ export class ActivePeriodStorage {
               );
               return {
                 recovered: true,
-                action: "reconstructed_cache",
+                action: 'reconstructed_cache',
                 details: `Reconstructed cache for period: ${period.name}`,
               };
             }
@@ -312,8 +312,8 @@ export class ActivePeriodStorage {
             this.clearActivePeriod();
             return {
               recovered: true,
-              action: "cleared_invalid_reconstruction",
-              details: "Failed to reconstruct cache data",
+              action: 'cleared_invalid_reconstruction',
+              details: 'Failed to reconstruct cache data',
             };
           }
         }
@@ -323,17 +323,17 @@ export class ActivePeriodStorage {
       this.clearActivePeriod();
       return {
         recovered: true,
-        action: "cleared_invalid_data",
-        details: "Cleared invalid cache data that could not be recovered",
+        action: 'cleared_invalid_data',
+        details: 'Cleared invalid cache data that could not be recovered',
       };
     } catch (error) {
       // Last resort - clear everything
       this.clearActivePeriod();
       return {
         recovered: true,
-        action: "cleared_on_error",
+        action: 'cleared_on_error',
         details: `Cleared cache due to recovery error: ${
-          error instanceof Error ? error.message : "Unknown error"
+          error instanceof Error ? error.message : 'Unknown error'
         }`,
       };
     }
@@ -354,7 +354,7 @@ export class ActivePeriodStorage {
 
     // Check storage availability
     if (!this.isStorageAvailable()) {
-      issues.push("Session storage is not available");
+      issues.push('Session storage is not available');
       return { healthy: false, issues, repaired: false, actions };
     }
 
@@ -366,7 +366,7 @@ export class ActivePeriodStorage {
           healthy: true,
           issues: [],
           repaired: false,
-          actions: ["No cache data - healthy state"],
+          actions: ['No cache data - healthy state'],
         };
       }
 
@@ -374,25 +374,25 @@ export class ActivePeriodStorage {
       try {
         parsed = JSON.parse(cachedData);
       } catch (parseError) {
-        issues.push("Cache contains invalid JSON");
+        issues.push('Cache contains invalid JSON');
         this.clearActivePeriod();
-        actions.push("Cleared corrupted JSON cache");
+        actions.push('Cleared corrupted JSON cache');
         repaired = true;
         return { healthy: true, issues, repaired, actions };
       }
 
       // Check cache structure
-      if (!parsed || typeof parsed !== "object") {
-        issues.push("Cache data is not an object");
+      if (!parsed || typeof parsed !== 'object') {
+        issues.push('Cache data is not an object');
         this.clearActivePeriod();
-        actions.push("Cleared non-object cache data");
+        actions.push('Cleared non-object cache data');
         repaired = true;
         return { healthy: true, issues, repaired, actions };
       }
 
       // Check required properties
       if (!parsed.period || !parsed.timestamp || !parsed.version) {
-        issues.push("Cache missing required properties");
+        issues.push('Cache missing required properties');
         const recovery = this.recoverFromCorruptedCache();
         if (recovery.recovered) {
           actions.push(`Recovery action: ${recovery.action}`);
@@ -407,7 +407,7 @@ export class ActivePeriodStorage {
           `Cache version mismatch: ${parsed.version} vs ${CACHE_VERSION}`
         );
         this.clearActivePeriod();
-        actions.push("Cleared cache due to version mismatch");
+        actions.push('Cleared cache due to version mismatch');
         repaired = true;
         return { healthy: true, issues, repaired, actions };
       }
@@ -419,7 +419,7 @@ export class ActivePeriodStorage {
           `Cache expired: ${Math.round(age / 1000 / 60)} minutes old`
         );
         this.clearActivePeriod();
-        actions.push("Cleared expired cache");
+        actions.push('Cleared expired cache');
         repaired = true;
         return { healthy: true, issues, repaired, actions };
       }
@@ -429,10 +429,10 @@ export class ActivePeriodStorage {
       if (
         !period.id ||
         !period.name ||
-        typeof period.month !== "number" ||
-        typeof period.year !== "number"
+        typeof period.month !== 'number' ||
+        typeof period.year !== 'number'
       ) {
-        issues.push("Period data is incomplete or invalid");
+        issues.push('Period data is incomplete or invalid');
         const recovery = this.recoverFromCorruptedCache();
         if (recovery.recovered) {
           actions.push(`Recovery action: ${recovery.action}`);
@@ -446,16 +446,16 @@ export class ActivePeriodStorage {
         healthy: true,
         issues: [],
         repaired: false,
-        actions: ["Cache is healthy"],
+        actions: ['Cache is healthy'],
       };
     } catch (error) {
       issues.push(
         `Health check failed: ${
-          error instanceof Error ? error.message : "Unknown error"
+          error instanceof Error ? error.message : 'Unknown error'
         }`
       );
       this.clearActivePeriod();
-      actions.push("Cleared cache due to health check error");
+      actions.push('Cleared cache due to health check error');
       return { healthy: true, issues, repaired: true, actions };
     }
   }
@@ -477,7 +477,7 @@ export class ActivePeriodStorage {
       saveActivePeriod: (period: Period) => {
         memoryCache = period;
         console.warn(
-          "Using memory fallback for active period storage - data will not persist across page reloads"
+          'Using memory fallback for active period storage - data will not persist across page reloads'
         );
       },
       clearActivePeriod: () => {
@@ -514,12 +514,12 @@ export class ActivePeriodStorage {
  * Custom error class for storage operations
  */
 class StorageError extends Error {
-  public readonly type: StorageError["type"];
+  public readonly type: StorageError['type'];
   public readonly originalError?: Error;
 
   constructor(error: StorageError) {
     super(error.message);
-    this.name = "StorageError";
+    this.name = 'StorageError';
     this.type = error.type;
     this.originalError = error.originalError;
   }

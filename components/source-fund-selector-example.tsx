@@ -1,27 +1,27 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { SourceFundSelector, validateSourceFund } from "./source-fund-selector";
-import { useBudget } from "@/context/budget-context";
-import { Fund } from "@/types/funds";
+import { useState } from 'react';
+import { SourceFundSelector, validateSourceFund } from './source-fund-selector';
+import { useBudget } from '@/context/budget-context';
+import { Fund } from '@/types/funds';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CheckCircle, AlertCircle } from "lucide-react";
+} from '@/components/ui/select';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CheckCircle, AlertCircle } from 'lucide-react';
 
 export function SourceFundSelectorExample() {
   const { categories, selectedFund } = useBudget();
@@ -50,14 +50,14 @@ export function SourceFundSelectorExample() {
       alert(
         `Selected source fund: ${selectedSourceFund.name} for category: ${
           categories?.find((c) => c.id === selectedCategoryId)?.name ||
-          "Unknown"
+          'Unknown'
         }`
       );
     }
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto">
+    <Card className="mx-auto w-full max-w-md">
       <CardHeader>
         <CardTitle>Source Fund Selector Example</CardTitle>
         <CardDescription>
@@ -70,7 +70,7 @@ export function SourceFundSelectorExample() {
         <div className="space-y-2">
           <Label htmlFor="category-select">Categoría</Label>
           <Select
-            value={selectedCategoryId || ""}
+            value={selectedCategoryId || ''}
             onValueChange={handleCategoryChange}
           >
             <SelectTrigger id="category-select">
@@ -105,14 +105,14 @@ export function SourceFundSelectorExample() {
             <AlertDescription>
               Filtro actual: {selectedFund.name}
               {selectedSourceFund?.id === selectedFund.id &&
-                " (seleccionado como origen)"}
+                ' (seleccionado como origen)'}
             </AlertDescription>
           </Alert>
         )}
 
         {/* Validation Status */}
         {selectedCategoryId && (
-          <Alert variant={validation.isValid ? "default" : "destructive"}>
+          <Alert variant={validation.isValid ? 'default' : 'destructive'}>
             {validation.isValid ? (
               <CheckCircle className="h-4 w-4" />
             ) : (
@@ -121,7 +121,7 @@ export function SourceFundSelectorExample() {
             <AlertDescription>
               {validation.isValid
                 ? `Fondo origen válido: ${
-                    selectedSourceFund?.name || "Ninguno"
+                    selectedSourceFund?.name || 'Ninguno'
                   }`
                 : validation.error}
             </AlertDescription>
@@ -138,11 +138,11 @@ export function SourceFundSelectorExample() {
         </Button>
 
         {/* Debug Info */}
-        <div className="text-xs text-muted-foreground space-y-1">
-          <div>Categoría seleccionada: {selectedCategoryId || "Ninguna"}</div>
-          <div>Fondo origen: {selectedSourceFund?.name || "Ninguno"}</div>
-          <div>Filtro actual: {selectedFund?.name || "Ninguno"}</div>
-          <div>Estado: {validation.isValid ? "Válido" : "Inválido"}</div>
+        <div className="space-y-1 text-xs text-muted-foreground">
+          <div>Categoría seleccionada: {selectedCategoryId || 'Ninguna'}</div>
+          <div>Fondo origen: {selectedSourceFund?.name || 'Ninguno'}</div>
+          <div>Filtro actual: {selectedFund?.name || 'Ninguno'}</div>
+          <div>Estado: {validation.isValid ? 'Válido' : 'Inválido'}</div>
         </div>
       </CardContent>
     </Card>
@@ -153,10 +153,10 @@ export function SourceFundSelectorExample() {
 export function ExpenseFormWithSourceFund() {
   const { categories, selectedFund } = useBudget();
   const [formData, setFormData] = useState({
-    categoryId: "",
+    categoryId: '',
     sourceFund: null as Fund | null,
     amount: 0,
-    description: "",
+    description: '',
   });
 
   const validation = validateSourceFund(

@@ -1,5 +1,9 @@
-import type { RateType, RateConversionResult, RateConversionDisplay } from "@/types/interest-rate-simulator";
-import { RATE_TYPES } from "@/types/interest-rate-simulator";
+import type {
+  RateType,
+  RateConversionResult,
+  RateConversionDisplay,
+} from '@/types/interest-rate-simulator';
+import { RATE_TYPES } from '@/types/interest-rate-simulator';
 
 // ============================================================================
 // Constants
@@ -271,7 +275,10 @@ export function convertNAtoNM(na: number): number {
  * @param fromType - The type of the input rate
  * @returns Object with all rate conversions
  */
-export function convertRate(rate: number, fromType: RateType): RateConversionResult {
+export function convertRate(
+  rate: number,
+  fromType: RateType
+): RateConversionResult {
   // Handle edge cases
   if (rate < 0) {
     return { ea: 0, em: 0, ed: 0, nm: 0, na: 0 };
@@ -281,19 +288,19 @@ export function convertRate(rate: number, fromType: RateType): RateConversionRes
 
   // First, convert to EA as the base
   switch (fromType) {
-    case "EA":
+    case 'EA':
       ea = rate;
       break;
-    case "EM":
+    case 'EM':
       ea = convertEMtoEA(rate);
       break;
-    case "ED":
+    case 'ED':
       ea = convertEDtoEA(rate);
       break;
-    case "NM":
+    case 'NM':
       ea = convertNMtoEA(rate);
       break;
-    case "NA":
+    case 'NA':
       ea = convertNAtoEA(rate);
       break;
     default:
@@ -335,40 +342,40 @@ export function getConversionDisplay(
   };
 
   // If input is EA, update the formula
-  if (fromType === "EA") {
-    formulas.EA = "Valor ingresado";
+  if (fromType === 'EA') {
+    formulas.EA = 'Valor ingresado';
   }
 
   return [
     {
-      rateType: "EA",
+      rateType: 'EA',
       value: conversions.ea,
-      isInput: fromType === "EA",
+      isInput: fromType === 'EA',
       formula: formulas.EA,
     },
     {
-      rateType: "EM",
+      rateType: 'EM',
       value: conversions.em,
-      isInput: fromType === "EM",
-      formula: fromType === "EM" ? "Valor ingresado" : formulas.EM,
+      isInput: fromType === 'EM',
+      formula: fromType === 'EM' ? 'Valor ingresado' : formulas.EM,
     },
     {
-      rateType: "ED",
+      rateType: 'ED',
       value: conversions.ed,
-      isInput: fromType === "ED",
-      formula: fromType === "ED" ? "Valor ingresado" : formulas.ED,
+      isInput: fromType === 'ED',
+      formula: fromType === 'ED' ? 'Valor ingresado' : formulas.ED,
     },
     {
-      rateType: "NM",
+      rateType: 'NM',
       value: conversions.nm,
-      isInput: fromType === "NM",
-      formula: fromType === "NM" ? "Valor ingresado" : formulas.NM,
+      isInput: fromType === 'NM',
+      formula: fromType === 'NM' ? 'Valor ingresado' : formulas.NM,
     },
     {
-      rateType: "NA",
+      rateType: 'NA',
       value: conversions.na,
-      isInput: fromType === "NA",
-      formula: fromType === "NA" ? "Valor ingresado" : formulas.NA,
+      isInput: fromType === 'NA',
+      formula: fromType === 'NA' ? 'Valor ingresado' : formulas.NA,
     },
   ];
 }
@@ -378,18 +385,18 @@ export function getConversionDisplay(
  */
 function getFormulaToEA(fromType: RateType): string {
   switch (fromType) {
-    case "EA":
-      return "Valor ingresado";
-    case "EM":
-      return "EA = (1 + EM)^12 - 1";
-    case "ED":
-      return "EA = (1 + ED)^365 - 1";
-    case "NM":
-      return "EA = (1 + NM)^12 - 1";
-    case "NA":
-      return "EA = (1 + NA/12)^12 - 1";
+    case 'EA':
+      return 'Valor ingresado';
+    case 'EM':
+      return 'EA = (1 + EM)^12 - 1';
+    case 'ED':
+      return 'EA = (1 + ED)^365 - 1';
+    case 'NM':
+      return 'EA = (1 + NM)^12 - 1';
+    case 'NA':
+      return 'EA = (1 + NA/12)^12 - 1';
     default:
-      return "";
+      return '';
   }
 }
 
@@ -411,10 +418,10 @@ export function isValidRate(rate: number): boolean {
  */
 export function getRateValidationError(rate: number): string | null {
   if (rate < 0) {
-    return "La tasa no puede ser negativa";
+    return 'La tasa no puede ser negativa';
   }
   if (rate > 10) {
-    return "La tasa no puede exceder 1000%";
+    return 'La tasa no puede exceder 1000%';
   }
   return null;
 }

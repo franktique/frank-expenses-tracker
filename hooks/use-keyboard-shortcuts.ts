@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { useEffect, useCallback } from 'react';
 import { useTabs } from '@/components/tabs/tab-context';
@@ -32,14 +32,14 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
     unpinTab,
     closeAllTabs,
     closeOtherTabs,
-    tabs
+    tabs,
   } = useTabs();
   const router = useRouter();
   const pathname = usePathname();
 
   // New tab shortcut
   const handleNewTab = useCallback(() => {
-    addTab("/", "New Tab");
+    addTab('/', 'New Tab');
   }, [addTab]);
 
   // Close current tab shortcut
@@ -55,7 +55,7 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
     const activeTab = getActiveTab();
     if (!activeTab || tabs.length <= 1) return;
 
-    const currentIndex = tabs.findIndex(tab => tab.id === activeTab.id);
+    const currentIndex = tabs.findIndex((tab) => tab.id === activeTab.id);
     const nextIndex = (currentIndex + 1) % tabs.length;
     switchTab(tabs[nextIndex].id);
   }, [getActiveTab, tabs, switchTab]);
@@ -65,7 +65,7 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
     const activeTab = getActiveTab();
     if (!activeTab || tabs.length <= 1) return;
 
-    const currentIndex = tabs.findIndex(tab => tab.id === activeTab.id);
+    const currentIndex = tabs.findIndex((tab) => tab.id === activeTab.id);
     const prevIndex = currentIndex === 0 ? tabs.length - 1 : currentIndex - 1;
     switchTab(tabs[prevIndex].id);
   }, [getActiveTab, tabs, switchTab]);
@@ -105,11 +105,14 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
   }, []);
 
   // Go to specific tab by number (1-9)
-  const handleGoToTab = useCallback((tabNumber: number) => {
-    if (tabNumber >= 1 && tabNumber <= Math.min(9, tabs.length)) {
-      switchTab(tabs[tabNumber - 1].id);
-    }
-  }, [tabs, switchTab]);
+  const handleGoToTab = useCallback(
+    (tabNumber: number) => {
+      if (tabNumber >= 1 && tabNumber <= Math.min(9, tabs.length)) {
+        switchTab(tabs[tabNumber - 1].id);
+      }
+    },
+    [tabs, switchTab]
+  );
 
   // Navigate back/forward in browser history
   const handleBrowserBack = useCallback(() => {
@@ -132,50 +135,50 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
       key: 't',
       ctrlKey: true,
       action: handleNewTab,
-      description: 'New tab'
+      description: 'New tab',
     },
     {
       key: 'w',
       ctrlKey: true,
       action: handleCloseTab,
-      description: 'Close current tab'
+      description: 'Close current tab',
     },
     {
       key: 'Tab',
       ctrlKey: true,
       action: handleNextTab,
-      description: 'Next tab'
+      description: 'Next tab',
     },
     {
       key: 'Tab',
       ctrlKey: true,
       shiftKey: true,
       action: handlePreviousTab,
-      description: 'Previous tab'
+      description: 'Previous tab',
     },
     {
       key: 'd',
       ctrlKey: true,
       action: handleDuplicateTab,
-      description: 'Duplicate current tab'
+      description: 'Duplicate current tab',
     },
     {
       key: 'p',
       ctrlKey: true,
       action: handlePinTab,
-      description: 'Pin/unpin current tab'
+      description: 'Pin/unpin current tab',
     },
     {
       key: 'h',
       ctrlKey: true,
       action: handleCloseOtherTabs,
-      description: 'Close other tabs'
+      description: 'Close other tabs',
     },
     {
       key: 'Shift',
       ctrlKey: true,
       action: handleReopenTab,
-      description: 'Reopen last tab'
+      description: 'Reopen last tab',
     },
 
     // Number keys for tab navigation
@@ -183,55 +186,55 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
       key: '1',
       ctrlKey: true,
       action: () => handleGoToTab(1),
-      description: 'Go to tab 1'
+      description: 'Go to tab 1',
     },
     {
       key: '2',
       ctrlKey: true,
       action: () => handleGoToTab(2),
-      description: 'Go to tab 2'
+      description: 'Go to tab 2',
     },
     {
       key: '3',
       ctrlKey: true,
       action: () => handleGoToTab(3),
-      description: 'Go to tab 3'
+      description: 'Go to tab 3',
     },
     {
       key: '4',
       ctrlKey: true,
       action: () => handleGoToTab(4),
-      description: 'Go to tab 4'
+      description: 'Go to tab 4',
     },
     {
       key: '5',
       ctrlKey: true,
       action: () => handleGoToTab(5),
-      description: 'Go to tab 5'
+      description: 'Go to tab 5',
     },
     {
       key: '6',
       ctrlKey: true,
       action: () => handleGoToTab(6),
-      description: 'Go to tab 6'
+      description: 'Go to tab 6',
     },
     {
       key: '7',
       ctrlKey: true,
       action: () => handleGoToTab(7),
-      description: 'Go to tab 7'
+      description: 'Go to tab 7',
     },
     {
       key: '8',
       ctrlKey: true,
       action: () => handleGoToTab(8),
-      description: 'Go to tab 8'
+      description: 'Go to tab 8',
     },
     {
       key: '9',
       ctrlKey: true,
       action: () => handleGoToTab(9),
-      description: 'Go to tab 9'
+      description: 'Go to tab 9',
     },
 
     // Browser navigation
@@ -239,24 +242,24 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
       key: 'ArrowLeft',
       altKey: true,
       action: handleBrowserBack,
-      description: 'Browser back'
+      description: 'Browser back',
     },
     {
       key: 'ArrowRight',
       altKey: true,
       action: handleBrowserForward,
-      description: 'Browser forward'
+      description: 'Browser forward',
     },
     {
       key: 'r',
       ctrlKey: true,
       action: handleRefreshTab,
-      description: 'Refresh current tab'
+      description: 'Refresh current tab',
     },
     {
       key: 'F5',
       action: handleRefreshTab,
-      description: 'Refresh current tab'
+      description: 'Refresh current tab',
     },
 
     // Address bar (for future implementation)
@@ -264,15 +267,15 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
       key: 'l',
       ctrlKey: true,
       action: () => console.log('Focus address bar - not implemented'),
-      description: 'Focus address bar'
+      description: 'Focus address bar',
     },
     {
       key: 'd',
       ctrlKey: true,
       shiftKey: true,
       action: () => console.log('Focus address bar - not implemented'),
-      description: 'Focus address bar'
-    }
+      description: 'Focus address bar',
+    },
   ];
 
   // Handle keyboard events
@@ -282,24 +285,27 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Ignore shortcuts when user is typing in input fields
       const target = event.target as HTMLElement;
-      const isInputElement = target.tagName === 'INPUT' ||
-                           target.tagName === 'TEXTAREA' ||
-                           target.contentEditable === 'true';
+      const isInputElement =
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.contentEditable === 'true';
 
       if (isInputElement) {
         // Allow some shortcuts even in input fields
-        const allowedInInput = shortcuts.filter(shortcut =>
-          (shortcut.key === 't' && shortcut.ctrlKey) || // Ctrl+T for new tab
-          (shortcut.key === 'w' && shortcut.ctrlKey) || // Ctrl+W for close tab
-          (shortcut.key === 'Tab' && shortcut.ctrlKey)    // Ctrl+Tab for tab switching
+        const allowedInInput = shortcuts.filter(
+          (shortcut) =>
+            (shortcut.key === 't' && shortcut.ctrlKey) || // Ctrl+T for new tab
+            (shortcut.key === 'w' && shortcut.ctrlKey) || // Ctrl+W for close tab
+            (shortcut.key === 'Tab' && shortcut.ctrlKey) // Ctrl+Tab for tab switching
         );
 
-        const matchingShortcut = allowedInInput.find(shortcut =>
-          shortcut.key.toLowerCase() === event.key.toLowerCase() &&
-          !!shortcut.ctrlKey === !!event.ctrlKey &&
-          !!shortcut.altKey === !!event.altKey &&
-          !!shortcut.shiftKey === !!event.shiftKey &&
-          !!shortcut.metaKey === !!event.metaKey
+        const matchingShortcut = allowedInInput.find(
+          (shortcut) =>
+            shortcut.key.toLowerCase() === event.key.toLowerCase() &&
+            !!shortcut.ctrlKey === !!event.ctrlKey &&
+            !!shortcut.altKey === !!event.altKey &&
+            !!shortcut.shiftKey === !!event.shiftKey &&
+            !!shortcut.metaKey === !!event.metaKey
         );
 
         if (matchingShortcut) {
@@ -310,12 +316,13 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
       }
 
       // Find matching shortcut
-      const matchingShortcut = shortcuts.find(shortcut =>
-        shortcut.key.toLowerCase() === event.key.toLowerCase() &&
-        !!shortcut.ctrlKey === !!event.ctrlKey &&
-        !!shortcut.altKey === !!event.altKey &&
-        !!shortcut.shiftKey === !!event.shiftKey &&
-        !!shortcut.metaKey === !!event.metaKey
+      const matchingShortcut = shortcuts.find(
+        (shortcut) =>
+          shortcut.key.toLowerCase() === event.key.toLowerCase() &&
+          !!shortcut.ctrlKey === !!event.ctrlKey &&
+          !!shortcut.altKey === !!event.altKey &&
+          !!shortcut.shiftKey === !!event.shiftKey &&
+          !!shortcut.metaKey === !!event.metaKey
       );
 
       if (matchingShortcut) {
@@ -333,7 +340,7 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
   // Return shortcuts info for help/documentation
   return {
     shortcuts,
-    enabledShortcuts: enabled ? shortcuts : []
+    enabledShortcuts: enabled ? shortcuts : [],
   };
 }
 
@@ -343,18 +350,19 @@ export function useKeyboardShortcutsHelp() {
 
   const getShortcutsByCategory = useCallback(() => {
     const categories = {
-      'Tab Management': enabledShortcuts.filter(s =>
-        s.description.includes('tab') || s.description.includes('Tab')
+      'Tab Management': enabledShortcuts.filter(
+        (s) => s.description.includes('tab') || s.description.includes('Tab')
       ),
-      'Navigation': enabledShortcuts.filter(s =>
-        s.description.includes('back') ||
-        s.description.includes('forward') ||
-        s.description.includes('Go to')
+      Navigation: enabledShortcuts.filter(
+        (s) =>
+          s.description.includes('back') ||
+          s.description.includes('forward') ||
+          s.description.includes('Go to')
       ),
-      'Browser Actions': enabledShortcuts.filter(s =>
-        s.description.includes('Refresh') ||
-        s.description.includes('address')
-      )
+      'Browser Actions': enabledShortcuts.filter(
+        (s) =>
+          s.description.includes('Refresh') || s.description.includes('address')
+      ),
     };
 
     return categories;
@@ -362,6 +370,6 @@ export function useKeyboardShortcutsHelp() {
 
   return {
     getShortcutsByCategory,
-    allShortcuts: enabledShortcuts
+    allShortcuts: enabledShortcuts,
   };
 }

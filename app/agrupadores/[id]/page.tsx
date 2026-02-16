@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -17,23 +17,23 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { toast } from "@/components/ui/use-toast";
+} from '@/components/ui/table';
+import { toast } from '@/components/ui/use-toast';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
+} from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   ArrowLeft,
   Layers as LayersIcon,
   Loader2,
   PlusCircle,
   Trash2,
-} from "lucide-react";
+} from 'lucide-react';
 
 type Grouper = {
   id: number;
@@ -80,58 +80,58 @@ export default function GrouperDetailPage() {
           const data = await response.json();
           setGrouper(data);
         } else {
-          let errorMessage = "Ocurrió un error desconocido";
+          let errorMessage = 'Ocurrió un error desconocido';
           try {
             const error = await response.json();
             errorMessage = error.error || errorMessage;
           } catch (parseError) {
-            console.error("Failed to parse error response:", parseError);
+            console.error('Failed to parse error response:', parseError);
           }
 
           // Provide specific messages based on status codes
           if (response.status === 404) {
-            errorMessage = "El agrupador no fue encontrado.";
+            errorMessage = 'El agrupador no fue encontrado.';
             toast({
-              title: "❌ Agrupador no encontrado",
+              title: '❌ Agrupador no encontrado',
               description: errorMessage,
-              variant: "destructive",
+              variant: 'destructive',
             });
             // Redirect back if grouper not found
-            router.push("/agrupadores");
+            router.push('/agrupadores');
             return;
           } else if (response.status === 400) {
-            errorMessage = "ID de agrupador inválido.";
+            errorMessage = 'ID de agrupador inválido.';
           } else if (response.status >= 500) {
-            errorMessage = "Error del servidor. Intente recargar la página.";
+            errorMessage = 'Error del servidor. Intente recargar la página.';
           }
 
           toast({
-            title: "❌ Error al cargar agrupador",
+            title: '❌ Error al cargar agrupador',
             description: errorMessage,
-            variant: "destructive",
+            variant: 'destructive',
           });
         }
       } catch (error) {
-        console.error("Error fetching grouper details:", error);
+        console.error('Error fetching grouper details:', error);
 
         // Enhanced network error handling
         let errorDescription =
-          "No se pudieron cargar los detalles del agrupador.";
+          'No se pudieron cargar los detalles del agrupador.';
 
-        if (error instanceof TypeError && error.message.includes("fetch")) {
+        if (error instanceof TypeError && error.message.includes('fetch')) {
           errorDescription =
-            "Error de red. Verifique su conexión a internet e intente recargar la página.";
+            'Error de red. Verifique su conexión a internet e intente recargar la página.';
         } else if (error instanceof Error) {
           errorDescription = `Error: ${error.message}. Intente recargar la página.`;
         } else {
           errorDescription =
-            "Error desconocido. Intente recargar la página más tarde.";
+            'Error desconocido. Intente recargar la página más tarde.';
         }
 
         toast({
-          title: "❌ Error de conexión",
+          title: '❌ Error de conexión',
           description: errorDescription,
-          variant: "destructive",
+          variant: 'destructive',
         });
       } finally {
         setIsLoading(false);
@@ -147,7 +147,7 @@ export default function GrouperDetailPage() {
       try {
         // Use retry mechanism for network failures
         const response = await retryOperation(
-          () => fetch("/api/categories"),
+          () => fetch('/api/categories'),
           3, // max retries
           1000 // initial delay in ms
         );
@@ -156,48 +156,48 @@ export default function GrouperDetailPage() {
           const data = await response.json();
           setCategories(data);
         } else {
-          let errorMessage = "Ocurrió un error desconocido";
+          let errorMessage = 'Ocurrió un error desconocido';
           try {
             const error = await response.json();
             errorMessage = error.error || errorMessage;
           } catch (parseError) {
-            console.error("Failed to parse error response:", parseError);
+            console.error('Failed to parse error response:', parseError);
           }
 
           // Provide specific messages based on status codes
           if (response.status >= 500) {
             errorMessage =
-              "Error del servidor al cargar categorías. Intente recargar la página.";
+              'Error del servidor al cargar categorías. Intente recargar la página.';
           } else if (response.status === 400) {
-            errorMessage = "Solicitud inválida al cargar categorías.";
+            errorMessage = 'Solicitud inválida al cargar categorías.';
           }
 
           toast({
-            title: "❌ Error al cargar categorías",
+            title: '❌ Error al cargar categorías',
             description: errorMessage,
-            variant: "destructive",
+            variant: 'destructive',
           });
         }
       } catch (error) {
-        console.error("Error fetching categories:", error);
+        console.error('Error fetching categories:', error);
 
         // Enhanced network error handling
-        let errorDescription = "No se pudieron cargar las categorías.";
+        let errorDescription = 'No se pudieron cargar las categorías.';
 
-        if (error instanceof TypeError && error.message.includes("fetch")) {
+        if (error instanceof TypeError && error.message.includes('fetch')) {
           errorDescription =
-            "Error de red. Las categorías no estarán disponibles hasta que se restablezca la conexión.";
+            'Error de red. Las categorías no estarán disponibles hasta que se restablezca la conexión.';
         } else if (error instanceof Error) {
           errorDescription = `Error: ${error.message}. Las categorías no estarán disponibles.`;
         } else {
           errorDescription =
-            "Error desconocido. Las categorías no estarán disponibles.";
+            'Error desconocido. Las categorías no estarán disponibles.';
         }
 
         toast({
-          title: "❌ Error de conexión",
+          title: '❌ Error de conexión',
           description: errorDescription,
-          variant: "destructive",
+          variant: 'destructive',
         });
       }
     };
@@ -212,7 +212,7 @@ export default function GrouperDetailPage() {
       const unassigned = categories
         .filter((c) => !assignedIds.has(c.id))
         .sort((a, b) =>
-          a.name.localeCompare(b.name, "es", { sensitivity: "base" })
+          a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
         );
       setUnassignedCategories(unassigned);
     }
@@ -270,8 +270,8 @@ export default function GrouperDetailPage() {
       const response = await retryOperation(
         () =>
           fetch(`/api/groupers/${grouperId}/categories`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ categoryIds: selectedCategoryIds }),
           }),
         3, // max retries
@@ -314,11 +314,11 @@ export default function GrouperDetailPage() {
         ) {
           // All categories added successfully
           toast({
-            title: "✅ Categorías agregadas exitosamente",
+            title: '✅ Categorías agregadas exitosamente',
             description: `${result.added} ${
               result.added === 1
-                ? "categoría ha sido agregada"
-                : "categorías han sido agregadas"
+                ? 'categoría ha sido agregada'
+                : 'categorías han sido agregadas'
             } al agrupador.`,
           });
         } else if (
@@ -327,44 +327,44 @@ export default function GrouperDetailPage() {
         ) {
           // Partial success with detailed information
           let description = `${result.added} ${
-            result.added === 1 ? "categoría agregada" : "categorías agregadas"
+            result.added === 1 ? 'categoría agregada' : 'categorías agregadas'
           }`;
           if (result.skipped > 0) {
             description += `, ${result.skipped} ${
               result.skipped === 1
-                ? "ya estaba asignada"
-                : "ya estaban asignadas"
+                ? 'ya estaba asignada'
+                : 'ya estaban asignadas'
             }`;
           }
           if (result.errors.length > 0) {
             description += `, ${result.errors.length} ${
-              result.errors.length === 1 ? "falló" : "fallaron"
+              result.errors.length === 1 ? 'falló' : 'fallaron'
             }`;
 
             // Show first few error details if available
             if (result.errors.length <= 3) {
-              description += `: ${result.errors.join(", ")}`;
+              description += `: ${result.errors.join(', ')}`;
             } else {
               description += `. Ver consola para más detalles.`;
-              console.error("Detailed errors:", result.errors);
+              console.error('Detailed errors:', result.errors);
             }
           }
 
           toast({
-            title: "⚠️ Categorías procesadas parcialmente",
+            title: '⚠️ Categorías procesadas parcialmente',
             description: description,
-            variant: "default",
+            variant: 'default',
           });
         } else if (result.skipped > 0 && result.added === 0) {
           // All categories were already assigned
           toast({
-            title: "ℹ️ Categorías ya asignadas",
+            title: 'ℹ️ Categorías ya asignadas',
             description: `${
               result.skipped === 1
-                ? "La categoría seleccionada ya estaba asignada"
-                : "Todas las categorías seleccionadas ya estaban asignadas"
+                ? 'La categoría seleccionada ya estaba asignada'
+                : 'Todas las categorías seleccionadas ya estaban asignadas'
             } a este agrupador.`,
-            variant: "destructive",
+            variant: 'destructive',
           });
         } else if (result.errors.length > 0 && result.added === 0) {
           // All operations failed - show detailed error information
@@ -372,71 +372,71 @@ export default function GrouperDetailPage() {
             result.errors.length
           } ${
             result.errors.length === 1
-              ? "error encontrado"
-              : "errores encontrados"
+              ? 'error encontrado'
+              : 'errores encontrados'
           }`;
 
           // Show specific error details for better debugging
           if (result.errors.length <= 2) {
-            errorDescription += `: ${result.errors.join(", ")}`;
+            errorDescription += `: ${result.errors.join(', ')}`;
           } else {
             errorDescription += `. Errores: ${result.errors
               .slice(0, 2)
-              .join(", ")}${
+              .join(', ')}${
               result.errors.length > 2
                 ? ` y ${result.errors.length - 2} más`
-                : ""
+                : ''
             }`;
-            console.error("All errors:", result.errors);
+            console.error('All errors:', result.errors);
           }
 
           toast({
-            title: "❌ Error al agregar categorías",
+            title: '❌ Error al agregar categorías',
             description: errorDescription,
-            variant: "destructive",
+            variant: 'destructive',
           });
         }
       } else {
         // Handle server errors with detailed information
-        let errorMessage = "Ocurrió un error desconocido en el servidor";
+        let errorMessage = 'Ocurrió un error desconocido en el servidor';
         try {
           const error = await response.json();
           errorMessage = error.error || errorMessage;
 
           // Log additional error details if available
           if (error.details) {
-            console.error("Server error details:", error.details);
+            console.error('Server error details:', error.details);
           }
         } catch (parseError) {
-          console.error("Failed to parse error response:", parseError);
+          console.error('Failed to parse error response:', parseError);
         }
 
         toast({
-          title: "❌ Error al agregar categorías",
+          title: '❌ Error al agregar categorías',
           description: errorMessage,
-          variant: "destructive",
+          variant: 'destructive',
         });
       }
     } catch (error) {
-      console.error("Error adding categories:", error);
+      console.error('Error adding categories:', error);
 
       // Enhanced network error handling
-      let errorTitle = "❌ Error de conexión";
-      let errorDescription = "No se pudo conectar con el servidor.";
+      let errorTitle = '❌ Error de conexión';
+      let errorDescription = 'No se pudo conectar con el servidor.';
 
-      if (error instanceof TypeError && error.message.includes("fetch")) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
         errorDescription =
-          "Error de red. Verifique su conexión a internet e intente nuevamente.";
+          'Error de red. Verifique su conexión a internet e intente nuevamente.';
       } else if (error instanceof Error) {
         errorDescription = `Error: ${error.message}. Intente nuevamente.`;
       } else {
-        errorDescription = "Error desconocido. Intente nuevamente más tarde.";
+        errorDescription = 'Error desconocido. Intente nuevamente más tarde.';
       }
 
       toast({
         title: errorTitle,
         description: errorDescription,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsAddingCategories(false);
@@ -454,7 +454,7 @@ export default function GrouperDetailPage() {
           fetch(
             `/api/groupers/${grouperId}/categories?categoryId=${categoryId}`,
             {
-              method: "DELETE",
+              method: 'DELETE',
             }
           ),
         3, // max retries
@@ -473,56 +473,56 @@ export default function GrouperDetailPage() {
           });
 
           toast({
-            title: "✅ Categoría eliminada",
+            title: '✅ Categoría eliminada',
             description: `La categoría ha sido eliminada exitosamente del agrupador.`,
           });
         }
       } else {
         // Enhanced error handling with specific status codes
-        let errorMessage = "Ocurrió un error desconocido";
+        let errorMessage = 'Ocurrió un error desconocido';
         try {
           const error = await response.json();
           errorMessage = error.error || errorMessage;
         } catch (parseError) {
-          console.error("Failed to parse error response:", parseError);
+          console.error('Failed to parse error response:', parseError);
         }
 
         // Provide specific messages based on status codes
         if (response.status === 404) {
           errorMessage =
-            "La categoría no está asignada a este agrupador o no existe.";
+            'La categoría no está asignada a este agrupador o no existe.';
         } else if (response.status === 400) {
           errorMessage =
-            "Solicitud inválida. Verifique los datos e intente nuevamente.";
+            'Solicitud inválida. Verifique los datos e intente nuevamente.';
         } else if (response.status >= 500) {
-          errorMessage = "Error del servidor. Intente nuevamente más tarde.";
+          errorMessage = 'Error del servidor. Intente nuevamente más tarde.';
         }
 
         toast({
-          title: "❌ Error al eliminar categoría",
+          title: '❌ Error al eliminar categoría',
           description: errorMessage,
-          variant: "destructive",
+          variant: 'destructive',
         });
       }
     } catch (error) {
-      console.error("Error removing category:", error);
+      console.error('Error removing category:', error);
 
       // Enhanced network error handling
-      let errorDescription = "No se pudo eliminar la categoría.";
+      let errorDescription = 'No se pudo eliminar la categoría.';
 
-      if (error instanceof TypeError && error.message.includes("fetch")) {
+      if (error instanceof TypeError && error.message.includes('fetch')) {
         errorDescription =
-          "Error de red. Verifique su conexión a internet e intente nuevamente.";
+          'Error de red. Verifique su conexión a internet e intente nuevamente.';
       } else if (error instanceof Error) {
         errorDescription = `Error: ${error.message}. Intente nuevamente.`;
       } else {
-        errorDescription = "Error desconocido. Intente nuevamente más tarde.";
+        errorDescription = 'Error desconocido. Intente nuevamente más tarde.';
       }
 
       toast({
-        title: "❌ Error de conexión",
+        title: '❌ Error de conexión',
         description: errorDescription,
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
   };
@@ -531,7 +531,7 @@ export default function GrouperDetailPage() {
     <div className="container mx-auto py-6">
       <Button
         variant="outline"
-        onClick={() => router.push("/agrupadores")}
+        onClick={() => router.push('/agrupadores')}
         className="mb-6"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -539,12 +539,12 @@ export default function GrouperDetailPage() {
       </Button>
 
       {isLoading ? (
-        <div className="text-center py-4">Cargando detalles...</div>
+        <div className="py-4 text-center">Cargando detalles...</div>
       ) : !grouper ? (
-        <div className="text-center py-4">No se encontró el agrupador</div>
+        <div className="py-4 text-center">No se encontró el agrupador</div>
       ) : (
         <>
-          <div className="flex justify-between items-center mb-6">
+          <div className="mb-6 flex items-center justify-between">
             <div className="flex items-center gap-2">
               <LayersIcon className="h-6 w-6" />
               <h1 className="text-3xl font-bold">{grouper.name}</h1>
@@ -554,14 +554,14 @@ export default function GrouperDetailPage() {
               disabled={unassignedCategories.length === 0}
               title={
                 unassignedCategories.length === 0
-                  ? "No hay categorías disponibles para agregar"
-                  : "Agregar categorías a este agrupador"
+                  ? 'No hay categorías disponibles para agregar'
+                  : 'Agregar categorías a este agrupador'
               }
             >
               <PlusCircle className="mr-2 h-4 w-4" />
               {unassignedCategories.length === 0
-                ? "Sin categorías disponibles"
-                : "Agregar Categoría"}
+                ? 'Sin categorías disponibles'
+                : 'Agregar Categoría'}
             </Button>
           </div>
 
@@ -574,7 +574,7 @@ export default function GrouperDetailPage() {
             </CardHeader>
             <CardContent>
               {grouper.assignedCategories.length === 0 ? (
-                <div className="text-center py-4">
+                <div className="py-4 text-center">
                   Este agrupador no tiene categorías asociadas. Agregue algunas
                   utilizando el botón "Agregar Categoría".
                 </div>
@@ -589,8 +589,8 @@ export default function GrouperDetailPage() {
                   <TableBody>
                     {grouper.assignedCategories
                       .sort((a, b) =>
-                        a.name.localeCompare(b.name, "es", {
-                          sensitivity: "base",
+                        a.name.localeCompare(b.name, 'es', {
+                          sensitivity: 'base',
                         })
                       )
                       .map((category) => (
@@ -626,21 +626,21 @@ export default function GrouperDetailPage() {
               </DialogHeader>
               <div className="py-4">
                 {unassignedCategories.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="py-8 text-center text-muted-foreground">
                     <div className="mb-2">
-                      <PlusCircle className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                      <PlusCircle className="mx-auto mb-3 h-12 w-12 opacity-50" />
                     </div>
-                    <div className="font-medium mb-1">
+                    <div className="mb-1 font-medium">
                       No hay categorías disponibles
                     </div>
                     <div className="text-sm">
                       {categories.length === 0
-                        ? "No se han creado categorías en el sistema. Cree algunas categorías primero."
-                        : "Todas las categorías existentes ya están asignadas a este agrupador."}
+                        ? 'No se han creado categorías en el sistema. Cree algunas categorías primero.'
+                        : 'Todas las categorías existentes ya están asignadas a este agrupador.'}
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                  <div className="max-h-96 space-y-2 overflow-y-auto">
                     {unassignedCategories.map((category) => (
                       <div
                         key={category.id}
@@ -658,7 +658,7 @@ export default function GrouperDetailPage() {
                         />
                         <label
                           htmlFor={`category-${category.id}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                          className="cursor-pointer text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                         >
                           {category.name}
                         </label>
@@ -686,7 +686,7 @@ export default function GrouperDetailPage() {
                     `Agregar${
                       selectedCategoryIds.length > 0
                         ? ` (${selectedCategoryIds.length})`
-                        : ""
+                        : ''
                     }`
                   )}
                 </Button>

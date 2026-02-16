@@ -1,14 +1,14 @@
-import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import {
   PaymentMethodErrorBoundary,
   usePaymentMethodErrorBoundary,
-} from "../payment-method-error-boundary";
+} from '../payment-method-error-boundary';
 
 // Test component that throws an error
 const ThrowError = ({ shouldThrow }: { shouldThrow: boolean }) => {
   if (shouldThrow) {
-    throw new Error("Test error message");
+    throw new Error('Test error message');
   }
   return <div>No error</div>;
 };
@@ -21,8 +21,8 @@ const HookTestComponent = () => {
   return (
     <div>
       <div data-testid="has-error">{hasError.toString()}</div>
-      <div data-testid="error-message">{error?.message || "no error"}</div>
-      <button onClick={() => captureError(new Error("Hook test error"))}>
+      <div data-testid="error-message">{error?.message || 'no error'}</div>
+      <button onClick={() => captureError(new Error('Hook test error'))}>
         Capture Error
       </button>
       <button onClick={resetError}>Reset Error</button>
@@ -30,7 +30,7 @@ const HookTestComponent = () => {
   );
 };
 
-describe("PaymentMethodErrorBoundary", () => {
+describe('PaymentMethodErrorBoundary', () => {
   // Suppress console.error for these tests
   const originalError = console.error;
   beforeAll(() => {
@@ -41,30 +41,30 @@ describe("PaymentMethodErrorBoundary", () => {
     console.error = originalError;
   });
 
-  it("should render children when there is no error", () => {
+  it('should render children when there is no error', () => {
     render(
       <PaymentMethodErrorBoundary>
         <ThrowError shouldThrow={false} />
       </PaymentMethodErrorBoundary>
     );
 
-    expect(screen.getByText("No error")).toBeInTheDocument();
+    expect(screen.getByText('No error')).toBeInTheDocument();
   });
 
-  it("should render error UI when child component throws", () => {
+  it('should render error UI when child component throws', () => {
     render(
       <PaymentMethodErrorBoundary>
         <ThrowError shouldThrow={true} />
       </PaymentMethodErrorBoundary>
     );
 
-    expect(screen.getByText("Error en Métodos de Pago")).toBeInTheDocument();
+    expect(screen.getByText('Error en Métodos de Pago')).toBeInTheDocument();
     expect(
       screen.getByText(/Ocurrió un error al cargar o procesar/)
     ).toBeInTheDocument();
   });
 
-  it("should show retry button when retries are available", () => {
+  it('should show retry button when retries are available', () => {
     render(
       <PaymentMethodErrorBoundary maxRetries={3}>
         <ThrowError shouldThrow={true} />
@@ -73,10 +73,10 @@ describe("PaymentMethodErrorBoundary", () => {
 
     const retryButton = screen.getByText(/Reintentar/);
     expect(retryButton).toBeInTheDocument();
-    expect(retryButton.textContent).toContain("(1/3)");
+    expect(retryButton.textContent).toContain('(1/3)');
   });
 
-  it("should show reset button when max retries reached", () => {
+  it('should show reset button when max retries reached', () => {
     const { rerender } = render(
       <PaymentMethodErrorBoundary maxRetries={1}>
         <ThrowError shouldThrow={true} />
@@ -94,10 +94,10 @@ describe("PaymentMethodErrorBoundary", () => {
       </PaymentMethodErrorBoundary>
     );
 
-    expect(screen.getByText("Restablecer")).toBeInTheDocument();
+    expect(screen.getByText('Restablecer')).toBeInTheDocument();
   });
 
-  it("should call onError callback when error occurs", () => {
+  it('should call onError callback when error occurs', () => {
     const onError = jest.fn();
 
     render(
@@ -114,7 +114,7 @@ describe("PaymentMethodErrorBoundary", () => {
     );
   });
 
-  it("should render custom fallback when provided", () => {
+  it('should render custom fallback when provided', () => {
     const customFallback = <div>Custom error message</div>;
 
     render(
@@ -123,40 +123,40 @@ describe("PaymentMethodErrorBoundary", () => {
       </PaymentMethodErrorBoundary>
     );
 
-    expect(screen.getByText("Custom error message")).toBeInTheDocument();
+    expect(screen.getByText('Custom error message')).toBeInTheDocument();
     expect(
-      screen.queryByText("Error en Métodos de Pago")
+      screen.queryByText('Error en Métodos de Pago')
     ).not.toBeInTheDocument();
   });
 
-  it("should show technical details in expandable section", () => {
+  it('should show technical details in expandable section', () => {
     render(
       <PaymentMethodErrorBoundary>
         <ThrowError shouldThrow={true} />
       </PaymentMethodErrorBoundary>
     );
 
-    const detailsButton = screen.getByText("Detalles técnicos");
+    const detailsButton = screen.getByText('Detalles técnicos');
     expect(detailsButton).toBeInTheDocument();
 
     fireEvent.click(detailsButton);
     expect(screen.getByText(/Test error message/)).toBeInTheDocument();
   });
 
-  it("should show suggested solutions", () => {
+  it('should show suggested solutions', () => {
     render(
       <PaymentMethodErrorBoundary>
         <ThrowError shouldThrow={true} />
       </PaymentMethodErrorBoundary>
     );
 
-    expect(screen.getByText("Soluciones sugeridas:")).toBeInTheDocument();
+    expect(screen.getByText('Soluciones sugeridas:')).toBeInTheDocument();
     expect(
       screen.getByText(/Verifica que los métodos de pago/)
     ).toBeInTheDocument();
   });
 
-  it("should have reload page button", () => {
+  it('should have reload page button', () => {
     // Mock window.location.reload
     const mockReload = jest.fn();
     delete (window as any).location;
@@ -168,60 +168,60 @@ describe("PaymentMethodErrorBoundary", () => {
       </PaymentMethodErrorBoundary>
     );
 
-    const reloadButton = screen.getByText("Recargar página");
+    const reloadButton = screen.getByText('Recargar página');
     fireEvent.click(reloadButton);
 
     expect(mockReload).toHaveBeenCalled();
   });
 });
 
-describe("usePaymentMethodErrorBoundary", () => {
-  it("should initialize with no error", () => {
+describe('usePaymentMethodErrorBoundary', () => {
+  it('should initialize with no error', () => {
     render(<HookTestComponent />);
 
-    expect(screen.getByTestId("has-error")).toHaveTextContent("false");
-    expect(screen.getByTestId("error-message")).toHaveTextContent("no error");
+    expect(screen.getByTestId('has-error')).toHaveTextContent('false');
+    expect(screen.getByTestId('error-message')).toHaveTextContent('no error');
   });
 
-  it("should capture and store errors", () => {
+  it('should capture and store errors', () => {
     render(<HookTestComponent />);
 
-    const captureButton = screen.getByText("Capture Error");
+    const captureButton = screen.getByText('Capture Error');
     fireEvent.click(captureButton);
 
-    expect(screen.getByTestId("has-error")).toHaveTextContent("true");
-    expect(screen.getByTestId("error-message")).toHaveTextContent(
-      "Hook test error"
+    expect(screen.getByTestId('has-error')).toHaveTextContent('true');
+    expect(screen.getByTestId('error-message')).toHaveTextContent(
+      'Hook test error'
     );
   });
 
-  it("should reset errors", () => {
+  it('should reset errors', () => {
     render(<HookTestComponent />);
 
     // First capture an error
-    const captureButton = screen.getByText("Capture Error");
+    const captureButton = screen.getByText('Capture Error');
     fireEvent.click(captureButton);
 
-    expect(screen.getByTestId("has-error")).toHaveTextContent("true");
+    expect(screen.getByTestId('has-error')).toHaveTextContent('true');
 
     // Then reset it
-    const resetButton = screen.getByText("Reset Error");
+    const resetButton = screen.getByText('Reset Error');
     fireEvent.click(resetButton);
 
-    expect(screen.getByTestId("has-error")).toHaveTextContent("false");
-    expect(screen.getByTestId("error-message")).toHaveTextContent("no error");
+    expect(screen.getByTestId('has-error')).toHaveTextContent('false');
+    expect(screen.getByTestId('error-message')).toHaveTextContent('no error');
   });
 
-  it("should log errors to console", () => {
-    const consoleSpy = jest.spyOn(console, "error").mockImplementation();
+  it('should log errors to console', () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation();
 
     render(<HookTestComponent />);
 
-    const captureButton = screen.getByText("Capture Error");
+    const captureButton = screen.getByText('Capture Error');
     fireEvent.click(captureButton);
 
     expect(consoleSpy).toHaveBeenCalledWith(
-      "Payment method error captured:",
+      'Payment method error captured:',
       expect.any(Error)
     );
 

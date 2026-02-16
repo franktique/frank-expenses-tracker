@@ -1,6 +1,6 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { UpdateIncomeSchema, DEFAULT_FUND_NAME } from "@/types/funds";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { UpdateIncomeSchema, DEFAULT_FUND_NAME } from '@/types/funds';
 
 export async function GET(
   request: NextRequest,
@@ -20,12 +20,12 @@ export async function GET(
     `;
 
     if (!income) {
-      return NextResponse.json({ error: "Income not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Income not found' }, { status: 404 });
     }
 
     return NextResponse.json(income);
   } catch (error) {
-    console.error("Error fetching income:", error);
+    console.error('Error fetching income:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -45,7 +45,7 @@ export async function PUT(
     const validationResult = UpdateIncomeSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: validationResult.error.errors },
+        { error: 'Validation failed', details: validationResult.error.errors },
         { status: 400 }
       );
     }
@@ -53,7 +53,7 @@ export async function PUT(
     // Get existing income to calculate balance changes
     const [existingIncome] = await sql`SELECT * FROM incomes WHERE id = ${id}`;
     if (!existingIncome) {
-      return NextResponse.json({ error: "Income not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Income not found' }, { status: 404 });
     }
 
     let { period_id, date, description, amount, event, fund_id } =
@@ -84,7 +84,7 @@ export async function PUT(
           period_id = latestPeriod.id;
         } else {
           return NextResponse.json(
-            { error: "No hay periodos disponibles. Crea un periodo primero." },
+            { error: 'No hay periodos disponibles. Crea un periodo primero.' },
             { status: 400 }
           );
         }
@@ -96,7 +96,7 @@ export async function PUT(
       const [fund] = await sql`SELECT id FROM funds WHERE id = ${fund_id}`;
       if (!fund) {
         return NextResponse.json(
-          { error: "El fondo especificado no existe" },
+          { error: 'El fondo especificado no existe' },
           { status: 400 }
         );
       }
@@ -129,14 +129,14 @@ export async function PUT(
     const [updatedIncome] = await sql`
       UPDATE incomes
       SET period_id = ${period_id}, date = ${date}, description = ${description}, amount = ${amount}, event = ${
-      event || null
-    }, fund_id = ${fund_id}
+        event || null
+      }, fund_id = ${fund_id}
       WHERE id = ${id}
       RETURNING *
     `;
 
     if (!updatedIncome) {
-      return NextResponse.json({ error: "Income not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Income not found' }, { status: 404 });
     }
 
     // Update new fund balance
@@ -162,7 +162,7 @@ export async function PUT(
 
     return NextResponse.json(incomeWithFund);
   } catch (error) {
-    console.error("Error updating income:", error);
+    console.error('Error updating income:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -180,7 +180,7 @@ export async function DELETE(
     // Get the income before deleting to update fund balance
     const [incomeToDelete] = await sql`SELECT * FROM incomes WHERE id = ${id}`;
     if (!incomeToDelete) {
-      return NextResponse.json({ error: "Income not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Income not found' }, { status: 404 });
     }
 
     const [deletedIncome] = await sql`
@@ -190,7 +190,7 @@ export async function DELETE(
     `;
 
     if (!deletedIncome) {
-      return NextResponse.json({ error: "Income not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Income not found' }, { status: 404 });
     }
 
     // Update fund balance if income was assigned to a fund
@@ -204,7 +204,7 @@ export async function DELETE(
 
     return NextResponse.json(deletedIncome);
   } catch (error) {
-    console.error("Error deleting income:", error);
+    console.error('Error deleting income:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

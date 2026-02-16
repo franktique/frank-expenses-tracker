@@ -1,30 +1,30 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useMemo } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, ArrowLeft, RefreshCw } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { useState, useEffect, useMemo } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, ArrowLeft, RefreshCw } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 import {
   LoanCalculatorForm,
   LoanSummaryCards,
   InterestRateComparison,
   PaymentScheduleTable,
   ExtraPaymentDialog,
-} from "@/components/loan-simulator";
-import {
-  calculateLoanSummary,
-  formatCurrency,
-} from "@/lib/loan-calculations";
+} from '@/components/loan-simulator';
+import { calculateLoanSummary, formatCurrency } from '@/lib/loan-calculations';
 import type {
   LoanScenario,
   AmortizationPayment,
   ExtraPayment,
   LoanSummary,
-} from "@/types/loan-simulator";
-import type { CreateLoanData, ExtraPaymentData } from "@/components/loan-simulator";
+} from '@/types/loan-simulator';
+import type {
+  CreateLoanData,
+  ExtraPaymentData,
+} from '@/components/loan-simulator';
 
 export default function LoanScenarioDetailPage() {
   const router = useRouter();
@@ -36,7 +36,7 @@ export default function LoanScenarioDetailPage() {
   const [scenario, setScenario] = useState<LoanScenario | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState("calculator");
+  const [activeTab, setActiveTab] = useState('calculator');
 
   // Schedule data
   const [payments, setPayments] = useState<AmortizationPayment[]>([]);
@@ -60,7 +60,7 @@ export default function LoanScenarioDetailPage() {
     number | null
   >(null);
 
-  const isNew = scenarioId === "new";
+  const isNew = scenarioId === 'new';
 
   // Load scenario
   useEffect(() => {
@@ -77,18 +77,18 @@ export default function LoanScenarioDetailPage() {
     try {
       const response = await fetch(`/api/loan-scenarios/${scenarioId}`);
       if (!response.ok) {
-        throw new Error("Error al cargar el escenario");
+        throw new Error('Error al cargar el escenario');
       }
       const data = await response.json();
       setScenario(data);
       setExtraPayments(data.extraPayments || []);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Error al cargar el escenario de préstamo",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Error al cargar el escenario de préstamo',
+        variant: 'destructive',
       });
-      router.push("/simular-prestamos");
+      router.push('/simular-prestamos');
     } finally {
       setIsLoading(false);
     }
@@ -97,9 +97,11 @@ export default function LoanScenarioDetailPage() {
   const loadSchedule = async () => {
     setIsLoadingSchedule(true);
     try {
-      const response = await fetch(`/api/loan-scenarios/${scenarioId}/schedule`);
+      const response = await fetch(
+        `/api/loan-scenarios/${scenarioId}/schedule`
+      );
       if (!response.ok) {
-        throw new Error("Error al cargar el calendario");
+        throw new Error('Error al cargar el calendario');
       }
       const data = await response.json();
       setPayments(data.payments || []);
@@ -110,35 +112,35 @@ export default function LoanScenarioDetailPage() {
       setInterestSaved(data.interestSaved || 0);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Error al cargar el calendario de pagos",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Error al cargar el calendario de pagos',
+        variant: 'destructive',
       });
     } finally {
       setIsLoadingSchedule(false);
     }
   };
 
-  const handleSave = async (data: CreateLoanData) => {
+  const handleSave = async (data: CreateLoanData): Promise<LoanScenario> => {
     setIsSaving(true);
     try {
       const url = isNew
-        ? "/api/loan-scenarios"
+        ? '/api/loan-scenarios'
         : `/api/loan-scenarios/${scenarioId}`;
-      const method = isNew ? "POST" : "PUT";
+      const method = isNew ? 'POST' : 'PUT';
 
       const response = await fetch(url, {
         method,
-        headers: { "Content-Type": "application/json" },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al guardar");
+        throw new Error(errorData.error || 'Error al guardar');
       }
 
-      const saved = await response.json();
+      const saved: LoanScenario = await response.json();
 
       if (isNew) {
         router.push(`/simular-prestamos/${saved.id}`);
@@ -146,6 +148,8 @@ export default function LoanScenarioDetailPage() {
         setScenario(saved);
         await loadSchedule();
       }
+
+      return saved;
     } catch (error) {
       throw error;
     } finally {
@@ -155,11 +159,11 @@ export default function LoanScenarioDetailPage() {
 
   const handleDelete = async () => {
     const response = await fetch(`/api/loan-scenarios/${scenarioId}`, {
-      method: "DELETE",
+      method: 'DELETE',
     });
 
     if (!response.ok) {
-      throw new Error("Error al eliminar");
+      throw new Error('Error al eliminar');
     }
   };
 
@@ -169,8 +173,8 @@ export default function LoanScenarioDetailPage() {
     const response = await fetch(
       `/api/loan-scenarios/${scenarioId}/extra-payments`,
       {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           paymentNumber: selectedPaymentNumber,
           ...data,
@@ -179,24 +183,24 @@ export default function LoanScenarioDetailPage() {
     );
 
     if (!response.ok) {
-      throw new Error("Error al agregar pago extra");
+      throw new Error('Error al agregar pago extra');
     }
 
     await loadSchedule();
   };
 
   const handleRemoveExtraPayment = async (extraPaymentId: string) => {
-    if (!confirm("¿Eliminar este pago extra?")) return;
+    if (!confirm('¿Eliminar este pago extra?')) return;
 
     const response = await fetch(
       `/api/loan-scenarios/${scenarioId}/extra-payments/${extraPaymentId}`,
       {
-        method: "DELETE",
+        method: 'DELETE',
       }
     );
 
     if (!response.ok) {
-      throw new Error("Error al eliminar pago extra");
+      throw new Error('Error al eliminar pago extra');
     }
 
     await loadSchedule();
@@ -223,10 +227,10 @@ export default function LoanScenarioDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-6 px-4">
+      <div className="container mx-auto px-4 py-6">
         <div className="flex items-center justify-center py-12">
           <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin" />
             <p className="text-muted-foreground">Cargando escenario...</p>
           </div>
         </div>
@@ -235,24 +239,25 @@ export default function LoanScenarioDetailPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4">
+    <div className="container mx-auto px-4 py-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push("/simular-prestamos")}
+            onClick={() => router.push('/simular-prestamos')}
           >
             <ArrowLeft className="h-4 w-4" />
           </Button>
           <div>
             <h1 className="text-3xl font-bold">
-              {isNew ? "Nuevo Préstamo" : scenario?.name}
+              {isNew ? 'Nuevo Préstamo' : scenario?.name}
             </h1>
             {!isNew && scenario && (
               <p className="text-muted-foreground">
-                {formatCurrency(scenario.principal, scenario.currency)} @ {scenario.interestRate}% EA
+                {formatCurrency(scenario.principal, scenario.currency)} @{' '}
+                {scenario.interestRate}% EA
               </p>
             )}
           </div>
@@ -264,7 +269,7 @@ export default function LoanScenarioDetailPage() {
             onClick={loadSchedule}
             disabled={isLoadingSchedule}
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="mr-2 h-4 w-4" />
             Actualizar
           </Button>
         )}
@@ -288,7 +293,7 @@ export default function LoanScenarioDetailPage() {
               isLoading={isSaving}
             />
 
-            {!isNew && summary && (
+            {!isNew && summary && scenario && (
               <>
                 <LoanSummaryCards
                   summary={summary}

@@ -1,13 +1,13 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { CreateExpenseSchema, SOURCE_FUND_ERROR_MESSAGES } from "@/types/funds";
-import { validateExpenseSourceFunds } from "@/lib/source-fund-validation";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { CreateExpenseSchema, SOURCE_FUND_ERROR_MESSAGES } from '@/types/funds';
+import { validateExpenseSourceFunds } from '@/lib/source-fund-validation';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const fundFilter = searchParams.get("fund_id");
-    const creditCardFilter = searchParams.get("credit_card_id");
+    const fundFilter = searchParams.get('fund_id');
+    const creditCardFilter = searchParams.get('credit_card_id');
 
     let expenses;
 
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(transformedExpenses);
   } catch (error) {
-    console.error("Error fetching expenses:", error);
+    console.error('Error fetching expenses:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -152,7 +152,7 @@ export async function POST(request: NextRequest) {
     const validationResult = CreateExpenseSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: validationResult.error.errors },
+        { error: 'Validation failed', details: validationResult.error.errors },
         { status: 400 }
       );
     }
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
     if (!validation.isValid) {
       return NextResponse.json(
         {
-          error: "Validation failed",
+          error: 'Validation failed',
           details: validation.errors,
           warnings: validation.warnings,
         },
@@ -192,26 +192,26 @@ export async function POST(request: NextRequest) {
 
     // Log warnings if any
     if (validation.warnings.length > 0) {
-      console.warn("Expense creation warnings:", validation.warnings);
+      console.warn('Expense creation warnings:', validation.warnings);
     }
 
     // Standardize date to ensure consistency with Colombia timezone
     let dateToSave = date;
 
     // If it's an ISO string, ensure we use only the date part
-    if (typeof date === "string" && date.includes("T")) {
+    if (typeof date === 'string' && date.includes('T')) {
       // Extract only the date part (YYYY-MM-DD)
-      dateToSave = date.split("T")[0];
+      dateToSave = date.split('T')[0];
     }
 
     // Insert the expense
     const [newExpense] = await sql`
       INSERT INTO expenses (category_id, period_id, date, event, payment_method, description, amount, source_fund_id, destination_fund_id, credit_card_id, pending)
       VALUES (${category_id}, ${period_id}, ${dateToSave}, ${
-      event || null
-    }, ${payment_method}, ${description}, ${amount}, ${source_fund_id}, ${
-      destination_fund_id || null
-    }, ${credit_card_id || null}, ${pending || false})
+        event || null
+      }, ${payment_method}, ${description}, ${amount}, ${source_fund_id}, ${
+        destination_fund_id || null
+      }, ${credit_card_id || null}, ${pending || false})
       RETURNING *
     `;
 
@@ -270,7 +270,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(transformedExpense);
   } catch (error) {
-    console.error("Error creating expense:", error);
+    console.error('Error creating expense:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

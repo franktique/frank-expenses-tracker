@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Loader2, Save, Trash2, DollarSign } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import type { LoanScenario, CurrencyCode } from "@/types/loan-simulator";
-import { SUPPORTED_CURRENCIES } from "@/types/loan-simulator";
+} from '@/components/ui/select';
+import { Loader2, Save, Trash2, DollarSign } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import type { LoanScenario, CurrencyCode } from '@/types/loan-simulator';
+import { SUPPORTED_CURRENCIES } from '@/types/loan-simulator';
 
 interface LoanCalculatorFormProps {
   scenario?: LoanScenario;
@@ -44,14 +44,12 @@ export function LoanCalculatorForm({
   const { toast } = useToast();
 
   const [formData, setFormData] = useState<CreateLoanData>({
-    name: scenario?.name || "",
+    name: scenario?.name || '',
     principal: scenario?.principal || 0,
     interestRate: scenario?.interestRate || 0,
     termMonths: scenario?.termMonths || 360,
-    startDate:
-      scenario?.startDate ||
-      new Date().toISOString().split("T")[0],
-    currency: scenario?.currency || "USD",
+    startDate: scenario?.startDate || new Date().toISOString().split('T')[0],
+    currency: scenario?.currency || 'USD',
   });
 
   const [isSaving, setIsSaving] = useState(false);
@@ -71,45 +69,45 @@ export function LoanCalculatorForm({
     // Validation
     if (!formData.name.trim()) {
       toast({
-        title: "Error",
-        description: "El nombre del préstamo es obligatorio",
-        variant: "destructive",
+        title: 'Error',
+        description: 'El nombre del préstamo es obligatorio',
+        variant: 'destructive',
       });
       return;
     }
 
     if (formData.principal <= 0) {
       toast({
-        title: "Error",
-        description: "El monto del préstamo debe ser positivo",
-        variant: "destructive",
+        title: 'Error',
+        description: 'El monto del préstamo debe ser positivo',
+        variant: 'destructive',
       });
       return;
     }
 
     if (formData.interestRate <= 0) {
       toast({
-        title: "Error",
-        description: "La tasa de interés debe ser positiva",
-        variant: "destructive",
+        title: 'Error',
+        description: 'La tasa de interés debe ser positiva',
+        variant: 'destructive',
       });
       return;
     }
 
     if (formData.termMonths <= 0) {
       toast({
-        title: "Error",
-        description: "El plazo debe ser positivo",
-        variant: "destructive",
+        title: 'Error',
+        description: 'El plazo debe ser positivo',
+        variant: 'destructive',
       });
       return;
     }
 
     if (!formData.startDate) {
       toast({
-        title: "Error",
-        description: "La fecha de inicio es obligatoria",
-        variant: "destructive",
+        title: 'Error',
+        description: 'La fecha de inicio es obligatoria',
+        variant: 'destructive',
       });
       return;
     }
@@ -120,19 +118,19 @@ export function LoanCalculatorForm({
     try {
       await onSave(formData);
       toast({
-        title: "Éxito",
+        title: 'Éxito',
         description: scenario
-          ? "Préstamo actualizado correctamente"
-          : "Préstamo creado correctamente",
+          ? 'Préstamo actualizado correctamente'
+          : 'Préstamo creado correctamente',
       });
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
           error instanceof Error
             ? error.message
-            : "Error al guardar el préstamo",
-        variant: "destructive",
+            : 'Error al guardar el préstamo',
+        variant: 'destructive',
       });
     } finally {
       setIsSaving(false);
@@ -142,7 +140,7 @@ export function LoanCalculatorForm({
   const handleDelete = async () => {
     if (!onDelete) return;
 
-    if (!confirm("¿Estás seguro de que deseas eliminar este préstamo?")) {
+    if (!confirm('¿Estás seguro de que deseas eliminar este préstamo?')) {
       return;
     }
 
@@ -150,17 +148,17 @@ export function LoanCalculatorForm({
     try {
       await onDelete();
       toast({
-        title: "Éxito",
-        description: "Préstamo eliminado correctamente",
+        title: 'Éxito',
+        description: 'Préstamo eliminado correctamente',
       });
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
           error instanceof Error
             ? error.message
-            : "Error al eliminar el préstamo",
-        variant: "destructive",
+            : 'Error al eliminar el préstamo',
+        variant: 'destructive',
       });
     } finally {
       setIsDeleting(false);
@@ -177,7 +175,7 @@ export function LoanCalculatorForm({
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) => handleChange("name", e.target.value)}
+              onChange={(e) => handleChange('name', e.target.value)}
               placeholder="Ej: Hipoteca Casa, Préstamo Auto"
               disabled={readOnly || isLoading || isSaving || isDeleting}
             />
@@ -194,7 +192,7 @@ export function LoanCalculatorForm({
                 min="0"
                 value={formData.principal}
                 onChange={(e) =>
-                  handleChange("principal", parseFloat(e.target.value) || 0)
+                  handleChange('principal', parseFloat(e.target.value) || 0)
                 }
                 placeholder="500000"
                 disabled={readOnly || isLoading || isSaving || isDeleting}
@@ -203,7 +201,7 @@ export function LoanCalculatorForm({
               <Select
                 value={formData.currency}
                 onValueChange={(value) =>
-                  handleChange("currency", value as CurrencyCode)
+                  handleChange('currency', value as CurrencyCode)
                 }
                 disabled={readOnly || isLoading || isSaving || isDeleting}
               >
@@ -234,7 +232,7 @@ export function LoanCalculatorForm({
               max="100"
               value={formData.interestRate}
               onChange={(e) =>
-                handleChange("interestRate", parseFloat(e.target.value) || 0)
+                handleChange('interestRate', parseFloat(e.target.value) || 0)
               }
               placeholder="8.5"
               disabled={readOnly || isLoading || isSaving || isDeleting}
@@ -254,13 +252,13 @@ export function LoanCalculatorForm({
               max="480"
               value={formData.termMonths}
               onChange={(e) =>
-                handleChange("termMonths", parseInt(e.target.value) || 0)
+                handleChange('termMonths', parseInt(e.target.value) || 0)
               }
               placeholder="360"
               disabled={readOnly || isLoading || isSaving || isDeleting}
             />
             <p className="text-xs text-muted-foreground">
-              {Math.floor(formData.termMonths / 12)} años,{" "}
+              {Math.floor(formData.termMonths / 12)} años,{' '}
               {formData.termMonths % 12} meses
             </p>
           </div>
@@ -272,7 +270,7 @@ export function LoanCalculatorForm({
               id="startDate"
               type="date"
               value={formData.startDate}
-              onChange={(e) => handleChange("startDate", e.target.value)}
+              onChange={(e) => handleChange('startDate', e.target.value)}
               disabled={readOnly || isLoading || isSaving || isDeleting}
             />
           </div>
@@ -280,7 +278,7 @@ export function LoanCalculatorForm({
 
         {/* Actions */}
         {!readOnly && (
-          <div className="flex gap-2 mt-6">
+          <div className="mt-6 flex gap-2">
             {onSave && (
               <Button
                 onClick={handleSave}
@@ -294,7 +292,7 @@ export function LoanCalculatorForm({
                 ) : (
                   <>
                     <Save className="mr-2 h-4 w-4" />
-                    {scenario ? "Actualizar" : "Crear"}
+                    {scenario ? 'Actualizar' : 'Crear'}
                   </>
                 )}
               </Button>

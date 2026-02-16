@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const fundId = searchParams.get("fund_id");
-    const limit = parseInt(searchParams.get("limit") || "50");
-    const offset = parseInt(searchParams.get("offset") || "0");
+    const fundId = searchParams.get('fund_id');
+    const limit = parseInt(searchParams.get('limit') || '50');
+    const offset = parseInt(searchParams.get('offset') || '0');
 
     let transferQuery;
 
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
       fund_id: fundId,
       transfers: transfers.map((transfer: TransferRow) => ({
         ...transfer,
-        amount: parseFloat(transfer.amount?.toString() || "0"),
+        amount: parseFloat(transfer.amount?.toString() || '0'),
       })),
       pagination: {
         limit,
@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error fetching fund transfers:", error);
+    console.error('Error fetching fund transfers:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

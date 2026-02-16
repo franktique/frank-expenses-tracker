@@ -22,6 +22,7 @@ Change the color of the "Ahorro Esperado" (Expected Savings) KPI from green to p
 ## Current Implementation
 
 ### KPI Card (Line 691)
+
 ```tsx
 <div className="text-2xl font-bold text-emerald-600">
   {formatCurrency(totals.expectedSavings)}
@@ -29,14 +30,13 @@ Change the color of the "Ahorro Esperado" (Expected Savings) KPI from green to p
 ```
 
 ### Table Column Values (Lines 870-923)
+
 ```tsx
 <Input
   type="number"
   // ... other props
   className={`w-full text-right ${
-    categoryErrors?.expected_savings
-      ? "border-destructive"
-      : ""
+    categoryErrors?.expected_savings ? 'border-destructive' : ''
   }`}
   placeholder="0.00"
 />
@@ -45,11 +45,13 @@ Change the color of the "Ahorro Esperado" (Expected Savings) KPI from green to p
 ## Color Selection
 
 **Chosen Purple:** `text-purple-600` (Tailwind CSS standard - #9333ea)
+
 - Provides good contrast against dark background
 - Distinguishes "Expected Savings" from other metrics
 - WCAG AA compliant for accessibility
 
 **Alternative Options Considered:**
+
 - `text-purple-500` (#a855f7) - Slightly lighter
 - `text-violet-600` (#7c3aed) - Deeper purple
 - `text-fuchsia-600` (#c026d3) - Pink-purple
@@ -57,6 +59,7 @@ Change the color of the "Ahorro Esperado" (Expected Savings) KPI from green to p
 ## Implementation Tasks
 
 ### Phase 1: Update KPI Card Color
+
 - [x] Change KPI text color from `text-emerald-600` to `text-purple-600`
 - [x] Test visibility and contrast in both light and dark modes
 - [x] Verify the KPI displays correctly with various values (0, positive, large numbers)
@@ -64,6 +67,7 @@ Change the color of the "Ahorro Esperado" (Expected Savings) KPI from green to p
 **File:** `components/simulation-budget-form.tsx`
 **Line:** 691
 **Change:**
+
 ```tsx
 // Before
 <div className="text-2xl font-bold text-emerald-600">
@@ -73,6 +77,7 @@ Change the color of the "Ahorro Esperado" (Expected Savings) KPI from green to p
 ```
 
 ### Phase 2: Add Conditional Styling to Table Column
+
 - [x] Update the Input component to conditionally apply purple text color
 - [x] Apply purple color when `expected_savings > 0`
 - [x] Ensure the color change doesn't interfere with validation error styling
@@ -81,6 +86,7 @@ Change the color of the "Ahorro Esperado" (Expected Savings) KPI from green to p
 **File:** `components/simulation-budget-form.tsx`
 **Lines:** 870-923
 **Change:**
+
 ```tsx
 // Before
 <Input
@@ -136,6 +142,7 @@ Change the color of the "Ahorro Esperado" (Expected Savings) KPI from green to p
 ```
 
 ### Phase 3: Testing
+
 - [x] Test KPI card displays purple color correctly
 - [x] Test table column values turn purple when > 0
 - [x] Test table column values remain default color when = 0
@@ -149,6 +156,7 @@ Change the color of the "Ahorro Esperado" (Expected Savings) KPI from green to p
 - [x] Test accessibility (color contrast, screen reader compatibility)
 
 ### Phase 4: Visual QA
+
 - [x] Compare with screenshot to ensure it matches the requirement
 - [x] Verify purple shade is consistent between KPI and table
 - [x] Check alignment and spacing remain unchanged
@@ -156,6 +164,7 @@ Change the color of the "Ahorro Esperado" (Expected Savings) KPI from green to p
 - [x] Review in different browser environments (Chrome, Firefox, Safari)
 
 ### Phase 5: Documentation
+
 - [x] Update this plan with completion status
 - [x] Add inline code comments if needed for clarity
 - [x] Document color choice rationale for future reference
@@ -163,26 +172,33 @@ Change the color of the "Ahorro Esperado" (Expected Savings) KPI from green to p
 ## Technical Notes
 
 ### Color Consistency
+
 Both the KPI and table values will use `text-purple-600` to ensure visual consistency.
 
 ### Styling Priority
+
 The className logic for the Input field will follow this priority:
+
 1. **Validation errors** (highest priority): Red border (`border-destructive`)
 2. **Positive values**: Purple text (`text-purple-600`) + bold weight (`font-semibold`)
 3. **Default**: Standard input styling
 
 ### Value Checking
+
 The condition `parseFloat(categoryData?.expected_savings || "0") > 0` ensures:
+
 - Empty or null values default to "0"
 - Only positive numbers trigger purple styling
 - Zero values remain unstyled
 
 ### Font Weight
+
 Adding `font-semibold` to positive values makes them stand out in the table, matching the bold weight of the KPI card.
 
 ## Design Rationale
 
 ### Why Purple?
+
 1. **Differentiation:** Purple distinguishes "Expected Savings" from other metrics:
    - Green/Emerald: General positive values, balances
    - Blue: Neutral information (credit, totals)
@@ -195,6 +211,7 @@ Adding `font-semibold` to positive values makes them stand out in the table, mat
 3. **Visual Hierarchy:** Purple creates a clear visual category for savings-related data
 
 ### User Experience Benefits
+
 - Quick visual identification of expected savings amounts
 - Easy to scan table for categories with planned savings
 - Consistent color coding improves data comprehension
@@ -240,6 +257,7 @@ Adding `font-semibold` to positive values makes them stand out in the table, mat
 ## Rollback Plan
 
 If issues arise, revert to previous colors:
+
 - KPI: Restore `text-emerald-600`
 - Table: Remove conditional purple styling
 

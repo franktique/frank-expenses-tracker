@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useMemo, useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useMemo, useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   BarChart,
   Bar,
@@ -18,18 +18,18 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
-} from "recharts";
-import { CategoryExclusionFilter } from "@/components/category-exclusion-filter";
-import { Settings, Loader2 } from "lucide-react";
-import type { AllPeriodsOverspendResponse } from "@/types/funds";
+} from 'recharts';
+import { CategoryExclusionFilter } from '@/components/category-exclusion-filter';
+import { Settings, Loader2 } from 'lucide-react';
+import type { AllPeriodsOverspendResponse } from '@/types/funds';
 
-const CASH_METHODS = ["cash", "debit"];
-const CREDIT_METHODS = ["credit"];
-const STORAGE_KEY = "overspend_all_periods_excluded_categories";
+const CASH_METHODS = ['cash', 'debit'];
+const CREDIT_METHODS = ['credit'];
+const STORAGE_KEY = 'overspend_all_periods_excluded_categories';
 
 function getMethodFilter(option: string) {
-  if (option === "cash") return CASH_METHODS;
-  if (option === "credit") return CREDIT_METHODS;
+  if (option === 'cash') return CASH_METHODS;
+  if (option === 'credit') return CREDIT_METHODS;
   return [...CASH_METHODS, ...CREDIT_METHODS];
 }
 
@@ -51,42 +51,53 @@ interface PeriodSummary {
 }
 
 export default function AllPeriodsOverspendDashboard() {
-  const [methodFilter, setMethodFilter] = useState<string>("all");
+  const [methodFilter, setMethodFilter] = useState<string>('all');
   const [excludedCategories, setExcludedCategories] = useState<string[]>([]);
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
   const [data, setData] = useState<AllPeriodsOverspendResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>(
+    []
+  );
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
   const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
 
   // Load excluded categories from localStorage on mount
   useEffect(() => {
-    if (typeof window === "undefined") return; // Skip on server-side rendering
+    if (typeof window === 'undefined') return; // Skip on server-side rendering
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        console.log("📂 Loaded excluded categories from localStorage:", parsed);
+        console.log('📂 Loaded excluded categories from localStorage:', parsed);
         setExcludedCategories(parsed);
       }
       setHasLoadedFromStorage(true);
     } catch (error) {
-      console.warn("Failed to load excluded categories from localStorage:", error);
+      console.warn(
+        'Failed to load excluded categories from localStorage:',
+        error
+      );
       setHasLoadedFromStorage(true);
     }
   }, []);
 
   // Save excluded categories to localStorage whenever they change (but not during initial load)
   useEffect(() => {
-    if (typeof window === "undefined") return; // Skip on server-side rendering
+    if (typeof window === 'undefined') return; // Skip on server-side rendering
     if (!hasLoadedFromStorage) return; // Don't save until we've attempted to load
     try {
-      console.log("💾 Saving excluded categories to localStorage:", excludedCategories);
+      console.log(
+        '💾 Saving excluded categories to localStorage:',
+        excludedCategories
+      );
       localStorage.setItem(STORAGE_KEY, JSON.stringify(excludedCategories));
     } catch (error) {
-      console.warn("Failed to save excluded categories to localStorage:", error);
+      console.warn(
+        'Failed to save excluded categories to localStorage:',
+        error
+      );
     }
   }, [excludedCategories, hasLoadedFromStorage]);
 
@@ -98,18 +109,18 @@ export default function AllPeriodsOverspendDashboard() {
         setError(null);
 
         const params = new URLSearchParams();
-        if (methodFilter !== "all") {
-          params.append("paymentMethod", methodFilter);
+        if (methodFilter !== 'all') {
+          params.append('paymentMethod', methodFilter);
         }
         if (excludedCategories.length > 0) {
-          params.append("excludedCategories", excludedCategories.join(","));
+          params.append('excludedCategories', excludedCategories.join(','));
         }
 
         const response = await fetch(
           `/api/overspend/all-periods?${params.toString()}`
         );
         if (!response.ok) {
-          throw new Error("Failed to fetch all-periods overspend data");
+          throw new Error('Failed to fetch all-periods overspend data');
         }
 
         const responseData: AllPeriodsOverspendResponse = await response.json();
@@ -134,8 +145,8 @@ export default function AllPeriodsOverspendDashboard() {
           }
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : "Unknown error occurred");
-        console.error("Error fetching all-periods data:", err);
+        setError(err instanceof Error ? err.message : 'Unknown error occurred');
+        console.error('Error fetching all-periods data:', err);
       } finally {
         setIsLoading(false);
       }
@@ -213,9 +224,11 @@ export default function AllPeriodsOverspendDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-96 space-y-4">
+      <div className="flex h-96 flex-col items-center justify-center space-y-4">
         <Loader2 className="h-8 w-8 animate-spin" />
-        <p className="text-muted-foreground">Cargando datos de todos los periodos...</p>
+        <p className="text-muted-foreground">
+          Cargando datos de todos los periodos...
+        </p>
       </div>
     );
   }
@@ -223,7 +236,7 @@ export default function AllPeriodsOverspendDashboard() {
   if (error) {
     return (
       <div className="space-y-4">
-        <Card className="bg-red-50 border-red-200">
+        <Card className="border-red-200 bg-red-50">
           <CardHeader>
             <CardTitle className="text-red-900">Error</CardTitle>
           </CardHeader>
@@ -238,12 +251,14 @@ export default function AllPeriodsOverspendDashboard() {
   if (!data || periodSummaries.length === 0) {
     return (
       <div className="space-y-4">
-        <Card className="bg-amber-50 border-amber-200">
+        <Card className="border-amber-200 bg-amber-50">
           <CardHeader>
             <CardTitle className="text-amber-900">Sin datos</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-amber-800">No hay datos de overspend disponibles</p>
+            <p className="text-amber-800">
+              No hay datos de overspend disponibles
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -253,9 +268,11 @@ export default function AllPeriodsOverspendDashboard() {
   return (
     <div className="space-y-8">
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4 items-end">
+      <div className="flex flex-col items-end gap-4 md:flex-row">
         <div className="flex-1">
-          <label className="text-sm font-medium mb-2 block">Método de Pago</label>
+          <label className="mb-2 block text-sm font-medium">
+            Método de Pago
+          </label>
           <Select value={methodFilter} onValueChange={setMethodFilter}>
             <SelectTrigger>
               <SelectValue />
@@ -271,9 +288,9 @@ export default function AllPeriodsOverspendDashboard() {
           variant="outline"
           size="sm"
           onClick={() => setShowCategoryFilter(!showCategoryFilter)}
-          className={showCategoryFilter ? "bg-gray-100" : ""}
+          className={showCategoryFilter ? 'bg-gray-100' : ''}
         >
-          <Settings className="h-4 w-4 mr-2" />
+          <Settings className="mr-2 h-4 w-4" />
           Filtros
         </Button>
       </div>
@@ -295,7 +312,7 @@ export default function AllPeriodsOverspendDashboard() {
           <CardTitle>Timeline de Overspend por Periodo</CardTitle>
         </CardHeader>
         <CardContent>
-          <div style={{ width: "100%", height: 400 }}>
+          <div style={{ width: '100%', height: 400 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={chartData}
@@ -310,11 +327,11 @@ export default function AllPeriodsOverspendDashboard() {
                 <YAxis />
                 <Tooltip
                   formatter={(value: number) =>
-                    `$${value.toLocaleString("es-MX", {
+                    `$${value.toLocaleString('es-MX', {
                       minimumFractionDigits: 2,
                     })}`
                   }
-                  cursor={{ fill: "rgba(59, 130, 246, 0.1)" }}
+                  cursor={{ fill: 'rgba(59, 130, 246, 0.1)' }}
                 />
                 <Bar
                   dataKey="overspend"
@@ -330,10 +347,10 @@ export default function AllPeriodsOverspendDashboard() {
                       key={`cell-${entry.periodId}`}
                       fill={
                         selectedPeriodId === entry.periodId
-                          ? "#2563eb"
+                          ? '#2563eb'
                           : entry.overspend > 0
-                            ? "#ef4444"
-                            : "#22c55e"
+                            ? '#ef4444'
+                            : '#22c55e'
                       }
                     />
                   ))}
@@ -348,13 +365,12 @@ export default function AllPeriodsOverspendDashboard() {
       {selectedPeriod && (
         <Card>
           <CardHeader>
-            <CardTitle>
-              Detalle de {selectedPeriod.periodName}
-            </CardTitle>
-            <p className="text-sm text-muted-foreground mt-2">
-              Total Overspend:{" "}
+            <CardTitle>Detalle de {selectedPeriod.periodName}</CardTitle>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Total Overspend:{' '}
               <span className="font-semibold text-red-600">
-                ${selectedPeriod.totalOverspend.toLocaleString("es-MX", {
+                $
+                {selectedPeriod.totalOverspend.toLocaleString('es-MX', {
                   minimumFractionDigits: 2,
                 })}
               </span>
@@ -365,11 +381,11 @@ export default function AllPeriodsOverspendDashboard() {
               <table className="w-full text-sm">
                 <thead className="border-b">
                   <tr className="bg-muted/50">
-                    <th className="text-left py-2 px-4">Categoría</th>
-                    <th className="text-right py-2 px-4">Planeado</th>
-                    <th className="text-right py-2 px-4">Gastado</th>
-                    <th className="text-right py-2 px-4">Overspend</th>
-                    <th className="text-right py-2 px-4">%</th>
+                    <th className="px-4 py-2 text-left">Categoría</th>
+                    <th className="px-4 py-2 text-right">Planeado</th>
+                    <th className="px-4 py-2 text-right">Gastado</th>
+                    <th className="px-4 py-2 text-right">Overspend</th>
+                    <th className="px-4 py-2 text-right">%</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -377,40 +393,47 @@ export default function AllPeriodsOverspendDashboard() {
                     const percentage =
                       cat.planned > 0
                         ? ((cat.overspend / cat.planned) * 100).toFixed(1)
-                        : "N/A";
+                        : 'N/A';
                     return (
                       <tr
                         key={cat.categoryId}
                         className={`border-b hover:bg-muted/50 ${
-                          cat.overspend > 0 ? "bg-red-50/50 dark:bg-red-950/20" : ""
+                          cat.overspend > 0
+                            ? 'bg-red-50/50 dark:bg-red-950/20'
+                            : ''
                         }`}
                       >
-                        <td className="py-3 px-4 font-medium">
+                        <td className="px-4 py-3 font-medium">
                           {cat.categoryName}
                         </td>
-                        <td className="text-right py-3 px-4">
-                          ${cat.planned.toLocaleString("es-MX", {
+                        <td className="px-4 py-3 text-right">
+                          $
+                          {cat.planned.toLocaleString('es-MX', {
                             minimumFractionDigits: 2,
                           })}
                         </td>
-                        <td className="text-right py-3 px-4">
-                          ${cat.spent.toLocaleString("es-MX", {
+                        <td className="px-4 py-3 text-right">
+                          $
+                          {cat.spent.toLocaleString('es-MX', {
                             minimumFractionDigits: 2,
                           })}
                         </td>
-                        <td className="text-right py-3 px-4 font-semibold">
+                        <td className="px-4 py-3 text-right font-semibold">
                           <span
                             className={
-                              cat.overspend > 0 ? "text-red-600" : "text-green-600"
+                              cat.overspend > 0
+                                ? 'text-red-600'
+                                : 'text-green-600'
                             }
                           >
-                            ${Math.abs(cat.overspend).toLocaleString("es-MX", {
+                            $
+                            {Math.abs(cat.overspend).toLocaleString('es-MX', {
                               minimumFractionDigits: 2,
                             })}
                           </span>
                         </td>
-                        <td className="text-right py-3 px-4">
-                          {percentage !== "N/A" ? `${percentage}%` : "N/A"}
+                        <td className="px-4 py-3 text-right">
+                          {percentage !== 'N/A' ? `${percentage}%` : 'N/A'}
                         </td>
                       </tr>
                     );

@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useMemo, useCallback } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -18,46 +18,74 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
-import { Checkbox } from "@/components/ui/checkbox";
+} from '@/components/ui/table';
+import { useToast } from '@/components/ui/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { formatCurrency } from "@/lib/utils";
-import { Loader2, Save, Calculator, AlertCircle, Download, ArrowUpDown, GripVertical, Filter, X, Trash2, ChevronDown, ChevronUp, Eye, EyeOff, ChevronsDown, ChevronsUp } from "lucide-react";
-import type { Subgroup, VisibilityState } from "@/types/simulation";
-import { exportSimulationToExcel } from "@/lib/excel-export-utils";
+} from '@/components/ui/popover';
+import { formatCurrency } from '@/lib/utils';
+import {
+  Loader2,
+  Save,
+  Calculator,
+  AlertCircle,
+  Download,
+  ArrowUpDown,
+  GripVertical,
+  Filter,
+  X,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  EyeOff,
+  ChevronsDown,
+  ChevronsUp,
+} from 'lucide-react';
+import type { Subgroup, VisibilityState } from '@/types/simulation';
+import { exportSimulationToExcel } from '@/lib/excel-export-utils';
 import {
   validateBudgetAmountInput,
   validateBudgetFormData,
   checkDataLossRisks,
-} from "@/lib/simulation-validation";
-import { useSimulationRetry } from "@/hooks/use-simulation-retry";
-import { SimulationErrorWrapper } from "@/components/simulation-error-boundary";
-import { DataConsistencyAlert } from "@/components/simulation-fallback-components";
-import { TipoGastoBadge } from "@/components/tipo-gasto-badge";
-import type { TipoGasto } from "@/types/funds";
-import { TIPO_GASTO_SORT_ORDERS } from "@/types/funds";
-import { SubgroupNameDialog } from "@/components/subgroup-name-dialog";
-import { SubgroupHeaderRow } from "@/components/subgroup-header-row";
-import { SubgroupSubtotalRow } from "@/components/subgroup-subtotal-row";
-import { TemplateSelector } from "@/components/template-selector";
-import { SaveAsTemplateDialog } from "@/components/save-as-template-dialog";
-import { TemplateManager } from "@/components/template-manager";
-import { organizeTableRowsWithSubgroups, shouldShowRow, getSubgroupForCategory } from "@/lib/subgroup-table-utils";
-import { calculateSubgroupSubtotals, getSubgroupCategoryCount } from "@/lib/subgroup-calculations";
-import { reorganizeTableRowsWithSubgroupOrder, initializeSubgroupOrder, cleanupSubgroupOrder } from "@/lib/subgroup-reordering-utils";
+} from '@/lib/simulation-validation';
+import { useSimulationRetry } from '@/hooks/use-simulation-retry';
+import { SimulationErrorWrapper } from '@/components/simulation-error-boundary';
+import { DataConsistencyAlert } from '@/components/simulation-fallback-components';
+import { TipoGastoBadge } from '@/components/tipo-gasto-badge';
+import type { TipoGasto } from '@/types/funds';
+import { TIPO_GASTO_SORT_ORDERS } from '@/types/funds';
+import { SubgroupNameDialog } from '@/components/subgroup-name-dialog';
+import { SubgroupHeaderRow } from '@/components/subgroup-header-row';
+import { SubgroupSubtotalRow } from '@/components/subgroup-subtotal-row';
+import { TemplateSelector } from '@/components/template-selector';
+import { SaveAsTemplateDialog } from '@/components/save-as-template-dialog';
+import { TemplateManager } from '@/components/template-manager';
+import {
+  organizeTableRowsWithSubgroups,
+  shouldShowRow,
+  getSubgroupForCategory,
+} from '@/lib/subgroup-table-utils';
+import {
+  calculateSubgroupSubtotals,
+  getSubgroupCategoryCount,
+} from '@/lib/subgroup-calculations';
+import {
+  reorganizeTableRowsWithSubgroupOrder,
+  initializeSubgroupOrder,
+  cleanupSubgroupOrder,
+} from '@/lib/subgroup-reordering-utils';
 import {
   toggleVisibility,
   loadVisibilityFromStorage,
   saveVisibilityToStorage,
   isSubgroupVisible,
   isCategoryVisible,
-  filterVisibleCategories
-} from "@/lib/visibility-calculation-utils";
+  filterVisibleCategories,
+} from '@/lib/visibility-calculation-utils';
 
 // Types
 type Category = {
@@ -72,6 +100,8 @@ type SimulationBudget = {
   category_name: string;
   efectivo_amount: number;
   credito_amount: number;
+  ahorro_efectivo_amount?: number;
+  ahorro_credito_amount?: number;
   expected_savings: number;
   tipo_gasto?: TipoGasto;
   needs_adjustment?: boolean;
@@ -131,49 +161,71 @@ export function SimulationBudgetForm({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [errors, setErrors] = useState<{
-    [categoryId: number]: {
+    [categoryId: string | number]: {
       efectivo?: string;
       credito?: string;
+      ahorro_efectivo?: string;
+      ahorro_credito?: string;
       expected_savings?: string;
     };
   }>({});
-  const [sortField, setSortField] = useState<"tipo_gasto" | "category_name" | null>(null);
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [sortField, setSortField] = useState<
+    'tipo_gasto' | 'category_name' | null
+  >(null);
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   // Custom sort state for tipo_gasto: 0 = none, 1 = Fijo first, 2 = Variable first
   const [tipoGastoSortState, setTipoGastoSortState] = useState<0 | 1 | 2>(0);
 
   // Drag & drop state management
   const [categoryOrder, setCategoryOrder] = useState<(string | number)[]>([]);
-  const [draggedCategoryId, setDraggedCategoryId] = useState<string | number | null>(null);
-  const [draggedTipoGasto, setDraggedTipoGasto] = useState<TipoGasto | undefined>(undefined);
+  const [draggedCategoryId, setDraggedCategoryId] = useState<
+    string | number | null
+  >(null);
+  const [draggedTipoGasto, setDraggedTipoGasto] = useState<
+    TipoGasto | undefined
+  >(undefined);
   const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const [isValidDropTarget, setIsValidDropTarget] = useState(false);
 
   // Filter state management
   const [hideEmptyCategories, setHideEmptyCategories] = useState(false);
-  const [excludedCategoryIds, setExcludedCategoryIds] = useState<(string | number)[]>([]);
+  const [excludedCategoryIds, setExcludedCategoryIds] = useState<
+    (string | number)[]
+  >([]);
   const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
 
   // Sub-group state management
   const [subgroups, setSubgroups] = useState<Subgroup[]>([]);
   const [isLoadingSubgroups, setIsLoadingSubgroups] = useState(false);
-  const [selectedCategoryIds, setSelectedCategoryIds] = useState<(string | number)[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<
+    (string | number)[]
+  >([]);
   const [isSubgroupCreationMode, setIsSubgroupCreationMode] = useState(false);
-  const [expandedSubgroups, setExpandedSubgroups] = useState<Set<string>>(new Set());
-  const [isSubgroupNameDialogOpen, setIsSubgroupNameDialogOpen] = useState(false);
+  const [expandedSubgroups, setExpandedSubgroups] = useState<Set<string>>(
+    new Set()
+  );
+  const [isSubgroupNameDialogOpen, setIsSubgroupNameDialogOpen] =
+    useState(false);
   const [isCreatingSubgroup, setIsCreatingSubgroup] = useState(false);
 
   // Sub-group addition mode state management
-  const [addingToSubgroupId, setAddingToSubgroupId] = useState<string | null>(null);
-  const [categoriesToAddToSubgroup, setCategoriesToAddToSubgroup] = useState<(string | number)[]>([]);
-  const [isAddingCategoriesLoading, setIsAddingCategoriesLoading] = useState(false);
+  const [addingToSubgroupId, setAddingToSubgroupId] = useState<string | null>(
+    null
+  );
+  const [categoriesToAddToSubgroup, setCategoriesToAddToSubgroup] = useState<
+    (string | number)[]
+  >([]);
+  const [isAddingCategoriesLoading, setIsAddingCategoriesLoading] =
+    useState(false);
 
   // Sub-group drag & drop reordering state management
   const [subgroupOrder, setSubgroupOrder] = useState<string[]>([]);
-  const [uncategorizedCategoryOrder, setUncategorizedCategoryOrder] = useState<(string | number)[]>([]);
+  const [uncategorizedCategoryOrder, setUncategorizedCategoryOrder] = useState<
+    (string | number)[]
+  >([]);
   const [subgroupDragState, setSubgroupDragState] = useState<{
     draggedItemId: string | null;
-    draggedItemType: "subgroup" | "uncategorized" | null;
+    draggedItemType: 'subgroup' | 'uncategorized' | null;
     dropZoneIndex: number | null;
   }>({
     draggedItemId: null,
@@ -185,8 +237,12 @@ export function SimulationBudgetForm({
   const [visibilityState, setVisibilityState] = useState<VisibilityState>({});
 
   // Template state management
-  const [currentTemplateId, setCurrentTemplateId] = useState<string | null>(null);
-  const [currentTemplateName, setCurrentTemplateName] = useState<string | null>(null);
+  const [currentTemplateId, setCurrentTemplateId] = useState<string | null>(
+    null
+  );
+  const [currentTemplateName, setCurrentTemplateName] = useState<string | null>(
+    null
+  );
   const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
 
   // Load categories and existing budget data
@@ -195,9 +251,9 @@ export function SimulationBudgetForm({
       setIsLoading(true);
       try {
         // Load categories
-        const categoriesResponse = await fetch("/api/categories");
+        const categoriesResponse = await fetch('/api/categories');
         if (!categoriesResponse.ok) {
-          throw new Error("Error al cargar categorías");
+          throw new Error('Error al cargar categorías');
         }
         const categoriesData = await categoriesResponse.json();
         setCategories(categoriesData);
@@ -207,21 +263,21 @@ export function SimulationBudgetForm({
           `/api/simulations/${simulationId}/budgets`
         );
         if (!budgetsResponse.ok) {
-          throw new Error("Error al cargar presupuestos de simulación");
+          throw new Error('Error al cargar presupuestos de simulación');
         }
         const budgetsResponseData = await budgetsResponse.json();
         const budgetsData: SimulationBudget[] =
           budgetsResponseData.budgets || [];
 
-        console.log("Loaded budgets data:", budgetsData);
-        console.log("Categories data:", categoriesData);
+        console.log('Loaded budgets data:', budgetsData);
+        console.log('Categories data:', categoriesData);
 
         // Initialize budget form data
         const initialBudgetData: BudgetFormData = {};
         categoriesData.forEach((category: Category) => {
           // Ensure category has a valid ID (can be number or UUID string)
           if (!category.id) {
-            console.warn("Missing category ID:", category);
+            console.warn('Missing category ID:', category);
             return;
           }
 
@@ -248,13 +304,13 @@ export function SimulationBudgetForm({
               efectivoAmount !== undefined &&
               !isNaN(efectivoAmount)
                 ? efectivoAmount.toString()
-                : "0",
+                : '0',
             credito_amount:
               creditoAmount !== null &&
               creditoAmount !== undefined &&
               !isNaN(creditoAmount)
                 ? creditoAmount.toString()
-                : "0",
+                : '0',
             ahorro_efectivo_amount:
               ahorroEfectivoAmount !== null &&
               ahorroEfectivoAmount !== undefined &&
@@ -262,35 +318,35 @@ export function SimulationBudgetForm({
                 ? ahorroEfectivoAmount.toString()
                 : // Fallback to expected_savings for backward compatibility
                   expectedSavings !== null &&
-                  expectedSavings !== undefined &&
-                  !isNaN(expectedSavings)
+                    expectedSavings !== undefined &&
+                    !isNaN(expectedSavings)
                   ? expectedSavings.toString()
-                  : "0",
+                  : '0',
             ahorro_credito_amount:
               ahorroCreditoAmount !== null &&
               ahorroCreditoAmount !== undefined &&
               !isNaN(ahorroCreditoAmount)
                 ? ahorroCreditoAmount.toString()
-                : "0",
+                : '0',
             expected_savings:
               expectedSavings !== null &&
               expectedSavings !== undefined &&
               !isNaN(expectedSavings)
                 ? expectedSavings.toString()
-                : "0",
+                : '0',
             needs_adjustment:
               needsAdjustment !== null && needsAdjustment !== undefined
                 ? String(needsAdjustment)
-                : "false",
+                : 'false',
           };
         });
 
         setBudgetData(initialBudgetData);
       } catch (error) {
         toast({
-          title: "Error",
-          description: (error as Error).message || "Error al cargar los datos",
-          variant: "destructive",
+          title: 'Error',
+          description: (error as Error).message || 'Error al cargar los datos',
+          variant: 'destructive',
         });
       } finally {
         setIsLoading(false);
@@ -317,7 +373,7 @@ export function SimulationBudgetForm({
         const formValidation = validateBudgetFormData(budgetData);
         setHasErrors(!formValidation.isValid);
       } catch (error) {
-        console.error("Error validating budget form data:", error);
+        console.error('Error validating budget form data:', error);
         setHasErrors(false);
       }
     }, 100);
@@ -342,7 +398,7 @@ export function SimulationBudgetForm({
             setCategoryOrder(categories.map((c) => c.id));
           }
         } catch (error) {
-          console.error("Error parsing saved category order:", error);
+          console.error('Error parsing saved category order:', error);
           setCategoryOrder(categories.map((c) => c.id));
         }
       } else {
@@ -371,7 +427,10 @@ export function SimulationBudgetForm({
           setExcludedCategoryIds(parsed);
         }
       } catch (error) {
-        console.error("Error parsing excluded categories from localStorage:", error);
+        console.error(
+          'Error parsing excluded categories from localStorage:',
+          error
+        );
         setExcludedCategoryIds([]);
       }
     }
@@ -388,14 +447,16 @@ export function SimulationBudgetForm({
     const loadSubgroups = async () => {
       setIsLoadingSubgroups(true);
       try {
-        const response = await fetch(`/api/simulations/${simulationId}/subgroups`);
+        const response = await fetch(
+          `/api/simulations/${simulationId}/subgroups`
+        );
         if (!response.ok) {
-          throw new Error("Error al cargar subgrupos");
+          throw new Error('Error al cargar subgrupos');
         }
         const data = await response.json();
         setSubgroups(data.subgroups || []);
       } catch (error) {
-        console.error("Error loading subgroups:", error);
+        console.error('Error loading subgroups:', error);
         // Don't show error toast for subgroups, as they are optional
         setSubgroups([]);
       } finally {
@@ -410,7 +471,9 @@ export function SimulationBudgetForm({
   useEffect(() => {
     const loadAppliedTemplate = async () => {
       try {
-        const response = await fetch(`/api/simulations/${simulationId}/applied-template`);
+        const response = await fetch(
+          `/api/simulations/${simulationId}/applied-template`
+        );
         if (response.ok) {
           const data = await response.json();
           if (data.success && data.appliedTemplate) {
@@ -419,7 +482,7 @@ export function SimulationBudgetForm({
           }
         }
       } catch (error) {
-        console.error("Error loading applied template:", error);
+        console.error('Error loading applied template:', error);
         // Non-critical, don't show error to user
       }
     };
@@ -450,14 +513,19 @@ export function SimulationBudgetForm({
         }
 
         // Send to API for migration
-        const response = await fetch(`/api/simulations/${simulationId}/migrate-localstorage`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            subgroupOrder: savedOrder ? JSON.parse(savedOrder) : undefined,
-            visibilityState: savedVisibility ? JSON.parse(savedVisibility) : undefined,
-          }),
-        });
+        const response = await fetch(
+          `/api/simulations/${simulationId}/migrate-localstorage`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              subgroupOrder: savedOrder ? JSON.parse(savedOrder) : undefined,
+              visibilityState: savedVisibility
+                ? JSON.parse(savedVisibility)
+                : undefined,
+            }),
+          }
+        );
 
         const data = await response.json();
 
@@ -465,8 +533,9 @@ export function SimulationBudgetForm({
           console.log('localStorage data migrated to database:', data.details);
           localStorage.setItem(migrationKey, 'true');
           toast({
-            title: "Data Migrated",
-            description: "Your subgroup settings have been saved to the database",
+            title: 'Data Migrated',
+            description:
+              'Your subgroup settings have been saved to the database',
           });
         }
       } catch (error) {
@@ -516,7 +585,7 @@ export function SimulationBudgetForm({
           }
         }
       } catch (error) {
-        console.error("Error loading subgroup order from localStorage:", error);
+        console.error('Error loading subgroup order from localStorage:', error);
         // Fallback to database order
         if (subgroupOrder.length === 0) {
           setSubgroupOrder(initializeSubgroupOrder(subgroups));
@@ -532,7 +601,7 @@ export function SimulationBudgetForm({
         const storageKey = `simulation_${simulationId}_subgroup_order`;
         localStorage.setItem(storageKey, JSON.stringify(subgroupOrder));
       } catch (error) {
-        console.error("Error saving subgroup order to localStorage:", error);
+        console.error('Error saving subgroup order to localStorage:', error);
       }
     }
   }, [subgroupOrder, simulationId]);
@@ -554,60 +623,70 @@ export function SimulationBudgetForm({
   }, []);
 
   // Helper function to toggle needs_adjustment for a category
-  const handleToggleNeedsAdjustment = useCallback((categoryId: string | number) => {
-    setBudgetData((prev) => {
-      const categoryKey = String(categoryId);
-      const currentData = prev[categoryKey];
-      if (!currentData) return prev;
+  const handleToggleNeedsAdjustment = useCallback(
+    (categoryId: string | number) => {
+      setBudgetData((prev) => {
+        const categoryKey = String(categoryId);
+        const currentData = prev[categoryKey];
+        if (!currentData) return prev;
 
-      const currentValue = currentData.needs_adjustment === "true";
-      const newBudgetData = {
-        ...prev,
-        [categoryKey]: {
-          ...currentData,
-          needs_adjustment: String(!currentValue),
-        },
-      };
+        const currentValue = currentData.needs_adjustment === 'true';
+        const newBudgetData = {
+          ...prev,
+          [categoryKey]: {
+            ...currentData,
+            needs_adjustment: String(!currentValue),
+          },
+        };
 
-      // Trigger auto-save after a short delay with the updated data
-      setTimeout(async () => {
-        try {
-          // Prepare budgets array from the updated state
-          const budgets = Object.entries(newBudgetData).map(([catId, data]) => {
-            let parsedCategoryId: string | number = catId;
-            if (/^\d+$/.test(catId)) {
-              parsedCategoryId = parseInt(catId);
+        // Trigger auto-save after a short delay with the updated data
+        setTimeout(async () => {
+          try {
+            // Prepare budgets array from the updated state
+            const budgets = Object.entries(newBudgetData).map(
+              ([catId, data]) => {
+                let parsedCategoryId: string | number = catId;
+                if (/^\d+$/.test(catId)) {
+                  parsedCategoryId = parseInt(catId);
+                }
+                return {
+                  category_id: parsedCategoryId,
+                  efectivo_amount: parseFloat(data.efectivo_amount) || 0,
+                  credito_amount: parseFloat(data.credito_amount) || 0,
+                  ahorro_efectivo_amount:
+                    parseFloat(data.ahorro_efectivo_amount) || 0,
+                  ahorro_credito_amount:
+                    parseFloat(data.ahorro_credito_amount) || 0,
+                  expected_savings: parseFloat(data.expected_savings) || 0,
+                  needs_adjustment: data.needs_adjustment === 'true',
+                };
+              }
+            );
+
+            const response = await fetch(
+              `/api/simulations/${simulationId}/budgets`,
+              {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ budgets }),
+              }
+            );
+
+            if (response.ok) {
+              setLastSaved(new Date());
+              setHasUnsavedChanges(false);
             }
-            return {
-              category_id: parsedCategoryId,
-              efectivo_amount: parseFloat(data.efectivo_amount) || 0,
-              credito_amount: parseFloat(data.credito_amount) || 0,
-              ahorro_efectivo_amount: parseFloat(data.ahorro_efectivo_amount) || 0,
-              ahorro_credito_amount: parseFloat(data.ahorro_credito_amount) || 0,
-              expected_savings: parseFloat(data.expected_savings) || 0,
-              needs_adjustment: data.needs_adjustment === "true" || data.needs_adjustment === true,
-            };
-          });
-
-          const response = await fetch(`/api/simulations/${simulationId}/budgets`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ budgets }),
-          });
-
-          if (response.ok) {
-            setLastSaved(new Date());
-            setHasUnsavedChanges(false);
+          } catch (error) {
+            console.error('Failed to save needs_adjustment:', error);
           }
-        } catch (error) {
-          console.error("Failed to save needs_adjustment:", error);
-        }
-      }, 500);
+        }, 500);
 
-      return newBudgetData;
-    });
-    setHasUnsavedChanges(true);
-  }, [simulationId]);
+        return newBudgetData;
+      });
+      setHasUnsavedChanges(true);
+    },
+    [simulationId]
+  );
 
   // Helper function to toggle subgroup expansion
   const toggleSubgroupExpanded = useCallback((subgroupId: string) => {
@@ -624,7 +703,7 @@ export function SimulationBudgetForm({
 
   // Expand all subgroups
   const expandAllSubgroups = useCallback(() => {
-    const allSubgroupIds = new Set(subgroups.map(sg => sg.id));
+    const allSubgroupIds = new Set(subgroups.map((sg) => sg.id));
     setExpandedSubgroups(allSubgroupIds);
   }, [subgroups]);
 
@@ -635,8 +714,8 @@ export function SimulationBudgetForm({
 
   // Toggle between expand and collapse all
   const toggleExpandCollapseAll = useCallback(() => {
-    const allSubgroupIds = subgroups.map(sg => sg.id);
-    const allExpanded = allSubgroupIds.every(id => expandedSubgroups.has(id));
+    const allSubgroupIds = subgroups.map((sg) => sg.id);
+    const allExpanded = allSubgroupIds.every((id) => expandedSubgroups.has(id));
 
     if (allExpanded) {
       collapseAllSubgroups();
@@ -667,7 +746,7 @@ export function SimulationBudgetForm({
   const handleCreateSubgroup = useCallback(
     async (name: string) => {
       if (selectedCategoryIds.length === 0) {
-        throw new Error("Debe seleccionar al menos una categoría");
+        throw new Error('Debe seleccionar al menos una categoría');
       }
 
       setIsCreatingSubgroup(true);
@@ -675,9 +754,9 @@ export function SimulationBudgetForm({
         const response = await fetch(
           `/api/simulations/${simulationId}/subgroups`,
           {
-            method: "POST",
+            method: 'POST',
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               name,
@@ -688,9 +767,7 @@ export function SimulationBudgetForm({
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(
-            errorData.error || "Error al crear el subgrupo"
-          );
+          throw new Error(errorData.error || 'Error al crear el subgrupo');
         }
 
         const result = await response.json();
@@ -707,16 +784,16 @@ export function SimulationBudgetForm({
 
         // Show success toast
         toast({
-          title: "Subgrupo creado",
+          title: 'Subgrupo creado',
           description: `El subgrupo "${name}" se ha creado correctamente`,
-          variant: "default",
+          variant: 'default',
         });
 
         // Close the dialog
         setIsSubgroupNameDialogOpen(false);
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Error al crear el subgrupo";
+          error instanceof Error ? error.message : 'Error al crear el subgrupo';
         throw new Error(errorMessage);
       } finally {
         setIsCreatingSubgroup(false);
@@ -742,13 +819,13 @@ export function SimulationBudgetForm({
         const response = await fetch(
           `/api/simulations/${simulationId}/subgroups/${subgroupId}`,
           {
-            method: "DELETE",
+            method: 'DELETE',
           }
         );
 
         if (!response.ok) {
           const errorData = await response.json();
-          throw new Error(errorData.error || "Error al eliminar el subgrupo");
+          throw new Error(errorData.error || 'Error al eliminar el subgrupo');
         }
 
         // Remove subgroup from list
@@ -763,35 +840,39 @@ export function SimulationBudgetForm({
 
         // Show success toast
         toast({
-          title: "Subgrupo eliminado",
+          title: 'Subgrupo eliminado',
           description: `El subgrupo "${subgroup.name}" se ha eliminado correctamente`,
-          variant: "default",
+          variant: 'default',
         });
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Error al eliminar el subgrupo";
+          error instanceof Error
+            ? error.message
+            : 'Error al eliminar el subgrupo';
         toast({
-          title: "Error",
+          title: 'Error',
           description: errorMessage,
-          variant: "destructive",
+          variant: 'destructive',
         });
       }
     },
     [simulationId, subgroups, toast]
   );
 
-
   // Handler for toggling category selection for adding to sub-group
-  const toggleCategoryForAddition = useCallback((categoryId: string | number) => {
-    setCategoriesToAddToSubgroup((prev) => {
-      const id = String(categoryId);
-      if (prev.includes(id)) {
-        return prev.filter((cId) => String(cId) !== id);
-      } else {
-        return [...prev, id];
-      }
-    });
-  }, []);
+  const toggleCategoryForAddition = useCallback(
+    (categoryId: string | number) => {
+      setCategoriesToAddToSubgroup((prev) => {
+        const id = String(categoryId);
+        if (prev.includes(id)) {
+          return prev.filter((cId) => String(cId) !== id);
+        } else {
+          return [...prev, id];
+        }
+      });
+    },
+    []
+  );
 
   // Handler for entering add mode for a specific sub-group
   const handleAddToSubgroupClick = useCallback((subgroupId: string) => {
@@ -810,9 +891,9 @@ export function SimulationBudgetForm({
     async (subgroupId: string) => {
       if (categoriesToAddToSubgroup.length === 0) {
         toast({
-          title: "Error",
-          description: "Debes seleccionar al menos una categoría",
-          variant: "destructive",
+          title: 'Error',
+          description: 'Debes seleccionar al menos una categoría',
+          variant: 'destructive',
         });
         return;
       }
@@ -822,7 +903,7 @@ export function SimulationBudgetForm({
         // Get current sub-group to merge with new categories
         const currentSubgroup = subgroups.find((sg) => sg.id === subgroupId);
         if (!currentSubgroup) {
-          throw new Error("Sub-grupo no encontrado");
+          throw new Error('Sub-grupo no encontrado');
         }
 
         const allCategoryIds = Array.from(
@@ -835,9 +916,9 @@ export function SimulationBudgetForm({
         const response = await fetch(
           `/api/simulations/${simulationId}/subgroups/${subgroupId}`,
           {
-            method: "PATCH",
+            method: 'PATCH',
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               categoryIds: allCategoryIds,
@@ -848,7 +929,7 @@ export function SimulationBudgetForm({
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(
-            errorData.error || "Error al agregar categorías al sub-grupo"
+            errorData.error || 'Error al agregar categorías al sub-grupo'
           );
         }
 
@@ -856,9 +937,7 @@ export function SimulationBudgetForm({
 
         // Update sub-groups in state
         setSubgroups((prev) =>
-          prev.map((sg) =>
-            sg.id === subgroupId ? result.data : sg
-          )
+          prev.map((sg) => (sg.id === subgroupId ? result.data : sg))
         );
 
         // Reset add mode
@@ -867,17 +946,19 @@ export function SimulationBudgetForm({
 
         // Show success toast
         toast({
-          title: "Categorías agregadas",
+          title: 'Categorías agregadas',
           description: `${categoriesToAddToSubgroup.length} categoría(s) se agregó(aron) al sub-grupo`,
-          variant: "default",
+          variant: 'default',
         });
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Error al agregar categorías";
+          error instanceof Error
+            ? error.message
+            : 'Error al agregar categorías';
         toast({
-          title: "Error",
+          title: 'Error',
           description: errorMessage,
-          variant: "destructive",
+          variant: 'destructive',
         });
       } finally {
         setIsAddingCategoriesLoading(false);
@@ -896,15 +977,15 @@ export function SimulationBudgetForm({
 
       if (!subgroupWithCategory) {
         toast({
-          title: "Error",
-          description: "No se encontró el sub-grupo",
-          variant: "destructive",
+          title: 'Error',
+          description: 'No se encontró el sub-grupo',
+          variant: 'destructive',
         });
         return;
       }
 
       const confirmDelete = window.confirm(
-        "¿Deseas eliminar esta categoría del sub-grupo? La categoría seguirá disponible sin agrupar."
+        '¿Deseas eliminar esta categoría del sub-grupo? La categoría seguirá disponible sin agrupar.'
       );
 
       if (!confirmDelete) return;
@@ -919,9 +1000,9 @@ export function SimulationBudgetForm({
         const response = await fetch(
           `/api/simulations/${simulationId}/subgroups/${subgroupWithCategory.id}`,
           {
-            method: "PATCH",
+            method: 'PATCH',
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             },
             body: JSON.stringify({
               categoryIds: updatedCategoryIds,
@@ -932,7 +1013,7 @@ export function SimulationBudgetForm({
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(
-            errorData.error || "Error al remover categoría del sub-grupo"
+            errorData.error || 'Error al remover categoría del sub-grupo'
           );
         }
 
@@ -946,17 +1027,17 @@ export function SimulationBudgetForm({
         );
 
         toast({
-          title: "Categoría removida",
-          description: "La categoría ha sido removida del sub-grupo",
-          variant: "default",
+          title: 'Categoría removida',
+          description: 'La categoría ha sido removida del sub-grupo',
+          variant: 'default',
         });
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Error al remover categoría";
+          error instanceof Error ? error.message : 'Error al remover categoría';
         toast({
-          title: "Error",
+          title: 'Error',
           description: errorMessage,
-          variant: "destructive",
+          variant: 'destructive',
         });
       } finally {
         setIsAddingCategoriesLoading(false);
@@ -995,21 +1076,22 @@ export function SimulationBudgetForm({
             category_id: parsedCategoryId,
             efectivo_amount: parseFloat(data.efectivo_amount) || 0,
             credito_amount: parseFloat(data.credito_amount) || 0,
-            ahorro_efectivo_amount: parseFloat(data.ahorro_efectivo_amount) || 0,
+            ahorro_efectivo_amount:
+              parseFloat(data.ahorro_efectivo_amount) || 0,
             ahorro_credito_amount: parseFloat(data.ahorro_credito_amount) || 0,
             expected_savings: parseFloat(data.expected_savings) || 0, // Keep for backward compatibility
-            needs_adjustment: data.needs_adjustment === "true" || data.needs_adjustment === true,
+            needs_adjustment: data.needs_adjustment === 'true',
           };
         });
 
-        console.log("Saving budgets:", budgets);
+        console.log('Saving budgets:', budgets);
 
         const response = await fetch(
           `/api/simulations/${simulationId}/budgets`,
           {
-            method: "PUT",
+            method: 'PUT',
             headers: {
-              "Content-Type": "application/json",
+              'Content-Type': 'application/json',
             },
             body: JSON.stringify({ budgets }),
           }
@@ -1018,7 +1100,7 @@ export function SimulationBudgetForm({
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(
-            errorData.error || "Error al guardar los presupuestos"
+            errorData.error || 'Error al guardar los presupuestos'
           );
         }
 
@@ -1027,9 +1109,9 @@ export function SimulationBudgetForm({
 
         if (showToast) {
           toast({
-            title: "Presupuestos guardados",
+            title: 'Presupuestos guardados',
             description:
-              "Los presupuestos de simulación han sido guardados exitosamente",
+              'Los presupuestos de simulación han sido guardados exitosamente',
           });
         }
 
@@ -1041,10 +1123,10 @@ export function SimulationBudgetForm({
       } catch (error) {
         if (showToast) {
           toast({
-            title: "Error",
+            title: 'Error',
             description:
-              (error as Error).message || "Error al guardar los presupuestos",
-            variant: "destructive",
+              (error as Error).message || 'Error al guardar los presupuestos',
+            variant: 'destructive',
           });
         }
         return false;
@@ -1083,7 +1165,7 @@ export function SimulationBudgetForm({
   const {
     validateBudgetAmountInput,
     validateBudgetFormData,
-  } = require("@/lib/simulation-validation");
+  } = require('@/lib/simulation-validation');
 
   // Validate individual field using comprehensive validation
   const validateField = (
@@ -1094,7 +1176,7 @@ export function SimulationBudgetForm({
       const validation = validateBudgetAmountInput(value, isTyping);
       return validation.isValid ? undefined : validation.error;
     } catch (error) {
-      console.error("Error validating field:", error);
+      console.error('Error validating field:', error);
       return undefined;
     }
   };
@@ -1103,16 +1185,16 @@ export function SimulationBudgetForm({
   const handleInputChange = (
     categoryId: string | number,
     field:
-      | "efectivo_amount"
-      | "credito_amount"
-      | "ahorro_efectivo_amount"
-      | "ahorro_credito_amount"
-      | "expected_savings",
+      | 'efectivo_amount'
+      | 'credito_amount'
+      | 'ahorro_efectivo_amount'
+      | 'ahorro_credito_amount'
+      | 'expected_savings',
     value: string
   ) => {
     // Ensure categoryId is valid (can be string UUID or number)
     if (!categoryId) {
-      console.error("Invalid category ID in handleInputChange:", categoryId);
+      console.error('Invalid category ID in handleInputChange:', categoryId);
       return;
     }
 
@@ -1120,20 +1202,25 @@ export function SimulationBudgetForm({
     const categoryKey = String(categoryId);
 
     // Sanitize the input value
-    const sanitizedValue = value === "" ? "0" : value;
+    const sanitizedValue = value === '' ? '0' : value;
 
     // Update budget data, ensuring all fields exist
-    setBudgetData((prev) => ({
-      ...prev,
-      [categoryKey]: {
-        efectivo_amount: prev[categoryKey]?.efectivo_amount ?? "0",
-        credito_amount: prev[categoryKey]?.credito_amount ?? "0",
-        ahorro_efectivo_amount: prev[categoryKey]?.ahorro_efectivo_amount ?? "0",
-        ahorro_credito_amount: prev[categoryKey]?.ahorro_credito_amount ?? "0",
-        expected_savings: prev[categoryKey]?.expected_savings ?? "0",
-        [field]: sanitizedValue,
-      },
-    }));
+    setBudgetData((prev) => {
+      const updatedCategory = {
+        efectivo_amount: prev[categoryKey]?.efectivo_amount ?? '0',
+        credito_amount: prev[categoryKey]?.credito_amount ?? '0',
+        ahorro_efectivo_amount:
+          prev[categoryKey]?.ahorro_efectivo_amount ?? '0',
+        ahorro_credito_amount: prev[categoryKey]?.ahorro_credito_amount ?? '0',
+        expected_savings: prev[categoryKey]?.expected_savings ?? '0',
+        needs_adjustment: prev[categoryKey]?.needs_adjustment ?? 'false',
+      };
+      (updatedCategory as any)[field] = sanitizedValue;
+      return {
+        ...prev,
+        [categoryKey]: updatedCategory,
+      } as BudgetFormData;
+    });
 
     // Mark as having unsaved changes
     setHasUnsavedChanges(true);
@@ -1141,15 +1228,15 @@ export function SimulationBudgetForm({
     // Validate and update errors for the changed field only (with typing flag)
     const error = validateField(sanitizedValue, true);
     const errorFieldName =
-      field === "efectivo_amount"
-        ? "efectivo"
-        : field === "credito_amount"
-          ? "credito"
-          : field === "ahorro_efectivo_amount"
-            ? "ahorro_efectivo"
-            : field === "ahorro_credito_amount"
-              ? "ahorro_credito"
-              : "expected_savings";
+      field === 'efectivo_amount'
+        ? 'efectivo'
+        : field === 'credito_amount'
+          ? 'credito'
+          : field === 'ahorro_efectivo_amount'
+            ? 'ahorro_efectivo'
+            : field === 'ahorro_credito_amount'
+              ? 'ahorro_credito'
+              : 'expected_savings';
     setErrors((prev) => ({
       ...prev,
       [categoryKey]: {
@@ -1164,16 +1251,16 @@ export function SimulationBudgetForm({
     async (
       categoryId: string | number,
       field:
-        | "efectivo_amount"
-        | "credito_amount"
-        | "ahorro_efectivo_amount"
-        | "ahorro_credito_amount"
-        | "expected_savings",
+        | 'efectivo_amount'
+        | 'credito_amount'
+        | 'ahorro_efectivo_amount'
+        | 'ahorro_credito_amount'
+        | 'expected_savings',
       value: string
     ) => {
       // Ensure categoryId is valid
       if (!categoryId) {
-        console.error("Invalid category ID in handleInputBlur:", categoryId);
+        console.error('Invalid category ID in handleInputBlur:', categoryId);
         return;
       }
 
@@ -1183,15 +1270,15 @@ export function SimulationBudgetForm({
       // Final validation without typing flag (stricter validation)
       const error = validateField(value, false);
       const errorFieldName =
-        field === "efectivo_amount"
-          ? "efectivo"
-          : field === "credito_amount"
-            ? "credito"
-            : field === "ahorro_efectivo_amount"
-              ? "ahorro_efectivo"
-              : field === "ahorro_credito_amount"
-                ? "ahorro_credito"
-                : "expected_savings";
+        field === 'efectivo_amount'
+          ? 'efectivo'
+          : field === 'credito_amount'
+            ? 'credito'
+            : field === 'ahorro_efectivo_amount'
+              ? 'ahorro_efectivo'
+              : field === 'ahorro_credito_amount'
+                ? 'ahorro_credito'
+                : 'expected_savings';
       setErrors((prev) => ({
         ...prev,
         [categoryKey]: {
@@ -1214,7 +1301,7 @@ export function SimulationBudgetForm({
               setIsSavingOnBlur(false);
             }
           } catch (saveError) {
-            console.error("Auto-save failed on blur:", saveError);
+            console.error('Auto-save failed on blur:', saveError);
             setIsSavingOnBlur(false);
             // Don't show error toast for auto-save failures to avoid being intrusive
           }
@@ -1295,8 +1382,8 @@ export function SimulationBudgetForm({
       // Filter out empty categories if hideEmptyCategories is enabled
       if (hideEmptyCategories) {
         const categoryData = budgetData[String(category.id)];
-        const efectivo = parseFloat(categoryData?.efectivo_amount || "0") || 0;
-        const credito = parseFloat(categoryData?.credito_amount || "0") || 0;
+        const efectivo = parseFloat(categoryData?.efectivo_amount || '0') || 0;
+        const credito = parseFloat(categoryData?.credito_amount || '0') || 0;
         if (efectivo === 0 && credito === 0) {
           return false;
         }
@@ -1305,11 +1392,9 @@ export function SimulationBudgetForm({
       return true;
     });
 
-    let sorted = [...filtered].sort((a, b) =>
-      a.name.localeCompare(b.name)
-    );
+    let sorted = [...filtered].sort((a, b) => a.name.localeCompare(b.name));
 
-    if (sortField === "tipo_gasto" && tipoGastoSortState !== 0) {
+    if (sortField === 'tipo_gasto' && tipoGastoSortState !== 0) {
       // Use custom tipo_gasto sort order
       sorted.sort((a, b) => {
         const aSortValue = getTipoGastoSortValue(a.tipo_gasto);
@@ -1338,10 +1423,10 @@ export function SimulationBudgetForm({
           return aOrderIndex - bOrderIndex;
         });
       }
-    } else if (sortField === "category_name") {
+    } else if (sortField === 'category_name') {
       sorted.sort((a, b) => {
         const comparison = a.name.localeCompare(b.name);
-        return sortDirection === "asc" ? comparison : -comparison;
+        return sortDirection === 'asc' ? comparison : -comparison;
       });
     } else if (categoryOrder.length > 0) {
       // Apply custom drag-drop order when no sorting is active
@@ -1357,7 +1442,16 @@ export function SimulationBudgetForm({
     }
 
     return sorted;
-  }, [categories, sortField, sortDirection, tipoGastoSortState, categoryOrder, hideEmptyCategories, excludedCategoryIds, budgetData]);
+  }, [
+    categories,
+    sortField,
+    sortDirection,
+    tipoGastoSortState,
+    categoryOrder,
+    hideEmptyCategories,
+    excludedCategoryIds,
+    budgetData,
+  ]);
 
   // Helper function to find which sub-group a category belongs to
   // Moved before categoryBalances memo to avoid reference error
@@ -1416,14 +1510,22 @@ export function SimulationBudgetForm({
       const category = getSortedCategories.find((c) => c.id === categoryId);
       if (category) {
         // Check if category is visible (considering parent subgroup visibility)
-        const parentSubgroupId = getSubgroupForCategory(subgroups, category.id)?.id;
-        const isVisible = isCategoryVisible(category.id, parentSubgroupId, visibilityState);
+        const parentSubgroupId = getSubgroupForCategory(
+          subgroups,
+          category.id
+        )?.id;
+        const isVisible = isCategoryVisible(
+          category.id,
+          parentSubgroupId,
+          visibilityState
+        );
 
         const categoryData = budgetData[String(category.id)];
         if (categoryData && isVisible) {
           // Calculate net spend: Efectivo - Ahorro Efectivo (only efectivo savings affect balance)
           const efectivoAmount = parseFloat(categoryData.efectivo_amount) || 0;
-          const ahorroEfectivo = parseFloat(categoryData.ahorro_efectivo_amount) || 0;
+          const ahorroEfectivo =
+            parseFloat(categoryData.ahorro_efectivo_amount) || 0;
           const netSpend = efectivoAmount - ahorroEfectivo;
 
           // Decrease balance by net spend (actual amount after savings)
@@ -1436,7 +1538,14 @@ export function SimulationBudgetForm({
     });
 
     return balances;
-  }, [budgetData, getSortedCategories, totalIncome, subgroups, subgroupOrder, visibilityState]);
+  }, [
+    budgetData,
+    getSortedCategories,
+    totalIncome,
+    subgroups,
+    subgroupOrder,
+    visibilityState,
+  ]);
 
   // Calculate balance after each sub-group (for display in subtotal rows)
   const subgroupBalances = useMemo(() => {
@@ -1494,14 +1603,22 @@ export function SimulationBudgetForm({
       const category = getSortedCategories.find((c) => c.id === categoryId);
       if (category) {
         // Check if category is visible (considering parent subgroup visibility)
-        const parentSubgroupId = getSubgroupForCategory(subgroups, category.id)?.id;
-        const isVisible = isCategoryVisible(category.id, parentSubgroupId, visibilityState);
+        const parentSubgroupId = getSubgroupForCategory(
+          subgroups,
+          category.id
+        )?.id;
+        const isVisible = isCategoryVisible(
+          category.id,
+          parentSubgroupId,
+          visibilityState
+        );
 
         const categoryData = budgetData[String(category.id)];
         if (categoryData && isVisible) {
           // Calculate net spend: Efectivo - Ahorro Efectivo
           const efectivoAmount = parseFloat(categoryData.efectivo_amount) || 0;
-          const ahorroEfectivo = parseFloat(categoryData.ahorro_efectivo_amount) || 0;
+          const ahorroEfectivo =
+            parseFloat(categoryData.ahorro_efectivo_amount) || 0;
           const netSpend = efectivoAmount - ahorroEfectivo;
 
           // Decrease balance by net spend (actual amount after savings)
@@ -1516,7 +1633,14 @@ export function SimulationBudgetForm({
     });
 
     return balances;
-  }, [budgetData, getSortedCategories, totalIncome, subgroups, subgroupOrder, visibilityState]);
+  }, [
+    budgetData,
+    getSortedCategories,
+    totalIncome,
+    subgroups,
+    subgroupOrder,
+    visibilityState,
+  ]);
 
   // Helper function to get uncategorized categories (not in any sub-group)
   const getUncategorizedCategories = useCallback((): Category[] => {
@@ -1526,16 +1650,14 @@ export function SimulationBudgetForm({
         categorizedCategoryIds.add(cid);
       });
     });
-    return getSortedCategories.filter(
-      (c) => !categorizedCategoryIds.has(c.id)
-    );
+    return getSortedCategories.filter((c) => !categorizedCategoryIds.has(c.id));
   }, [subgroups, getSortedCategories]);
 
   // Get balance color based on value
   const getBalanceColor = (balance: number): string => {
-    if (balance < 0) return "text-red-600";
-    if (balance < totalIncome * 0.1) return "text-orange-600"; // Warning if less than 10% remaining
-    return "text-green-600";
+    if (balance < 0) return 'text-red-600';
+    if (balance < totalIncome * 0.1) return 'text-orange-600'; // Warning if less than 10% remaining
+    return 'text-green-600';
   };
 
   // Get comprehensive validation feedback
@@ -1545,7 +1667,7 @@ export function SimulationBudgetForm({
 
     const errorMessages: string[] = [];
     Object.entries(formValidation.errors).forEach(
-      ([categoryId, categoryErrors]) => {
+      ([categoryId, categoryErrors]: [string, any]) => {
         // Handle both numeric and UUID category IDs
         const category = categories.find((c) => String(c.id) === categoryId);
         const categoryName = category?.name || `Categoría ${categoryId}`;
@@ -1574,9 +1696,9 @@ export function SimulationBudgetForm({
   const handleSave = async () => {
     if (hasErrors) {
       toast({
-        title: "Error de validación",
-        description: "Corrige los errores antes de guardar",
-        variant: "destructive",
+        title: 'Error de validación',
+        description: 'Corrige los errores antes de guardar',
+        variant: 'destructive',
       });
       return;
     }
@@ -1590,16 +1712,16 @@ export function SimulationBudgetForm({
     try {
       await exportSimulationToExcel(simulationId);
       toast({
-        title: "Exportación exitosa",
-        description: "El archivo Excel se ha descargado correctamente",
+        title: 'Exportación exitosa',
+        description: 'El archivo Excel se ha descargado correctamente',
       });
     } catch (error) {
-      console.error("Error exporting to Excel:", error);
+      console.error('Error exporting to Excel:', error);
       toast({
-        title: "Error al exportar",
+        title: 'Error al exportar',
         description:
-          (error as Error).message || "No se pudo generar el archivo Excel",
-        variant: "destructive",
+          (error as Error).message || 'No se pudo generar el archivo Excel',
+        variant: 'destructive',
       });
     } finally {
       setIsExporting(false);
@@ -1607,17 +1729,17 @@ export function SimulationBudgetForm({
   };
 
   // Handle sort column click
-  const handleSortClick = (field: "tipo_gasto" | "category_name") => {
-    if (field === "tipo_gasto") {
+  const handleSortClick = (field: 'tipo_gasto' | 'category_name') => {
+    if (field === 'tipo_gasto') {
       // Custom 3-cycle behavior for tipo_gasto: 0 → 1 → 2 → 0
-      if (sortField === "tipo_gasto") {
+      if (sortField === 'tipo_gasto') {
         // Already sorting by tipo_gasto, cycle to next state
         if (tipoGastoSortState === 0) {
           setTipoGastoSortState(1);
-          setSortField("tipo_gasto");
+          setSortField('tipo_gasto');
         } else if (tipoGastoSortState === 1) {
           setTipoGastoSortState(2);
-          setSortField("tipo_gasto");
+          setSortField('tipo_gasto');
         } else {
           // State 2 → reset to state 0
           setTipoGastoSortState(0);
@@ -1625,24 +1747,24 @@ export function SimulationBudgetForm({
         }
       } else {
         // Start sorting by tipo_gasto with state 1
-        setSortField("tipo_gasto");
+        setSortField('tipo_gasto');
         setTipoGastoSortState(1);
       }
-    } else if (field === "category_name") {
+    } else if (field === 'category_name') {
       // Standard toggle behavior for category_name
       if (sortField === field) {
         // If clicking the same field, toggle direction
-        if (sortDirection === "asc") {
-          setSortDirection("desc");
+        if (sortDirection === 'asc') {
+          setSortDirection('desc');
         } else {
           // If descending, clear the sort
           setSortField(null);
-          setSortDirection("asc");
+          setSortDirection('asc');
         }
       } else {
         // If clicking a different field, set it as sort field with ascending direction
         setSortField(field);
-        setSortDirection("asc");
+        setSortDirection('asc');
       }
     }
   };
@@ -1664,10 +1786,10 @@ export function SimulationBudgetForm({
 
   const getExclusionFilterButtonText = () => {
     if (excludedCategoryIds.length === 0) {
-      return "Excluir categorías";
+      return 'Excluir categorías';
     } else if (excludedCategoryIds.length === 1) {
       const excluded = categories.find((c) => c.id === excludedCategoryIds[0]);
-      return `Excluida: ${excluded?.name || "Categoría"}`;
+      return `Excluida: ${excluded?.name || 'Categoría'}`;
     } else {
       return `${excludedCategoryIds.length} excluidas`;
     }
@@ -1681,22 +1803,30 @@ export function SimulationBudgetForm({
   // Calculate if all subgroups are expanded
   const allSubgroupsExpanded = useMemo(() => {
     if (subgroups.length === 0) return false;
-    return subgroups.every(sg => expandedSubgroups.has(sg.id));
+    return subgroups.every((sg) => expandedSubgroups.has(sg.id));
   }, [subgroups, expandedSubgroups]);
 
   // Drag & Drop Event Handlers
   const handleDragStart = useCallback(
-    (e: React.DragEvent, categoryId: string | number, tipoGasto?: TipoGasto) => {
+    (
+      e: React.DragEvent,
+      categoryId: string | number,
+      tipoGasto?: TipoGasto
+    ) => {
       setDraggedCategoryId(categoryId);
       setDraggedTipoGasto(tipoGasto);
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/html", "");
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', '');
     },
     []
   );
 
   const handleDragOver = useCallback(
-    (e: React.DragEvent, targetCategoryId: string | number, targetTipoGasto?: TipoGasto) => {
+    (
+      e: React.DragEvent,
+      targetCategoryId: string | number,
+      targetTipoGasto?: TipoGasto
+    ) => {
       e.preventDefault();
 
       // Check if drop target is in the same tipo_gasto group as dragged item
@@ -1704,16 +1834,20 @@ export function SimulationBudgetForm({
       setIsValidDropTarget(isValidTarget);
 
       if (isValidTarget) {
-        e.dataTransfer.dropEffect = "move";
+        e.dataTransfer.dropEffect = 'move';
       } else {
-        e.dataTransfer.dropEffect = "none";
+        e.dataTransfer.dropEffect = 'none';
       }
     },
     [draggedTipoGasto]
   );
 
   const handleDrop = useCallback(
-    (e: React.DragEvent, targetCategoryId: string | number, targetTipoGasto?: TipoGasto) => {
+    (
+      e: React.DragEvent,
+      targetCategoryId: string | number,
+      targetTipoGasto?: TipoGasto
+    ) => {
       e.preventDefault();
 
       if (!draggedCategoryId || draggedTipoGasto !== targetTipoGasto) {
@@ -1782,11 +1916,11 @@ export function SimulationBudgetForm({
 
       setSubgroupDragState({
         draggedItemId: subgroupId,
-        draggedItemType: "subgroup",
+        draggedItemType: 'subgroup',
         dropZoneIndex: null,
       });
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/html", "");
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/html', '');
     },
     [isSubgroupDraggingDisabled]
   );
@@ -1795,25 +1929,33 @@ export function SimulationBudgetForm({
     (e: React.DragEvent) => {
       e.preventDefault();
       // Allow drop on any valid target
-      if (subgroupDragState.draggedItemType === "subgroup") {
-        e.dataTransfer.dropEffect = "move";
+      if (subgroupDragState.draggedItemType === 'subgroup') {
+        e.dataTransfer.dropEffect = 'move';
       } else {
-        e.dataTransfer.dropEffect = "none";
+        e.dataTransfer.dropEffect = 'none';
       }
     },
     [subgroupDragState.draggedItemType]
   );
 
   const handleSubgroupDrop = useCallback(
-    (e: React.DragEvent, targetSubgroupId: string | null, position: "before" | "after") => {
+    (
+      e: React.DragEvent,
+      targetSubgroupId: string | null,
+      position: 'before' | 'after'
+    ) => {
       e.preventDefault();
 
-      if (!subgroupDragState.draggedItemId || subgroupDragState.draggedItemType !== "subgroup") {
+      if (
+        !subgroupDragState.draggedItemId ||
+        subgroupDragState.draggedItemType !== 'subgroup'
+      ) {
         return;
       }
 
       const draggedId = subgroupDragState.draggedItemId;
-      const currentOrder = subgroupOrder.length > 0 ? subgroupOrder : subgroups.map((s) => s.id);
+      const currentOrder =
+        subgroupOrder.length > 0 ? subgroupOrder : subgroups.map((s) => s.id);
       const newOrder = [...currentOrder];
 
       // Find indices
@@ -1830,7 +1972,7 @@ export function SimulationBudgetForm({
         if (targetIndex === -1) {
           newOrder.push(draggedItem);
         } else {
-          if (position === "after") {
+          if (position === 'after') {
             targetIndex += 1;
           }
           newOrder.splice(targetIndex, 0, draggedItem);
@@ -1876,7 +2018,7 @@ export function SimulationBudgetForm({
       showDetails={false}
     >
       <div className="space-y-6">
-        <div className="flex justify-between items-start">
+        <div className="flex items-start justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">
               Configurar Presupuestos
@@ -1907,7 +2049,7 @@ export function SimulationBudgetForm({
         </div>
 
         {/* Template Selection and Management */}
-        <div className="flex items-center justify-between gap-4 pb-4 border-b">
+        <div className="flex items-center justify-between gap-4 border-b pb-4">
           <div className="flex items-center gap-3">
             <TemplateSelector
               simulationId={simulationId}
@@ -1929,11 +2071,15 @@ export function SimulationBudgetForm({
           <SaveAsTemplateDialog
             simulationId={simulationId}
             subgroupCount={subgroups.length}
-            categoryCount={subgroups.reduce((sum, sg) => sum + (sg.categoryIds?.length || 0), 0)}
+            categoryCount={subgroups.reduce(
+              (sum, sg) => sum + (sg.categoryIds?.length || 0),
+              0
+            )}
             onTemplateSaved={() => {
               toast({
-                title: "Success",
-                description: "Template saved successfully. You can now apply it to other simulations.",
+                title: 'Success',
+                description:
+                  'Template saved successfully. You can now apply it to other simulations.',
               });
             }}
           />
@@ -1952,10 +2098,10 @@ export function SimulationBudgetForm({
             severity="error"
             onResolve={() => {
               toast({
-                title: "Corrija los errores",
+                title: 'Corrija los errores',
                 description:
-                  "Revise los campos marcados en rojo y corrija los valores",
-                variant: "destructive",
+                  'Revise los campos marcados en rojo y corrija los valores',
+                variant: 'destructive',
               });
             }}
           />
@@ -2002,8 +2148,9 @@ export function SimulationBudgetForm({
               <div className="text-2xl font-bold text-purple-600">
                 {formatCurrency(totals.ahorroEfectivo)}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Gasto neto efectivo: {formatCurrency(totals.efectivo - totals.ahorroEfectivo)}
+              <p className="mt-1 text-xs text-muted-foreground">
+                Gasto neto efectivo:{' '}
+                {formatCurrency(totals.efectivo - totals.ahorroEfectivo)}
               </p>
             </CardContent>
           </Card>
@@ -2019,8 +2166,9 @@ export function SimulationBudgetForm({
               <div className="text-2xl font-bold text-purple-600">
                 {formatCurrency(totals.ahorroCredito)}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Gasto neto crédito: {formatCurrency(totals.credito - totals.ahorroCredito)}
+              <p className="mt-1 text-xs text-muted-foreground">
+                Gasto neto crédito:{' '}
+                {formatCurrency(totals.credito - totals.ahorroCredito)}
               </p>
             </CardContent>
           </Card>
@@ -2036,12 +2184,12 @@ export function SimulationBudgetForm({
               <div className="text-2xl font-bold">
                 {formatCurrency(totals.general)}
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="mt-1 text-xs text-muted-foreground">
                 {
                   Object.keys(budgetData).filter(
                     (categoryId) => getCategoryTotal(categoryId) > 0
                   ).length
-                }{" "}
+                }{' '}
                 categorías con presupuesto
               </p>
             </CardContent>
@@ -2058,10 +2206,10 @@ export function SimulationBudgetForm({
           </CardHeader>
           <CardContent>
             {/* Filter Controls */}
-            <div className="mb-6 flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
-              <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center w-full sm:w-auto">
+            <div className="mb-6 flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+              <div className="flex w-full flex-col items-start gap-3 sm:w-auto sm:flex-row sm:items-center">
                 {/* Hide Empty Categories Toggle */}
-                <div className="flex items-center space-x-2 px-3 py-2 border rounded-lg bg-muted/30">
+                <div className="flex items-center space-x-2 rounded-lg border bg-muted/30 px-3 py-2">
                   <Checkbox
                     id="hide-empty-categories"
                     checked={hideEmptyCategories}
@@ -2084,7 +2232,9 @@ export function SimulationBudgetForm({
                     size="sm"
                     onClick={toggleExpandCollapseAll}
                     className="gap-2"
-                    title={allSubgroupsExpanded ? "Colapsar Todos" : "Expandir Todos"}
+                    title={
+                      allSubgroupsExpanded ? 'Colapsar Todos' : 'Expandir Todos'
+                    }
                   >
                     {allSubgroupsExpanded ? (
                       <ChevronsUp className="h-4 w-4" />
@@ -2092,21 +2242,28 @@ export function SimulationBudgetForm({
                       <ChevronsDown className="h-4 w-4" />
                     )}
                     <span className="hidden sm:inline">
-                      {allSubgroupsExpanded ? "Colapsar Todos" : "Expandir Todos"}
+                      {allSubgroupsExpanded
+                        ? 'Colapsar Todos'
+                        : 'Expandir Todos'}
                     </span>
                   </Button>
                 )}
 
                 {/* Category Exclusion Filter Dropdown */}
-                <Popover open={filterDropdownOpen} onOpenChange={setFilterDropdownOpen}>
+                <Popover
+                  open={filterDropdownOpen}
+                  onOpenChange={setFilterDropdownOpen}
+                >
                   <PopoverTrigger asChild>
                     <Button
-                      variant={excludedCategoryIds.length > 0 ? "default" : "outline"}
+                      variant={
+                        excludedCategoryIds.length > 0 ? 'default' : 'outline'
+                      }
                       size="sm"
                       className={`gap-2 ${
                         excludedCategoryIds.length > 0
-                          ? "bg-orange-500 hover:bg-orange-600"
-                          : ""
+                          ? 'bg-orange-500 hover:bg-orange-600'
+                          : ''
                       }`}
                     >
                       <Filter className="h-4 w-4" />
@@ -2116,14 +2273,14 @@ export function SimulationBudgetForm({
                       <span className="sm:hidden">
                         {excludedCategoryIds.length > 0
                           ? `${excludedCategoryIds.length} excluidas`
-                          : "Filtros"}
+                          : 'Filtros'}
                       </span>
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-64 p-4">
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
-                        <h4 className="font-semibold text-sm">
+                        <h4 className="text-sm font-semibold">
                           Excluir Categorías
                         </h4>
                         {excludedCategoryIds.length > 0 && (
@@ -2139,9 +2296,9 @@ export function SimulationBudgetForm({
                       </div>
 
                       {/* Scrollable list of categories */}
-                      <div className="max-h-[300px] overflow-y-auto space-y-2 border rounded-lg p-2 bg-muted/20">
+                      <div className="max-h-[300px] space-y-2 overflow-y-auto rounded-lg border bg-muted/20 p-2">
                         {sortedCategoriesForFilter.length === 0 ? (
-                          <p className="text-xs text-muted-foreground py-2 text-center">
+                          <p className="py-2 text-center text-xs text-muted-foreground">
                             No hay categorías disponibles
                           </p>
                         ) : (
@@ -2161,7 +2318,7 @@ export function SimulationBudgetForm({
                               />
                               <Label
                                 htmlFor={`exclude-${category.id}`}
-                                className="text-sm cursor-pointer flex-1"
+                                className="flex-1 cursor-pointer text-sm"
                               >
                                 {category.name}
                               </Label>
@@ -2184,7 +2341,7 @@ export function SimulationBudgetForm({
             </div>
 
             {/* Sub-group creation controls */}
-            <div className="mb-6 flex gap-3 items-center">
+            <div className="mb-6 flex items-center gap-3">
               {isSubgroupCreationMode ? (
                 <>
                   <Button
@@ -2193,7 +2350,9 @@ export function SimulationBudgetForm({
                     onClick={() => {
                       setIsSubgroupNameDialogOpen(true);
                     }}
-                    disabled={selectedCategoryIds.length === 0 || isCreatingSubgroup}
+                    disabled={
+                      selectedCategoryIds.length === 0 || isCreatingSubgroup
+                    }
                     className="gap-2"
                   >
                     {isCreatingSubgroup ? (
@@ -2204,7 +2363,7 @@ export function SimulationBudgetForm({
                     ) : (
                       <>
                         Finalizar Crear Subgrupo
-                        <span className="ml-2 text-xs bg-red-900 px-2 py-1 rounded">
+                        <span className="ml-2 rounded bg-red-900 px-2 py-1 text-xs">
                           {selectedCategoryIds.length} seleccionadas
                         </span>
                       </>
@@ -2244,10 +2403,10 @@ export function SimulationBudgetForm({
                       variant="ghost"
                       size="sm"
                       className="h-auto p-0 font-semibold hover:bg-transparent"
-                      onClick={() => handleSortClick("category_name")}
+                      onClick={() => handleSortClick('category_name')}
                     >
                       Categoría
-                      {sortField === "category_name" && (
+                      {sortField === 'category_name' && (
                         <ArrowUpDown className="ml-2 h-4 w-4" />
                       )}
                     </Button>
@@ -2257,17 +2416,17 @@ export function SimulationBudgetForm({
                       variant="ghost"
                       size="sm"
                       className="h-auto p-0 font-semibold hover:bg-transparent"
-                      onClick={() => handleSortClick("tipo_gasto")}
+                      onClick={() => handleSortClick('tipo_gasto')}
                       title={
                         tipoGastoSortState === 0
-                          ? "Click para ordenar: Fijo → Semi-Fijo → Variable → Eventual"
+                          ? 'Click para ordenar: Fijo → Semi-Fijo → Variable → Eventual'
                           : tipoGastoSortState === 1
-                            ? "Click para ordenar: Variable → Semi-Fijo → Fijo → Eventual"
-                            : "Click para resetear orden"
+                            ? 'Click para ordenar: Variable → Semi-Fijo → Fijo → Eventual'
+                            : 'Click para resetear orden'
                       }
                     >
                       Tipo Gasto
-                      {sortField === "tipo_gasto" && (
+                      {sortField === 'tipo_gasto' && (
                         <>
                           <ArrowUpDown className="ml-2 h-4 w-4" />
                           <span className="ml-1 text-xs text-muted-foreground">
@@ -2277,12 +2436,24 @@ export function SimulationBudgetForm({
                       )}
                     </Button>
                   </TableHead>
-                  <TableHead className="text-right min-w-[140px]">Efectivo</TableHead>
-                  <TableHead className="text-right min-w-[140px]">Crédito</TableHead>
-                  <TableHead className="text-right min-w-[160px]">Ahorro Efectivo</TableHead>
-                  <TableHead className="text-right min-w-[160px]">Ahorro Crédito</TableHead>
-                  <TableHead className="text-right min-w-[140px]">Total</TableHead>
-                  <TableHead className="text-right min-w-[140px]">Balance</TableHead>
+                  <TableHead className="min-w-[140px] text-right">
+                    Efectivo
+                  </TableHead>
+                  <TableHead className="min-w-[140px] text-right">
+                    Crédito
+                  </TableHead>
+                  <TableHead className="min-w-[160px] text-right">
+                    Ahorro Efectivo
+                  </TableHead>
+                  <TableHead className="min-w-[160px] text-right">
+                    Ahorro Crédito
+                  </TableHead>
+                  <TableHead className="min-w-[140px] text-right">
+                    Total
+                  </TableHead>
+                  <TableHead className="min-w-[140px] text-right">
+                    Balance
+                  </TableHead>
                   <TableHead className="w-[32px]"></TableHead>
                   <TableHead className="w-[32px]"></TableHead>
                 </TableRow>
@@ -2312,7 +2483,7 @@ export function SimulationBudgetForm({
                       <TableRow>
                         <TableCell
                           colSpan={10}
-                          className="text-center py-4 text-muted-foreground"
+                          className="py-4 text-center text-muted-foreground"
                         >
                           No hay categorías disponibles
                         </TableCell>
@@ -2327,8 +2498,10 @@ export function SimulationBudgetForm({
                     }
 
                     // Render subgroup header
-                    if (row.type === "subgroup_header") {
-                      const subgroup = subgroups.find((sg) => sg.id === row.subgroupId);
+                    if (row.type === 'subgroup_header') {
+                      const subgroup = subgroups.find(
+                        (sg) => sg.id === row.subgroupId
+                      );
                       if (!subgroup) return null;
 
                       const subtotals = calculateSubgroupSubtotals(
@@ -2337,9 +2510,14 @@ export function SimulationBudgetForm({
                         visibilityState
                       );
 
-                      const uncategorizedCount = getUncategorizedCategories().length;
-                      const isDraggingThisSubgroup = subgroupDragState.draggedItemId === row.subgroupId;
-                      const isDragOverThisSubgroup = subgroupDragState.draggedItemId && subgroupDragState.draggedItemId !== row.subgroupId;
+                      const uncategorizedCount =
+                        getUncategorizedCategories().length;
+                      const isDraggingThisSubgroup =
+                        subgroupDragState.draggedItemId === row.subgroupId;
+                      const isDragOverThisSubgroup = !!(
+                        subgroupDragState.draggedItemId &&
+                        subgroupDragState.draggedItemId !== row.subgroupId
+                      );
 
                       return (
                         <SubgroupHeaderRow
@@ -2350,7 +2528,11 @@ export function SimulationBudgetForm({
                           onToggleExpand={toggleSubgroupExpanded}
                           onDelete={handleDeleteSubgroup}
                           subtotals={subtotals}
-                          categoryCount={row.categoryCount || 0}
+                          categoryCount={
+                            typeof row.categoryCount === 'number'
+                              ? row.categoryCount
+                              : 0
+                          }
                           totalIncome={totalIncome}
                           isInAddMode={addingToSubgroupId === row.subgroupId}
                           onAddCategories={handleAddToSubgroupClick}
@@ -2359,7 +2541,9 @@ export function SimulationBudgetForm({
                           canAddCategories={uncategorizedCount > 0}
                           isDragging={isDraggingThisSubgroup}
                           isDragOver={isDragOverThisSubgroup}
-                          onDragStart={(e) => handleSubgroupDragStart(e, row.subgroupId!)}
+                          onDragStart={(e) =>
+                            handleSubgroupDragStart(e, row.subgroupId!)
+                          }
                           onDragOver={handleSubgroupDragOver}
                           onDragLeave={() => {
                             // Clear drag over state when leaving
@@ -2368,17 +2552,28 @@ export function SimulationBudgetForm({
                               dropZoneIndex: null,
                             }));
                           }}
-                          onDrop={(e, position) => handleSubgroupDrop(e, row.subgroupId || null, position)}
+                          onDrop={(e, position) =>
+                            handleSubgroupDrop(
+                              e,
+                              row.subgroupId || null,
+                              position
+                            )
+                          }
                           onDragEnd={handleSubgroupDragEnd}
-                          isVisible={isSubgroupVisible(row.subgroupId!, visibilityState)}
+                          isVisible={isSubgroupVisible(
+                            row.subgroupId!,
+                            visibilityState
+                          )}
                           onToggleVisibility={handleToggleVisibility}
                         />
                       );
                     }
 
                     // Render subgroup subtotal
-                    if (row.type === "subgroup_subtotal") {
-                      const subgroup = subgroups.find((sg) => sg.id === row.subgroupId);
+                    if (row.type === 'subgroup_subtotal') {
+                      const subgroup = subgroups.find(
+                        (sg) => sg.id === row.subgroupId
+                      );
                       if (!subgroup) return null;
 
                       const subtotals = calculateSubgroupSubtotals(
@@ -2387,7 +2582,8 @@ export function SimulationBudgetForm({
                         visibilityState
                       );
 
-                      const subgroupBalance = subgroupBalances.get(row.subgroupId!) ?? 0;
+                      const subgroupBalance =
+                        subgroupBalances.get(row.subgroupId!) ?? 0;
 
                       return (
                         <SubgroupSubtotalRow
@@ -2395,13 +2591,16 @@ export function SimulationBudgetForm({
                           subgroupId={row.subgroupId!}
                           subtotals={subtotals}
                           subgroupBalance={subgroupBalance}
-                          isSubgroupVisible={isSubgroupVisible(row.subgroupId!, visibilityState)}
+                          isSubgroupVisible={isSubgroupVisible(
+                            row.subgroupId!,
+                            visibilityState
+                          )}
                         />
                       );
                     }
 
                     // Render category row
-                    if (row.type === "category") {
+                    if (row.type === 'category') {
                       const category = getSortedCategories.find(
                         (c) => String(c.id) === String(row.categoryId)
                       );
@@ -2411,9 +2610,8 @@ export function SimulationBudgetForm({
                       const categoryErrors = errors[String(category.id)];
                       const categoryTotal = getCategoryTotal(category.id);
 
-                      const isBeingAddedToSubgroup = categoriesToAddToSubgroup.includes(
-                        String(category.id)
-                      );
+                      const isBeingAddedToSubgroup =
+                        categoriesToAddToSubgroup.includes(String(category.id));
 
                       const isCategoryHidden = !isCategoryVisible(
                         category.id,
@@ -2435,31 +2633,31 @@ export function SimulationBudgetForm({
                             handleDrop(e, category.id, category.tipo_gasto)
                           }
                           onDragEnd={handleDragEnd}
-                          className={`cursor-move group ${
+                          className={`group cursor-move ${
                             draggedCategoryId === category.id
-                              ? "opacity-50 bg-accent"
-                              : ""
+                              ? 'bg-accent opacity-50'
+                              : ''
                           } ${
                             draggedCategoryId &&
                             draggedTipoGasto === category.tipo_gasto &&
                             draggedCategoryId !== category.id
                               ? isValidDropTarget
-                                ? "bg-blue-50 dark:bg-blue-950"
-                                : ""
-                              : ""
+                                ? 'bg-blue-50 dark:bg-blue-950'
+                                : ''
+                              : ''
                           } ${
                             isBeingAddedToSubgroup
-                              ? "bg-blue-50 dark:bg-blue-950"
-                              : ""
+                              ? 'bg-blue-50 dark:bg-blue-950'
+                              : ''
                           } ${
-                            isCategoryHidden ? "opacity-60 line-through" : ""
+                            isCategoryHidden ? 'line-through opacity-60' : ''
                           } ${
-                            categoryData?.needs_adjustment === "true"
-                              ? "bg-yellow-700/40 dark:bg-yellow-800/40"
-                              : ""
+                            categoryData?.needs_adjustment === 'true'
+                              ? 'bg-yellow-700/40 dark:bg-yellow-800/40'
+                              : ''
                           }`}
                         >
-                          <TableCell className="font-medium w-8 pl-2">
+                          <TableCell className="w-8 pl-2 font-medium">
                             {isSubgroupCreationMode ? (
                               <Checkbox
                                 checked={selectedCategoryIds.includes(
@@ -2471,7 +2669,10 @@ export function SimulationBudgetForm({
                                 onClick={(e) => e.stopPropagation()}
                                 aria-label={`Select ${category.name} for subgroup`}
                               />
-                            ) : addingToSubgroupId && getUncategorizedCategories().some((c) => String(c.id) === String(category.id)) ? (
+                            ) : addingToSubgroupId &&
+                              getUncategorizedCategories().some(
+                                (c) => String(c.id) === String(category.id)
+                              ) ? (
                               // Show checkbox for uncategorized categories when in add mode
                               <Checkbox
                                 checked={categoriesToAddToSubgroup.includes(
@@ -2483,7 +2684,10 @@ export function SimulationBudgetForm({
                                 onClick={(e) => e.stopPropagation()}
                                 aria-label={`Select ${category.name} to add to sub-group`}
                               />
-                            ) : getSubgroupForCategory(subgroups, category.id) ? (
+                            ) : getSubgroupForCategory(
+                                subgroups,
+                                category.id
+                              ) ? (
                               // Show delete button for categorized items
                               <Button
                                 variant="ghost"
@@ -2500,7 +2704,7 @@ export function SimulationBudgetForm({
                                 <Trash2 className="h-3 w-3" />
                               </Button>
                             ) : (
-                              <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                              <GripVertical className="h-4 w-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
                             )}
                           </TableCell>
                           <TableCell className="font-medium">
@@ -2517,24 +2721,24 @@ export function SimulationBudgetForm({
                             {category.tipo_gasto ? (
                               <TipoGastoBadge tipoGasto={category.tipo_gasto} />
                             ) : (
-                              <span className="text-muted-foreground text-sm">
+                              <span className="text-sm text-muted-foreground">
                                 -
                               </span>
                             )}
                           </TableCell>
-                          <TableCell className="text-right min-w-[140px]">
+                          <TableCell className="min-w-[140px] text-right">
                             <div className="space-y-1">
                               <Input
                                 type="number"
                                 min="0"
                                 step="0.01"
-                                value={categoryData?.efectivo_amount || "0"}
+                                value={categoryData?.efectivo_amount || '0'}
                                 onChange={(e) => {
                                   const value = e.target.value;
                                   if (category.id) {
                                     handleInputChange(
                                       category.id,
-                                      "efectivo_amount",
+                                      'efectivo_amount',
                                       value
                                     );
                                   }
@@ -2544,15 +2748,15 @@ export function SimulationBudgetForm({
                                   if (category.id) {
                                     handleInputBlur(
                                       category.id,
-                                      "efectivo_amount",
+                                      'efectivo_amount',
                                       value
                                     );
                                   }
                                 }}
                                 className={`w-full text-right ${
                                   categoryErrors?.efectivo
-                                    ? "border-destructive"
-                                    : ""
+                                    ? 'border-destructive'
+                                    : ''
                                 }`}
                                 placeholder="0.00"
                               />
@@ -2563,19 +2767,19 @@ export function SimulationBudgetForm({
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-right min-w-[140px]">
+                          <TableCell className="min-w-[140px] text-right">
                             <div className="space-y-1">
                               <Input
                                 type="number"
                                 min="0"
                                 step="0.01"
-                                value={categoryData?.credito_amount || "0"}
+                                value={categoryData?.credito_amount || '0'}
                                 onChange={(e) => {
                                   const value = e.target.value;
                                   if (category.id) {
                                     handleInputChange(
                                       category.id,
-                                      "credito_amount",
+                                      'credito_amount',
                                       value
                                     );
                                   }
@@ -2585,15 +2789,15 @@ export function SimulationBudgetForm({
                                   if (category.id) {
                                     handleInputBlur(
                                       category.id,
-                                      "credito_amount",
+                                      'credito_amount',
                                       value
                                     );
                                   }
                                 }}
                                 className={`w-full text-right ${
                                   categoryErrors?.credito
-                                    ? "border-destructive"
-                                    : ""
+                                    ? 'border-destructive'
+                                    : ''
                                 }`}
                                 placeholder="0.00"
                               />
@@ -2604,22 +2808,24 @@ export function SimulationBudgetForm({
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-right min-w-[160px]">
+                          <TableCell className="min-w-[160px] text-right">
                             <div className="space-y-1">
                               <Input
                                 type="number"
                                 min="0"
                                 step="0.01"
                                 max={parseFloat(
-                                  categoryData?.efectivo_amount || "0"
+                                  categoryData?.efectivo_amount || '0'
                                 )}
-                                value={categoryData?.ahorro_efectivo_amount || "0"}
+                                value={
+                                  categoryData?.ahorro_efectivo_amount || '0'
+                                }
                                 onChange={(e) => {
                                   const value = e.target.value;
                                   if (category.id) {
                                     handleInputChange(
                                       category.id,
-                                      "ahorro_efectivo_amount",
+                                      'ahorro_efectivo_amount',
                                       value
                                     );
                                   }
@@ -2629,19 +2835,20 @@ export function SimulationBudgetForm({
                                   if (category.id) {
                                     handleInputBlur(
                                       category.id,
-                                      "ahorro_efectivo_amount",
+                                      'ahorro_efectivo_amount',
                                       value
                                     );
                                   }
                                 }}
                                 className={`w-full text-right ${
                                   categoryErrors?.ahorro_efectivo
-                                    ? "border-destructive"
+                                    ? 'border-destructive'
                                     : parseFloat(
-                                        categoryData?.ahorro_efectivo_amount || "0"
-                                      ) > 0
-                                    ? "text-purple-600 font-semibold"
-                                    : ""
+                                          categoryData?.ahorro_efectivo_amount ||
+                                            '0'
+                                        ) > 0
+                                      ? 'font-semibold text-purple-600'
+                                      : ''
                                 }`}
                                 placeholder="0.00"
                               />
@@ -2652,22 +2859,24 @@ export function SimulationBudgetForm({
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-right min-w-[160px]">
+                          <TableCell className="min-w-[160px] text-right">
                             <div className="space-y-1">
                               <Input
                                 type="number"
                                 min="0"
                                 step="0.01"
                                 max={parseFloat(
-                                  categoryData?.credito_amount || "0"
+                                  categoryData?.credito_amount || '0'
                                 )}
-                                value={categoryData?.ahorro_credito_amount || "0"}
+                                value={
+                                  categoryData?.ahorro_credito_amount || '0'
+                                }
                                 onChange={(e) => {
                                   const value = e.target.value;
                                   if (category.id) {
                                     handleInputChange(
                                       category.id,
-                                      "ahorro_credito_amount",
+                                      'ahorro_credito_amount',
                                       value
                                     );
                                   }
@@ -2677,19 +2886,20 @@ export function SimulationBudgetForm({
                                   if (category.id) {
                                     handleInputBlur(
                                       category.id,
-                                      "ahorro_credito_amount",
+                                      'ahorro_credito_amount',
                                       value
                                     );
                                   }
                                 }}
                                 className={`w-full text-right ${
                                   categoryErrors?.ahorro_credito
-                                    ? "border-destructive"
+                                    ? 'border-destructive'
                                     : parseFloat(
-                                        categoryData?.ahorro_credito_amount || "0"
-                                      ) > 0
-                                    ? "text-purple-600 font-semibold"
-                                    : ""
+                                          categoryData?.ahorro_credito_amount ||
+                                            '0'
+                                        ) > 0
+                                      ? 'font-semibold text-purple-600'
+                                      : ''
                                 }`}
                                 placeholder="0.00"
                               />
@@ -2700,18 +2910,18 @@ export function SimulationBudgetForm({
                               )}
                             </div>
                           </TableCell>
-                          <TableCell className="text-right font-medium min-w-[140px]">
+                          <TableCell className="min-w-[140px] text-right font-medium">
                             <span
                               className={
                                 categoryTotal > 0
-                                  ? "text-primary"
-                                  : "text-muted-foreground"
+                                  ? 'text-primary'
+                                  : 'text-muted-foreground'
                               }
                             >
                               {formatCurrency(categoryTotal)}
                             </span>
                           </TableCell>
-                          <TableCell className="text-right font-bold min-w-[140px]">
+                          <TableCell className="min-w-[140px] text-right font-bold">
                             <span
                               className={getBalanceColor(
                                 categoryBalances.get(String(category.id)) || 0
@@ -2727,27 +2937,45 @@ export function SimulationBudgetForm({
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-4 w-4 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-purple-100 hover:text-purple-600 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
-                                onClick={() => handleToggleVisibility(category.id)}
+                                className="h-4 w-4 p-0 opacity-0 transition-opacity hover:bg-purple-100 hover:text-purple-600 group-hover:opacity-100 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+                                onClick={() =>
+                                  handleToggleVisibility(category.id)
+                                }
                                 disabled={isSaving || isAutoSaving}
-                                aria-label={isCategoryHidden ? `Show ${category.name}` : `Hide ${category.name}`}
-                                title={isCategoryHidden ? "Show category" : "Hide category"}
+                                aria-label={
+                                  isCategoryHidden
+                                    ? `Show ${category.name}`
+                                    : `Hide ${category.name}`
+                                }
+                                title={
+                                  isCategoryHidden
+                                    ? 'Show category'
+                                    : 'Hide category'
+                                }
                               >
-                                {isCategoryHidden ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                                {isCategoryHidden ? (
+                                  <EyeOff className="h-3 w-3" />
+                                ) : (
+                                  <Eye className="h-3 w-3" />
+                                )}
                               </Button>
                             </div>
                           </TableCell>
                           <TableCell className="w-[32px] px-0">
                             <div className="flex items-center justify-center">
                               <Checkbox
-                                checked={categoryData?.needs_adjustment === "true"}
-                                onCheckedChange={() => handleToggleNeedsAdjustment(category.id)}
+                                checked={
+                                  categoryData?.needs_adjustment === 'true'
+                                }
+                                onCheckedChange={() =>
+                                  handleToggleNeedsAdjustment(category.id)
+                                }
                                 disabled={isSaving || isAutoSaving}
                                 className={`${
-                                  categoryData?.needs_adjustment === "true"
-                                    ? "opacity-100"
-                                    : "opacity-0 group-hover:opacity-100"
-                                } transition-opacity h-4 w-4`}
+                                  categoryData?.needs_adjustment === 'true'
+                                    ? 'opacity-100'
+                                    : 'opacity-0 group-hover:opacity-100'
+                                } h-4 w-4 transition-opacity`}
                                 aria-label={`Mark ${category.name} as needing adjustment`}
                                 title="Mark as needing adjustment"
                               />
@@ -2820,7 +3048,7 @@ export function SimulationBudgetForm({
         </div>
 
         {/* Auto-save info */}
-        <div className="text-xs text-muted-foreground text-center">
+        <div className="text-center text-xs text-muted-foreground">
           Los cambios se guardan automáticamente al terminar de editar cada
           campo
         </div>

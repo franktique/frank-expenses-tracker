@@ -4,17 +4,17 @@
  * DELETE: Delete a sub-group
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 import {
   updateSubgroup,
   deleteSubgroup,
   ensureSubgroupTablesExist,
-} from "@/lib/subgroup-db-utils";
+} from '@/lib/subgroup-db-utils';
 import type {
   UpdateSubgroupRequest,
   SubgroupResponse,
   DeleteSubgroupResponse,
-} from "@/types/simulation";
+} from '@/types/simulation';
 
 /**
  * PATCH /api/simulations/[id]/subgroups/[subgroupId]
@@ -32,7 +32,7 @@ export async function PATCH(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid simulation ID",
+          error: 'Invalid simulation ID',
           statusCode: 400,
         },
         { status: 400 }
@@ -43,7 +43,7 @@ export async function PATCH(
       return NextResponse.json(
         {
           success: false,
-          error: "Sub-group ID is required",
+          error: 'Sub-group ID is required',
           statusCode: 400,
         },
         { status: 400 }
@@ -58,7 +58,7 @@ export async function PATCH(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid request body",
+          error: 'Invalid request body',
           statusCode: 400,
         },
         { status: 400 }
@@ -84,12 +84,12 @@ export async function PATCH(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error updating sub-group:", error);
+    console.error('Error updating sub-group:', error);
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to update sub-group";
+      error instanceof Error ? error.message : 'Failed to update sub-group';
 
     // Check if sub-group not found
-    if (errorMessage.includes("not found")) {
+    if (errorMessage.includes('not found')) {
       return NextResponse.json(
         {
           success: false,
@@ -101,7 +101,7 @@ export async function PATCH(
     }
 
     // Check if it's a duplicate name error
-    if (errorMessage.includes("already exists")) {
+    if (errorMessage.includes('already exists')) {
       return NextResponse.json(
         {
           success: false,
@@ -114,8 +114,8 @@ export async function PATCH(
 
     // Check if it's a validation error
     if (
-      errorMessage.includes("cannot be empty") ||
-      errorMessage.includes("must contain")
+      errorMessage.includes('cannot be empty') ||
+      errorMessage.includes('must contain')
     ) {
       return NextResponse.json(
         {
@@ -154,7 +154,7 @@ export async function DELETE(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid simulation ID",
+          error: 'Invalid simulation ID',
           statusCode: 400,
         },
         { status: 400 }
@@ -165,7 +165,7 @@ export async function DELETE(
       return NextResponse.json(
         {
           success: false,
-          error: "Sub-group ID is required",
+          error: 'Sub-group ID is required',
           statusCode: 400,
         },
         { status: 400 }
@@ -181,18 +181,18 @@ export async function DELETE(
     return NextResponse.json(
       {
         success: true,
-        message: "Sub-group deleted successfully",
+        message: 'Sub-group deleted successfully',
         statusCode: 200,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error deleting sub-group:", error);
+    console.error('Error deleting sub-group:', error);
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to delete sub-group";
+      error instanceof Error ? error.message : 'Failed to delete sub-group';
 
     // Check if sub-group not found
-    if (errorMessage.includes("not found")) {
+    if (errorMessage.includes('not found')) {
       return NextResponse.json(
         {
           success: false,

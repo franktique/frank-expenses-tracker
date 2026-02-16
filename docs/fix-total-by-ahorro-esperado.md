@@ -9,6 +9,7 @@
 When a user enters a value in the "Ahorro Esperado" (Expected Savings) column in the simulation budget form, the "Total" column does not update to reflect the savings deduction.
 
 **Example from user:**
+
 - Category: "mercado"
 - Efectivo: $2,000,000
 - Crédito: $0
@@ -29,7 +30,7 @@ const getCategoryTotal = (categoryId: string | number): number => {
 
   const efectivo = parseFloat(data.efectivo_amount) || 0;
   const credito = parseFloat(data.credito_amount) || 0;
-  return efectivo + credito;  // ❌ Missing expected_savings subtraction
+  return efectivo + credito; // ❌ Missing expected_savings subtraction
 };
 ```
 
@@ -40,11 +41,13 @@ const getCategoryTotal = (categoryId: string | number): number => {
 The application already correctly calculates net spend with savings in multiple places:
 
 1. **Balance calculations** (lines 1278-1281):
+
    ```typescript
    const netSpend = efectivoAmount - expectedSavings;
    ```
 
 2. **Subgroup subtotals** (`lib/subgroup-calculations.ts`, line 68):
+
    ```typescript
    const total = efectivoAmount + creditoAmount - expectedSavings;
    ```
@@ -69,6 +72,7 @@ The application already correctly calculates net spend with savings in multiple 
 **Location**: Lines 1117-1124
 
 **Current code**:
+
 ```typescript
 const getCategoryTotal = (categoryId: string | number): number => {
   const data = budgetData[String(categoryId)];
@@ -81,6 +85,7 @@ const getCategoryTotal = (categoryId: string | number): number => {
 ```
 
 **Updated code**:
+
 ```typescript
 const getCategoryTotal = (categoryId: string | number): number => {
   const data = budgetData[String(categoryId)];
@@ -100,11 +105,13 @@ const getCategoryTotal = (categoryId: string | number): number => {
 **Location**: Line 1102
 
 **Current code**:
+
 ```typescript
 totalGeneral += efectivo + credito;
 ```
 
 **Updated code**:
+
 ```typescript
 totalGeneral += efectivo + credito - expectedSavings;
 ```
@@ -205,10 +212,12 @@ After implementation, verify:
 ## Task Breakdown
 
 ### Phase 1: Implementation
+
 - [x] Update `getCategoryTotal()` function to include expected_savings subtraction
 - [x] Update `totals.general` calculation to include expected_savings subtraction
 
 ### Phase 2: Testing
+
 - [ ] Test Case 1: Basic calculation (Efectivo - Ahorro = Total)
 - [ ] Test Case 2: With credit amount
 - [ ] Test Case 3: Zero savings
@@ -221,6 +230,7 @@ After implementation, verify:
 - [ ] Edge case: Very large numbers
 
 ### Phase 3: Verification
+
 - [ ] Run through complete verification checklist
 - [ ] Check for console errors
 - [ ] Verify all existing features still work
@@ -228,6 +238,7 @@ After implementation, verify:
 - [ ] Review UI for any visual regressions
 
 ### Phase 4: Documentation
+
 - [ ] Update this plan with test results
 - [ ] Mark all tasks as complete
 - [ ] Document any issues encountered
@@ -238,6 +249,7 @@ After implementation, verify:
 **Risk Level**: LOW
 
 **Reasoning**:
+
 - Small, focused change (2 lines of code)
 - Consistent with existing patterns in the codebase
 - No database schema changes required
@@ -245,6 +257,7 @@ After implementation, verify:
 - Isolated to calculation logic only
 
 **Potential Issues**:
+
 1. **Backward compatibility**: Existing simulations should work without issues since we're just fixing a calculation
 2. **UI refresh**: Should update automatically via React state, but verify no manual refresh needed
 3. **Performance**: No impact expected (same calculation complexity)

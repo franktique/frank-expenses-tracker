@@ -2,9 +2,9 @@
  * @jest-environment jsdom
  */
 
-describe("Fund Balance SQL Query Verification", () => {
-  describe("Source Fund ID Usage", () => {
-    it("should verify expense calculations use source_fund_id", () => {
+describe('Fund Balance SQL Query Verification', () => {
+  describe('Source Fund ID Usage', () => {
+    it('should verify expense calculations use source_fund_id', () => {
       // Test the SQL query structure for expense calculations
       const expectedExpenseQuery = `
         SELECT 
@@ -16,12 +16,12 @@ describe("Fund Balance SQL Query Verification", () => {
       `;
 
       // Verify the query structure is correct
-      expect(expectedExpenseQuery).toContain("source_fund_id");
-      expect(expectedExpenseQuery).toContain("GROUP BY source_fund_id");
-      expect(expectedExpenseQuery).not.toContain("JOIN categories");
+      expect(expectedExpenseQuery).toContain('source_fund_id');
+      expect(expectedExpenseQuery).toContain('GROUP BY source_fund_id');
+      expect(expectedExpenseQuery).not.toContain('JOIN categories');
     });
 
-    it("should verify transfer calculations use source_fund_id", () => {
+    it('should verify transfer calculations use source_fund_id', () => {
       // Test the SQL query structure for transfer calculations
       const expectedTransferQuery = `
         SELECT 
@@ -35,14 +35,14 @@ describe("Fund Balance SQL Query Verification", () => {
       `;
 
       // Verify the query structure is correct
-      expect(expectedTransferQuery).toContain("source_fund_id");
+      expect(expectedTransferQuery).toContain('source_fund_id');
       expect(expectedTransferQuery).toContain(
-        "destination_fund_id != source_fund_id"
+        'destination_fund_id != source_fund_id'
       );
-      expect(expectedTransferQuery).not.toContain("JOIN categories");
+      expect(expectedTransferQuery).not.toContain('JOIN categories');
     });
 
-    it("should verify fund balance calculation formula", () => {
+    it('should verify fund balance calculation formula', () => {
       // Test the balance calculation logic
       const initialBalance = 1000;
       const totalIncome = 500;
@@ -55,23 +55,23 @@ describe("Fund Balance SQL Query Verification", () => {
       expect(calculatedBalance).toBe(1300);
     });
 
-    it("should verify transfer identification logic", () => {
+    it('should verify transfer identification logic', () => {
       // Test transfer identification
       const expense1 = {
-        source_fund_id: "fund-1",
-        destination_fund_id: "fund-2", // Different funds = transfer
+        source_fund_id: 'fund-1',
+        destination_fund_id: 'fund-2', // Different funds = transfer
         amount: 100,
       };
 
       const expense2 = {
-        source_fund_id: "fund-1",
+        source_fund_id: 'fund-1',
         destination_fund_id: null, // No destination = regular expense
         amount: 50,
       };
 
       const expense3 = {
-        source_fund_id: "fund-1",
-        destination_fund_id: "fund-1", // Same fund = internal expense
+        source_fund_id: 'fund-1',
+        destination_fund_id: 'fund-1', // Same fund = internal expense
         amount: 25,
       };
 
@@ -95,18 +95,18 @@ describe("Fund Balance SQL Query Verification", () => {
     });
   });
 
-  describe("Migration Compatibility", () => {
-    it("should handle expenses with and without source_fund_id", () => {
+  describe('Migration Compatibility', () => {
+    it('should handle expenses with and without source_fund_id', () => {
       // Test scenarios for migration compatibility
       const expenseWithSource = {
-        id: "exp-1",
-        source_fund_id: "fund-1",
+        id: 'exp-1',
+        source_fund_id: 'fund-1',
         destination_fund_id: null,
         amount: 100,
       };
 
       const expenseWithoutSource = {
-        id: "exp-2",
+        id: 'exp-2',
         source_fund_id: null,
         destination_fund_id: null,
         amount: 50,
@@ -118,8 +118,8 @@ describe("Fund Balance SQL Query Verification", () => {
     });
   });
 
-  describe("Balance Calculation Edge Cases", () => {
-    it("should handle zero values correctly", () => {
+  describe('Balance Calculation Edge Cases', () => {
+    it('should handle zero values correctly', () => {
       const initialBalance = 0;
       const totalIncome = 0;
       const totalTransfersIn = 0;
@@ -131,7 +131,7 @@ describe("Fund Balance SQL Query Verification", () => {
       expect(calculatedBalance).toBe(0);
     });
 
-    it("should handle negative balances correctly", () => {
+    it('should handle negative balances correctly', () => {
       const initialBalance = 100;
       const totalIncome = 50;
       const totalTransfersIn = 0;

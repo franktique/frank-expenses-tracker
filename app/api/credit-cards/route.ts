@@ -1,10 +1,10 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   CreateCreditCardSchema,
   CREDIT_CARD_ERROR_MESSAGES,
   type CreditCard,
-} from "@/types/credit-cards";
+} from '@/types/credit-cards';
 
 export async function GET() {
   try {
@@ -26,7 +26,7 @@ export async function GET() {
       total_count: creditCards.length,
     });
   } catch (error) {
-    console.error("Error fetching credit cards:", error);
+    console.error('Error fetching credit cards:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     if (!validationResult.success) {
       return NextResponse.json(
         {
-          error: "Validation failed",
+          error: 'Validation failed',
           details: validationResult.error.errors,
         },
         { status: 400 }
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: CREDIT_CARD_ERROR_MESSAGES.DUPLICATE_CREDIT_CARD,
-          code: "DUPLICATE_CREDIT_CARD",
+          code: 'DUPLICATE_CREDIT_CARD',
         },
         { status: 409 }
       );
@@ -75,8 +75,8 @@ export async function POST(request: NextRequest) {
     const [newCreditCard] = await sql`
       INSERT INTO credit_cards (bank_name, franchise, last_four_digits, is_active)
       VALUES (${bank_name}, ${franchise}, ${last_four_digits}, ${
-      is_active ?? true
-    })
+        is_active ?? true
+      })
       RETURNING 
         id,
         bank_name,
@@ -96,7 +96,7 @@ export async function POST(request: NextRequest) {
       { status: 201 }
     );
   } catch (error) {
-    console.error("Error creating credit card:", error);
+    console.error('Error creating credit card:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

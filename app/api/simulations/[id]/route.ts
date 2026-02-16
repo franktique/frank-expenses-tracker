@@ -1,10 +1,10 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   validateUpdateSimulation,
   checkSimulationDataConsistency,
   getValidationFeedback,
-} from "@/lib/simulation-validation";
+} from '@/lib/simulation-validation';
 
 // GET /api/simulations/[id] - Get individual simulation details
 export async function GET(
@@ -19,8 +19,8 @@ export async function GET(
     if (isNaN(simulationId) || simulationId <= 0) {
       return NextResponse.json(
         {
-          error: "ID de simulación inválido",
-          code: "INVALID_SIMULATION_ID",
+          error: 'ID de simulación inválido',
+          code: 'INVALID_SIMULATION_ID',
         },
         { status: 400 }
       );
@@ -39,8 +39,8 @@ export async function GET(
     if (!simulation) {
       return NextResponse.json(
         {
-          error: "Simulación no encontrada",
-          code: "SIMULATION_NOT_FOUND",
+          error: 'Simulación no encontrada',
+          code: 'SIMULATION_NOT_FOUND',
           simulation_id: simulationId,
         },
         { status: 404 }
@@ -71,14 +71,14 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("Error fetching simulation:", error);
+    console.error('Error fetching simulation:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -88,8 +88,8 @@ export async function GET(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al cargar la simulación",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al cargar la simulación',
+        code: 'INTERNAL_SERVER_ERROR',
         retryable: true,
       },
       { status: 500 }
@@ -110,8 +110,8 @@ export async function PUT(
     if (isNaN(simulationId) || simulationId <= 0) {
       return NextResponse.json(
         {
-          error: "ID de simulación inválido",
-          code: "INVALID_SIMULATION_ID",
+          error: 'ID de simulación inválido',
+          code: 'INVALID_SIMULATION_ID',
         },
         { status: 400 }
       );
@@ -133,7 +133,10 @@ export async function PUT(
       );
     }
 
-    const { name, description } = validation.data;
+    const { name, description } = validation.data ?? {
+      name: undefined,
+      description: undefined,
+    };
 
     // Check if simulation exists
     const [existingSimulation] = await sql`
@@ -143,8 +146,8 @@ export async function PUT(
     if (!existingSimulation) {
       return NextResponse.json(
         {
-          error: "Simulación no encontrada",
-          code: "SIMULATION_NOT_FOUND",
+          error: 'Simulación no encontrada',
+          code: 'SIMULATION_NOT_FOUND',
           simulation_id: simulationId,
         },
         { status: 404 }
@@ -163,8 +166,8 @@ export async function PUT(
       if (duplicateSimulation.length > 0) {
         return NextResponse.json(
           {
-            error: "Ya existe otra simulación con este nombre",
-            code: "DUPLICATE_NAME",
+            error: 'Ya existe otra simulación con este nombre',
+            code: 'DUPLICATE_NAME',
             existing_simulation: {
               id: duplicateSimulation[0].id,
               name: duplicateSimulation[0].name,
@@ -198,7 +201,7 @@ export async function PUT(
     `;
 
     if (!updatedSimulation) {
-      throw new Error("Failed to update simulation - no data returned");
+      throw new Error('Failed to update simulation - no data returned');
     }
 
     // Log successful update
@@ -208,30 +211,30 @@ export async function PUT(
 
     return NextResponse.json(updatedSimulation);
   } catch (error) {
-    console.error("Error updating simulation:", error);
+    console.error('Error updating simulation:', error);
 
     if (error instanceof Error) {
       if (
-        error.message.includes("duplicate key") ||
-        error.message.includes("unique constraint")
+        error.message.includes('duplicate key') ||
+        error.message.includes('unique constraint')
       ) {
         return NextResponse.json(
           {
-            error: "Ya existe otra simulación con este nombre",
-            code: "DUPLICATE_NAME",
+            error: 'Ya existe otra simulación con este nombre',
+            code: 'DUPLICATE_NAME',
           },
           { status: 409 }
         );
       }
 
       if (
-        error.message.includes("connection") ||
-        error.message.includes("timeout")
+        error.message.includes('connection') ||
+        error.message.includes('timeout')
       ) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -241,8 +244,8 @@ export async function PUT(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al actualizar la simulación",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al actualizar la simulación',
+        code: 'INTERNAL_SERVER_ERROR',
         retryable: true,
       },
       { status: 500 }
@@ -263,8 +266,8 @@ export async function DELETE(
     if (isNaN(simulationId) || simulationId <= 0) {
       return NextResponse.json(
         {
-          error: "ID de simulación inválido",
-          code: "INVALID_SIMULATION_ID",
+          error: 'ID de simulación inválido',
+          code: 'INVALID_SIMULATION_ID',
         },
         { status: 400 }
       );
@@ -278,8 +281,8 @@ export async function DELETE(
     if (!existingSimulation) {
       return NextResponse.json(
         {
-          error: "Simulación no encontrada",
-          code: "SIMULATION_NOT_FOUND",
+          error: 'Simulación no encontrada',
+          code: 'SIMULATION_NOT_FOUND',
           simulation_id: simulationId,
         },
         { status: 404 }
@@ -298,7 +301,7 @@ export async function DELETE(
     `;
 
     if (deletedRows.length === 0) {
-      throw new Error("Failed to delete simulation - no rows affected");
+      throw new Error('Failed to delete simulation - no rows affected');
     }
 
     // Log successful deletion
@@ -308,7 +311,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: "Simulación eliminada exitosamente",
+      message: 'Simulación eliminada exitosamente',
       deleted_simulation: {
         id: simulationId,
         name: existingSimulation.name,
@@ -316,32 +319,32 @@ export async function DELETE(
       },
     });
   } catch (error) {
-    console.error("Error deleting simulation:", error);
+    console.error('Error deleting simulation:', error);
 
     if (error instanceof Error) {
       if (
-        error.message.includes("foreign key") ||
-        error.message.includes("constraint")
+        error.message.includes('foreign key') ||
+        error.message.includes('constraint')
       ) {
         return NextResponse.json(
           {
-            error: "No se puede eliminar la simulación debido a dependencias",
-            code: "FOREIGN_KEY_CONSTRAINT",
+            error: 'No se puede eliminar la simulación debido a dependencias',
+            code: 'FOREIGN_KEY_CONSTRAINT',
             details:
-              "La simulación tiene datos relacionados que impiden su eliminación",
+              'La simulación tiene datos relacionados que impiden su eliminación',
           },
           { status: 409 }
         );
       }
 
       if (
-        error.message.includes("connection") ||
-        error.message.includes("timeout")
+        error.message.includes('connection') ||
+        error.message.includes('timeout')
       ) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -351,8 +354,8 @@ export async function DELETE(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al eliminar la simulación",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al eliminar la simulación',
+        code: 'INTERNAL_SERVER_ERROR',
         retryable: true,
       },
       { status: 500 }

@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useRouter } from "next/navigation";
-import { SimulationList } from "@/components/simulation-list";
-import { SimulationNavigation } from "@/components/simulation-navigation";
+import { useRouter } from 'next/navigation';
+import { SimulationList } from '@/components/simulation-list';
+import { SimulationNavigation } from '@/components/simulation-navigation';
 
 export default function SimularPage() {
   const router = useRouter();
@@ -12,7 +12,7 @@ export default function SimularPage() {
   };
 
   return (
-    <div className="container mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8 space-y-6">
+    <div className="container mx-auto space-y-6 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
       {/* Recent simulations navigation */}
       <SimulationNavigation showRecentList={true} maxRecentItems={5} />
 

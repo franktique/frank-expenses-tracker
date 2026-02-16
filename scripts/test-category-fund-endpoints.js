@@ -3,19 +3,19 @@
  * Run this after starting the development server with: npm run dev
  */
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = 'http://localhost:3000';
 
 async function testEndpoints() {
-  console.log("🧪 Testing Category-Fund Relationship Endpoints\n");
+  console.log('🧪 Testing Category-Fund Relationship Endpoints\n');
 
   try {
     // Test 1: Get categories to find a test category
-    console.log("1. Getting existing categories...");
+    console.log('1. Getting existing categories...');
     const categoriesResponse = await fetch(`${BASE_URL}/api/categories`);
     const categories = await categoriesResponse.json();
 
     if (!categories || categories.length === 0) {
-      console.log("❌ No categories found. Please create a category first.");
+      console.log('❌ No categories found. Please create a category first.');
       return;
     }
 
@@ -25,12 +25,12 @@ async function testEndpoints() {
     );
 
     // Test 2: Get funds to find test funds
-    console.log("\n2. Getting existing funds...");
+    console.log('\n2. Getting existing funds...');
     const fundsResponse = await fetch(`${BASE_URL}/api/funds`);
     const funds = await fundsResponse.json();
 
     if (!funds || funds.length === 0) {
-      console.log("❌ No funds found. Please create funds first.");
+      console.log('❌ No funds found. Please create funds first.');
       return;
     }
 
@@ -66,9 +66,9 @@ async function testEndpoints() {
     const updateResponse = await fetch(
       `${BASE_URL}/api/categories/${testCategory.id}/funds`,
       {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(updateData),
       }
@@ -127,7 +127,7 @@ async function testEndpoints() {
       const deleteResponse = await fetch(
         `${BASE_URL}/api/categories/${testCategory.id}/funds/${fundToRemove.id}`,
         {
-          method: "DELETE",
+          method: 'DELETE',
         }
       );
 
@@ -171,32 +171,32 @@ async function testEndpoints() {
       );
     }
 
-    console.log("\n🎉 All endpoint tests completed!");
+    console.log('\n🎉 All endpoint tests completed!');
   } catch (error) {
-    console.error("❌ Test failed with error:", error.message);
+    console.error('❌ Test failed with error:', error.message);
   }
 }
 
 // Test error cases
 async function testErrorCases() {
-  console.log("\n🧪 Testing Error Cases\n");
+  console.log('\n🧪 Testing Error Cases\n');
 
   try {
     // Test 1: Non-existent category
-    console.log("1. Testing non-existent category...");
+    console.log('1. Testing non-existent category...');
     const nonExistentResponse = await fetch(
       `${BASE_URL}/api/categories/00000000-0000-0000-0000-000000000000/funds`
     );
     const nonExistentData = await nonExistentResponse.json();
 
     if (nonExistentResponse.status === 404) {
-      console.log("✅ Non-existent category returns 404 as expected");
+      console.log('✅ Non-existent category returns 404 as expected');
     } else {
       console.log(`❌ Expected 404, got ${nonExistentResponse.status}`);
     }
 
     // Test 2: Invalid fund IDs in POST
-    console.log("\n2. Testing invalid fund IDs...");
+    console.log('\n2. Testing invalid fund IDs...');
     const categoriesResponse = await fetch(`${BASE_URL}/api/categories`);
     const categories = await categoriesResponse.json();
 
@@ -205,12 +205,12 @@ async function testErrorCases() {
       const invalidUpdateResponse = await fetch(
         `${BASE_URL}/api/categories/${testCategory.id}/funds`,
         {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            fund_ids: ["invalid-uuid", "00000000-0000-0000-0000-000000000000"],
+            fund_ids: ['invalid-uuid', '00000000-0000-0000-0000-000000000000'],
           }),
         }
       );
@@ -218,16 +218,16 @@ async function testErrorCases() {
       const invalidUpdateData = await invalidUpdateResponse.json();
 
       if (invalidUpdateResponse.status === 400) {
-        console.log("✅ Invalid fund IDs return 400 as expected");
+        console.log('✅ Invalid fund IDs return 400 as expected');
         console.log(`   Error: ${invalidUpdateData.error}`);
       } else {
         console.log(`❌ Expected 400, got ${invalidUpdateResponse.status}`);
       }
     }
 
-    console.log("\n🎉 Error case tests completed!");
+    console.log('\n🎉 Error case tests completed!');
   } catch (error) {
-    console.error("❌ Error case test failed:", error.message);
+    console.error('❌ Error case test failed:', error.message);
   }
 }
 

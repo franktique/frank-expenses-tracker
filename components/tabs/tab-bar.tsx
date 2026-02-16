@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useRef, useState, useCallback, useEffect } from 'react';
 import { Plus, MoreHorizontal } from 'lucide-react';
@@ -22,7 +22,7 @@ export function TabBar({
   onTabClose,
   onAddTab,
   onTabPin,
-  onTabContextMenu
+  onTabContextMenu,
 }: TabBarProps) {
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [showScrollButtons, setShowScrollButtons] = useState(false);
@@ -65,17 +65,23 @@ export function TabBar({
   }, []);
 
   // Handle tab context menu
-  const handleTabContextMenu = useCallback((tabId: string, event: React.MouseEvent) => {
-    event.preventDefault();
-    onTabContextMenu?.(tabId, event);
-  }, [onTabContextMenu]);
+  const handleTabContextMenu = useCallback(
+    (tabId: string, event: React.MouseEvent) => {
+      event.preventDefault();
+      onTabContextMenu?.(tabId, event);
+    },
+    [onTabContextMenu]
+  );
 
   // Handle add tab
-  const handleAddTab = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    onAddTab();
-  }, [onAddTab]);
+  const handleAddTab = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onAddTab();
+    },
+    [onAddTab]
+  );
 
   // Handle dropdown menu actions
   const handleNewTab = useCallback(() => {
@@ -103,14 +109,14 @@ export function TabBar({
   });
 
   return (
-    <div className="relative flex items-center bg-background border-b">
+    <div className="relative flex items-center border-b bg-background">
       {/* Scroll left button */}
       {showScrollButtons && (
         <Button
           variant="ghost"
           size="sm"
           onClick={scrollLeft}
-          className="absolute left-0 z-10 h-8 w-8 p-0 rounded-r-none shadow-md"
+          className="absolute left-0 z-10 h-8 w-8 rounded-r-none p-0 shadow-md"
           aria-label="Scroll tabs left"
         >
           <span className="sr-only">Scroll left</span>
@@ -133,14 +139,11 @@ export function TabBar({
       {/* Tab scroll area */}
       <ScrollArea
         ref={scrollAreaRef}
-        className={cn(
-          "flex-1",
-          showScrollButtons && "ml-8"
-        )}
+        className={cn('flex-1', showScrollButtons && 'ml-8')}
       >
         <div
           ref={scrollContainerRef}
-          className="flex items-center h-12 gap-1 px-2"
+          className="flex h-12 items-center gap-1 px-2"
           role="tablist"
           aria-label="Application tabs"
         >
@@ -163,11 +166,11 @@ export function TabBar({
             size="sm"
             onClick={handleAddTab}
             className={cn(
-              "h-8 w-8 p-0 rounded-sm",
-              "hover:bg-accent hover:text-accent-foreground",
-              "transition-colors duration-200",
-              "border border-dashed border-muted-foreground/30",
-              "flex items-center justify-center"
+              'h-8 w-8 rounded-sm p-0',
+              'hover:bg-accent hover:text-accent-foreground',
+              'transition-colors duration-200',
+              'border border-dashed border-muted-foreground/30',
+              'flex items-center justify-center'
             )}
             title="Add new tab"
             aria-label="Add new tab"
@@ -183,7 +186,7 @@ export function TabBar({
           variant="ghost"
           size="sm"
           onClick={scrollRight}
-          className="absolute right-0 z-10 h-8 w-8 p-0 rounded-l-none shadow-md"
+          className="absolute right-0 z-10 h-8 w-8 rounded-l-none p-0 shadow-md"
           aria-label="Scroll tabs right"
         >
           <span className="sr-only">Scroll right</span>
@@ -209,7 +212,7 @@ export function TabBar({
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0 rounded-sm"
+            className="h-8 w-8 rounded-sm p-0"
             title="More tab options"
             aria-label="More tab options"
           >
@@ -244,16 +247,16 @@ export function TabBar({
 // Compact tab bar for mobile
 export function CompactTabBar(props: TabBarProps) {
   return (
-    <div className="flex items-center bg-background border-b px-2 py-1">
+    <div className="flex items-center border-b bg-background px-2 py-1">
       <div className="flex items-center gap-1 overflow-x-auto">
         {props.tabs.slice(0, 3).map((tab) => (
           <div
             key={tab.id}
             className={cn(
-              "px-2 py-1 text-xs rounded-sm cursor-pointer whitespace-nowrap",
+              'cursor-pointer whitespace-nowrap rounded-sm px-2 py-1 text-xs',
               tab.id === props.activeTabId
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-accent"
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-accent'
             )}
             onClick={() => props.onTabClick(tab.id)}
           >

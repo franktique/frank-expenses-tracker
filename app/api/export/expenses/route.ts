@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET() {
   try {
@@ -26,7 +26,7 @@ export async function GET() {
 
     return NextResponse.json(expenses);
   } catch (error) {
-    console.error("Error exporting expenses:", error);
+    console.error('Error exporting expenses:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

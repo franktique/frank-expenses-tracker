@@ -1,25 +1,25 @@
-import { NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const paymentMethod = searchParams.get("paymentMethod"); // Legacy parameter for backward compatibility
-    const expensePaymentMethods = searchParams.get("expensePaymentMethods");
-    const budgetPaymentMethods = searchParams.get("budgetPaymentMethods");
-    const grouperIdsParam = searchParams.get("grouperIds");
-    const estudioId = searchParams.get("estudioId");
-    const includeBudgets = searchParams.get("includeBudgets") === "true";
+    const paymentMethod = searchParams.get('paymentMethod'); // Legacy parameter for backward compatibility
+    const expensePaymentMethods = searchParams.get('expensePaymentMethods');
+    const budgetPaymentMethods = searchParams.get('budgetPaymentMethods');
+    const grouperIdsParam = searchParams.get('grouperIds');
+    const estudioId = searchParams.get('estudioId');
+    const includeBudgets = searchParams.get('includeBudgets') === 'true';
 
     // Validate payment method parameter
     if (
       paymentMethod &&
-      !["all", "cash", "credit", "debit"].includes(paymentMethod)
+      !['all', 'cash', 'credit', 'debit'].includes(paymentMethod)
     ) {
       return NextResponse.json(
         {
           error:
-            "Invalid payment method. Must be one of: all, cash, credit, debit",
+            'Invalid payment method. Must be one of: all, cash, credit, debit',
         },
         { status: 400 }
       );
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
     let grouperIds: number[] | null = null;
     if (grouperIdsParam) {
       try {
-        grouperIds = grouperIdsParam.split(",").map((id) => {
+        grouperIds = grouperIdsParam.split(',').map((id) => {
           const parsed = parseInt(id.trim());
           if (isNaN(parsed)) {
             throw new Error(`Invalid grouper ID: ${id}`);
@@ -40,7 +40,7 @@ export async function GET(request: Request) {
         return NextResponse.json(
           {
             error:
-              "Invalid grouperIds parameter. Must be comma-separated numbers.",
+              'Invalid grouperIds parameter. Must be comma-separated numbers.',
           },
           { status: 400 }
         );
@@ -54,13 +54,15 @@ export async function GET(request: Request) {
     // Handle expense payment methods (new parameter or legacy fallback)
     if (expensePaymentMethods) {
       try {
-        expensePaymentMethodsArray = expensePaymentMethods.split(",").map((method) => {
-          const trimmed = method.trim();
-          if (!["cash", "credit", "debit"].includes(trimmed)) {
-            throw new Error(`Invalid expense payment method: ${trimmed}`);
-          }
-          return trimmed;
-        });
+        expensePaymentMethodsArray = expensePaymentMethods
+          .split(',')
+          .map((method) => {
+            const trimmed = method.trim();
+            if (!['cash', 'credit', 'debit'].includes(trimmed)) {
+              throw new Error(`Invalid expense payment method: ${trimmed}`);
+            }
+            return trimmed;
+          });
       } catch (error) {
         return NextResponse.json(
           {
@@ -69,7 +71,7 @@ export async function GET(request: Request) {
           { status: 400 }
         );
       }
-    } else if (paymentMethod && paymentMethod !== "all") {
+    } else if (paymentMethod && paymentMethod !== 'all') {
       // Legacy backward compatibility
       expensePaymentMethodsArray = [paymentMethod];
     }
@@ -77,13 +79,15 @@ export async function GET(request: Request) {
     // Handle budget payment methods
     if (budgetPaymentMethods) {
       try {
-        budgetPaymentMethodsArray = budgetPaymentMethods.split(",").map((method) => {
-          const trimmed = method.trim();
-          if (!["cash", "credit", "debit"].includes(trimmed)) {
-            throw new Error(`Invalid budget payment method: ${trimmed}`);
-          }
-          return trimmed;
-        });
+        budgetPaymentMethodsArray = budgetPaymentMethods
+          .split(',')
+          .map((method) => {
+            const trimmed = method.trim();
+            if (!['cash', 'credit', 'debit'].includes(trimmed)) {
+              throw new Error(`Invalid budget payment method: ${trimmed}`);
+            }
+            return trimmed;
+          });
       } catch (error) {
         return NextResponse.json(
           {
@@ -100,7 +104,7 @@ export async function GET(request: Request) {
     let paramIndex = 1;
 
     // Build budget join with payment method filter
-    let budgetJoin = "";
+    let budgetJoin = '';
     if (includeBudgets) {
       budgetJoin = `LEFT JOIN budgets b ON b.category_id = c.id AND b.period_id = p.id`;
       if (budgetPaymentMethodsArray && budgetPaymentMethodsArray.length > 0) {
@@ -112,7 +116,7 @@ export async function GET(request: Request) {
 
     const budgetSelect = includeBudgets
       ? `, COALESCE(SUM(b.expected_amount), 0) as budget_amount`
-      : "";
+      : '';
 
     query = `
       SELECT
@@ -201,20 +205,20 @@ export async function GET(request: Request) {
 
     return NextResponse.json(structuredData);
   } catch (error) {
-    console.error("Error in period comparison API:", error);
+    console.error('Error in period comparison API:', error);
 
     // Provide more specific error messages
-    let errorMessage = "Error interno del servidor";
+    let errorMessage = 'Error interno del servidor';
     let statusCode = 500;
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
-        errorMessage = "Error de conexión a la base de datos";
-      } else if (error.message.includes("syntax")) {
-        errorMessage = "Error en la consulta de datos";
-      } else if (error.message.includes("timeout")) {
-        errorMessage = "La consulta tardó demasiado tiempo";
-      } else if (error.message.includes("Invalid grouper ID")) {
+      if (error.message.includes('connection')) {
+        errorMessage = 'Error de conexión a la base de datos';
+      } else if (error.message.includes('syntax')) {
+        errorMessage = 'Error en la consulta de datos';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'La consulta tardó demasiado tiempo';
+      } else if (error.message.includes('Invalid grouper ID')) {
         errorMessage = error.message;
         statusCode = 400;
       } else {

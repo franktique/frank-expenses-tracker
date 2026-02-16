@@ -1,4 +1,4 @@
-import "@testing-library/jest-dom";
+import '@testing-library/jest-dom';
 
 // Mock sessionStorage for tests
 const mockSessionStorage = (() => {
@@ -17,7 +17,7 @@ const mockSessionStorage = (() => {
   };
 })();
 
-Object.defineProperty(window, "sessionStorage", {
+Object.defineProperty(window, 'sessionStorage', {
   value: mockSessionStorage,
   writable: true,
 });

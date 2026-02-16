@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   PlusCircle,
@@ -6,16 +6,16 @@ import {
   TrendingUp,
   BarChart3,
   RefreshCw,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+} from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface EmptyStateProps {
   title: string;
@@ -37,13 +37,13 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div
-      className={`flex flex-col items-center justify-center py-12 px-4 text-center ${
-        className || ""
+      className={`flex flex-col items-center justify-center px-4 py-12 text-center ${
+        className || ''
       }`}
     >
-      {icon && <div className="mb-4 p-3 rounded-full bg-muted">{icon}</div>}
-      <h3 className="text-lg font-semibold mb-2">{title}</h3>
-      <p className="text-muted-foreground mb-6 max-w-md">{description}</p>
+      {icon && <div className="mb-4 rounded-full bg-muted p-3">{icon}</div>}
+      <h3 className="mb-2 text-lg font-semibold">{title}</h3>
+      <p className="mb-6 max-w-md text-muted-foreground">{description}</p>
       {action && <Button onClick={action.onClick}>{action.label}</Button>}
     </div>
   );
@@ -61,7 +61,7 @@ export function FundsEmptyState({
       description="Los fondos te ayudan a organizar tus finanzas en diferentes categorías. Crea tu primer fondo para comenzar a gestionar tu dinero de manera más efectiva."
       icon={<Wallet className="h-8 w-8 text-muted-foreground" />}
       action={{
-        label: "Crear primer fondo",
+        label: 'Crear primer fondo',
         onClick: onCreateFund,
       }}
     />
@@ -80,11 +80,11 @@ export function FundsDashboardEmptyState() {
 
 export function FundBalanceTrendsEmptyState() {
   return (
-    <div className="h-[300px] flex items-center justify-center">
+    <div className="flex h-[300px] items-center justify-center">
       <div className="text-center">
-        <TrendingUp className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-        <h4 className="text-lg font-medium mb-2">Sin datos de tendencia</h4>
-        <p className="text-muted-foreground text-sm">
+        <TrendingUp className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+        <h4 className="mb-2 text-lg font-medium">Sin datos de tendencia</h4>
+        <p className="text-sm text-muted-foreground">
           Los datos de tendencia aparecerán una vez que tengas transacciones
           registradas
         </p>
@@ -97,14 +97,14 @@ export function FundTransfersEmptyState() {
   return (
     <div className="py-8 text-center">
       <div className="mb-4">
-        <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto">
+        <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted">
           <RefreshCw className="h-6 w-6 text-muted-foreground" />
         </div>
       </div>
-      <h4 className="text-lg font-medium mb-2">
+      <h4 className="mb-2 text-lg font-medium">
         No hay transferencias recientes
       </h4>
-      <p className="text-muted-foreground text-sm">
+      <p className="text-sm text-muted-foreground">
         Las transferencias entre fondos aparecerán aquí cuando registres gastos
         con destino a otros fondos
       </p>
@@ -123,7 +123,7 @@ export function FundsTableSkeleton() {
           <Skeleton className="h-4 w-[100px]" />
           <Skeleton className="h-4 w-[100px]" />
           <Skeleton className="h-4 w-[80px]" />
-          <div className="flex space-x-2 ml-auto">
+          <div className="ml-auto flex space-x-2">
             <Skeleton className="h-8 w-8" />
             <Skeleton className="h-8 w-8" />
             <Skeleton className="h-8 w-8" />
@@ -146,7 +146,7 @@ export function FundsDashboardSkeleton() {
               <Skeleton className="h-4 w-4" />
             </CardHeader>
             <CardContent>
-              <Skeleton className="h-8 w-[120px] mb-2" />
+              <Skeleton className="mb-2 h-8 w-[120px]" />
               <Skeleton className="h-3 w-[80px]" />
             </CardContent>
           </Card>
@@ -228,7 +228,7 @@ export function ChartLoadingSkeleton({ height = 300 }: { height?: number }) {
   return (
     <div className={`h-[${height}px] flex items-center justify-center`}>
       <div className="text-center">
-        <RefreshCw className="h-8 w-8 text-muted-foreground animate-spin mx-auto mb-2" />
+        <RefreshCw className="mx-auto mb-2 h-8 w-8 animate-spin text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Cargando datos...</p>
       </div>
     </div>
@@ -236,7 +236,7 @@ export function ChartLoadingSkeleton({ height = 300 }: { height?: number }) {
 }
 
 // Inline loading indicators
-export function InlineLoader({ text = "Cargando..." }: { text?: string }) {
+export function InlineLoader({ text = 'Cargando...' }: { text?: string }) {
   return (
     <div className="flex items-center space-x-2 text-sm text-muted-foreground">
       <RefreshCw className="h-3 w-3 animate-spin" />
@@ -259,7 +259,7 @@ export function LoadingButton({
   return (
     <Button disabled={isLoading} {...props}>
       {isLoading && <RefreshCw className="mr-2 h-4 w-4 animate-spin" />}
-      {isLoading ? loadingText || "Cargando..." : children}
+      {isLoading ? loadingText || 'Cargando...' : children}
     </Button>
   );
 }

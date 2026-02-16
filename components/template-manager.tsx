@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,11 +21,11 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Trash2, Edit, Plus, FileText, RefreshCw } from "lucide-react";
-import { RefreshTemplateDialog } from "@/components/refresh-template-dialog";
-import type { SubgroupTemplate } from "@/types/subgroup-templates";
+} from '@/components/ui/alert-dialog';
+import { useToast } from '@/components/ui/use-toast';
+import { Loader2, Trash2, Edit, Plus, FileText, RefreshCw } from 'lucide-react';
+import { RefreshTemplateDialog } from '@/components/refresh-template-dialog';
+import type { SubgroupTemplate } from '@/types/subgroup-templates';
 
 interface TemplateManagerProps {
   isOpen: boolean;
@@ -35,16 +35,20 @@ interface TemplateManagerProps {
 export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
   const [templates, setTemplates] = useState<SubgroupTemplate[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<SubgroupTemplate | null>(null);
-  const [deletingTemplateId, setDeletingTemplateId] = useState<string | null>(null);
+  const [editingTemplate, setEditingTemplate] =
+    useState<SubgroupTemplate | null>(null);
+  const [deletingTemplateId, setDeletingTemplateId] = useState<string | null>(
+    null
+  );
   const [isDeleting, setIsDeleting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [refreshingTemplate, setRefreshingTemplate] = useState<SubgroupTemplate | null>(null);
+  const [refreshingTemplate, setRefreshingTemplate] =
+    useState<SubgroupTemplate | null>(null);
   const { toast } = useToast();
 
   // Form state for editing
-  const [editName, setEditName] = useState("");
-  const [editDescription, setEditDescription] = useState("");
+  const [editName, setEditName] = useState('');
+  const [editDescription, setEditDescription] = useState('');
 
   useEffect(() => {
     if (isOpen) {
@@ -55,20 +59,20 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
   const loadTemplates = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/subgroup-templates");
+      const response = await fetch('/api/subgroup-templates');
       const data = await response.json();
 
       if (data.success && data.templates) {
         setTemplates(data.templates);
       } else {
-        throw new Error(data.error || "Failed to load templates");
+        throw new Error(data.error || 'Failed to load templates');
       }
     } catch (error) {
-      console.error("Error loading templates:", error);
+      console.error('Error loading templates:', error);
       toast({
-        title: "Error",
-        description: "Failed to load templates. Please try again.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Failed to load templates. Please try again.',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -78,15 +82,15 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
   const handleEditClick = (template: SubgroupTemplate) => {
     setEditingTemplate(template);
     setEditName(template.name);
-    setEditDescription(template.description || "");
+    setEditDescription(template.description || '');
   };
 
   const handleSaveEdit = async () => {
     if (!editingTemplate || !editName.trim()) {
       toast({
-        title: "Error",
-        description: "Template name is required",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Template name is required',
+        variant: 'destructive',
       });
       return;
     }
@@ -94,35 +98,39 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
     setIsSaving(true);
 
     try {
-      const response = await fetch(`/api/subgroup-templates/${editingTemplate.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: editName.trim(),
-          description: editDescription.trim() || undefined,
-        }),
-      });
+      const response = await fetch(
+        `/api/subgroup-templates/${editingTemplate.id}`,
+        {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: editName.trim(),
+            description: editDescription.trim() || undefined,
+          }),
+        }
+      );
 
       const data = await response.json();
 
       if (data.success) {
         toast({
-          title: "Template Updated",
-          description: "Template has been updated successfully",
+          title: 'Template Updated',
+          description: 'Template has been updated successfully',
         });
         setEditingTemplate(null);
         loadTemplates();
       } else {
-        throw new Error(data.error || "Failed to update template");
+        throw new Error(data.error || 'Failed to update template');
       }
     } catch (error) {
-      console.error("Error updating template:", error);
+      console.error('Error updating template:', error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to update template",
-        variant: "destructive",
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'Failed to update template',
+        variant: 'destructive',
       });
     } finally {
       setIsSaving(false);
@@ -139,28 +147,32 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
     setIsDeleting(true);
 
     try {
-      const response = await fetch(`/api/subgroup-templates/${deletingTemplateId}`, {
-        method: "DELETE",
-      });
+      const response = await fetch(
+        `/api/subgroup-templates/${deletingTemplateId}`,
+        {
+          method: 'DELETE',
+        }
+      );
 
       const data = await response.json();
 
       if (data.success) {
         toast({
-          title: "Template Deleted",
-          description: "Template has been deleted successfully",
+          title: 'Template Deleted',
+          description: 'Template has been deleted successfully',
         });
         setDeletingTemplateId(null);
         loadTemplates();
       } else {
-        throw new Error(data.error || "Failed to delete template");
+        throw new Error(data.error || 'Failed to delete template');
       }
     } catch (error) {
-      console.error("Error deleting template:", error);
+      console.error('Error deleting template:', error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete template",
-        variant: "destructive",
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'Failed to delete template',
+        variant: 'destructive',
       });
     } finally {
       setIsDeleting(false);
@@ -170,7 +182,7 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
   return (
     <>
       <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-h-[80vh] max-w-3xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Manage Templates</DialogTitle>
             <DialogDescription>
@@ -183,11 +195,12 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
               <Loader2 className="h-8 w-8 animate-spin" />
             </div>
           ) : templates.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <div className="py-12 text-center text-muted-foreground">
+              <FileText className="mx-auto mb-4 h-12 w-12 opacity-50" />
               <p className="font-medium">No templates available</p>
-              <p className="text-sm mt-2">
-                Create a template by saving your simulation setup using the "Save as Template" button.
+              <p className="mt-2 text-sm">
+                Create a template by saving your simulation setup using the
+                "Save as Template" button.
               </p>
             </div>
           ) : (
@@ -195,19 +208,25 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
               {templates.map((template) => (
                 <div
                   key={template.id}
-                  className="border rounded-lg p-4 hover:bg-accent/50 transition-colors"
+                  className="rounded-lg border p-4 transition-colors hover:bg-accent/50"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
                       <h3 className="font-semibold">{template.name}</h3>
                       {template.description && (
-                        <p className="text-sm text-muted-foreground mt-1">
+                        <p className="mt-1 text-sm text-muted-foreground">
                           {template.description}
                         </p>
                       )}
-                      <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                        <span>Created: {new Date(template.createdAt).toLocaleDateString()}</span>
-                        <span>Updated: {new Date(template.updatedAt).toLocaleDateString()}</span>
+                      <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+                        <span>
+                          Created:{' '}
+                          {new Date(template.createdAt).toLocaleDateString()}
+                        </span>
+                        <span>
+                          Updated:{' '}
+                          {new Date(template.updatedAt).toLocaleDateString()}
+                        </span>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -242,9 +261,9 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-4 border-t">
+          <div className="flex items-center justify-between border-t pt-4">
             <p className="text-sm text-muted-foreground">
-              {templates.length} template{templates.length !== 1 ? "s" : ""}
+              {templates.length} template{templates.length !== 1 ? 's' : ''}
             </p>
             <Button onClick={onClose}>Close</Button>
           </div>
@@ -252,7 +271,10 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
       </Dialog>
 
       {/* Edit Dialog */}
-      <Dialog open={!!editingTemplate} onOpenChange={(open) => !open && setEditingTemplate(null)}>
+      <Dialog
+        open={!!editingTemplate}
+        onOpenChange={(open) => !open && setEditingTemplate(null)}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Template</DialogTitle>
@@ -292,14 +314,17 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
             >
               Cancel
             </Button>
-            <Button onClick={handleSaveEdit} disabled={isSaving || !editName.trim()}>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={isSaving || !editName.trim()}
+            >
               {isSaving ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Saving...
                 </>
               ) : (
-                "Save Changes"
+                'Save Changes'
               )}
             </Button>
           </div>
@@ -307,13 +332,17 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <AlertDialog open={!!deletingTemplateId} onOpenChange={(open) => !open && setDeletingTemplateId(null)}>
+      <AlertDialog
+        open={!!deletingTemplateId}
+        onOpenChange={(open) => !open && setDeletingTemplateId(null)}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Template?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this template. Simulations that are using this template will keep their subgroups.
-              This action cannot be undone.
+              This will permanently delete this template. Simulations that are
+              using this template will keep their subgroups. This action cannot
+              be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -325,11 +354,11 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
             >
               {isDeleting ? (
                 <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Deleting...
                 </>
               ) : (
-                "Delete"
+                'Delete'
               )}
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -347,8 +376,9 @@ export function TemplateManager({ isOpen, onClose }: TemplateManagerProps) {
             prev.map((t) => (t.id === updatedTemplate.id ? updatedTemplate : t))
           );
           toast({
-            title: "Success",
-            description: "Template has been refreshed with updated subgroups and categories.",
+            title: 'Success',
+            description:
+              'Template has been refreshed with updated subgroups and categories.',
           });
         }}
       />

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { memo, useState, useEffect, useCallback } from "react";
+import React, { memo, useState, useEffect, useCallback } from 'react';
 import {
   BarChart,
   Bar,
@@ -15,19 +15,19 @@ import {
   PieChart,
   Pie,
   Cell,
-} from "recharts";
-import { formatCurrency } from "@/lib/utils";
+} from 'recharts';
+import { formatCurrency } from '@/lib/utils';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/components/ui/use-toast";
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from '@/components/ui/use-toast';
 import {
   ArrowLeft,
   BarChart3,
@@ -36,7 +36,7 @@ import {
   RefreshCw,
   Target,
   Activity,
-} from "lucide-react";
+} from 'lucide-react';
 
 // Types for drill-down data
 interface CategoryDrillDownData {
@@ -72,8 +72,8 @@ const DrillDownTooltip = memo<DrillDownTooltipProps>(
     const data = payload[0].payload;
 
     return (
-      <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
-        <p className="font-semibold text-foreground mb-2">
+      <div className="rounded-lg border border-border bg-background p-3 shadow-lg">
+        <p className="mb-2 font-semibold text-foreground">
           {label || data.category_name}
         </p>
 
@@ -81,21 +81,21 @@ const DrillDownTooltip = memo<DrillDownTooltipProps>(
           {showPaymentMethods ? (
             <>
               <p className="text-sm">
-                <span className="font-medium text-blue-600">Efectivo:</span>{" "}
+                <span className="font-medium text-blue-600">Efectivo:</span>{' '}
                 {formatCurrency(data.efectivo_amount)}
               </p>
               <p className="text-sm">
-                <span className="font-medium text-green-600">Crédito:</span>{" "}
+                <span className="font-medium text-green-600">Crédito:</span>{' '}
                 {formatCurrency(data.credito_amount)}
               </p>
-              <p className="text-sm font-semibold border-t pt-1">
-                <span className="text-foreground">Total:</span>{" "}
+              <p className="border-t pt-1 text-sm font-semibold">
+                <span className="text-foreground">Total:</span>{' '}
                 {formatCurrency(data.simulation_amount)}
               </p>
             </>
           ) : (
             <p className="text-sm">
-              <span className="font-medium text-blue-600">Simulación:</span>{" "}
+              <span className="font-medium text-blue-600">Simulación:</span>{' '}
               {formatCurrency(data.simulation_amount)}
             </p>
           )}
@@ -104,7 +104,7 @@ const DrillDownTooltip = memo<DrillDownTooltipProps>(
             <p className="text-sm">
               <span className="font-medium text-muted-foreground">
                 Promedio histórico:
-              </span>{" "}
+              </span>{' '}
               {formatCurrency(data.historical_avg)}
             </p>
           )}
@@ -113,19 +113,19 @@ const DrillDownTooltip = memo<DrillDownTooltipProps>(
             <p
               className={`text-xs ${
                 data.variance_percentage > 0
-                  ? "text-green-600"
+                  ? 'text-green-600'
                   : data.variance_percentage < 0
-                  ? "text-red-600"
-                  : "text-gray-500"
+                    ? 'text-red-600'
+                    : 'text-gray-500'
               }`}
             >
-              Variación: {data.variance_percentage > 0 ? "+" : ""}
+              Variación: {data.variance_percentage > 0 ? '+' : ''}
               {data.variance_percentage.toFixed(1)}%
             </p>
           )}
         </div>
 
-        <p className="text-xs text-blue-600 italic mt-2">
+        <p className="mt-2 text-xs italic text-blue-600">
           * Datos de simulación
         </p>
       </div>
@@ -133,7 +133,7 @@ const DrillDownTooltip = memo<DrillDownTooltipProps>(
   }
 );
 
-DrillDownTooltip.displayName = "DrillDownTooltip";
+DrillDownTooltip.displayName = 'DrillDownTooltip';
 
 // Main drill-down chart component
 interface SimulationDrillDownChartProps {
@@ -155,8 +155,8 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
     const [data, setData] = useState<CategoryDrillDownData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [activeView, setActiveView] = useState<"bar" | "pie" | "payment">(
-      "bar"
+    const [activeView, setActiveView] = useState<'bar' | 'pie' | 'payment'>(
+      'bar'
     );
 
     // Fetch drill-down data
@@ -170,7 +170,7 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
           `/api/simulations/${simulationId}/budgets`
         );
         if (!budgetsResponse.ok) {
-          throw new Error("Error al cargar presupuestos de simulación");
+          throw new Error('Error al cargar presupuestos de simulación');
         }
         const budgetsData = await budgetsResponse.json();
 
@@ -179,7 +179,7 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
           `/api/groupers/${grouperId}/categories`
         );
         if (!grouperResponse.ok) {
-          throw new Error("Error al cargar categorías del agrupador");
+          throw new Error('Error al cargar categorías del agrupador');
         }
         const grouperCategories = await grouperResponse.json();
 
@@ -205,17 +205,17 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
 
         setData(transformedData);
       } catch (error) {
-        console.error("Error fetching drill-down data:", error);
+        console.error('Error fetching drill-down data:', error);
         const errorMessage =
           error instanceof Error
             ? error.message
-            : "Error al cargar datos detallados";
+            : 'Error al cargar datos detallados';
         setError(errorMessage);
 
         toast({
-          title: "Error",
+          title: 'Error',
           description: errorMessage,
-          variant: "destructive",
+          variant: 'destructive',
         });
       } finally {
         setIsLoading(false);
@@ -244,7 +244,7 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
     const pieData = chartData.map((item) => ({
       name:
         item.category_name.length > 15
-          ? item.category_name.substring(0, 15) + "..."
+          ? item.category_name.substring(0, 15) + '...'
           : item.category_name,
       value: item.simulation_amount,
       category_id: item.category_id,
@@ -257,16 +257,16 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
 
     // Colors for pie chart
     const pieColors = [
-      "#8884d8",
-      "#83a6ed",
-      "#8dd1e1",
-      "#82ca9d",
-      "#a4de6c",
-      "#d0ed57",
-      "#ffc658",
-      "#ff8042",
-      "#ff6361",
-      "#bc5090",
+      '#8884d8',
+      '#83a6ed',
+      '#8dd1e1',
+      '#82ca9d',
+      '#a4de6c',
+      '#d0ed57',
+      '#ffc658',
+      '#ff8042',
+      '#ff6361',
+      '#bc5090',
     ];
 
     if (externalLoading || isLoading) {
@@ -284,8 +284,8 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center items-center h-[500px]">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <div className="flex h-[500px] items-center justify-center">
+              <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
             </div>
           </CardContent>
         </Card>
@@ -307,10 +307,10 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center justify-center h-[400px] space-y-4">
-              <p className="text-destructive font-medium">{error}</p>
+            <div className="flex h-[400px] flex-col items-center justify-center space-y-4">
+              <p className="font-medium text-destructive">{error}</p>
               <Button onClick={fetchDrillDownData} variant="outline">
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="mr-2 h-4 w-4" />
                 Reintentar
               </Button>
             </div>
@@ -334,7 +334,7 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
             </div>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center items-center h-[400px]">
+            <div className="flex h-[400px] items-center justify-center">
               <p className="text-muted-foreground">
                 No hay presupuestos configurados para este agrupador
               </p>
@@ -376,7 +376,7 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
                 </div>
                 <Badge
                   variant="outline"
-                  className="text-blue-600 border-blue-600"
+                  className="border-blue-600 text-blue-600"
                 >
                   {chartData.length} categorías
                 </Badge>
@@ -398,7 +398,7 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
               value={activeView}
               onValueChange={(value) => setActiveView(value as any)}
             >
-              <TabsList className="grid w-full grid-cols-3 mb-6">
+              <TabsList className="mb-6 grid w-full grid-cols-3">
                 <TabsTrigger value="bar" className="flex items-center gap-2">
                   <BarChart3 className="h-4 w-4" />
                   Barras
@@ -475,7 +475,7 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
                       <Tooltip
                         formatter={(value) => [
                           formatCurrency(value as number),
-                          "Presupuesto",
+                          'Presupuesto',
                         ]}
                       />
                     </PieChart>
@@ -528,10 +528,10 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
         </Card>
 
         {/* Summary statistics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="mb-2 flex items-center gap-2">
                 <Target className="h-4 w-4 text-green-600" />
                 <span className="text-sm font-medium">Total Efectivo</span>
               </div>
@@ -556,7 +556,7 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
 
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="mb-2 flex items-center gap-2">
                 <Target className="h-4 w-4 text-amber-600" />
                 <span className="text-sm font-medium">Total Crédito</span>
               </div>
@@ -581,7 +581,7 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
 
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="mb-2 flex items-center gap-2">
                 <BarChart3 className="h-4 w-4 text-blue-600" />
                 <span className="text-sm font-medium">
                   Promedio por Categoría
@@ -601,4 +601,4 @@ export const SimulationDrillDownChart = memo<SimulationDrillDownChartProps>(
   }
 );
 
-SimulationDrillDownChart.displayName = "SimulationDrillDownChart";
+SimulationDrillDownChart.displayName = 'SimulationDrillDownChart';

@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 /**
  * GET /api/periods/[id]/data
@@ -16,11 +16,11 @@ export async function GET(
     const periodId = id;
 
     // Validate period ID format (UUID)
-    if (!periodId || typeof periodId !== "string") {
+    if (!periodId || typeof periodId !== 'string') {
       return NextResponse.json(
         {
-          error: "ID de período inválido",
-          code: "INVALID_PERIOD_ID",
+          error: 'ID de período inválido',
+          code: 'INVALID_PERIOD_ID',
         },
         { status: 400 }
       );
@@ -36,8 +36,8 @@ export async function GET(
     if (!period) {
       return NextResponse.json(
         {
-          error: "Período no encontrado",
-          code: "PERIOD_NOT_FOUND",
+          error: 'Período no encontrado',
+          code: 'PERIOD_NOT_FOUND',
           period_id: periodId,
         },
         { status: 404 }
@@ -101,9 +101,11 @@ export async function GET(
     `) as unknown as BudgetRow[];
 
     // Debug: Log aggregated budgets
-    console.log(`=== DEBUG: Period ${periodId} aggregated budgets (${budgets.length} categories) ===`);
+    console.log(
+      `=== DEBUG: Period ${periodId} aggregated budgets (${budgets.length} categories) ===`
+    );
     if (budgets.length > 0) {
-      console.log("First 3 budgets:", budgets.slice(0, 3));
+      console.log('First 3 budgets:', budgets.slice(0, 3));
     }
 
     // Calculate totals for preview
@@ -156,18 +158,18 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("Error fetching period data:", error);
+    console.error('Error fetching period data:', error);
 
     if (error instanceof Error) {
       // Database connection errors
       if (
-        error.message.includes("connection") ||
-        error.message.includes("timeout")
+        error.message.includes('connection') ||
+        error.message.includes('timeout')
       ) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -175,11 +177,11 @@ export async function GET(
       }
 
       // SQL syntax errors
-      if (error.message.includes("syntax")) {
+      if (error.message.includes('syntax')) {
         return NextResponse.json(
           {
-            error: "Error en la consulta de datos",
-            code: "SQL_ERROR",
+            error: 'Error en la consulta de datos',
+            code: 'SQL_ERROR',
             details: error.message,
           },
           { status: 500 }
@@ -189,8 +191,8 @@ export async function GET(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al cargar datos del período",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al cargar datos del período',
+        code: 'INTERNAL_SERVER_ERROR',
         retryable: true,
       },
       { status: 500 }

@@ -15,6 +15,7 @@
 ## ✅ Completed Phases
 
 ### Phase 1: Backend Infrastructure (2-3 hours)
+
 - ✅ Database schema with proper foreign keys and cascade delete
 - ✅ Type definitions for all sub-group operations
 - ✅ Complete CRUD API endpoints
@@ -23,18 +24,21 @@
 - ✅ Migration endpoint for database initialization
 
 ### Phase 2: State Management (1.5-2 hours)
+
 - ✅ Sub-group state variables integrated into SimulationBudgetForm
 - ✅ useEffect hook for loading sub-groups from database
 - ✅ Helper functions for managing sub-groups
 - ✅ Proper error handling for optional feature
 
 ### Phase 3: UI Controls (2-3 hours)
+
 - ✅ SubgroupNameDialog component with full validation
 - ✅ "Crear Subgrupo" / "Finalizar Crear Subgrupo" button toggle
 - ✅ Checkboxes in category rows during creation mode
 - ✅ Complete creation workflow
 
 ### Phase 4: Sub-Group Display & Integration (3-4 hours)
+
 - ✅ SubgroupHeaderRow component with:
   - Expand/collapse toggle
   - Sub-group name and category count
@@ -47,6 +51,7 @@
 - ✅ Support for uncategorized categories interspersed with sub-groups
 
 ### Phase 5: Delete Functionality (1.5-2 hours)
+
 - ✅ handleDeleteSubgroup() with confirmation dialog
 - ✅ API integration with DELETE endpoint
 - ✅ Remove from state and UI
@@ -58,6 +63,7 @@
 ## ✅ Phase 6: Integration with Existing Features (Complete)
 
 **Completed**:
+
 - ✅ Drag-drop works with individual categories (expand/collapse prevents dragging collapsed categories)
 - ✅ Filter logic (hideEmptyCategories, excludedCategoryIds) works with sub-groups
   - Filters applied to individual categories while subtotals show full group totals
@@ -75,6 +81,7 @@
 ### Phase 7: Testing & Documentation (2-3 hours)
 
 **Still Needed**:
+
 - [ ] Unit tests for sub-group calculation functions
 - [ ] Integration tests for API endpoints
 - [ ] Component tests for UI interactions
@@ -87,6 +94,7 @@
 ## Technical Implementation Details
 
 ### Database Tables
+
 ```sql
 simulation_subgroups
 - id (UUID, PK)
@@ -103,6 +111,7 @@ subgroup_categories
 ```
 
 ### API Endpoints
+
 ```
 GET    /api/simulations/[id]/subgroups
 POST   /api/simulations/[id]/subgroups
@@ -112,6 +121,7 @@ POST   /api/migrate-simulation-subgroups
 ```
 
 ### Component Architecture
+
 ```
 SimulationBudgetForm (main component)
 ├── SubgroupNameDialog (modal for creation)
@@ -124,6 +134,7 @@ SimulationBudgetForm (main component)
 ```
 
 ### Key Features Implemented
+
 1. **Create Sub-Groups**
    - Select multiple categories
    - Name the sub-group
@@ -163,6 +174,7 @@ SimulationBudgetForm (main component)
 ## Known Limitations & Future Enhancements
 
 ### Current Limitations
+
 1. **Tipo_gasto Sort**
    - Sub-groups don't have primary tipo_gasto calculation integrated into main sort
    - Sorting still works but doesn't treat sub-groups as units
@@ -180,6 +192,7 @@ SimulationBudgetForm (main component)
    - Could include subtotal rows in future
 
 ### Potential Enhancements
+
 1. Drag-drop entire sub-groups as units
 2. Primary tipo_gasto display on sub-group headers
 3. Sub-group sorting by custom order or tipo_gasto
@@ -192,6 +205,7 @@ SimulationBudgetForm (main component)
 ## Testing Checklist
 
 ### Manual Testing Done
+
 - ✅ Create sub-group with multiple categories
 - ✅ Delete sub-group
 - ✅ Expand/collapse sub-groups
@@ -200,6 +214,7 @@ SimulationBudgetForm (main component)
 - ✅ Data persists after page reload
 
 ### Manual Testing Still Needed
+
 - [ ] Test with many sub-groups (performance)
 - [ ] Test with large numbers of categories per sub-group
 - [ ] Test filtration with sub-groups
@@ -210,6 +225,7 @@ SimulationBudgetForm (main component)
 - [ ] Test concurrent operations
 
 ### Automated Testing Needed
+
 - Unit tests for utility functions
 - Integration tests for API
 - Component snapshot tests
@@ -259,16 +275,16 @@ Documentation:
 
 ## Progress Timeline
 
-| Phase | Status | Time | Completed |
-|-------|--------|------|-----------|
-| 1. Backend | ✅ Done | 2-3h | ~3h |
-| 2. State | ✅ Done | 1.5-2h | ~2h |
-| 3. UI Controls | ✅ Done | 2-3h | ~2.5h |
-| 4. Display | ✅ Done | 3-4h | ~4h |
-| 5. Delete | ✅ Done | 1.5-2h | ~2h |
-| 6. Integration | ✅ Done | 2-3h | ~3.5h |
-| 7. Testing/Docs | 🔄 In Progress | 2-3h | ~0.5h |
-| **TOTAL** | **85%** | **15-20h** | **~17.5h** |
+| Phase           | Status         | Time       | Completed  |
+| --------------- | -------------- | ---------- | ---------- |
+| 1. Backend      | ✅ Done        | 2-3h       | ~3h        |
+| 2. State        | ✅ Done        | 1.5-2h     | ~2h        |
+| 3. UI Controls  | ✅ Done        | 2-3h       | ~2.5h      |
+| 4. Display      | ✅ Done        | 3-4h       | ~4h        |
+| 5. Delete       | ✅ Done        | 1.5-2h     | ~2h        |
+| 6. Integration  | ✅ Done        | 2-3h       | ~3.5h      |
+| 7. Testing/Docs | 🔄 In Progress | 2-3h       | ~0.5h      |
+| **TOTAL**       | **85%**        | **15-20h** | **~17.5h** |
 
 ---
 
@@ -306,12 +322,14 @@ Documentation:
 The sub-groups feature is **feature-complete and production-ready**. All core functionality and integrations are working:
 
 **Core Features (Phases 1-5)**:
+
 - ✅ Create, read, update, delete operations
 - ✅ Display with subtotals and expand/collapse
 - ✅ Database persistence with proper relationships
 - ✅ Comprehensive validation and error handling
 
 **Integration Features (Phase 6)**:
+
 - ✅ Filter integration (hideEmptyCategories, excludedCategoryIds)
 - ✅ Drag-drop reordering for categories within sub-groups
 - ✅ Tipo_gasto sort compatibility with sub-group structure
@@ -320,4 +338,3 @@ The sub-groups feature is **feature-complete and production-ready**. All core fu
 **Ready for**: Production deployment, user testing, optional enhancements.
 
 **Remaining Work (Phase 7)**: Documentation (CLAUDE.md, inline comments), unit tests, integration tests, and component tests. Estimated 2-3 hours for comprehensive documentation and testing suite.
-

@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useCallback } from "react";
+import { useState, useCallback } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,12 +8,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
-import { Loader2 } from "lucide-react";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
+import { Loader2 } from 'lucide-react';
 
 interface SubgroupNameDialogProps {
   isOpen: boolean;
@@ -30,18 +30,21 @@ export function SubgroupNameDialog({
   onConfirm,
   existingNames = [],
 }: SubgroupNameDialogProps) {
-  const [name, setName] = useState("");
+  const [name, setName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
-  const handleNameChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setName(e.target.value);
-    setError(null);
-  }, []);
+  const handleNameChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setName(e.target.value);
+      setError(null);
+    },
+    []
+  );
 
   const handleClose = useCallback(() => {
-    setName("");
+    setName('');
     setError(null);
     onClose();
   }, [onClose]);
@@ -51,12 +54,12 @@ export function SubgroupNameDialog({
 
     // Validation
     if (!trimmedName) {
-      setError("El nombre del subgrupo no puede estar vacío");
+      setError('El nombre del subgrupo no puede estar vacío');
       return;
     }
 
     if (trimmedName.length > 255) {
-      setError("El nombre del subgrupo no puede exceder 255 caracteres");
+      setError('El nombre del subgrupo no puede exceder 255 caracteres');
       return;
     }
 
@@ -65,7 +68,7 @@ export function SubgroupNameDialog({
         (existing) => existing.toLowerCase() === trimmedName.toLowerCase()
       )
     ) {
-      setError("Ya existe un subgrupo con este nombre");
+      setError('Ya existe un subgrupo con este nombre');
       return;
     }
 
@@ -75,7 +78,7 @@ export function SubgroupNameDialog({
       handleClose();
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Error al crear el subgrupo";
+        err instanceof Error ? err.message : 'Error al crear el subgrupo';
       setError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -84,9 +87,9 @@ export function SubgroupNameDialog({
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter" && !isSubmitting) {
+      if (e.key === 'Enter' && !isSubmitting) {
         handleConfirm();
-      } else if (e.key === "Escape") {
+      } else if (e.key === 'Escape') {
         handleClose();
       }
     },
@@ -116,9 +119,7 @@ export function SubgroupNameDialog({
               autoFocus
               maxLength={255}
             />
-            {error && (
-              <p className="text-sm text-red-500 mt-1">{error}</p>
-            )}
+            {error && <p className="mt-1 text-sm text-red-500">{error}</p>}
           </div>
         </div>
 
@@ -142,7 +143,7 @@ export function SubgroupNameDialog({
                 Creando...
               </>
             ) : (
-              "Crear Subgrupo"
+              'Crear Subgrupo'
             )}
           </Button>
         </DialogFooter>

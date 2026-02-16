@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { AlertTriangle, Info } from "lucide-react";
+import { useState } from 'react';
+import { AlertTriangle, Info } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -11,9 +11,9 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 
 interface ValidationData {
   categoryId?: string;
@@ -29,7 +29,7 @@ interface ValidationData {
 interface CategoryFundErrorDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  title: string;
+  title?: string;
   errors?: string[];
   warnings?: string[];
   validationData?: ValidationData;
@@ -50,8 +50,8 @@ export function CategoryFundErrorDialog({
   validationData,
   onConfirm,
   onCancel,
-  confirmText = "Continuar",
-  cancelText = "Cancelar",
+  confirmText = 'Continuar',
+  cancelText = 'Cancelar',
   showForceOption = false,
   isDestructive = false,
 }: CategoryFundErrorDialogProps) {
@@ -87,11 +87,11 @@ export function CategoryFundErrorDialog({
                 <Card className="border-destructive/20 bg-destructive/5">
                   <CardContent className="pt-4">
                     <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-destructive flex items-center gap-2">
+                      <h4 className="flex items-center gap-2 text-sm font-medium text-destructive">
                         <AlertTriangle className="h-4 w-4" />
                         Errores encontrados:
                       </h4>
-                      <ul className="text-sm space-y-1">
+                      <ul className="space-y-1 text-sm">
                         {errors.map((error, index) => (
                           <li key={index} className="flex items-start gap-2">
                             <span className="text-destructive">•</span>
@@ -109,11 +109,11 @@ export function CategoryFundErrorDialog({
                 <Card className="border-amber-200 bg-amber-50">
                   <CardContent className="pt-4">
                     <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-amber-700 flex items-center gap-2">
+                      <h4 className="flex items-center gap-2 text-sm font-medium text-amber-700">
                         <Info className="h-4 w-4" />
                         Advertencias:
                       </h4>
-                      <ul className="text-sm space-y-1">
+                      <ul className="space-y-1 text-sm">
                         {warnings.map((warning, index) => (
                           <li key={index} className="flex items-start gap-2">
                             <span className="text-amber-600">•</span>
@@ -134,7 +134,7 @@ export function CategoryFundErrorDialog({
                       <h4 className="text-sm font-medium">
                         Información adicional:
                       </h4>
-                      <div className="text-sm space-y-1">
+                      <div className="space-y-1 text-sm">
                         {validationData.categoryName && (
                           <div className="flex items-center gap-2">
                             <span className="text-muted-foreground">
@@ -163,8 +163,8 @@ export function CategoryFundErrorDialog({
                             <Badge
                               variant={
                                 validationData.expenseCount > 0
-                                  ? "destructive"
-                                  : "secondary"
+                                  ? 'destructive'
+                                  : 'secondary'
                               }
                             >
                               {validationData.expenseCount}
@@ -180,8 +180,8 @@ export function CategoryFundErrorDialog({
                             <Badge
                               variant={
                                 validationData.remainingFundRelationships === 0
-                                  ? "destructive"
-                                  : "secondary"
+                                  ? 'destructive'
+                                  : 'secondary'
                               }
                             >
                               {validationData.remainingFundRelationships}
@@ -191,7 +191,7 @@ export function CategoryFundErrorDialog({
                         {validationData.affectedFunds &&
                           validationData.affectedFunds.length > 0 && (
                             <div className="space-y-1">
-                              <span className="text-muted-foreground text-sm">
+                              <span className="text-sm text-muted-foreground">
                                 Fondos afectados:
                               </span>
                               <div className="flex flex-wrap gap-1">
@@ -217,7 +217,7 @@ export function CategoryFundErrorDialog({
 
               {/* Force Option Information */}
               {showForceOption && !hasErrors && (
-                <div className="text-sm text-muted-foreground p-3 bg-muted/50 rounded-md">
+                <div className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
                   <p>
                     Puedes continuar con esta operación, pero ten en cuenta las
                     advertencias mostradas arriba.
@@ -236,7 +236,7 @@ export function CategoryFundErrorDialog({
               onClick={handleConfirm}
               className={
                 isDestructive
-                  ? "bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  ? 'bg-destructive text-destructive-foreground hover:bg-destructive/90'
                   : undefined
               }
             >
@@ -252,14 +252,14 @@ export function CategoryFundErrorDialog({
 // Utility function to create error dialog props from API response
 export function createErrorDialogProps(
   apiError: any,
-  title: string = "Error de validación"
+  title: string = 'Error de validación'
 ): Partial<CategoryFundErrorDialogProps> {
   // Handle confirmation required as warnings, not errors
   const isConfirmationRequired =
-    apiError.error === "Confirmation required" ||
-    apiError.details === "Confirmation required" ||
+    apiError.error === 'Confirmation required' ||
+    apiError.details === 'Confirmation required' ||
     (Array.isArray(apiError.details) &&
-      apiError.details.includes("Confirmation required"));
+      apiError.details.includes('Confirmation required'));
 
   let errors: string[] = [];
   let warnings: string[] = [];
@@ -269,21 +269,21 @@ export function createErrorDialogProps(
     warnings = Array.isArray(apiError.warnings)
       ? apiError.warnings
       : apiError.warnings
-      ? [apiError.warnings]
-      : [];
+        ? [apiError.warnings]
+        : [];
   } else {
     // Normal error handling
     errors = Array.isArray(apiError.details)
       ? apiError.details
       : apiError.details
-      ? [apiError.details]
-      : [apiError.error || "Error desconocido"];
+        ? [apiError.details]
+        : [apiError.error || 'Error desconocido'];
 
     warnings = Array.isArray(apiError.warnings)
       ? apiError.warnings
       : apiError.warnings
-      ? [apiError.warnings]
-      : [];
+        ? [apiError.warnings]
+        : [];
   }
 
   return {
@@ -310,7 +310,7 @@ export function useCategoryFundErrorDialog() {
 
   const showError = (
     apiError: any,
-    title: string = "Error de validación",
+    title: string = 'Error de validación',
     onConfirm?: () => void | Promise<void>
   ): Promise<void> => {
     return new Promise<void>((resolve, reject) => {
@@ -346,7 +346,7 @@ export function useCategoryFundErrorDialog() {
           resolve: undefined,
           reject: undefined,
         });
-        reject(new Error("User cancelled operation"));
+        reject(new Error('User cancelled operation'));
       };
 
       setDialogState({
@@ -365,7 +365,7 @@ export function useCategoryFundErrorDialog() {
   const hideError = () => {
     // Only reject if there's a pending promise and it hasn't been resolved yet
     if (dialogState.reject && dialogState.open) {
-      dialogState.reject(new Error("Dialog closed"));
+      dialogState.reject(new Error('Dialog closed'));
     }
     setDialogState({
       open: false,

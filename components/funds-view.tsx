@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { PlusCircle, Calculator, Trash2, Edit } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { PlusCircle, Calculator, Trash2, Edit } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -18,10 +18,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Table,
   TableBody,
@@ -29,26 +29,26 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
-import { useBudget } from "@/context/budget-context";
-import { Fund, CreateFundSchema, UpdateFundSchema } from "@/types/funds";
+} from '@/components/ui/table';
+import { useToast } from '@/components/ui/use-toast';
+import { useBudget } from '@/context/budget-context';
+import { Fund, CreateFundSchema, UpdateFundSchema } from '@/types/funds';
 import {
   FundErrorDisplay,
   FundValidationErrorDisplay,
   FundBalanceErrorDisplay,
-} from "@/components/fund-error-display";
+} from '@/components/fund-error-display';
 import {
   classifyError,
   validateFundForm,
   retryOperation,
   logFundError,
-} from "@/lib/fund-error-handling";
+} from '@/lib/fund-error-handling';
 import {
   FundsEmptyState,
   FundsTableSkeleton,
   LoadingButton,
-} from "@/components/fund-empty-states";
+} from '@/components/fund-empty-states';
 
 export function FundsView() {
   const {
@@ -69,10 +69,10 @@ export function FundsView() {
   const [isRecalculateOpen, setIsRecalculateOpen] = useState(false);
 
   const [newFund, setNewFund] = useState({
-    name: "",
-    description: "",
+    name: '',
+    description: '',
     initialBalance: 0,
-    startDate: new Date().toISOString().split("T")[0],
+    startDate: new Date().toISOString().split('T')[0],
   });
 
   const [editFund, setEditFund] = useState<Fund | null>(null);
@@ -96,10 +96,10 @@ export function FundsView() {
 
   const resetNewFund = () => {
     setNewFund({
-      name: "",
-      description: "",
+      name: '',
+      description: '',
       initialBalance: 0,
-      startDate: new Date().toISOString().split("T")[0],
+      startDate: new Date().toISOString().split('T')[0],
     });
   };
 
@@ -138,18 +138,18 @@ export function FundsView() {
       resetNewFund();
       setIsAddOpen(false);
       toast({
-        title: "Fondo creado",
-        description: "El fondo ha sido creado exitosamente",
+        title: 'Fondo creado',
+        description: 'El fondo ha sido creado exitosamente',
       });
     } catch (error) {
-      logFundError("add_fund", error, { fundData: newFund });
+      logFundError('add_fund', error, { fundData: newFund });
       const errorDetails = classifyError(error);
       setGeneralError(errorDetails.message);
 
       toast({
-        title: "Error",
+        title: 'Error',
         description: errorDetails.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -192,18 +192,18 @@ export function FundsView() {
       setEditFund(null);
       setIsEditOpen(false);
       toast({
-        title: "Fondo actualizado",
-        description: "El fondo ha sido actualizado exitosamente",
+        title: 'Fondo actualizado',
+        description: 'El fondo ha sido actualizado exitosamente',
       });
     } catch (error) {
-      logFundError("update_fund", error, { fundId: editFund.id });
+      logFundError('update_fund', error, { fundId: editFund.id });
       const errorDetails = classifyError(error);
       setGeneralError(errorDetails.message);
 
       toast({
-        title: "Error",
+        title: 'Error',
         description: errorDetails.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -222,17 +222,17 @@ export function FundsView() {
       setDeleteId(null);
       setIsDeleteOpen(false);
       toast({
-        title: "Fondo eliminado",
-        description: "El fondo ha sido eliminado exitosamente",
+        title: 'Fondo eliminado',
+        description: 'El fondo ha sido eliminado exitosamente',
       });
     } catch (error) {
-      logFundError("delete_fund", error, { fundId: deleteId });
+      logFundError('delete_fund', error, { fundId: deleteId });
       const errorDetails = classifyError(error);
 
       toast({
-        title: "Error",
+        title: 'Error',
         description: errorDetails.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -248,17 +248,17 @@ export function FundsView() {
 
       if (result.success) {
         toast({
-          title: "Balance recalculado",
+          title: 'Balance recalculado',
           description: `Balance actualizado de $${result.old_balance.toLocaleString()} a $${result.new_balance.toLocaleString()}`,
         });
       } else {
-        throw new Error(result.error?.message || "Error al recalcular balance");
+        throw new Error(result.error?.message || 'Error al recalcular balance');
       }
 
       setRecalculateId(null);
       setIsRecalculateOpen(false);
     } catch (error) {
-      logFundError("recalculate_balance", error, { fundId: recalculateId });
+      logFundError('recalculate_balance', error, { fundId: recalculateId });
       const errorDetails = classifyError(error);
 
       // Store balance error for this specific fund
@@ -268,9 +268,9 @@ export function FundsView() {
       }));
 
       toast({
-        title: "Error",
+        title: 'Error',
         description: errorDetails.message,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -291,16 +291,16 @@ export function FundsView() {
   };
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-CO");
+    return new Date(dateString).toLocaleDateString('es-CO');
   };
 
   return (
@@ -314,7 +314,10 @@ export function FundsView() {
               Nuevo Fondo
             </Button>
           </DialogTrigger>
-          <DialogContent componentId="funds-add-dialog" className="sm:max-w-[425px]">
+          <DialogContent
+            componentId="funds-add-dialog"
+            className="sm:max-w-[425px]"
+          >
             <DialogHeader>
               <DialogTitle>Crear Nuevo Fondo</DialogTitle>
               <DialogDescription>
@@ -382,7 +385,7 @@ export function FundsView() {
                   onChange={(e) =>
                     setNewFund({ ...newFund, startDate: e.target.value })
                   }
-                  max={new Date().toISOString().split("T")[0]}
+                  max={new Date().toISOString().split('T')[0]}
                 />
               </div>
             </div>
@@ -458,7 +461,7 @@ export function FundsView() {
               ) : (
                 [...funds]
                   .sort((a, b) =>
-                    a.name.localeCompare(b.name, "es", { sensitivity: "base" })
+                    a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
                   )
                   .map((fund) => (
                     <>
@@ -467,7 +470,7 @@ export function FundsView() {
                           {fund.name}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {fund.description || "Sin descripción"}
+                          {fund.description || 'Sin descripción'}
                         </TableCell>
                         <TableCell className="text-right font-mono">
                           {formatCurrency(fund.initial_balance)}
@@ -562,7 +565,7 @@ export function FundsView() {
               <Label htmlFor="edit-name">Nombre *</Label>
               <Input
                 id="edit-name"
-                value={editFund?.name || ""}
+                value={editFund?.name || ''}
                 onChange={(e) =>
                   setEditFund((prev) =>
                     prev ? { ...prev, name: e.target.value } : null
@@ -574,7 +577,7 @@ export function FundsView() {
               <Label htmlFor="edit-description">Descripción</Label>
               <Textarea
                 id="edit-description"
-                value={editFund?.description || ""}
+                value={editFund?.description || ''}
                 onChange={(e) =>
                   setEditFund((prev) =>
                     prev ? { ...prev, description: e.target.value } : null

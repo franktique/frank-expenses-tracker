@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import type React from "react";
+import type React from 'react';
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from 'react';
 
 export type Category = {
   id: string;
@@ -35,7 +35,7 @@ export type Income = {
   event?: string;
 };
 
-export type PaymentMethod = "credit" | "debit" | "cash";
+export type PaymentMethod = 'credit' | 'debit' | 'cash';
 
 export type Expense = {
   id: string;
@@ -146,7 +146,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkDbStatus = async () => {
       try {
-        const response = await fetch("/api/check-db-status");
+        const response = await fetch('/api/check-db-status');
         if (!response.ok) {
           let errorMessage = `HTTP error ${response.status}`;
           try {
@@ -168,14 +168,14 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           data = await response.json();
         } catch {
           setDbConnectionError(true);
-          setConnectionErrorDetails("Invalid JSON response from server");
+          setConnectionErrorDetails('Invalid JSON response from server');
           setIsLoading(false);
           return;
         }
         if (!data.connected) {
           setDbConnectionError(true);
           setConnectionErrorDetails(
-            data.error || "Could not connect to database"
+            data.error || 'Could not connect to database'
           );
           setIsLoading(false);
           return;
@@ -201,7 +201,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     try {
       setIsLoading(true);
       setError(null);
-      const response = await fetch("/api/setup-db");
+      const response = await fetch('/api/setup-db');
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || `HTTP error ${response.status}`);
@@ -213,7 +213,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         setConnectionErrorDetails(null);
         await refreshData();
       } else {
-        throw new Error(data.message || "Unknown error setting up database");
+        throw new Error(data.message || 'Unknown error setting up database');
       }
     } catch (err) {
       setError((err as Error).message);
@@ -230,14 +230,14 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
     setError(null);
     try {
-      const categoriesResponse = await fetch("/api/categories");
+      const categoriesResponse = await fetch('/api/categories');
       if (!categoriesResponse.ok) {
         const errorText = await categoriesResponse.text();
         throw new Error(`Failed to fetch categories: ${errorText}`);
       }
       const categoriesData = await categoriesResponse.json();
       setCategories(categoriesData);
-      const periodsResponse = await fetch("/api/periods");
+      const periodsResponse = await fetch('/api/periods');
       if (!periodsResponse.ok) {
         const errorText = await periodsResponse.text();
         throw new Error(`Failed to fetch periods: ${errorText}`);
@@ -247,21 +247,21 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       const openPeriod =
         periodsData.find((p: Period) => p.is_open || p.isOpen) || null;
       setActivePeriod(openPeriod);
-      const budgetsResponse = await fetch("/api/budgets");
+      const budgetsResponse = await fetch('/api/budgets');
       if (!budgetsResponse.ok) {
         const errorText = await budgetsResponse.text();
         throw new Error(`Failed to fetch budgets: ${errorText}`);
       }
       const budgetsData = await budgetsResponse.json();
       setBudgets(budgetsData);
-      const incomesResponse = await fetch("/api/incomes");
+      const incomesResponse = await fetch('/api/incomes');
       if (!incomesResponse.ok) {
         const errorText = await incomesResponse.text();
         throw new Error(`Failed to fetch incomes: ${errorText}`);
       }
       const incomesData = await incomesResponse.json();
       setIncomes(incomesData);
-      const expensesResponse = await fetch("/api/expenses");
+      const expensesResponse = await fetch('/api/expenses');
       if (!expensesResponse.ok) {
         const errorText = await expensesResponse.text();
         throw new Error(`Failed to fetch expenses: ${errorText}`);
@@ -278,9 +278,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   // Category functions
   const addCategory = async (name: string) => {
     try {
-      const response = await fetch("/api/categories", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
       });
       if (!response.ok) {
@@ -297,8 +297,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const updateCategory = async (id: string, name: string) => {
     try {
       const response = await fetch(`/api/categories/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name }),
       });
       if (!response.ok) {
@@ -317,7 +317,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const deleteCategory = async (id: string) => {
     try {
       const response = await fetch(`/api/categories/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
       if (!response.ok) {
         const errorText = await response.text();
@@ -335,9 +335,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   // Period functions
   const addPeriod = async (name: string, month: number, year: number) => {
     try {
-      const response = await fetch("/api/periods", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/periods', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, month, year }),
       });
       if (!response.ok) {
@@ -359,8 +359,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       const response = await fetch(`/api/periods/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, month, year }),
       });
       if (!response.ok) {
@@ -381,7 +381,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   };
   const deletePeriod = async (id: string) => {
     try {
-      const response = await fetch(`/api/periods/${id}`, { method: "DELETE" });
+      const response = await fetch(`/api/periods/${id}`, { method: 'DELETE' });
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to delete period: ${errorText}`);
@@ -410,7 +410,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         setActivePeriod({ ...periodToOpen, is_open: true, isOpen: true });
       }
       const response = await fetch(`/api/periods/open/${id}`, {
-        method: "POST",
+        method: 'POST',
       });
       if (!response.ok) {
         const errorText = await response.text();
@@ -458,7 +458,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
       // Then send request to server
       const response = await fetch(`/api/periods/close/${id}`, {
-        method: "POST",
+        method: 'POST',
       });
 
       if (!response.ok) {
@@ -499,9 +499,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     paymentMethod: PaymentMethod
   ) => {
     try {
-      const response = await fetch("/api/budgets", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/budgets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           categoryId,
           periodId,
@@ -536,8 +536,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       const response = await fetch(`/api/budgets/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           expectedAmount,
           ...(paymentMethod ? { paymentMethod } : {}),
@@ -558,7 +558,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   };
   const deleteBudget = async (id: string) => {
     try {
-      const response = await fetch(`/api/budgets/${id}`, { method: "DELETE" });
+      const response = await fetch(`/api/budgets/${id}`, { method: 'DELETE' });
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to delete budget: ${errorText}`);
@@ -579,9 +579,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     event?: string
   ) => {
     try {
-      const response = await fetch("/api/incomes", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/incomes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ periodId, date, description, amount, event }),
       });
       if (!response.ok) {
@@ -605,8 +605,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       const response = await fetch(`/api/incomes/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ periodId, date, description, amount, event }),
       });
       if (!response.ok) {
@@ -624,7 +624,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   };
   const deleteIncome = async (id: string) => {
     try {
-      const response = await fetch(`/api/incomes/${id}`, { method: "DELETE" });
+      const response = await fetch(`/api/incomes/${id}`, { method: 'DELETE' });
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to delete income: ${errorText}`);
@@ -647,9 +647,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     amount: number
   ) => {
     try {
-      const response = await fetch("/api/expenses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           categoryId,
           periodId,
@@ -682,8 +682,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       const response = await fetch(`/api/expenses/${id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           categoryId,
           date,
@@ -710,7 +710,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   };
   const deleteExpense = async (id: string) => {
     try {
-      const response = await fetch(`/api/expenses/${id}`, { method: "DELETE" });
+      const response = await fetch(`/api/expenses/${id}`, { method: 'DELETE' });
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to delete expense: ${errorText}`);
@@ -773,7 +773,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 export function useBudget() {
   const context = useContext(BudgetContext);
   if (context === undefined) {
-    throw new Error("useBudget must be used within a BudgetProvider");
+    throw new Error('useBudget must be used within a BudgetProvider');
   }
   return context;
 }

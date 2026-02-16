@@ -3,8 +3,8 @@
  * One-time migration of localStorage data to database
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 interface MigrationRequest {
   subgroupOrder?: string[];
@@ -27,7 +27,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid simulation ID",
+          error: 'Invalid simulation ID',
           statusCode: 400,
         },
         { status: 400 }
@@ -42,7 +42,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid request body",
+          error: 'Invalid request body',
           statusCode: 400,
         },
         { status: 400 }
@@ -66,12 +66,17 @@ export async function POST(
           `;
 
           // Count rows affected (Neon returns different formats)
-          const rowCount = Array.isArray(result) ? result.length : (result.rowCount || 0);
+          const rowCount = Array.isArray(result)
+            ? result.length
+            : result.rowCount || 0;
           if (rowCount > 0) {
             migratedOrderCount++;
           }
         } catch (error) {
-          console.error(`Failed to update order for subgroup ${subgroupId}:`, error);
+          console.error(
+            `Failed to update order for subgroup ${subgroupId}:`,
+            error
+          );
           // Continue with other subgroups
         }
       }
@@ -79,7 +84,7 @@ export async function POST(
     }
 
     // Migrate visibility state
-    if (visibilityState && typeof visibilityState === "object") {
+    if (visibilityState && typeof visibilityState === 'object') {
       for (const [itemId, isVisible] of Object.entries(visibilityState)) {
         try {
           // Try to update as subgroup first
@@ -90,12 +95,17 @@ export async function POST(
           `;
 
           // Count rows affected
-          const rowCount = Array.isArray(result) ? result.length : (result.rowCount || 0);
+          const rowCount = Array.isArray(result)
+            ? result.length
+            : result.rowCount || 0;
           if (rowCount > 0) {
             migratedVisibilityCount++;
           }
         } catch (error) {
-          console.error(`Failed to update visibility for item ${itemId}:`, error);
+          console.error(
+            `Failed to update visibility for item ${itemId}:`,
+            error
+          );
           // Continue with other items
         }
       }
@@ -103,12 +113,14 @@ export async function POST(
     }
 
     // Mark migration as complete (store in a migrations tracking table or just log)
-    console.log(`localStorage migration completed for simulation ${simulationId}`);
+    console.log(
+      `localStorage migration completed for simulation ${simulationId}`
+    );
 
     return NextResponse.json(
       {
         success: true,
-        message: "localStorage migration completed",
+        message: 'localStorage migration completed',
         details: {
           subgroupsOrderMigrated: migratedOrderCount,
           visibilityMigrated: migratedVisibilityCount,
@@ -118,11 +130,11 @@ export async function POST(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error migrating localStorage data:", error);
+    console.error('Error migrating localStorage data:', error);
     const errorMessage =
       error instanceof Error
         ? error.message
-        : "Failed to migrate localStorage data";
+        : 'Failed to migrate localStorage data';
 
     return NextResponse.json(
       {

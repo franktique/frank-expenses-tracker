@@ -1,11 +1,11 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  let id = "";
+  let id = '';
   try {
     const p = await params;
     id = p.id;
@@ -13,7 +13,7 @@ export async function GET(
 
     if (isNaN(estudioId)) {
       return NextResponse.json(
-        { error: "Invalid estudio ID" },
+        { error: 'Invalid estudio ID' },
         { status: 400 }
       );
     }
@@ -24,7 +24,7 @@ export async function GET(
     `;
 
     if (!estudio) {
-      return NextResponse.json({ error: "Estudio not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Estudio not found' }, { status: 404 });
     }
 
     // Get groupers assigned to this estudio
@@ -53,7 +53,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  let id = "";
+  let id = '';
   try {
     const p = await params;
     id = p.id;
@@ -61,16 +61,16 @@ export async function PUT(
 
     if (isNaN(estudioId)) {
       return NextResponse.json(
-        { error: "ID de estudio inválido" },
+        { error: 'ID de estudio inválido' },
         { status: 400 }
       );
     }
 
     const { name } = await request.json();
 
-    if (!name || typeof name !== "string") {
+    if (!name || typeof name !== 'string') {
       return NextResponse.json(
-        { error: "El nombre del estudio es requerido" },
+        { error: 'El nombre del estudio es requerido' },
         { status: 400 }
       );
     }
@@ -80,14 +80,14 @@ export async function PUT(
 
     if (trimmedName.length === 0) {
       return NextResponse.json(
-        { error: "El nombre del estudio no puede estar vacío" },
+        { error: 'El nombre del estudio no puede estar vacío' },
         { status: 400 }
       );
     }
 
     if (trimmedName.length > 255) {
       return NextResponse.json(
-        { error: "El nombre del estudio no puede exceder 255 caracteres" },
+        { error: 'El nombre del estudio no puede exceder 255 caracteres' },
         { status: 400 }
       );
     }
@@ -99,7 +99,7 @@ export async function PUT(
 
     if (!existingEstudio) {
       return NextResponse.json(
-        { error: "Estudio no encontrado" },
+        { error: 'Estudio no encontrado' },
         { status: 404 }
       );
     }
@@ -112,7 +112,7 @@ export async function PUT(
 
     if (duplicateEstudio.length > 0) {
       return NextResponse.json(
-        { error: "Ya existe otro estudio con este nombre" },
+        { error: 'Ya existe otro estudio con este nombre' },
         { status: 409 }
       );
     }
@@ -126,7 +126,7 @@ export async function PUT(
 
     if (!updatedEstudio) {
       return NextResponse.json(
-        { error: "Error al actualizar el estudio" },
+        { error: 'Error al actualizar el estudio' },
         { status: 500 }
       );
     }
@@ -137,17 +137,17 @@ export async function PUT(
 
     // Handle specific database errors
     if (error instanceof Error) {
-      if (error.message.includes("duplicate key")) {
+      if (error.message.includes('duplicate key')) {
         return NextResponse.json(
-          { error: "Ya existe otro estudio con este nombre" },
+          { error: 'Ya existe otro estudio con este nombre' },
           { status: 409 }
         );
       }
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
             error:
-              "Error de conexión con la base de datos. Intente nuevamente.",
+              'Error de conexión con la base de datos. Intente nuevamente.',
           },
           { status: 503 }
         );
@@ -155,7 +155,7 @@ export async function PUT(
     }
 
     return NextResponse.json(
-      { error: "Error interno del servidor. Intente nuevamente." },
+      { error: 'Error interno del servidor. Intente nuevamente.' },
       { status: 500 }
     );
   }
@@ -165,7 +165,7 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  let id = "";
+  let id = '';
   try {
     const p = await params;
     id = p.id;
@@ -173,7 +173,7 @@ export async function DELETE(
 
     if (isNaN(estudioId)) {
       return NextResponse.json(
-        { error: "ID de estudio inválido" },
+        { error: 'ID de estudio inválido' },
         { status: 400 }
       );
     }
@@ -185,7 +185,7 @@ export async function DELETE(
 
     if (!existingEstudio) {
       return NextResponse.json(
-        { error: "Estudio no encontrado" },
+        { error: 'Estudio no encontrado' },
         { status: 404 }
       );
     }
@@ -199,8 +199,8 @@ export async function DELETE(
       return NextResponse.json(
         {
           error:
-            "No se puede eliminar el último estudio. Debe existir al menos un estudio para usar el dashboard.",
-          code: "LAST_ESTUDIO",
+            'No se puede eliminar el último estudio. Debe existir al menos un estudio para usar el dashboard.',
+          code: 'LAST_ESTUDIO',
         },
         { status: 409 }
       );
@@ -220,7 +220,7 @@ export async function DELETE(
 
     if (!deletedEstudio) {
       return NextResponse.json(
-        { error: "Error al eliminar el estudio" },
+        { error: 'Error al eliminar el estudio' },
         { status: 500 }
       );
     }
@@ -235,20 +235,20 @@ export async function DELETE(
 
     // Handle specific database errors
     if (error instanceof Error) {
-      if (error.message.includes("foreign key")) {
+      if (error.message.includes('foreign key')) {
         return NextResponse.json(
           {
             error:
-              "No se puede eliminar el estudio porque tiene dependencias activas",
+              'No se puede eliminar el estudio porque tiene dependencias activas',
           },
           { status: 409 }
         );
       }
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
             error:
-              "Error de conexión con la base de datos. Intente nuevamente.",
+              'Error de conexión con la base de datos. Intente nuevamente.',
           },
           { status: 503 }
         );
@@ -256,7 +256,7 @@ export async function DELETE(
     }
 
     return NextResponse.json(
-      { error: "Error interno del servidor. Intente nuevamente." },
+      { error: 'Error interno del servidor. Intente nuevamente.' },
       { status: 500 }
     );
   }

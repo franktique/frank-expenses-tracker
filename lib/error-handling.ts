@@ -3,12 +3,12 @@
  */
 
 export type ErrorType =
-  | "network"
-  | "validation"
-  | "server"
-  | "timeout"
-  | "not_found"
-  | "unknown";
+  | 'network'
+  | 'validation'
+  | 'server'
+  | 'timeout'
+  | 'not_found'
+  | 'unknown';
 
 export interface AppError {
   type: ErrorType;
@@ -26,23 +26,23 @@ export function categorizeError(error: unknown): AppError {
 
     // Network/Connection errors
     if (
-      message.includes("fetch") ||
-      message.includes("network") ||
-      message.includes("connection")
+      message.includes('fetch') ||
+      message.includes('network') ||
+      message.includes('connection')
     ) {
       return {
-        type: "network",
-        message: "Error de conexión. Verifica tu conexión a internet.",
+        type: 'network',
+        message: 'Error de conexión. Verifica tu conexión a internet.',
         originalError: error,
         retryable: true,
       };
     }
 
     // Timeout errors
-    if (message.includes("timeout") || message.includes("tardó demasiado")) {
+    if (message.includes('timeout') || message.includes('tardó demasiado')) {
       return {
-        type: "timeout",
-        message: "La operación tardó demasiado tiempo. Intenta nuevamente.",
+        type: 'timeout',
+        message: 'La operación tardó demasiado tiempo. Intenta nuevamente.',
         originalError: error,
         retryable: true,
       };
@@ -50,13 +50,13 @@ export function categorizeError(error: unknown): AppError {
 
     // Validation errors
     if (
-      message.includes("invalid") ||
-      message.includes("required") ||
-      message.includes("inválido")
+      message.includes('invalid') ||
+      message.includes('required') ||
+      message.includes('inválido')
     ) {
       return {
-        type: "validation",
-        message: "Datos inválidos. Verifica los parámetros.",
+        type: 'validation',
+        message: 'Datos inválidos. Verifica los parámetros.',
         originalError: error,
         retryable: false,
       };
@@ -64,13 +64,13 @@ export function categorizeError(error: unknown): AppError {
 
     // Not found errors
     if (
-      message.includes("not found") ||
-      message.includes("no existe") ||
-      message.includes("does not exist")
+      message.includes('not found') ||
+      message.includes('no existe') ||
+      message.includes('does not exist')
     ) {
       return {
-        type: "not_found",
-        message: "Los datos solicitados no fueron encontrados.",
+        type: 'not_found',
+        message: 'Los datos solicitados no fueron encontrados.',
         originalError: error,
         retryable: false,
       };
@@ -78,13 +78,13 @@ export function categorizeError(error: unknown): AppError {
 
     // Server errors
     if (
-      message.includes("server") ||
-      message.includes("internal") ||
-      message.includes("servidor")
+      message.includes('server') ||
+      message.includes('internal') ||
+      message.includes('servidor')
     ) {
       return {
-        type: "server",
-        message: "Error del servidor. Intenta nuevamente en unos momentos.",
+        type: 'server',
+        message: 'Error del servidor. Intenta nuevamente en unos momentos.',
         originalError: error,
         retryable: true,
       };
@@ -92,8 +92,8 @@ export function categorizeError(error: unknown): AppError {
 
     // Default to server error for unknown Error instances
     return {
-      type: "server",
-      message: error.message || "Error del servidor. Intenta nuevamente.",
+      type: 'server',
+      message: error.message || 'Error del servidor. Intenta nuevamente.',
       originalError: error,
       retryable: true,
     };
@@ -101,8 +101,8 @@ export function categorizeError(error: unknown): AppError {
 
   // Handle non-Error objects
   return {
-    type: "unknown",
-    message: "Error desconocido. Intenta nuevamente.",
+    type: 'unknown',
+    message: 'Error desconocido. Intenta nuevamente.',
     originalError: error instanceof Error ? error : new Error(String(error)),
     retryable: true,
   };
@@ -150,7 +150,7 @@ export async function retryWithBackoff<T>(
  */
 export async function handleApiResponse(response: Response): Promise<any> {
   if (!response.ok) {
-    let errorMessage = "Error en la respuesta del servidor";
+    let errorMessage = 'Error en la respuesta del servidor';
 
     try {
       const errorData = await response.json();
@@ -192,7 +192,7 @@ export function fetchWithTimeout(
   return Promise.race([
     fetch(url, options),
     new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error("timeout: Request timed out")), timeout)
+      setTimeout(() => reject(new Error('timeout: Request timed out')), timeout)
     ),
   ]);
 }
@@ -216,14 +216,14 @@ export async function fetchWithRetry(
  * Specific error messages for different scenarios
  */
 export const ERROR_MESSAGES = {
-  FILTER_LOAD_FAILED: "Error al cargar los filtros de agrupadores",
-  BUDGET_LOAD_FAILED: "Error al cargar los datos de presupuesto",
-  DATA_FETCH_FAILED: "Error al cargar los datos",
-  NETWORK_ERROR: "Error de conexión. Verifica tu conexión a internet",
-  SERVER_ERROR: "Error del servidor. Intenta nuevamente en unos momentos",
-  TIMEOUT_ERROR: "La operación tardó demasiado tiempo. Intenta nuevamente",
-  VALIDATION_ERROR: "Datos inválidos. Verifica los parámetros",
-  NOT_FOUND_ERROR: "Los datos solicitados no fueron encontrados",
+  FILTER_LOAD_FAILED: 'Error al cargar los filtros de agrupadores',
+  BUDGET_LOAD_FAILED: 'Error al cargar los datos de presupuesto',
+  DATA_FETCH_FAILED: 'Error al cargar los datos',
+  NETWORK_ERROR: 'Error de conexión. Verifica tu conexión a internet',
+  SERVER_ERROR: 'Error del servidor. Intenta nuevamente en unos momentos',
+  TIMEOUT_ERROR: 'La operación tardó demasiado tiempo. Intenta nuevamente',
+  VALIDATION_ERROR: 'Datos inválidos. Verifica los parámetros',
+  NOT_FOUND_ERROR: 'Los datos solicitados no fueron encontrados',
   RETRY_SUGGESTION: "Haz clic en 'Reintentar' para volver a cargar",
 } as const;
 
@@ -234,28 +234,28 @@ export function getErrorMessage(error: AppError, context?: string): string {
   const baseMessage = error.message;
 
   switch (error.type) {
-    case "network":
+    case 'network':
       return context
         ? `${ERROR_MESSAGES.NETWORK_ERROR}. ${ERROR_MESSAGES.RETRY_SUGGESTION}.`
         : ERROR_MESSAGES.NETWORK_ERROR;
 
-    case "timeout":
+    case 'timeout':
       return context
         ? `${ERROR_MESSAGES.TIMEOUT_ERROR}. ${ERROR_MESSAGES.RETRY_SUGGESTION}.`
         : ERROR_MESSAGES.TIMEOUT_ERROR;
 
-    case "server":
+    case 'server':
       return context
         ? `${ERROR_MESSAGES.SERVER_ERROR}. ${ERROR_MESSAGES.RETRY_SUGGESTION}.`
         : ERROR_MESSAGES.SERVER_ERROR;
 
-    case "validation":
+    case 'validation':
       return ERROR_MESSAGES.VALIDATION_ERROR;
 
-    case "not_found":
+    case 'not_found':
       return ERROR_MESSAGES.NOT_FOUND_ERROR;
 
     default:
-      return baseMessage || "Error desconocido";
+      return baseMessage || 'Error desconocido';
   }
 }

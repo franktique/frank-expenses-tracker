@@ -16,6 +16,7 @@ This helps users quickly understand how much each sub-group represents in relati
 ## Current State
 
 Sub-group headers display:
+
 - Efectivo (Cash)
 - Crédito (Credit)
 - Ahorro Esperado (Expected Savings)
@@ -27,6 +28,7 @@ The values are now correctly aligned after the previous fix.
 ## New State (Target)
 
 Sub-group headers will display:
+
 - Efectivo (Cash)
 - Crédito (Credit)
 - **Ahorro Esperado (Expected Savings) + %** ← New percentage
@@ -36,6 +38,7 @@ Sub-group headers will display:
 ## Percentage Calculation Details
 
 ### Ahorro Esperado Percentage
+
 ```
 Formula: (subgroupAhorroEsperado / subgroupTotal) * 100
 
@@ -46,6 +49,7 @@ Example for "Bebe Jacobo" sub-group:
 ```
 
 ### Total Percentage
+
 ```
 Formula: (subgroupTotal / totalIncome) * 100
 
@@ -58,11 +62,13 @@ Example for "Bebe Jacobo" sub-group:
 ## Implementation Plan
 
 ### Phase 1: Data Preparation
+
 - [x] Pass `totalIncome` prop to `SubgroupHeaderRow` component
 - [x] Verify `subtotals` object contains required values (efectivoAmount, creditoAmount, expectedSavings, total)
 - [x] Ensure calculations handle edge cases (division by zero, null values)
 
 ### Phase 2: UI Implementation
+
 - [x] Update `SubgroupHeaderRow` component to calculate percentages
 - [x] Modify "Ahorro Esperado" cell to display percentage below value
 - [x] Modify "Total" cell to display percentage below value
@@ -70,6 +76,7 @@ Example for "Bebe Jacobo" sub-group:
 - [x] Ensure percentage text doesn't break table layout
 
 ### Phase 3: Testing & Validation
+
 - [x] Test with various sub-group configurations
 - [x] Verify percentage calculations are accurate
 - [x] Test with edge cases (0 values, very small/large numbers)
@@ -81,25 +88,24 @@ Example for "Bebe Jacobo" sub-group:
 ### Component: `SubgroupHeaderRow`
 
 **Props to Add:**
+
 ```typescript
 totalIncome: number; // Total simulated income
 ```
 
 **Calculation Functions:**
+
 ```typescript
 // In component or utility
 const ahorroEsperadoPercentage =
-  subtotals.total > 0
-    ? ((subtotals.expectedSavings / subtotals.total) * 100)
-    : 0;
+  subtotals.total > 0 ? (subtotals.expectedSavings / subtotals.total) * 100 : 0;
 
 const totalPercentage =
-  totalIncome > 0
-    ? ((subtotals.total / totalIncome) * 100)
-    : 0;
+  totalIncome > 0 ? (subtotals.total / totalIncome) * 100 : 0;
 ```
 
 **Display Format:**
+
 ```
 Value (XX.XX%)
 
@@ -111,6 +117,7 @@ $ 405.000 (1.09%)
 ### Component: `SimulationBudgetForm`
 
 **Changes Needed:**
+
 - Ensure `SubgroupHeaderRow` receives `totalIncome` prop
 - Verify `totalIncome` is available in component state/context
 
@@ -129,12 +136,14 @@ $ 405.000 (1.09%)
 ## UI/UX Considerations
 
 ### Layout
+
 - Percentages should be displayed on a separate line below the value
 - Smaller font size (text-xs) for percentages
 - Muted color (text-muted-foreground) for visual distinction
 - No impact on table column width or alignment
 
 ### Edge Cases
+
 - When total is 0: display "-" or "0%"
 - When income is 0: display "-" or "0%"
 - Very large percentages (e.g., 150%): display with warning/different styling

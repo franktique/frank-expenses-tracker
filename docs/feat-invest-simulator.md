@@ -7,6 +7,7 @@ Crear un simulador de rendimientos financieros que permita proyectar el crecimie
 ## Características Principales
 
 ### Parámetros de Entrada
+
 - **Monto inicial**: Capital con el que se inicia la inversión
 - **Aporte mensual**: Cantidad fija a depositar cada mes
 - **Plazo en meses**: Duración de la inversión
@@ -14,13 +15,16 @@ Crear un simulador de rendimientos financieros que permita proyectar el crecimie
 - **Frecuencia de capitalización**: Diaria o Mensual (para cálculo de interés compuesto)
 
 ### Vista de Resumen
+
 Similar a la imagen de referencia:
+
 - Monto final proyectado (destacado)
 - Total depositado (monto inicial + aportes)
 - Rendimientos generados (intereses ganados)
 - Tasa EA utilizada
 
 ### Vista de Detalle (Tabs)
+
 - **Resumen**: Tarjetas KPI con el resumen de la inversión
 - **Detalle por Periodo**: Tabla con desglose mes a mes (o día a día según configuración)
   - Fecha/Periodo
@@ -31,6 +35,7 @@ Similar a la imagen de referencia:
 - **Comparar Tasas**: Agregar múltiples tasas EA para ver cómo afectaría el rendimiento final
 
 ### Gestión de Simulaciones
+
 - Crear nuevas simulaciones con nombre único
 - Listar todas las simulaciones guardadas
 - Editar simulaciones existentes
@@ -42,6 +47,7 @@ Similar a la imagen de referencia:
 ## Plan de Implementación
 
 ### Fase 1: Base de Datos y Tipos
+
 - [x] 1.1 Crear tipos TypeScript para el simulador de inversiones (`/types/invest-simulator.ts`)
   - `InvestmentScenario`: id, name, initialAmount, monthlyContribution, termMonths, annualRate, compoundingFrequency, currency, createdAt, updatedAt
   - `InvestmentProjection`: Proyección calculada con todos los datos del resumen
@@ -55,6 +61,7 @@ Similar a la imagen de referencia:
   - Script idempotente (verificar si tablas existen antes de crear)
 
 ### Fase 2: Lógica de Cálculos
+
 - [x] 2.1 Crear librería de cálculos financieros (`/lib/invest-calculations.ts`)
   - `convertEAToPeriodicRate(eaRate, frequency)`: Convertir tasa EA a tasa periódica (diaria/mensual)
   - `calculateCompoundInterest(principal, rate, periods, contribution, frequency)`: Cálculo de interés compuesto
@@ -63,6 +70,7 @@ Similar a la imagen de referencia:
   - `compareRates(scenario, additionalRates)`: Comparar múltiples tasas
 
 ### Fase 3: API Endpoints
+
 - [x] 3.1 CRUD de escenarios de inversión (`/app/api/invest-scenarios/route.ts`)
   - `GET`: Listar todos los escenarios
   - `POST`: Crear nuevo escenario
@@ -81,6 +89,7 @@ Similar a la imagen de referencia:
   - `DELETE`: Eliminar tasa de comparación
 
 ### Fase 4: Componentes UI
+
 - [x] 4.1 Calculadora principal (`/components/invest-simulator/invest-calculator.tsx`)
   - Componente principal que integra formulario + resultados
   - Cálculos en tiempo real (client-side) mientras el usuario ajusta parámetros
@@ -128,6 +137,7 @@ Similar a la imagen de referencia:
   - Confirmar guardado
 
 ### Fase 5: Páginas y Rutas
+
 - [x] 5.1 Página principal del simulador (`/app/simular-inversiones/page.tsx`)
   - Calculadora interactiva como elemento principal
   - Cálculos en tiempo real mientras se ajustan parámetros
@@ -141,6 +151,7 @@ Similar a la imagen de referencia:
   - Mismo layout que página principal pero con datos cargados
 
 ### Fase 6: Navegación e Integración
+
 - [x] 6.1 Agregar entrada en el menú lateral de navegación
   - Icono apropiado (TrendingUp o similar)
   - Submenú si es necesario
@@ -158,6 +169,7 @@ Similar a la imagen de referencia:
 ## Modelo de Datos
 
 ### Tabla: `investment_scenarios`
+
 ```sql
 CREATE TABLE investment_scenarios (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -174,6 +186,7 @@ CREATE TABLE investment_scenarios (
 ```
 
 ### Tabla: `investment_rate_comparisons`
+
 ```sql
 CREATE TABLE investment_rate_comparisons (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -190,13 +203,16 @@ CREATE TABLE investment_rate_comparisons (
 ## Fórmulas de Cálculo
 
 ### Conversión de Tasa EA a Tasa Periódica
+
 ```
 Tasa Mensual = (1 + EA)^(1/12) - 1
 Tasa Diaria = (1 + EA)^(1/365) - 1
 ```
 
 ### Interés Compuesto con Aportes Periódicos
+
 Para capitalización mensual:
+
 ```
 FV = P(1 + r)^n + PMT × [((1 + r)^n - 1) / r]
 
@@ -209,7 +225,9 @@ Donde:
 ```
 
 ### Generación de Tabla Detallada
+
 Para cada periodo:
+
 ```
 Saldo Inicial = Saldo Final del periodo anterior
 Interés = Saldo Inicial × Tasa Periódica
@@ -239,6 +257,7 @@ Saldo Final = Saldo Inicial + Aporte + Interés
 ## Mockup de Interfaz
 
 ### Página de Lista
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  Simulador de Inversiones                    [+ Nueva Simulación]│
@@ -251,6 +270,7 @@ Saldo Final = Saldo Inicial + Aporte + Interés
 ```
 
 ### Página de Detalle - Tab Resumen
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  [Resumen] [Detalle] [Comparar Tasas]                           │
@@ -277,6 +297,7 @@ Saldo Final = Saldo Inicial + Aporte + Interés
 ```
 
 ### Página de Detalle - Tab Comparar Tasas
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │  [Resumen] [Detalle] [Comparar Tasas]                           │
@@ -306,6 +327,7 @@ Saldo Final = Saldo Inicial + Aporte + Interés
 ## Estimación de Archivos a Crear/Modificar
 
 ### Nuevos Archivos (~15)
+
 - `/types/invest-simulator.ts`
 - `/lib/invest-calculations.ts`
 - `/app/api/migrate-invest-simulator/route.ts`
@@ -324,5 +346,6 @@ Saldo Final = Saldo Inicial + Aporte + Interés
 - `/app/simular-inversiones/[id]/page.tsx`
 
 ### Archivos a Modificar (~2)
+
 - `/components/sidebar-nav.tsx` o equivalente (agregar navegación)
 - `/CLAUDE.md` (documentación)

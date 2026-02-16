@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { memo, useMemo, useCallback } from "react";
+import React, { memo, useMemo, useCallback } from 'react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -11,8 +11,8 @@ import {
   Tooltip,
   Cell,
   LabelList,
-} from "recharts";
-import { formatCurrency } from "@/lib/utils";
+} from 'recharts';
+import { formatCurrency } from '@/lib/utils';
 // Chart animation optimization simplified to avoid circular dependencies
 
 type CategoryData = {
@@ -74,7 +74,7 @@ const CategoryBarCells = memo<{
   );
 });
 
-CategoryBarCells.displayName = "CategoryBarCells";
+CategoryBarCells.displayName = 'CategoryBarCells';
 
 // Memoized budget bar cells for categories
 const CategoryBudgetBarCells = memo<{
@@ -127,7 +127,7 @@ const CategoryBudgetBarCells = memo<{
   );
 });
 
-CategoryBudgetBarCells.displayName = "CategoryBudgetBarCells";
+CategoryBudgetBarCells.displayName = 'CategoryBudgetBarCells';
 
 // Memoized label formatter for categories
 const useCategoryLabelFormatter = (projectionMode: boolean) => {
@@ -144,7 +144,7 @@ const useCategoryLabelFormatter = (projectionMode: boolean) => {
 
 // Memoized budget label formatter for categories
 const categoryBudgetLabelFormatter = (value: number) =>
-  value > 0 ? `Presup: ${formatCurrency(value)}` : "";
+  value > 0 ? `Presup: ${formatCurrency(value)}` : '';
 
 // Main optimized category chart component with enhanced performance
 export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
@@ -156,7 +156,7 @@ export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
     const animationConfig = useMemo(
       () => ({
         duration: data.length > 25 || projectionMode ? 0 : 300,
-        easing: "ease-out",
+        easing: 'ease-out',
         delay: 0,
         stagger: 0,
       }),
@@ -166,12 +166,12 @@ export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
     // Memoized chart configuration with animation optimization
     const chartConfig = useMemo(
       () => ({
-        layout: "vertical" as const,
+        layout: 'vertical' as const,
         margin: { top: 10, right: 120, left: 120, bottom: 10 },
         // Disable animations for large datasets or in projection mode for better performance
         animationBegin: 0,
         animationDuration: data.length > 15 || projectionMode ? 0 : 300,
-        animationEasing: "ease-out",
+        animationEasing: 'ease-out',
         isAnimationActive: data.length <= 15 && !projectionMode,
       }),
       [data.length, projectionMode]
@@ -180,7 +180,7 @@ export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
     // Memoized axis configuration
     const xAxisConfig = useMemo(
       () => ({
-        type: "number" as const,
+        type: 'number' as const,
         domain: [0, maxAmount],
         tickFormatter: formatCurrency,
         // Optimize tick count for performance
@@ -191,13 +191,13 @@ export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
 
     const yAxisConfig = useMemo(
       () => ({
-        dataKey: "name",
-        type: "category" as const,
+        dataKey: 'name',
+        type: 'category' as const,
         width: 150,
         tick: { fontSize: 12 },
         interval: 0,
         // Optimize text rendering
-        textAnchor: "end" as const,
+        textAnchor: 'end' as const,
       }),
       []
     );
@@ -205,8 +205,8 @@ export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
     // Memoized bar configurations with performance optimizations
     const budgetBarConfig = useMemo(
       () => ({
-        dataKey: "budget_amount",
-        name: "Presupuesto",
+        dataKey: 'budget_amount',
+        name: 'Presupuesto',
         opacity: 0.5,
         animationBegin: 50,
         animationDuration: animationConfig.duration,
@@ -217,8 +217,8 @@ export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
 
     const mainBarConfig = useMemo(
       () => ({
-        dataKey: "amount",
-        name: projectionMode ? "Presupuesto" : "Gastos",
+        dataKey: 'amount',
+        name: projectionMode ? 'Presupuesto' : 'Gastos',
         opacity: projectionMode ? 0.7 : 1,
         animationBegin: 0,
         animationDuration: animationConfig.duration,
@@ -230,20 +230,20 @@ export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
     // Memoized label styles
     const budgetLabelStyle = useMemo(
       () => ({
-        fontSize: "11px",
-        fill: "#475569",
-        fontWeight: "600",
-        fontStyle: "italic",
+        fontSize: '11px',
+        fill: '#475569',
+        fontWeight: '600',
+        fontStyle: 'italic',
       }),
       []
     );
 
     const mainLabelStyle = useMemo(
       () => ({
-        fontSize: "11px",
-        fontWeight: "600",
-        fontStyle: projectionMode ? "italic" : "normal",
-        fill: projectionMode ? "#6366f1" : "#374151",
+        fontSize: '11px',
+        fontWeight: '600',
+        fontStyle: projectionMode ? 'italic' : 'normal',
+        fill: projectionMode ? '#6366f1' : '#374151',
       }),
       [projectionMode]
     );
@@ -251,15 +251,15 @@ export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
     // Memoized grid configuration for performance
     const gridConfig = useMemo(
       () => ({
-        strokeDasharray: "3 3",
-        stroke: "#e2e8f0",
+        strokeDasharray: '3 3',
+        stroke: '#e2e8f0',
         strokeOpacity: 0.5,
       }),
       []
     );
 
     return (
-      <div className="w-full h-[400px] mt-4">
+      <div className="mt-4 h-[400px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} {...chartConfig}>
             <CartesianGrid {...gridConfig} />
@@ -305,7 +305,7 @@ export const OptimizedCategoryChart = memo<OptimizedCategoryChartProps>(
   }
 );
 
-OptimizedCategoryChart.displayName = "OptimizedCategoryChart";
+OptimizedCategoryChart.displayName = 'OptimizedCategoryChart';
 
 // Enhanced memo comparison function for better performance with optimized checks
 const areCategoryPropsEqual = (
@@ -339,13 +339,13 @@ const areCategoryPropsEqual = (
         (item) =>
           `${item.category_id}-${item.total_amount}-${item.budget_amount || 0}`
       )
-      .join("|");
+      .join('|');
     const nextHash = nextProps.data
       .map(
         (item) =>
           `${item.category_id}-${item.total_amount}-${item.budget_amount || 0}`
       )
-      .join("|");
+      .join('|');
 
     if (prevHash !== nextHash) {
       return false;

@@ -3,8 +3,8 @@
  * DELETE: Remove a subgroup from a template
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { removeSubgroupFromTemplate } from "@/lib/subgroup-template-db-utils";
+import { NextRequest, NextResponse } from 'next/server';
+import { removeSubgroupFromTemplate } from '@/lib/subgroup-template-db-utils';
 
 interface DeleteSubgroupResponse {
   success: boolean;
@@ -29,18 +29,20 @@ export async function DELETE(
     return NextResponse.json(
       {
         success: true,
-        message: "Subgroup removed from template successfully",
+        message: 'Subgroup removed from template successfully',
         statusCode: 200,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error removing subgroup from template:", error);
+    console.error('Error removing subgroup from template:', error);
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to remove subgroup from template";
+      error instanceof Error
+        ? error.message
+        : 'Failed to remove subgroup from template';
 
     // Check if subgroup not found
-    if (errorMessage.includes("not found")) {
+    if (errorMessage.includes('not found')) {
       return NextResponse.json(
         {
           success: false,

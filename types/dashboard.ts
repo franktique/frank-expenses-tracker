@@ -1,5 +1,5 @@
 // Dashboard-related type definitions
-import { PaymentMethod } from "./estudios";
+import { PaymentMethod } from './estudios';
 
 /**
  * Budget summary item representing a category's budget and expense data
@@ -62,10 +62,10 @@ export interface BudgetTotals {
  */
 export function hasSplitBudgetFields(item: any): item is BudgetSummaryItem {
   return (
-    typeof item === "object" &&
+    typeof item === 'object' &&
     item !== null &&
-    typeof item.credit_budget === "number" &&
-    typeof item.cash_debit_budget === "number"
+    typeof item.credit_budget === 'number' &&
+    typeof item.cash_debit_budget === 'number'
   );
 }
 

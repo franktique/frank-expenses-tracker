@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { memo, useMemo } from "react";
+import React, { memo, useMemo } from 'react';
 import {
   BarChart,
   Bar,
@@ -14,17 +14,17 @@ import {
   Line,
   ReferenceLine,
   Cell,
-} from "recharts";
-import { formatCurrency } from "@/lib/utils";
+} from 'recharts';
+import { formatCurrency } from '@/lib/utils';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
 
 // Types for simulation data
 interface SimulationChartData {
@@ -42,7 +42,7 @@ interface ComparisonMetric {
   avg_historical: number;
   simulation_amount: number;
   variance_percentage: number;
-  trend: "increase" | "decrease" | "stable";
+  trend: 'increase' | 'decrease' | 'stable';
 }
 
 interface SimulationTooltipProps {
@@ -62,12 +62,12 @@ const SimulationTooltip = memo<SimulationTooltipProps>(
     const grouperName = data.grouper_name || label;
 
     return (
-      <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
-        <p className="font-semibold text-foreground mb-2">{grouperName}</p>
+      <div className="rounded-lg border border-border bg-background p-3 shadow-lg">
+        <p className="mb-2 font-semibold text-foreground">{grouperName}</p>
 
         <div className="space-y-1">
           <p className="text-sm">
-            <span className="font-medium text-blue-600">Simulación:</span>{" "}
+            <span className="font-medium text-blue-600">Simulación:</span>{' '}
             {formatCurrency(data.simulation_total)}
           </p>
 
@@ -75,7 +75,7 @@ const SimulationTooltip = memo<SimulationTooltipProps>(
             <p className="text-sm">
               <span className="font-medium text-muted-foreground">
                 Promedio histórico:
-              </span>{" "}
+              </span>{' '}
               {formatCurrency(data.historical_avg)}
             </p>
           )}
@@ -92,20 +92,20 @@ const SimulationTooltip = memo<SimulationTooltipProps>(
               <span
                 className={`font-medium ${
                   data.variance_percentage > 5
-                    ? "text-green-600"
+                    ? 'text-green-600'
                     : data.variance_percentage < -5
-                    ? "text-red-600"
-                    : "text-gray-500"
+                      ? 'text-red-600'
+                      : 'text-gray-500'
                 }`}
               >
-                {data.variance_percentage > 0 ? "+" : ""}
+                {data.variance_percentage > 0 ? '+' : ''}
                 {data.variance_percentage.toFixed(1)}%
               </span>
             </div>
           )}
         </div>
 
-        <p className="text-xs text-blue-600 italic mt-2">
+        <p className="mt-2 text-xs italic text-blue-600">
           * Datos de simulación
         </p>
       </div>
@@ -113,7 +113,7 @@ const SimulationTooltip = memo<SimulationTooltipProps>(
   }
 );
 
-SimulationTooltip.displayName = "SimulationTooltip";
+SimulationTooltip.displayName = 'SimulationTooltip';
 
 // Main simulation chart component
 interface SimulationChartProps {
@@ -129,8 +129,8 @@ export const SimulationChart = memo<SimulationChartProps>(
   ({
     data,
     comparisonMetrics,
-    title = "Análisis de Simulación",
-    description = "Comparación entre simulación y datos históricos",
+    title = 'Análisis de Simulación',
+    description = 'Comparación entre simulación y datos históricos',
     showComparison = true,
     isLoading = false,
   }) => {
@@ -140,7 +140,7 @@ export const SimulationChart = memo<SimulationChartProps>(
         ...item,
         grouper_name_short:
           item.grouper_name.length > 15
-            ? item.grouper_name.substring(0, 15) + "..."
+            ? item.grouper_name.substring(0, 15) + '...'
             : item.grouper_name,
       }));
     }, [data]);
@@ -148,16 +148,16 @@ export const SimulationChart = memo<SimulationChartProps>(
     // Color scheme for simulation vs historical data
     const getBarColor = (item: SimulationChartData, index: number) => {
       if (!showComparison || item.historical_avg === undefined) {
-        return "#3b82f6"; // Blue for simulation only
+        return '#3b82f6'; // Blue for simulation only
       }
 
       // Color based on variance
       if (item.variance_percentage !== undefined) {
-        if (item.variance_percentage > 5) return "#10b981"; // Green for increase
-        if (item.variance_percentage < -5) return "#ef4444"; // Red for decrease
+        if (item.variance_percentage > 5) return '#10b981'; // Green for increase
+        if (item.variance_percentage < -5) return '#ef4444'; // Red for decrease
       }
 
-      return "#6b7280"; // Gray for stable
+      return '#6b7280'; // Gray for stable
     };
 
     if (isLoading) {
@@ -168,8 +168,8 @@ export const SimulationChart = memo<SimulationChartProps>(
             <CardDescription>{description}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center items-center h-[400px]">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <div className="flex h-[400px] items-center justify-center">
+              <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
             </div>
           </CardContent>
         </Card>
@@ -184,7 +184,7 @@ export const SimulationChart = memo<SimulationChartProps>(
             <CardDescription>{description}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center items-center h-[400px]">
+            <div className="flex h-[400px] items-center justify-center">
               <p className="text-muted-foreground">
                 No hay datos de simulación disponibles
               </p>
@@ -202,7 +202,7 @@ export const SimulationChart = memo<SimulationChartProps>(
               <CardTitle>{title}</CardTitle>
               <CardDescription>{description}</CardDescription>
             </div>
-            <Badge variant="outline" className="text-blue-600 border-blue-600">
+            <Badge variant="outline" className="border-blue-600 text-blue-600">
               Simulación
             </Badge>
           </div>
@@ -284,16 +284,16 @@ export const SimulationChart = memo<SimulationChartProps>(
                       <Badge
                         key={metric.grouper_id}
                         variant={
-                          metric.trend === "increase"
-                            ? "default"
-                            : metric.trend === "decrease"
-                            ? "destructive"
-                            : "secondary"
+                          metric.trend === 'increase'
+                            ? 'default'
+                            : metric.trend === 'decrease'
+                              ? 'destructive'
+                              : 'secondary'
                         }
                         className="text-xs"
                       >
-                        {metric.grouper_name}:{" "}
-                        {metric.variance_percentage > 0 ? "+" : ""}
+                        {metric.grouper_name}:{' '}
+                        {metric.variance_percentage > 0 ? '+' : ''}
                         {metric.variance_percentage.toFixed(1)}%
                       </Badge>
                     ))}
@@ -306,7 +306,7 @@ export const SimulationChart = memo<SimulationChartProps>(
   }
 );
 
-SimulationChart.displayName = "SimulationChart";
+SimulationChart.displayName = 'SimulationChart';
 
 // Comparison chart showing simulation vs historical side by side
 interface SimulationComparisonChartProps {
@@ -319,8 +319,8 @@ interface SimulationComparisonChartProps {
 export const SimulationComparisonChart = memo<SimulationComparisonChartProps>(
   ({
     data,
-    title = "Comparación Simulación vs Histórico",
-    description = "Análisis lado a lado de simulación y promedios históricos",
+    title = 'Comparación Simulación vs Histórico',
+    description = 'Análisis lado a lado de simulación y promedios históricos',
     isLoading = false,
   }) => {
     // Filter data to only show items with historical comparison
@@ -330,7 +330,7 @@ export const SimulationComparisonChart = memo<SimulationComparisonChartProps>(
         .map((item) => ({
           grouper_name:
             item.grouper_name.length > 12
-              ? item.grouper_name.substring(0, 12) + "..."
+              ? item.grouper_name.substring(0, 12) + '...'
               : item.grouper_name,
           simulation: item.simulation_total,
           historical: item.historical_avg || 0,
@@ -346,8 +346,8 @@ export const SimulationComparisonChart = memo<SimulationComparisonChartProps>(
             <CardDescription>{description}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center items-center h-[400px]">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            <div className="flex h-[400px] items-center justify-center">
+              <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
             </div>
           </CardContent>
         </Card>
@@ -362,7 +362,7 @@ export const SimulationComparisonChart = memo<SimulationComparisonChartProps>(
             <CardDescription>{description}</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-center items-center h-[400px]">
+            <div className="flex h-[400px] items-center justify-center">
               <p className="text-muted-foreground">
                 No hay datos históricos para comparar
               </p>
@@ -405,7 +405,7 @@ export const SimulationComparisonChart = memo<SimulationComparisonChartProps>(
                 <Tooltip
                   formatter={(value, name) => [
                     formatCurrency(value as number),
-                    name === "simulation" ? "Simulación" : "Promedio Histórico",
+                    name === 'simulation' ? 'Simulación' : 'Promedio Histórico',
                   ]}
                   labelFormatter={(label) => `Agrupador: ${label}`}
                 />
@@ -432,4 +432,4 @@ export const SimulationComparisonChart = memo<SimulationComparisonChartProps>(
   }
 );
 
-SimulationComparisonChart.displayName = "SimulationComparisonChart";
+SimulationComparisonChart.displayName = 'SimulationComparisonChart';

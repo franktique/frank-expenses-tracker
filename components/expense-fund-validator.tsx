@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { AlertCircle, CheckCircle2, Info } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { CategoryFundValidationStatus } from "@/components/category-fund-loading-states";
-import { Fund } from "@/types/funds";
+import { useState, useEffect } from 'react';
+import { AlertCircle, CheckCircle2, Info } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
+import { CategoryFundValidationStatus } from '@/components/category-fund-loading-states';
+import { Fund } from '@/types/funds';
 
 interface ExpenseFundValidatorProps {
   categoryId: string | null;
@@ -52,7 +52,7 @@ export function ExpenseFundValidator({
         );
 
         if (!availableFundsResponse.ok) {
-          throw new Error("Failed to fetch available funds");
+          throw new Error('Failed to fetch available funds');
         }
 
         const availableFundsData = await availableFundsResponse.json();
@@ -61,7 +61,7 @@ export function ExpenseFundValidator({
           isValid: true,
           availableFunds: availableFundsData.available_funds || [],
           hasRestrictions: availableFundsData.has_fund_restrictions || false,
-          message: availableFundsData.message || "",
+          message: availableFundsData.message || '',
           warnings: [],
         };
 
@@ -79,14 +79,14 @@ export function ExpenseFundValidator({
               message:
                 errorData.details?.[0] ||
                 errorData.error ||
-                "Invalid combination",
+                'Invalid combination',
             };
           } else {
             const validationData = await validationResponse.json();
             validationResult = {
               ...validationResult,
               isValid: true,
-              message: validationData.message || "Valid combination",
+              message: validationData.message || 'Valid combination',
               warnings: validationData.warnings || [],
             };
           }
@@ -98,7 +98,7 @@ export function ExpenseFundValidator({
           validationResult.availableFunds
         );
       } catch (err) {
-        const errorMessage = (err as Error).message || "Validation failed";
+        const errorMessage = (err as Error).message || 'Validation failed';
         setError(errorMessage);
         onValidationChange?.(false, []);
       } finally {
@@ -138,9 +138,9 @@ export function ExpenseFundValidator({
   }
 
   const getValidationStatus = () => {
-    if (!validation.isValid) return "invalid";
-    if (validation.warnings.length > 0) return "warning";
-    return "valid";
+    if (!validation.isValid) return 'invalid';
+    if (validation.warnings.length > 0) return 'warning';
+    return 'valid';
   };
 
   return (
@@ -153,21 +153,21 @@ export function ExpenseFundValidator({
       {/* Available funds info */}
       {validation.availableFunds.length > 0 && (
         <Card className="mt-2 border-muted bg-muted/20">
-          <CardContent className="pt-3 pb-3">
+          <CardContent className="pb-3 pt-3">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
                 <Info className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm font-medium">
                   {validation.hasRestrictions
-                    ? "Fondos permitidos para esta categoría:"
-                    : "Todos los fondos están disponibles:"}
+                    ? 'Fondos permitidos para esta categoría:'
+                    : 'Todos los fondos están disponibles:'}
                 </span>
               </div>
               <div className="flex flex-wrap gap-1">
                 {validation.availableFunds.map((fund) => (
                   <Badge
                     key={fund.id}
-                    variant={fund.id === selectedFundId ? "default" : "outline"}
+                    variant={fund.id === selectedFundId ? 'default' : 'outline'}
                     className="text-xs"
                   >
                     {fund.name}
@@ -182,7 +182,7 @@ export function ExpenseFundValidator({
       {/* Warnings */}
       {validation.warnings.length > 0 && (
         <Card className="mt-2 border-amber-200 bg-amber-50">
-          <CardContent className="pt-3 pb-3">
+          <CardContent className="pb-3 pt-3">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
                 <AlertCircle className="h-4 w-4 text-amber-600" />
@@ -190,7 +190,7 @@ export function ExpenseFundValidator({
                   Advertencias:
                 </span>
               </div>
-              <ul className="text-sm space-y-1">
+              <ul className="space-y-1 text-sm">
                 {validation.warnings.map((warning, index) => (
                   <li key={index} className="flex items-start gap-2">
                     <span className="text-amber-600">•</span>
@@ -210,7 +210,7 @@ export function ExpenseFundValidator({
 export function useExpenseFundValidation() {
   const [isValid, setIsValid] = useState(true);
   const [availableFunds, setAvailableFunds] = useState<Fund[]>([]);
-  const [validationMessage, setValidationMessage] = useState<string>("");
+  const [validationMessage, setValidationMessage] = useState<string>('');
 
   const handleValidationChange = (valid: boolean, funds: Fund[]) => {
     setIsValid(valid);
@@ -229,16 +229,16 @@ export function useExpenseFundValidation() {
       if (!response.ok) {
         const errorData = await response.json();
         setValidationMessage(
-          errorData.details?.[0] || errorData.error || "Invalid combination"
+          errorData.details?.[0] || errorData.error || 'Invalid combination'
         );
         return false;
       }
 
       const data = await response.json();
-      setValidationMessage(data.message || "Valid combination");
+      setValidationMessage(data.message || 'Valid combination');
       return true;
     } catch (error) {
-      setValidationMessage("Error validating fund-category combination");
+      setValidationMessage('Error validating fund-category combination');
       return false;
     }
   };
@@ -258,7 +258,7 @@ export function useExpenseFundValidation() {
       const data = await response.json();
       return data.available_funds || [];
     } catch (error) {
-      console.error("Error fetching available funds:", error);
+      console.error('Error fetching available funds:', error);
       return [];
     }
   };

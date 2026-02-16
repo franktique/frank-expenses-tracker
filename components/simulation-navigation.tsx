@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,15 +10,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from '@/components/ui/dropdown-menu';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   ChevronDown,
   Clock,
@@ -27,8 +27,8 @@ import {
   BarChart3,
   Settings,
   Plus,
-} from "lucide-react";
-import { formatDate } from "@/lib/utils";
+} from 'lucide-react';
+import { formatDate } from '@/lib/utils';
 
 // Types
 type Simulation = {
@@ -66,7 +66,7 @@ export function SimulationNavigation({
   const loadSimulations = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/simulations");
+      const response = await fetch('/api/simulations');
       if (response.ok) {
         const data = await response.json();
         setSimulations(data);
@@ -91,7 +91,7 @@ export function SimulationNavigation({
         setRecentSimulations(recent);
       }
     } catch (error) {
-      console.error("Error loading simulations:", error);
+      console.error('Error loading simulations:', error);
     } finally {
       setIsLoading(false);
     }
@@ -111,16 +111,16 @@ export function SimulationNavigation({
   };
 
   const navigateToSimulationList = () => {
-    router.push("/simular");
+    router.push('/simular');
   };
 
   const createNewSimulation = () => {
-    router.push("/simular");
+    router.push('/simular');
     // The simulation list component will handle opening the create dialog
   };
 
   // Check if we're in analytics view
-  const isAnalyticsView = pathname.includes("/analytics");
+  const isAnalyticsView = pathname.includes('/analytics');
 
   return (
     <div className="space-y-4">
@@ -132,8 +132,8 @@ export function SimulationNavigation({
               <div className="flex items-center space-x-3">
                 <Zap className="h-5 w-5 text-blue-600" />
                 <div>
-                  <h3 className="font-medium text-sm">Simulación Actual</h3>
-                  <p className="text-xs text-muted-foreground truncate max-w-[200px]">
+                  <h3 className="text-sm font-medium">Simulación Actual</h3>
+                  <p className="max-w-[200px] truncate text-xs text-muted-foreground">
                     {currentSimulation.name}
                   </p>
                 </div>
@@ -187,15 +187,15 @@ export function SimulationNavigation({
                             onClick={() => navigateToSimulation(simulation.id)}
                             className="flex items-center justify-between"
                           >
-                            <div className="flex-1 min-w-0">
-                              <div className="font-medium text-sm truncate">
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-sm font-medium">
                                 {simulation.name}
                               </div>
                               <div className="text-xs text-muted-foreground">
                                 {simulation.budget_count} categorías
                               </div>
                             </div>
-                            <ArrowRight className="h-3 w-3 ml-2" />
+                            <ArrowRight className="ml-2 h-3 w-3" />
                           </DropdownMenuItem>
                         ))}
                         <DropdownMenuSeparator />
@@ -204,11 +204,11 @@ export function SimulationNavigation({
 
                     {/* Actions */}
                     <DropdownMenuItem onClick={navigateToSimulationList}>
-                      <Zap className="h-4 w-4 mr-2" />
+                      <Zap className="mr-2 h-4 w-4" />
                       Ver Todas las Simulaciones
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={createNewSimulation}>
-                      <Plus className="h-4 w-4 mr-2" />
+                      <Plus className="mr-2 h-4 w-4" />
                       Nueva Simulación
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -223,7 +223,7 @@ export function SimulationNavigation({
       {showRecentList && !currentSimulation && recentSimulations.length > 0 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-base">
               <Clock className="h-4 w-4" />
               Simulaciones Recientes
             </CardTitle>
@@ -235,11 +235,11 @@ export function SimulationNavigation({
             {recentSimulations.map((simulation) => (
               <div
                 key={simulation.id}
-                className="flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                className="flex cursor-pointer items-center justify-between rounded-lg p-2 transition-colors hover:bg-muted/50"
                 onClick={() => navigateToSimulation(simulation.id)}
               >
-                <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm truncate">
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium">
                     {simulation.name}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -247,8 +247,8 @@ export function SimulationNavigation({
                     <span>•</span>
                     <span>
                       {formatDate(new Date(simulation.updated_at), {
-                        day: "numeric",
-                        month: "short",
+                        day: 'numeric',
+                        month: 'short',
                       })}
                     </span>
                   </div>
@@ -275,7 +275,7 @@ export function SimulationNavigation({
             ))}
 
             {recentSimulations.length === maxRecentItems && (
-              <div className="pt-2 border-t">
+              <div className="border-t pt-2">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -283,7 +283,7 @@ export function SimulationNavigation({
                   className="w-full text-xs"
                 >
                   Ver todas las simulaciones
-                  <ArrowRight className="h-3 w-3 ml-1" />
+                  <ArrowRight className="ml-1 h-3 w-3" />
                 </Button>
               </div>
             )}

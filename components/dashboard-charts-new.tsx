@@ -1,6 +1,6 @@
-"use client"
+'use client';
 
-import { useEffect, useState } from "react"
+import { useEffect, useState } from 'react';
 import {
   BarChart,
   Bar,
@@ -13,189 +13,226 @@ import {
   LineChart,
   Line,
   AreaChart,
-  Area
-} from "recharts"
-import { format, parseISO } from "date-fns"
-import { es } from "date-fns/locale"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
-import { formatCurrency } from "@/lib/utils"
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
-import { Button } from "@/components/ui/button"
-import { ChevronDown, ChevronUp, Filter, X } from "lucide-react"
-import { Badge } from "@/components/ui/badge"
+  Area,
+} from 'recharts';
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { formatCurrency } from '@/lib/utils';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
+import { Button } from '@/components/ui/button';
+import { ChevronDown, ChevronUp, Filter, X } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 type ChartData = {
   expensesByDate: Array<{
-    date: string
-    total_amount: number
-    payment_method: string
-    category_id: string
-    category_name: string
-  }>
+    date: string;
+    total_amount: number;
+    payment_method: string;
+    category_id: string;
+    category_name: string;
+  }>;
   expensesByCategory: Array<{
-    category_id: string
-    category_name: string
-    total_amount: number
-  }>
-}
+    category_id: string;
+    category_name: string;
+    total_amount: number;
+  }>;
+};
 
 type DailyExpensesProps = {
-  periodId: string | null
-}
+  periodId: string | null;
+};
 
 // Daily Expenses Bar Chart Component
 export function DailyExpensesChart({ periodId }: DailyExpensesProps) {
-  const [rawData, setRawData] = useState<ChartData['expensesByDate']>([]) 
-  const [chartData, setChartData] = useState<Array<{date: string, total: number}>>([])  
-  const [categories, setCategories] = useState<Array<{id: string, name: string}>>([])  
-  const [paymentMethods, setPaymentMethods] = useState<Array<string>>([])  
-  const [excludedCategories, setExcludedCategories] = useState<string[]>([])
-  const [excludedPaymentMethods, setExcludedPaymentMethods] = useState<string[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [rawData, setRawData] = useState<ChartData['expensesByDate']>([]);
+  const [chartData, setChartData] = useState<
+    Array<{ date: string; total: number }>
+  >([]);
+  const [categories, setCategories] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
+  const [paymentMethods, setPaymentMethods] = useState<Array<string>>([]);
+  const [excludedCategories, setExcludedCategories] = useState<string[]>([]);
+  const [excludedPaymentMethods, setExcludedPaymentMethods] = useState<
+    string[]
+  >([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchChartData = async () => {
       if (!periodId) {
-        setIsLoading(false)
-        return
+        setIsLoading(false);
+        return;
       }
 
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        const response = await fetch(`/api/dashboard/charts?periodId=${periodId}`)
+        const response = await fetch(
+          `/api/dashboard/charts?periodId=${periodId}`
+        );
         if (!response.ok) {
-          throw new Error("Failed to fetch chart data")
+          throw new Error('Failed to fetch chart data');
         }
-        const data = await response.json() as ChartData
-        
+        const data = (await response.json()) as ChartData;
+
         // Store raw data for filtering
-        setRawData(data.expensesByDate)
-        
+        setRawData(data.expensesByDate);
+
         // Extract unique categories
-        const uniqueCategories = Array.from(new Set(data.expensesByDate.map(item => item.category_id)))
-          .map(categoryId => {
-            const categoryItem = data.expensesByDate.find(item => item.category_id === categoryId)
+        const uniqueCategories = Array.from(
+          new Set(data.expensesByDate.map((item) => item.category_id))
+        )
+          .map((categoryId) => {
+            const categoryItem = data.expensesByDate.find(
+              (item) => item.category_id === categoryId
+            );
             return {
               id: categoryId,
-              name: categoryItem?.category_name || 'Unknown'
-            }
+              name: categoryItem?.category_name || 'Unknown',
+            };
           })
-          .sort((a, b) => a.name.localeCompare(b.name))
-        
-        // Extract unique payment methods
-        const uniquePaymentMethods = Array.from(new Set(data.expensesByDate.map(item => item.payment_method)))
-          .filter(method => method) // Filter out any null/undefined values
-          .sort()
-        
-        setCategories(uniqueCategories)
-        setPaymentMethods(uniquePaymentMethods)
-        
-        // Process data for the daily expenses chart
-        processChartData(data.expensesByDate, [], [])
-      } catch (error) {
-        console.error("Error fetching chart data:", error)
-        setError((error as Error).message)
-      } finally {
-        setIsLoading(false)
-      }
-    }
+          .sort((a, b) => a.name.localeCompare(b.name));
 
-    fetchChartData()
-  }, [periodId])
-  
+        // Extract unique payment methods
+        const uniquePaymentMethods = Array.from(
+          new Set(data.expensesByDate.map((item) => item.payment_method))
+        )
+          .filter((method) => method) // Filter out any null/undefined values
+          .sort();
+
+        setCategories(uniqueCategories);
+        setPaymentMethods(uniquePaymentMethods);
+
+        // Process data for the daily expenses chart
+        processChartData(data.expensesByDate, [], []);
+      } catch (error) {
+        console.error('Error fetching chart data:', error);
+        setError((error as Error).message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchChartData();
+  }, [periodId]);
+
   // Process chart data whenever filters change
   useEffect(() => {
     if (rawData.length > 0) {
-      processChartData(rawData, excludedCategories, excludedPaymentMethods)
+      processChartData(rawData, excludedCategories, excludedPaymentMethods);
     }
-  }, [rawData, excludedCategories, excludedPaymentMethods])
-  
+  }, [rawData, excludedCategories, excludedPaymentMethods]);
+
   // Process chart data with filters
-  const processChartData = (data: ChartData['expensesByDate'], excludedCats: string[], excludedMethods: string[]) => {
+  const processChartData = (
+    data: ChartData['expensesByDate'],
+    excludedCats: string[],
+    excludedMethods: string[]
+  ) => {
     // Apply both category and payment method filters
-    let filteredData = data
-    
+    let filteredData = data;
+
     // Filter out excluded categories
     if (excludedCats.length > 0) {
-      filteredData = filteredData.filter(item => !excludedCats.includes(item.category_id))
+      filteredData = filteredData.filter(
+        (item) => !excludedCats.includes(item.category_id)
+      );
     }
-    
+
     // Filter out excluded payment methods
     if (excludedMethods.length > 0) {
-      filteredData = filteredData.filter(item => !excludedMethods.includes(item.payment_method))
+      filteredData = filteredData.filter(
+        (item) => !excludedMethods.includes(item.payment_method)
+      );
     }
-    
+
     // Group by date
-    const processedData = filteredData.reduce((acc, item) => {
-      const date = format(parseISO(item.date), 'dd/MM/yyyy')
-      const existingDay = acc.find(d => d.date === date)
-      
-      if (existingDay) {
-        existingDay.total += Number(item.total_amount)
-      } else {
-        acc.push({
-          date,
-          total: Number(item.total_amount)
-        })
-      }
-      return acc
-    }, [] as Array<{date: string, total: number}>)
-    
+    const processedData = filteredData.reduce(
+      (acc, item) => {
+        const date = format(parseISO(item.date), 'dd/MM/yyyy');
+        const existingDay = acc.find((d) => d.date === date);
+
+        if (existingDay) {
+          existingDay.total += Number(item.total_amount);
+        } else {
+          acc.push({
+            date,
+            total: Number(item.total_amount),
+          });
+        }
+        return acc;
+      },
+      [] as Array<{ date: string; total: number }>
+    );
+
     // Sort by date
     processedData.sort((a, b) => {
-      const datePartsA = a.date.split('/').reverse().join('')
-      const datePartsB = b.date.split('/').reverse().join('')
-      return datePartsA.localeCompare(datePartsB)
-    })
-    
-    setChartData(processedData)
-  }
-  
+      const datePartsA = a.date.split('/').reverse().join('');
+      const datePartsB = b.date.split('/').reverse().join('');
+      return datePartsA.localeCompare(datePartsB);
+    });
+
+    setChartData(processedData);
+  };
+
   const toggleCategory = (categoryId: string) => {
-    setExcludedCategories(prev => {
+    setExcludedCategories((prev) => {
       if (prev.includes(categoryId)) {
-        return prev.filter(id => id !== categoryId)
+        return prev.filter((id) => id !== categoryId);
       } else {
-        return [...prev, categoryId]
+        return [...prev, categoryId];
       }
-    })
-  }
-  
+    });
+  };
+
   const togglePaymentMethod = (method: string) => {
-    setExcludedPaymentMethods(prev => {
+    setExcludedPaymentMethods((prev) => {
       if (prev.includes(method)) {
-        return prev.filter(m => m !== method)
+        return prev.filter((m) => m !== method);
       } else {
-        return [...prev, method]
+        return [...prev, method];
       }
-    })
-  }
+    });
+  };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="flex h-[300px] items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
+      <div className="flex h-[300px] items-center justify-center">
         <p className="text-destructive">Error: {error}</p>
       </div>
-    )
+    );
   }
 
   if (chartData.length === 0) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
-        <p className="text-muted-foreground">No hay datos disponibles para mostrar</p>
+      <div className="flex h-[300px] items-center justify-center">
+        <p className="text-muted-foreground">
+          No hay datos disponibles para mostrar
+        </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -210,23 +247,27 @@ export function DailyExpensesChart({ periodId }: DailyExpensesProps) {
             <CollapsibleTrigger className="flex items-center gap-1 hover:text-primary">
               <Filter className="h-4 w-4" />
               <span className="text-sm font-medium">Filtros</span>
-              {(excludedCategories.length > 0 || excludedPaymentMethods.length > 0) && (
+              {(excludedCategories.length > 0 ||
+                excludedPaymentMethods.length > 0) && (
                 <Badge variant="secondary" className="ml-2">
-                  {(categories.length - excludedCategories.length) + (paymentMethods.length - excludedPaymentMethods.length)}/
-                  {categories.length + paymentMethods.length}
+                  {categories.length -
+                    excludedCategories.length +
+                    (paymentMethods.length - excludedPaymentMethods.length)}
+                  /{categories.length + paymentMethods.length}
                 </Badge>
               )}
-              <ChevronDown className="h-4 w-4 transition-transform ui-open:rotate-180" />
+              <ChevronDown className="ui-open:rotate-180 h-4 w-4 transition-transform" />
             </CollapsibleTrigger>
-            
-            {(excludedCategories.length > 0 || excludedPaymentMethods.length > 0) && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-8 px-2 text-xs" 
+
+            {(excludedCategories.length > 0 ||
+              excludedPaymentMethods.length > 0) && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2 text-xs"
                 onClick={() => {
-                  setExcludedCategories([])
-                  setExcludedPaymentMethods([])
+                  setExcludedCategories([]);
+                  setExcludedPaymentMethods([]);
                 }}
               >
                 <X className="mr-1 h-3 w-3" />
@@ -234,22 +275,25 @@ export function DailyExpensesChart({ periodId }: DailyExpensesProps) {
               </Button>
             )}
           </div>
-          
+
           <CollapsibleContent>
             {categories.length > 0 && (
-              <div className="pt-2 border-t">
-                <h4 className="text-sm font-medium mb-2">Categorías</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              <div className="border-t pt-2">
+                <h4 className="mb-2 text-sm font-medium">Categorías</h4>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
                   {categories.map((category) => (
-                    <div key={category.id} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`daily-category-${category.id}`} 
+                    <div
+                      key={category.id}
+                      className="flex items-center space-x-2"
+                    >
+                      <Checkbox
+                        id={`daily-category-${category.id}`}
                         checked={!excludedCategories.includes(category.id)}
                         onCheckedChange={() => toggleCategory(category.id)}
                       />
-                      <Label 
+                      <Label
                         htmlFor={`daily-category-${category.id}`}
-                        className="text-sm truncate"
+                        className="truncate text-sm"
                       >
                         {category.name}
                       </Label>
@@ -258,21 +302,21 @@ export function DailyExpensesChart({ periodId }: DailyExpensesProps) {
                 </div>
               </div>
             )}
-            
+
             {paymentMethods.length > 0 && (
-              <div className="pt-4 mt-2 border-t">
-                <h4 className="text-sm font-medium mb-2">Medio de Pago</h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
+              <div className="mt-2 border-t pt-4">
+                <h4 className="mb-2 text-sm font-medium">Medio de Pago</h4>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
                   {paymentMethods.map((method) => (
                     <div key={method} className="flex items-center space-x-2">
-                      <Checkbox 
-                        id={`daily-payment-${method}`} 
+                      <Checkbox
+                        id={`daily-payment-${method}`}
                         checked={!excludedPaymentMethods.includes(method)}
                         onCheckedChange={() => togglePaymentMethod(method)}
                       />
-                      <Label 
+                      <Label
                         htmlFor={`daily-payment-${method}`}
-                        className="text-sm truncate"
+                        className="truncate text-sm"
                       >
                         {method}
                       </Label>
@@ -295,17 +339,13 @@ export function DailyExpensesChart({ periodId }: DailyExpensesProps) {
               }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="date" 
-                angle={-45} 
-                textAnchor="end" 
-                height={70}
-              />
-              <YAxis 
-                tickFormatter={(value) => formatCurrency(value)}
-              />
-              <Tooltip 
-                formatter={(value) => [formatCurrency(value as number), "Total"]}
+              <XAxis dataKey="date" angle={-45} textAnchor="end" height={70} />
+              <YAxis tickFormatter={(value) => formatCurrency(value)} />
+              <Tooltip
+                formatter={(value) => [
+                  formatCurrency(value as number),
+                  'Total',
+                ]}
                 labelFormatter={(value) => `Fecha: ${value}`}
               />
               <Legend />
@@ -315,149 +355,170 @@ export function DailyExpensesChart({ periodId }: DailyExpensesProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // Cumulative Expenses Line Chart Component
 export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
-  const [rawData, setRawData] = useState<ChartData['expensesByDate']>([]) 
-  const [chartData, setChartData] = useState<Array<{date: string, total: number, cumulative: number}>>([])  
-  const [categories, setCategories] = useState<Array<{id: string, name: string}>>([])  
-  const [excludedCategories, setExcludedCategories] = useState<string[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [rawData, setRawData] = useState<ChartData['expensesByDate']>([]);
+  const [chartData, setChartData] = useState<
+    Array<{ date: string; total: number; cumulative: number }>
+  >([]);
+  const [categories, setCategories] = useState<
+    Array<{ id: string; name: string }>
+  >([]);
+  const [excludedCategories, setExcludedCategories] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchChartData = async () => {
       if (!periodId) {
-        setIsLoading(false)
-        return
+        setIsLoading(false);
+        return;
       }
 
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        const response = await fetch(`/api/dashboard/charts?periodId=${periodId}`)
+        const response = await fetch(
+          `/api/dashboard/charts?periodId=${periodId}`
+        );
         if (!response.ok) {
-          throw new Error("Failed to fetch chart data")
+          throw new Error('Failed to fetch chart data');
         }
-        const data = await response.json() as ChartData
-        
+        const data = (await response.json()) as ChartData;
+
         // Store raw data for filtering
-        setRawData(data.expensesByDate)
-        
+        setRawData(data.expensesByDate);
+
         // Extract unique categories
-        const uniqueCategories = Array.from(new Set(data.expensesByDate.map(item => item.category_id)))
-          .map(categoryId => {
-            const categoryItem = data.expensesByDate.find(item => item.category_id === categoryId)
+        const uniqueCategories = Array.from(
+          new Set(data.expensesByDate.map((item) => item.category_id))
+        )
+          .map((categoryId) => {
+            const categoryItem = data.expensesByDate.find(
+              (item) => item.category_id === categoryId
+            );
             return {
               id: categoryId,
-              name: categoryItem?.category_name || 'Unknown'
-            }
+              name: categoryItem?.category_name || 'Unknown',
+            };
           })
-          .sort((a, b) => a.name.localeCompare(b.name))
-        
-        setCategories(uniqueCategories)
-        
-        // Process data for the cumulative expenses chart
-        processChartData(data.expensesByDate, [])
-      } catch (error) {
-        console.error("Error fetching chart data:", error)
-        setError((error as Error).message)
-      } finally {
-        setIsLoading(false)
-      }
-    }
+          .sort((a, b) => a.name.localeCompare(b.name));
 
-    fetchChartData()
-  }, [periodId])
-  
+        setCategories(uniqueCategories);
+
+        // Process data for the cumulative expenses chart
+        processChartData(data.expensesByDate, []);
+      } catch (error) {
+        console.error('Error fetching chart data:', error);
+        setError((error as Error).message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchChartData();
+  }, [periodId]);
+
   // Process chart data whenever filters change
   useEffect(() => {
     if (rawData.length > 0) {
-      processChartData(rawData, excludedCategories)
+      processChartData(rawData, excludedCategories);
     }
-  }, [rawData, excludedCategories])
-  
+  }, [rawData, excludedCategories]);
+
   // Process chart data with filters
-  const processChartData = (data: ChartData['expensesByDate'], excluded: string[]) => {
+  const processChartData = (
+    data: ChartData['expensesByDate'],
+    excluded: string[]
+  ) => {
     // Filter out excluded categories
-    const filteredData = excluded.length > 0 
-      ? data.filter(item => !excluded.includes(item.category_id))
-      : data
-    
+    const filteredData =
+      excluded.length > 0
+        ? data.filter((item) => !excluded.includes(item.category_id))
+        : data;
+
     // First reduce to get daily totals
-    const dailyTotals = filteredData.reduce((acc, item) => {
-      const date = format(parseISO(item.date), 'dd/MM/yyyy')
-      const existingDay = acc.find(d => d.date === date)
-      
-      if (existingDay) {
-        existingDay.total += Number(item.total_amount)
-      } else {
-        acc.push({
-          date,
-          total: Number(item.total_amount),
-          cumulative: 0 // Will be calculated next
-        })
-      }
-      return acc
-    }, [] as Array<{date: string, total: number, cumulative: number}>)
-    
+    const dailyTotals = filteredData.reduce(
+      (acc, item) => {
+        const date = format(parseISO(item.date), 'dd/MM/yyyy');
+        const existingDay = acc.find((d) => d.date === date);
+
+        if (existingDay) {
+          existingDay.total += Number(item.total_amount);
+        } else {
+          acc.push({
+            date,
+            total: Number(item.total_amount),
+            cumulative: 0, // Will be calculated next
+          });
+        }
+        return acc;
+      },
+      [] as Array<{ date: string; total: number; cumulative: number }>
+    );
+
     // Sort by date
     dailyTotals.sort((a, b) => {
-      const datePartsA = a.date.split('/').reverse().join('')
-      const datePartsB = b.date.split('/').reverse().join('')
-      return datePartsA.localeCompare(datePartsB)
-    })
-    
+      const datePartsA = a.date.split('/').reverse().join('');
+      const datePartsB = b.date.split('/').reverse().join('');
+      return datePartsA.localeCompare(datePartsB);
+    });
+
     // Calculate cumulative values
-    let cumulativeTotal = 0
-    dailyTotals.forEach(item => {
-      cumulativeTotal += item.total
-      item.cumulative = cumulativeTotal
-    })
-    
-    setChartData(dailyTotals)
-  }
-  
+    let cumulativeTotal = 0;
+    dailyTotals.forEach((item) => {
+      cumulativeTotal += item.total;
+      item.cumulative = cumulativeTotal;
+    });
+
+    setChartData(dailyTotals);
+  };
+
   const toggleCategory = (categoryId: string) => {
-    setExcludedCategories(prev => {
+    setExcludedCategories((prev) => {
       if (prev.includes(categoryId)) {
-        return prev.filter(id => id !== categoryId)
+        return prev.filter((id) => id !== categoryId);
       } else {
-        return [...prev, categoryId]
+        return [...prev, categoryId];
       }
-    })
-  }
+    });
+  };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="flex h-[300px] items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
+      <div className="flex h-[300px] items-center justify-center">
         <p className="text-destructive">Error: {error}</p>
       </div>
-    )
+    );
   }
 
   if (chartData.length === 0) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
-        <p className="text-muted-foreground">No hay datos disponibles para mostrar</p>
+      <div className="flex h-[300px] items-center justify-center">
+        <p className="text-muted-foreground">
+          No hay datos disponibles para mostrar
+        </p>
       </div>
-    )
+    );
   }
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Gastos Acumulados</CardTitle>
-        <CardDescription>Gastos acumulados a lo largo del tiempo</CardDescription>
+        <CardDescription>
+          Gastos acumulados a lo largo del tiempo
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {categories.length > 0 && (
@@ -468,17 +529,18 @@ export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
                 <span className="text-sm font-medium">Filtros</span>
                 {excludedCategories.length > 0 && (
                   <Badge variant="secondary" className="ml-2">
-                    {categories.length - excludedCategories.length}/{categories.length}
+                    {categories.length - excludedCategories.length}/
+                    {categories.length}
                   </Badge>
                 )}
-                <ChevronDown className="h-4 w-4 transition-transform ui-open:rotate-180" />
+                <ChevronDown className="ui-open:rotate-180 h-4 w-4 transition-transform" />
               </CollapsibleTrigger>
-              
+
               {excludedCategories.length > 0 && (
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="h-8 px-2 text-xs" 
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-8 px-2 text-xs"
                   onClick={() => setExcludedCategories([])}
                 >
                   <X className="mr-1 h-3 w-3" />
@@ -486,19 +548,22 @@ export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
                 </Button>
               )}
             </div>
-            
+
             <CollapsibleContent>
-              <div className="pt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 border-t">
+              <div className="grid grid-cols-2 gap-2 border-t pt-2 sm:grid-cols-3 md:grid-cols-4">
                 {categories.map((category) => (
-                  <div key={category.id} className="flex items-center space-x-2">
-                    <Checkbox 
-                      id={`cumulative-category-${category.id}`} 
+                  <div
+                    key={category.id}
+                    className="flex items-center space-x-2"
+                  >
+                    <Checkbox
+                      id={`cumulative-category-${category.id}`}
                       checked={!excludedCategories.includes(category.id)}
                       onCheckedChange={() => toggleCategory(category.id)}
                     />
-                    <Label 
+                    <Label
                       htmlFor={`cumulative-category-${category.id}`}
-                      className="text-sm truncate"
+                      className="truncate text-sm"
                     >
                       {category.name}
                     </Label>
@@ -520,26 +585,22 @@ export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
               }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                dataKey="date" 
-                angle={-45} 
-                textAnchor="end" 
-                height={70}
-              />
-              <YAxis 
-                tickFormatter={(value) => formatCurrency(value)}
-              />
-              <Tooltip 
-                formatter={(value) => [formatCurrency(value as number), "Total"]}
+              <XAxis dataKey="date" angle={-45} textAnchor="end" height={70} />
+              <YAxis tickFormatter={(value) => formatCurrency(value)} />
+              <Tooltip
+                formatter={(value) => [
+                  formatCurrency(value as number),
+                  'Total',
+                ]}
                 labelFormatter={(value) => `Fecha: ${value}`}
               />
               <Legend />
-              <Area 
-                type="monotone" 
-                dataKey="cumulative" 
-                name="Gasto Acumulado" 
-                stroke="#8884d8" 
-                fill="#8884d8" 
+              <Area
+                type="monotone"
+                dataKey="cumulative"
+                name="Gasto Acumulado"
+                stroke="#8884d8"
+                fill="#8884d8"
                 fillOpacity={0.3}
               />
               <Bar dataKey="total" name="Gasto Diario" fill="#82ca9d" />
@@ -548,90 +609,100 @@ export function CumulativeExpensesChart({ periodId }: DailyExpensesProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 // Category Expenses Bar Chart Component
 export function CategoryExpensesChart({ periodId }: DailyExpensesProps) {
-  const [chartData, setChartData] = useState<Array<{category: string, total: number, id: string}>>([])
-  const [filteredData, setFilteredData] = useState<Array<{category: string, total: number, id: string}>>([])
-  const [excludedCategories, setExcludedCategories] = useState<string[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [chartData, setChartData] = useState<
+    Array<{ category: string; total: number; id: string }>
+  >([]);
+  const [filteredData, setFilteredData] = useState<
+    Array<{ category: string; total: number; id: string }>
+  >([]);
+  const [excludedCategories, setExcludedCategories] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchChartData = async () => {
       if (!periodId) {
-        setIsLoading(false)
-        return
+        setIsLoading(false);
+        return;
       }
 
-      setIsLoading(true)
+      setIsLoading(true);
       try {
-        const response = await fetch(`/api/dashboard/charts?periodId=${periodId}`)
+        const response = await fetch(
+          `/api/dashboard/charts?periodId=${periodId}`
+        );
         if (!response.ok) {
-          throw new Error("Failed to fetch chart data")
+          throw new Error('Failed to fetch chart data');
         }
-        const data = await response.json() as ChartData
-        
+        const data = (await response.json()) as ChartData;
+
         // Process data for the category chart
-        const processedData = data.expensesByCategory.map(item => ({
+        const processedData = data.expensesByCategory.map((item) => ({
           category: item.category_name,
           total: Number(item.total_amount),
-          id: item.category_id
-        }))
-        
-        setChartData(processedData)
-        setFilteredData(processedData)
-      } catch (error) {
-        console.error("Error fetching chart data:", error)
-        setError((error as Error).message)
-      } finally {
-        setIsLoading(false)
-      }
-    }
+          id: item.category_id,
+        }));
 
-    fetchChartData()
-  }, [periodId])
+        setChartData(processedData);
+        setFilteredData(processedData);
+      } catch (error) {
+        console.error('Error fetching chart data:', error);
+        setError((error as Error).message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchChartData();
+  }, [periodId]);
 
   // Filter data when excluded categories change
   useEffect(() => {
-    const filtered = chartData.filter(item => !excludedCategories.includes(item.id))
-    setFilteredData(filtered)
-  }, [excludedCategories, chartData])
+    const filtered = chartData.filter(
+      (item) => !excludedCategories.includes(item.id)
+    );
+    setFilteredData(filtered);
+  }, [excludedCategories, chartData]);
 
   const toggleCategory = (categoryId: string) => {
-    setExcludedCategories(prev => {
+    setExcludedCategories((prev) => {
       if (prev.includes(categoryId)) {
-        return prev.filter(id => id !== categoryId)
+        return prev.filter((id) => id !== categoryId);
       } else {
-        return [...prev, categoryId]
+        return [...prev, categoryId];
       }
-    })
-  }
+    });
+  };
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="flex h-[300px] items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
       </div>
-    )
+    );
   }
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
+      <div className="flex h-[300px] items-center justify-center">
         <p className="text-destructive">Error: {error}</p>
       </div>
-    )
+    );
   }
 
   if (chartData.length === 0) {
     return (
-      <div className="flex justify-center items-center h-[300px]">
-        <p className="text-muted-foreground">No hay datos disponibles para mostrar</p>
+      <div className="flex h-[300px] items-center justify-center">
+        <p className="text-muted-foreground">
+          No hay datos disponibles para mostrar
+        </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -648,17 +719,18 @@ export function CategoryExpensesChart({ periodId }: DailyExpensesProps) {
               <span className="text-sm font-medium">Filtros</span>
               {excludedCategories.length > 0 && (
                 <Badge variant="secondary" className="ml-2">
-                  {chartData.length - excludedCategories.length}/{chartData.length}
+                  {chartData.length - excludedCategories.length}/
+                  {chartData.length}
                 </Badge>
               )}
-              <ChevronDown className="h-4 w-4 transition-transform ui-open:rotate-180" />
+              <ChevronDown className="ui-open:rotate-180 h-4 w-4 transition-transform" />
             </CollapsibleTrigger>
-            
+
             {excludedCategories.length > 0 && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-8 px-2 text-xs" 
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-2 text-xs"
                 onClick={() => setExcludedCategories([])}
               >
                 <X className="mr-1 h-3 w-3" />
@@ -666,19 +738,19 @@ export function CategoryExpensesChart({ periodId }: DailyExpensesProps) {
               </Button>
             )}
           </div>
-          
+
           <CollapsibleContent>
-            <div className="pt-2 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 border-t">
+            <div className="grid grid-cols-2 gap-2 border-t pt-2 sm:grid-cols-3 md:grid-cols-4">
               {chartData.map((item) => (
                 <div key={item.id} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`category-${item.id}`} 
+                  <Checkbox
+                    id={`category-${item.id}`}
                     checked={!excludedCategories.includes(item.id)}
                     onCheckedChange={() => toggleCategory(item.id)}
                   />
-                  <Label 
+                  <Label
                     htmlFor={`category-${item.id}`}
-                    className="text-sm truncate"
+                    className="truncate text-sm"
                   >
                     {item.category}
                   </Label>
@@ -700,23 +772,27 @@ export function CategoryExpensesChart({ periodId }: DailyExpensesProps) {
               }}
             >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
+              <XAxis
                 type="number"
                 tickFormatter={(value) => formatCurrency(value)}
               />
-              <YAxis 
-                dataKey="category" 
-                type="category" 
+              <YAxis
+                dataKey="category"
+                type="category"
                 width={100}
                 tick={{ fontSize: 12 }}
               />
-              <Tooltip 
+              <Tooltip
                 content={({ active, payload }) => {
                   if (active && payload && payload.length) {
                     return (
-                      <div className="bg-background border rounded p-2 shadow-md">
-                        <p className="font-semibold">{payload[0].payload.category}</p>
-                        <p className="text-primary">{formatCurrency(payload[0].value as number)}</p>
+                      <div className="rounded border bg-background p-2 shadow-md">
+                        <p className="font-semibold">
+                          {payload[0].payload.category}
+                        </p>
+                        <p className="text-primary">
+                          {formatCurrency(payload[0].value as number)}
+                        </p>
                       </div>
                     );
                   }
@@ -730,5 +806,5 @@ export function CategoryExpensesChart({ periodId }: DailyExpensesProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

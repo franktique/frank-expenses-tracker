@@ -1,9 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { type NextRequest, NextResponse } from 'next/server';
 import {
   validateExpenseFundCategory,
   getAvailableFundsForCategory,
   CATEGORY_FUND_ERROR_MESSAGES,
-} from "@/lib/category-fund-validation";
+} from '@/lib/category-fund-validation';
 
 export async function GET(
   request: NextRequest,
@@ -12,7 +12,7 @@ export async function GET(
   try {
     const categoryId = params.id;
     const url = new URL(request.url);
-    const fundId = url.searchParams.get("fund_id");
+    const fundId = url.searchParams.get('fund_id');
 
     if (!fundId) {
       // Return available funds for this category
@@ -23,8 +23,8 @@ export async function GET(
         available_funds: result.funds,
         has_fund_restrictions: result.hasRestrictions,
         message: result.hasRestrictions
-          ? "Esta categoría tiene fondos específicos asociados"
-          : "Esta categoría acepta gastos desde cualquier fondo",
+          ? 'Esta categoría tiene fondos específicos asociados'
+          : 'Esta categoría acepta gastos desde cualquier fondo',
       });
     }
 
@@ -34,7 +34,7 @@ export async function GET(
     if (!validation.isValid) {
       return NextResponse.json(
         {
-          error: "Invalid fund-category combination",
+          error: 'Invalid fund-category combination',
           details: validation.errors,
           category_id: categoryId,
           fund_id: fundId,
@@ -49,10 +49,10 @@ export async function GET(
       fund_id: fundId,
       warnings: validation.warnings,
       validation_data: validation.data,
-      message: "La combinación fondo-categoría es válida",
+      message: 'La combinación fondo-categoría es válida',
     });
   } catch (error) {
-    console.error("Error validating fund-category combination:", error);
+    console.error('Error validating fund-category combination:', error);
     return NextResponse.json(
       {
         error: CATEGORY_FUND_ERROR_MESSAGES.SERVER_ERROR,

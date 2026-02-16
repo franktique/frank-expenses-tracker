@@ -15,7 +15,7 @@
 periodIdNum = parseInt(periodId);
 if (isNaN(periodIdNum)) {
   return NextResponse.json(
-    { error: "Invalid periodId parameter" },
+    { error: 'Invalid periodId parameter' },
     { status: 400 }
   );
 }
@@ -25,9 +25,9 @@ if (isNaN(periodIdNum)) {
 
 ```typescript
 // AFTER (correct):
-if (periodId && typeof periodId !== "string") {
+if (periodId && typeof periodId !== 'string') {
   return NextResponse.json(
-    { error: "Invalid periodId parameter" },
+    { error: 'Invalid periodId parameter' },
     { status: 400 }
   );
 }

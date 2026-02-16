@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function PUT(
   request: NextRequest,
@@ -12,7 +12,7 @@ export async function PUT(
 
     if (isNaN(estudioId) || isNaN(grouperIdNum)) {
       return NextResponse.json(
-        { error: "IDs de estudio y agrupador inválidos" },
+        { error: 'IDs de estudio y agrupador inválidos' },
         { status: 400 }
       );
     }
@@ -22,12 +22,12 @@ export async function PUT(
     // Validate percentage value
     if (percentage !== null && percentage !== undefined) {
       if (
-        typeof percentage !== "number" ||
+        typeof percentage !== 'number' ||
         percentage < 0 ||
         percentage > 100
       ) {
         return NextResponse.json(
-          { error: "El porcentaje debe ser un número entre 0 y 100" },
+          { error: 'El porcentaje debe ser un número entre 0 y 100' },
           { status: 400 }
         );
       }
@@ -39,11 +39,11 @@ export async function PUT(
       if (!Array.isArray(payment_methods)) {
         return NextResponse.json(
           {
-            error: "Los métodos de pago deben ser un array",
-            code: "INVALID_TYPE",
+            error: 'Los métodos de pago deben ser un array',
+            code: 'INVALID_TYPE',
             details: {
               received: typeof payment_methods,
-              expected: "array",
+              expected: 'array',
             },
           },
           { status: 400 }
@@ -55,31 +55,31 @@ export async function PUT(
         return NextResponse.json(
           {
             error:
-              "El array de métodos de pago no puede estar vacío. Use null para incluir todos los métodos",
-            code: "EMPTY_ARRAY",
+              'El array de métodos de pago no puede estar vacío. Use null para incluir todos los métodos',
+            code: 'EMPTY_ARRAY',
             suggestion:
-              "Para incluir todos los métodos de pago, envíe null en lugar de un array vacío",
+              'Para incluir todos los métodos de pago, envíe null en lugar de un array vacío',
           },
           { status: 400 }
         );
       }
 
       // Validate individual payment method values
-      const validMethods = ["cash", "credit", "debit"];
+      const validMethods = ['cash', 'credit', 'debit'];
       const invalidMethods = payment_methods.filter(
-        (method) => typeof method !== "string" || !validMethods.includes(method)
+        (method) => typeof method !== 'string' || !validMethods.includes(method)
       );
 
       if (invalidMethods.length > 0) {
         return NextResponse.json(
           {
             error: `Métodos de pago inválidos encontrados`,
-            code: "INVALID_METHODS",
+            code: 'INVALID_METHODS',
             details: {
               invalidMethods: invalidMethods,
               validMethods: validMethods,
               message: `Los siguientes valores no son válidos: ${invalidMethods.join(
-                ", "
+                ', '
               )}`,
             },
           },
@@ -96,11 +96,11 @@ export async function PUT(
 
         return NextResponse.json(
           {
-            error: "No se permiten métodos de pago duplicados",
-            code: "DUPLICATE_METHODS",
+            error: 'No se permiten métodos de pago duplicados',
+            code: 'DUPLICATE_METHODS',
             details: {
               duplicates: [...new Set(duplicates)],
-              suggestion: "Elimine los métodos duplicados de la selección",
+              suggestion: 'Elimine los métodos duplicados de la selección',
             },
           },
           { status: 400 }
@@ -111,13 +111,13 @@ export async function PUT(
       if (payment_methods.length > validMethods.length) {
         return NextResponse.json(
           {
-            error: "Demasiados métodos de pago especificados",
-            code: "TOO_MANY_METHODS",
+            error: 'Demasiados métodos de pago especificados',
+            code: 'TOO_MANY_METHODS',
             details: {
               received: payment_methods.length,
               maximum: validMethods.length,
               suggestion:
-                "Verifique que no haya métodos duplicados o inválidos",
+                'Verifique que no haya métodos duplicados o inválidos',
             },
           },
           { status: 400 }
@@ -133,7 +133,7 @@ export async function PUT(
 
     if (!existing) {
       return NextResponse.json(
-        { error: "La relación estudio-agrupador no existe" },
+        { error: 'La relación estudio-agrupador no existe' },
         { status: 404 }
       );
     }
@@ -156,7 +156,7 @@ export async function PUT(
     `;
 
     // Build response message
-    let message = "";
+    let message = '';
     if (
       percentage !== null &&
       percentage !== undefined &&
@@ -167,12 +167,12 @@ export async function PUT(
     } else if (percentage !== null && percentage !== undefined) {
       message = `Porcentaje actualizado a ${percentage}%`;
     } else if (payment_methods !== null && payment_methods !== undefined) {
-      message = "Métodos de pago configurados";
+      message = 'Métodos de pago configurados';
     } else {
       message =
         percentage === null
-          ? "Porcentaje removido"
-          : "Métodos de pago removidos";
+          ? 'Porcentaje removido'
+          : 'Métodos de pago removidos';
     }
 
     return NextResponse.json({
@@ -190,15 +190,15 @@ export async function PUT(
     if (error instanceof Error) {
       // Database connection errors
       if (
-        error.message.includes("connection") ||
-        error.message.includes("ECONNREFUSED")
+        error.message.includes('connection') ||
+        error.message.includes('ECONNREFUSED')
       ) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             details:
-              "No se pudo conectar con la base de datos. Intente nuevamente en unos momentos.",
+              'No se pudo conectar con la base de datos. Intente nuevamente en unos momentos.',
             retryable: true,
           },
           { status: 503 }
@@ -207,15 +207,15 @@ export async function PUT(
 
       // Database constraint violations
       if (
-        error.message.includes("constraint") ||
-        error.message.includes("violates")
+        error.message.includes('constraint') ||
+        error.message.includes('violates')
       ) {
         return NextResponse.json(
           {
-            error: "Error de validación en la base de datos",
-            code: "DATABASE_CONSTRAINT_ERROR",
+            error: 'Error de validación en la base de datos',
+            code: 'DATABASE_CONSTRAINT_ERROR',
             details:
-              "Los datos no cumplen con las restricciones de la base de datos. Verifique los valores enviados.",
+              'Los datos no cumplen con las restricciones de la base de datos. Verifique los valores enviados.',
             retryable: false,
           },
           { status: 400 }
@@ -223,12 +223,12 @@ export async function PUT(
       }
 
       // Timeout errors
-      if (error.message.includes("timeout")) {
+      if (error.message.includes('timeout')) {
         return NextResponse.json(
           {
-            error: "Tiempo de espera agotado",
-            code: "TIMEOUT_ERROR",
-            details: "La operación tardó demasiado tiempo. Intente nuevamente.",
+            error: 'Tiempo de espera agotado',
+            code: 'TIMEOUT_ERROR',
+            details: 'La operación tardó demasiado tiempo. Intente nuevamente.',
             retryable: true,
           },
           { status: 408 }
@@ -239,10 +239,10 @@ export async function PUT(
     // Generic server error
     return NextResponse.json(
       {
-        error: "Error interno del servidor",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor',
+        code: 'INTERNAL_SERVER_ERROR',
         details:
-          "Ocurrió un error inesperado. Si el problema persiste, contacte al administrador.",
+          'Ocurrió un error inesperado. Si el problema persiste, contacte al administrador.',
         retryable: true,
       },
       { status: 500 }
@@ -254,8 +254,8 @@ export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string; grouperId: string }> }
 ) {
-  let id = "";
-  let grouperId = "";
+  let id = '';
+  let grouperId = '';
   try {
     const p = await params;
     id = p.id;
@@ -265,14 +265,14 @@ export async function DELETE(
 
     if (isNaN(estudioId) || isNaN(grouperIdInt)) {
       return NextResponse.json(
-        { error: "ID de estudio o agrupador inválido" },
+        { error: 'ID de estudio o agrupador inválido' },
         { status: 400 }
       );
     }
 
     if (estudioId <= 0 || grouperIdInt <= 0) {
       return NextResponse.json(
-        { error: "Los IDs deben ser números positivos" },
+        { error: 'Los IDs deben ser números positivos' },
         { status: 400 }
       );
     }
@@ -284,7 +284,7 @@ export async function DELETE(
 
     if (!estudio) {
       return NextResponse.json(
-        { error: "Estudio no encontrado" },
+        { error: 'Estudio no encontrado' },
         { status: 404 }
       );
     }
@@ -296,7 +296,7 @@ export async function DELETE(
 
     if (!grouper) {
       return NextResponse.json(
-        { error: "Agrupador no encontrado" },
+        { error: 'Agrupador no encontrado' },
         { status: 404 }
       );
     }
@@ -309,7 +309,7 @@ export async function DELETE(
 
     if (!existingAssignment) {
       return NextResponse.json(
-        { error: "El agrupador no está asignado a este estudio" },
+        { error: 'El agrupador no está asignado a este estudio' },
         { status: 404 }
       );
     }
@@ -323,7 +323,7 @@ export async function DELETE(
 
     if (!deletedRelation) {
       return NextResponse.json(
-        { error: "Error al remover el agrupador del estudio" },
+        { error: 'Error al remover el agrupador del estudio' },
         { status: 500 }
       );
     }
@@ -343,11 +343,11 @@ export async function DELETE(
 
     // Handle specific database errors
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
             error:
-              "Error de conexión con la base de datos. Intente nuevamente.",
+              'Error de conexión con la base de datos. Intente nuevamente.',
           },
           { status: 503 }
         );
@@ -355,7 +355,7 @@ export async function DELETE(
     }
 
     return NextResponse.json(
-      { error: "Error interno del servidor. Intente nuevamente." },
+      { error: 'Error interno del servidor. Intente nuevamente.' },
       { status: 500 }
     );
   }

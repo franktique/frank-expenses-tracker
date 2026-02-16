@@ -1,19 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const fundId = searchParams.get("fund_id");
-    const days = parseInt(searchParams.get("days") || "30");
+    const fundId = searchParams.get('fund_id');
+    const days = parseInt(searchParams.get('days') || '30');
 
     // Calculate date range
     const endDate = new Date();
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const startDateStr = startDate.toISOString().split("T")[0];
-    const endDateStr = endDate.toISOString().split("T")[0];
+    const startDateStr = startDate.toISOString().split('T')[0];
+    const endDateStr = endDate.toISOString().split('T')[0];
 
     let balanceQuery;
 
@@ -172,18 +172,18 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       fund_id: fundId,
-      fund_name: balanceData[0]?.fund_name || "All Funds",
+      fund_name: balanceData[0]?.fund_name || 'All Funds',
       period_days: days,
       start_date: startDateStr,
       end_date: endDateStr,
       balance_trends: balanceData.map((row: BalanceRow) => ({
         date: row.date,
-        balance: parseFloat(row.balance?.toString() || "0"),
-        net_change: parseFloat(row.net_change?.toString() || "0"),
+        balance: parseFloat(row.balance?.toString() || '0'),
+        net_change: parseFloat(row.net_change?.toString() || '0'),
       })),
     });
   } catch (error) {
-    console.error("Error fetching fund balance trends:", error);
+    console.error('Error fetching fund balance trends:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

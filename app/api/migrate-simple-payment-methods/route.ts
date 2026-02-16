@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function POST() {
   try {
-    console.log("Starting simple payment methods migration...");
+    console.log('Starting simple payment methods migration...');
 
     // Check if column already exists
     const columnExists = await sql`
@@ -16,7 +16,7 @@ export async function POST() {
     if (columnExists.length > 0) {
       return NextResponse.json({
         success: true,
-        message: "Payment methods column already exists",
+        message: 'Payment methods column already exists',
         skipped: true,
       });
     }
@@ -38,20 +38,20 @@ export async function POST() {
       COMMENT ON COLUMN estudio_groupers.payment_methods IS 'Array of payment methods to include for this agrupador (cash, credit, debit). NULL means all methods are included.'
     `;
 
-    console.log("Simple payment methods migration completed successfully");
+    console.log('Simple payment methods migration completed successfully');
 
     return NextResponse.json({
       success: true,
-      message: "Payment methods column added successfully",
+      message: 'Payment methods column added successfully',
     });
   } catch (error) {
-    console.error("Simple payment methods migration failed:", error);
+    console.error('Simple payment methods migration failed:', error);
 
     return NextResponse.json(
       {
         success: false,
-        error: "Migration failed",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: 'Migration failed',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

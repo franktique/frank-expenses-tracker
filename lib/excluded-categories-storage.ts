@@ -1,6 +1,6 @@
 // Cache configuration
-const CACHE_KEY = "budget_tracker_excluded_categories";
-const CACHE_VERSION = "1.0.0";
+const CACHE_KEY = 'budget_tracker_excluded_categories';
+const CACHE_VERSION = '1.0.0';
 const CACHE_EXPIRY_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
 
 // Cached excluded categories data structure
@@ -20,13 +20,13 @@ export class ExcludedCategoriesStorage {
    */
   private static isStorageAvailable(): boolean {
     try {
-      if (typeof window === "undefined" || !window.localStorage) {
+      if (typeof window === 'undefined' || !window.localStorage) {
         return false;
       }
 
       // Test storage functionality
-      const testKey = "__storage_test__";
-      window.localStorage.setItem(testKey, "test");
+      const testKey = '__storage_test__';
+      window.localStorage.setItem(testKey, 'test');
       window.localStorage.removeItem(testKey);
       return true;
     } catch {
@@ -40,16 +40,12 @@ export class ExcludedCategoriesStorage {
   private static validateCachedData(
     data: any
   ): data is CachedExcludedCategories {
-    if (!data || typeof data !== "object") {
+    if (!data || typeof data !== 'object') {
       return false;
     }
 
     // Check required properties
-    if (
-      !Array.isArray(data.categoryIds) ||
-      !data.timestamp ||
-      !data.version
-    ) {
+    if (!Array.isArray(data.categoryIds) || !data.timestamp || !data.version) {
       return false;
     }
 
@@ -65,7 +61,7 @@ export class ExcludedCategoriesStorage {
     }
 
     // Validate that all categoryIds are strings
-    if (!data.categoryIds.every((id: any) => typeof id === "string")) {
+    if (!data.categoryIds.every((id: any) => typeof id === 'string')) {
       return false;
     }
 
@@ -109,7 +105,7 @@ export class ExcludedCategoriesStorage {
   static saveExcludedCategories(categoryIds: string[]): void {
     if (!this.isStorageAvailable()) {
       console.warn(
-        "localStorage is not available - excluded categories will not persist"
+        'localStorage is not available - excluded categories will not persist'
       );
       return;
     }
@@ -118,7 +114,7 @@ export class ExcludedCategoriesStorage {
       // Remove duplicates and filter out invalid entries
       const uniqueIds = Array.from(
         new Set(
-          categoryIds.filter((id) => typeof id === "string" && id.length > 0)
+          categoryIds.filter((id) => typeof id === 'string' && id.length > 0)
         )
       );
 
@@ -130,7 +126,10 @@ export class ExcludedCategoriesStorage {
 
       window.localStorage.setItem(CACHE_KEY, JSON.stringify(cachedData));
     } catch (error) {
-      console.error("Failed to save excluded categories to localStorage:", error);
+      console.error(
+        'Failed to save excluded categories to localStorage:',
+        error
+      );
     }
   }
 
@@ -208,9 +207,11 @@ export class ExcludedCategoriesStorage {
       const isValid = this.validateCachedData(parsed);
 
       return {
-        count: Array.isArray(parsed.categoryIds) ? parsed.categoryIds.length : 0,
+        count: Array.isArray(parsed.categoryIds)
+          ? parsed.categoryIds.length
+          : 0,
         timestamp: parsed.timestamp || 0,
-        version: parsed.version || "unknown",
+        version: parsed.version || 'unknown',
         isValid,
       };
     } catch {
@@ -237,14 +238,22 @@ export class ExcludedCategoriesStorage {
 }
 
 // Export convenience functions
-export const loadExcludedCategories = () => ExcludedCategoriesStorage.loadExcludedCategories();
-export const saveExcludedCategories = (categoryIds: string[]) => ExcludedCategoriesStorage.saveExcludedCategories(categoryIds);
-export const clearExcludedCategories = () => ExcludedCategoriesStorage.clearExcludedCategories();
-export const hasExcludedCategories = () => ExcludedCategoriesStorage.hasExcludedCategories();
-export const toggleCategory = (categoryId: string) => ExcludedCategoriesStorage.toggleCategory(categoryId);
-export const isCategoryExcluded = (categoryId: string) => ExcludedCategoriesStorage.isCategoryExcluded(categoryId);
-export const getCacheMetadata = () => ExcludedCategoriesStorage.getCacheMetadata();
-export const cleanupInvalidCategories = (validCategoryIds: string[]) => ExcludedCategoriesStorage.cleanupInvalidCategories(validCategoryIds);
+export const loadExcludedCategories = () =>
+  ExcludedCategoriesStorage.loadExcludedCategories();
+export const saveExcludedCategories = (categoryIds: string[]) =>
+  ExcludedCategoriesStorage.saveExcludedCategories(categoryIds);
+export const clearExcludedCategories = () =>
+  ExcludedCategoriesStorage.clearExcludedCategories();
+export const hasExcludedCategories = () =>
+  ExcludedCategoriesStorage.hasExcludedCategories();
+export const toggleCategory = (categoryId: string) =>
+  ExcludedCategoriesStorage.toggleCategory(categoryId);
+export const isCategoryExcluded = (categoryId: string) =>
+  ExcludedCategoriesStorage.isCategoryExcluded(categoryId);
+export const getCacheMetadata = () =>
+  ExcludedCategoriesStorage.getCacheMetadata();
+export const cleanupInvalidCategories = (validCategoryIds: string[]) =>
+  ExcludedCategoriesStorage.cleanupInvalidCategories(validCategoryIds);
 
 // Export types
 export type { CachedExcludedCategories };

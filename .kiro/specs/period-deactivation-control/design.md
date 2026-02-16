@@ -147,13 +147,11 @@ const [targetActivationPeriod, setTargetActivationPeriod] =
 ### Unit Tests
 
 1. **API Endpoint Tests**
-
    - Test successful period deactivation
    - Test error scenarios (invalid ID, database errors)
    - Test response format consistency
 
 2. **Context Function Tests**
-
    - Test `closePeriod` function with mocked API calls
    - Test optimistic updates and error rollback
    - Test state management consistency
@@ -166,7 +164,6 @@ const [targetActivationPeriod, setTargetActivationPeriod] =
 ### Integration Tests
 
 1. **End-to-End Workflows**
-
    - Test complete activation/deactivation cycle
    - Test switching between periods with confirmation
    - Test error scenarios with proper UI feedback
@@ -179,7 +176,6 @@ const [targetActivationPeriod, setTargetActivationPeriod] =
 ### User Experience Tests
 
 1. **Accessibility**
-
    - Ensure proper ARIA labels for action buttons
    - Test keyboard navigation through confirmation dialogs
    - Verify screen reader compatibility

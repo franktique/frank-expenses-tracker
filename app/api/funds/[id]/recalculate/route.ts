@@ -1,6 +1,6 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { FUND_ERROR_MESSAGES } from "@/types/funds";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { FUND_ERROR_MESSAGES } from '@/types/funds';
 
 export async function POST(
   request: NextRequest,
@@ -99,7 +99,7 @@ export async function POST(
       updated_fund: updatedFund,
     });
   } catch (error) {
-    console.error("Error recalculating fund balance:", error);
+    console.error('Error recalculating fund balance:', error);
     return NextResponse.json(
       {
         success: false,

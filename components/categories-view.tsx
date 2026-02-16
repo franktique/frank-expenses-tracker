@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useMemo } from "react";
-import { PlusCircle, AlertTriangle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useMemo } from 'react';
+import { PlusCircle, AlertTriangle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -18,7 +18,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,10 +28,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
+} from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -39,54 +39,73 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
-import { useBudget } from "@/context/budget-context";
-import { FundFilter } from "@/components/fund-filter";
-import { MultiFundSelector } from "@/components/multi-fund-selector";
+} from '@/components/ui/table';
+import { useToast } from '@/components/ui/use-toast';
+import { useBudget } from '@/context/budget-context';
+import { FundFilter } from '@/components/fund-filter';
+import { MultiFundSelector } from '@/components/multi-fund-selector';
 import {
   CategoryFundErrorDialog,
   useCategoryFundErrorDialog,
-} from "@/components/category-fund-error-dialog";
+} from '@/components/category-fund-error-dialog';
 import {
   CategoryFundLoadingButton,
   useCategoryFundLoadingState,
-} from "@/components/category-fund-loading-states";
-import { FundCategoryRelationshipIndicator } from "@/components/fund-category-relationship-indicator";
+} from '@/components/category-fund-loading-states';
+import { FundCategoryRelationshipIndicator } from '@/components/fund-category-relationship-indicator';
 import {
   CategoryFundInfoPanel,
   CategoryFundInfoCompact,
-} from "@/components/category-fund-info-panel";
-import { Fund, Category, TipoGasto, RecurrenceFrequency, RECURRENCE_LABELS } from "@/types/funds";
-import { TipoGastoBadge } from "@/components/tipo-gasto-badge";
-import { TipoGastoSelect } from "@/components/tipo-gasto-select";
+} from '@/components/category-fund-info-panel';
+import {
+  Fund,
+  Category,
+  TipoGasto,
+  RecurrenceFrequency,
+  RECURRENCE_LABELS,
+} from '@/types/funds';
+import { TipoGastoBadge } from '@/components/tipo-gasto-badge';
+import { TipoGastoSelect } from '@/components/tipo-gasto-select';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 
 export function CategoriesView() {
-  const { categories, addCategory, updateCategory, deleteCategory, funds, refreshData } =
-    useBudget();
+  const {
+    categories,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    funds,
+    refreshData,
+  } = useBudget();
   const { toast } = useToast();
 
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryFunds, setNewCategoryFunds] = useState<Fund[]>([]);
   const [newCategoryTipoGasto, setNewCategoryTipoGasto] = useState<TipoGasto>();
   const [editCategory, setEditCategory] = useState<Category | null>(null);
   const [editCategoryFunds, setEditCategoryFunds] = useState<Fund[]>([]);
-  const [editCategoryTipoGasto, setEditCategoryTipoGasto] = useState<TipoGasto>();
-  const [editCategoryDefaultDay, setEditCategoryDefaultDay] = useState<number | null>(null);
-  const [editCategoryRecurrenceFrequency, setEditCategoryRecurrenceFrequency] = useState<RecurrenceFrequency>(null);
-  const [newCategoryDefaultDay, setNewCategoryDefaultDay] = useState<number | null>(null);
-  const [newCategoryRecurrenceFrequency, setNewCategoryRecurrenceFrequency] = useState<RecurrenceFrequency>(null);
+  const [editCategoryTipoGasto, setEditCategoryTipoGasto] =
+    useState<TipoGasto>();
+  const [editCategoryDefaultDay, setEditCategoryDefaultDay] = useState<
+    number | null
+  >(null);
+  const [editCategoryRecurrenceFrequency, setEditCategoryRecurrenceFrequency] =
+    useState<RecurrenceFrequency>(null);
+  const [newCategoryDefaultDay, setNewCategoryDefaultDay] = useState<
+    number | null
+  >(null);
+  const [newCategoryRecurrenceFrequency, setNewCategoryRecurrenceFrequency] =
+    useState<RecurrenceFrequency>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteValidation, setDeleteValidation] = useState<{
     hasExpenses: boolean;
@@ -126,12 +145,12 @@ export function CategoriesView() {
     try {
       const response = await fetch(`/api/categories/${categoryId}/funds`);
       if (!response.ok) {
-        throw new Error("Failed to fetch category funds");
+        throw new Error('Failed to fetch category funds');
       }
       const data = await response.json();
       return data.funds || [];
     } catch (error) {
-      console.error("Error fetching category funds:", error);
+      console.error('Error fetching category funds:', error);
       return [];
     }
   };
@@ -148,9 +167,9 @@ export function CategoriesView() {
         : `/api/categories/${categoryId}/funds`;
 
       const response = await fetch(url, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ fund_ids: fundIds }),
       });
@@ -163,7 +182,7 @@ export function CategoriesView() {
           // Show error dialog and wait for user confirmation
           await showError(
             errorData,
-            "Confirmar actualización de fondos",
+            'Confirmar actualización de fondos',
             async () => {
               await updateCategoryFunds(categoryId, fundIds, true);
             }
@@ -171,10 +190,10 @@ export function CategoriesView() {
           return;
         }
 
-        throw new Error(errorData.error || "Failed to update category funds");
+        throw new Error(errorData.error || 'Failed to update category funds');
       }
     } catch (error) {
-      console.error("Error updating category funds:", error);
+      console.error('Error updating category funds:', error);
       throw error;
     }
   };
@@ -209,7 +228,7 @@ export function CategoriesView() {
         affectedFunds: [],
       };
     } catch (error) {
-      console.error("Error validating category deletion:", error);
+      console.error('Error validating category deletion:', error);
       return {
         hasExpenses: false,
         expenseCount: 0,
@@ -221,23 +240,23 @@ export function CategoriesView() {
   const handleAddCategory = async () => {
     if (!newCategoryName.trim()) {
       toast({
-        title: "Error",
-        description: "El nombre de la categoría no puede estar vacío",
-        variant: "destructive",
+        title: 'Error',
+        description: 'El nombre de la categoría no puede estar vacío',
+        variant: 'destructive',
       });
       return;
     }
 
-    loadingState.setLoading("addCategory", true, "Agregando categoría...");
+    loadingState.setLoading('addCategory', true, 'Agregando categoría...');
 
     try {
       // Create category with fund_ids array if funds are selected
       const fundIds = newCategoryFunds.map((fund) => fund.id);
 
-      const response = await fetch("/api/categories", {
-        method: "POST",
+      const response = await fetch('/api/categories', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: newCategoryName,
@@ -253,18 +272,18 @@ export function CategoriesView() {
 
         // Show enhanced error dialog for validation errors
         if (response.status === 400 || response.status === 409) {
-          showError(errorData, "Error al agregar categoría");
+          showError(errorData, 'Error al agregar categoría');
           return;
         }
 
-        throw new Error(errorData.error || "Failed to add category");
+        throw new Error(errorData.error || 'Failed to add category');
       }
 
       // Get fund names before clearing state
-      const fundNames = newCategoryFunds.map((f) => f.name).join(", ");
+      const fundNames = newCategoryFunds.map((f) => f.name).join(', ');
 
       // Reset form immediately
-      setNewCategoryName("");
+      setNewCategoryName('');
       setNewCategoryFunds([]);
       setNewCategoryTipoGasto(undefined);
       setNewCategoryDefaultDay(null);
@@ -273,9 +292,9 @@ export function CategoriesView() {
 
       // Show success toast
       toast({
-        title: "Categoría agregada",
+        title: 'Categoría agregada',
         description: `La categoría ha sido agregada exitosamente${
-          fundNames ? ` con fondos: ${fundNames}` : ""
+          fundNames ? ` con fondos: ${fundNames}` : ''
         }`,
       });
 
@@ -283,27 +302,27 @@ export function CategoriesView() {
       await refreshData();
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
-          (error as Error).message || "No se pudo agregar la categoría",
-        variant: "destructive",
+          (error as Error).message || 'No se pudo agregar la categoría',
+        variant: 'destructive',
       });
     } finally {
-      loadingState.setLoading("addCategory", false);
+      loadingState.setLoading('addCategory', false);
     }
   };
 
   const handleEditCategory = async () => {
     if (!editCategory || !editCategory.name.trim()) {
       toast({
-        title: "Error",
-        description: "El nombre de la categoría no puede estar vacío",
-        variant: "destructive",
+        title: 'Error',
+        description: 'El nombre de la categoría no puede estar vacío',
+        variant: 'destructive',
       });
       return;
     }
 
-    loadingState.setLoading("editCategory", true, "Actualizando categoría...");
+    loadingState.setLoading('editCategory', true, 'Actualizando categoría...');
 
     try {
       // Build update payload with all fields including tipo_gasto, default_day, and recurrence
@@ -325,16 +344,16 @@ export function CategoriesView() {
 
       // Update category using API call
       const response = await fetch(`/api/categories/${editCategory.id}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(updatePayload),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update category");
+        throw new Error(errorData.error || 'Failed to update category');
       }
 
       // Update fund relationships separately with enhanced error handling
@@ -351,8 +370,8 @@ export function CategoriesView() {
 
       // Show success toast
       toast({
-        title: "Categoría actualizada",
-        description: "La categoría ha sido actualizada exitosamente",
+        title: 'Categoría actualizada',
+        description: 'La categoría ha sido actualizada exitosamente',
       });
 
       // Refresh the context data to show updated categories
@@ -360,15 +379,15 @@ export function CategoriesView() {
     } catch (error) {
       // Only show error toast for actual errors, not for user cancellations
       const errorMessage = (error as Error).message;
-      if (errorMessage !== "User cancelled operation") {
+      if (errorMessage !== 'User cancelled operation') {
         toast({
-          title: "Error",
-          description: errorMessage || "No se pudo actualizar la categoría",
-          variant: "destructive",
+          title: 'Error',
+          description: errorMessage || 'No se pudo actualizar la categoría',
+          variant: 'destructive',
         });
       }
     } finally {
-      loadingState.setLoading("editCategory", false);
+      loadingState.setLoading('editCategory', false);
     }
   };
 
@@ -392,15 +411,15 @@ export function CategoriesView() {
       setDeleteId(null);
       setIsDeleteOpen(false);
       toast({
-        title: "Categoría eliminada",
-        description: "La categoría ha sido eliminada exitosamente",
+        title: 'Categoría eliminada',
+        description: 'La categoría ha sido eliminada exitosamente',
       });
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
-          (error as Error).message || "No se pudo eliminar la categoría",
-        variant: "destructive",
+          (error as Error).message || 'No se pudo eliminar la categoría',
+        variant: 'destructive',
       });
     }
   };
@@ -414,15 +433,15 @@ export function CategoriesView() {
       setIsDeleteConfirmOpen(false);
       setDeleteValidation(null);
       toast({
-        title: "Categoría eliminada",
-        description: "La categoría y sus gastos asociados han sido eliminados",
+        title: 'Categoría eliminada',
+        description: 'La categoría y sus gastos asociados han sido eliminados',
       });
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
-          (error as Error).message || "No se pudo eliminar la categoría",
-        variant: "destructive",
+          (error as Error).message || 'No se pudo eliminar la categoría',
+        variant: 'destructive',
       });
     }
   };
@@ -509,14 +528,18 @@ export function CategoriesView() {
                 </div>
                 {/* Recurrence Frequency */}
                 <div className="grid gap-2">
-                  <Label htmlFor="new-recurrence-frequency">Frecuencia de Pago (opcional)</Label>
+                  <Label htmlFor="new-recurrence-frequency">
+                    Frecuencia de Pago (opcional)
+                  </Label>
                   <Select
-                    value={newCategoryRecurrenceFrequency || "none"}
+                    value={newCategoryRecurrenceFrequency || 'none'}
                     onValueChange={(value) => {
-                      if (value === "none") {
+                      if (value === 'none') {
                         setNewCategoryRecurrenceFrequency(null);
                       } else {
-                        setNewCategoryRecurrenceFrequency(value as RecurrenceFrequency);
+                        setNewCategoryRecurrenceFrequency(
+                          value as RecurrenceFrequency
+                        );
                       }
                     }}
                   >
@@ -524,9 +547,15 @@ export function CategoriesView() {
                       <SelectValue placeholder="Selecciona frecuencia" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">Un solo pago (predeterminado)</SelectItem>
-                      <SelectItem value="weekly">Semanal (cada 7 días)</SelectItem>
-                      <SelectItem value="bi-weekly">Quincenal (cada 14 días)</SelectItem>
+                      <SelectItem value="none">
+                        Un solo pago (predeterminado)
+                      </SelectItem>
+                      <SelectItem value="weekly">
+                        Semanal (cada 7 días)
+                      </SelectItem>
+                      <SelectItem value="bi-weekly">
+                        Quincenal (cada 14 días)
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-xs text-muted-foreground">
@@ -537,23 +566,29 @@ export function CategoriesView() {
                 <div className="grid gap-2">
                   <Label htmlFor="new-default-day">
                     {newCategoryRecurrenceFrequency
-                      ? "Día del Primer Pago"
-                      : "Día por Defecto (opcional)"}
+                      ? 'Día del Primer Pago'
+                      : 'Día por Defecto (opcional)'}
                   </Label>
                   <Input
                     id="new-default-day"
                     type="number"
                     min="1"
                     max="31"
-                    placeholder={newCategoryRecurrenceFrequency ? "Ej: 5" : "Ej: 15"}
-                    value={newCategoryDefaultDay || ""}
+                    placeholder={
+                      newCategoryRecurrenceFrequency ? 'Ej: 5' : 'Ej: 15'
+                    }
+                    value={newCategoryDefaultDay || ''}
                     onChange={(e) => {
                       const value = e.target.value;
-                      if (value === "") {
+                      if (value === '') {
                         setNewCategoryDefaultDay(null);
                       } else {
                         const numValue = parseInt(value, 10);
-                        if (!isNaN(numValue) && numValue >= 1 && numValue <= 31) {
+                        if (
+                          !isNaN(numValue) &&
+                          numValue >= 1 &&
+                          numValue <= 31
+                        ) {
                           setNewCategoryDefaultDay(numValue);
                         }
                       }
@@ -561,8 +596,8 @@ export function CategoriesView() {
                   />
                   <p className="text-xs text-muted-foreground">
                     {newCategoryRecurrenceFrequency
-                      ? "Los pagos subsecuentes se calcularán automáticamente según la frecuencia"
-                      : "Día preferido del mes para gastos de esta categoría"}
+                      ? 'Los pagos subsecuentes se calcularán automáticamente según la frecuencia'
+                      : 'Día preferido del mes para gastos de esta categoría'}
                   </p>
                 </div>
               </div>
@@ -571,19 +606,18 @@ export function CategoriesView() {
                   variant="outline"
                   onClick={() => {
                     setIsAddOpen(false);
-                    setNewCategoryName("");
+                    setNewCategoryName('');
                     setNewCategoryFunds([]);
                     setNewCategoryTipoGasto(undefined);
                     setNewCategoryDefaultDay(null);
                     setNewCategoryRecurrenceFrequency(null);
-                    setNewCategoryRecurrenceStartDay(null);
                   }}
-                  disabled={loadingState.isLoading("addCategory")}
+                  disabled={loadingState.isLoading('addCategory')}
                 >
                   Cancelar
                 </Button>
                 <CategoryFundLoadingButton
-                  isLoading={loadingState.isLoading("addCategory")}
+                  isLoading={loadingState.isLoading('addCategory')}
                   loadingText="Guardando..."
                   onClick={handleAddCategory}
                 >
@@ -626,7 +660,7 @@ export function CategoriesView() {
               {(filteredCategories || [])
                 .slice()
                 .sort((a, b) =>
-                  a.name.localeCompare(b.name, "es", { sensitivity: "base" })
+                  a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
                 )
                 .map((category) => (
                   <TableRow key={category.id}>
@@ -647,7 +681,9 @@ export function CategoriesView() {
                     </TableCell>
                     <TableCell>
                       {category.default_day ? (
-                        <span className="text-sm font-medium">{category.default_day}</span>
+                        <span className="text-sm font-medium">
+                          {category.default_day}
+                        </span>
                       ) : (
                         <span className="text-sm text-muted-foreground">-</span>
                       )}
@@ -678,11 +714,11 @@ export function CategoriesView() {
                 <TableRow>
                   <TableCell
                     colSpan={5}
-                    className="text-center py-4 text-muted-foreground"
+                    className="py-4 text-center text-muted-foreground"
                   >
                     {fundFilter
                       ? `No hay categorías en el fondo "${fundFilter.name}". Agrega una nueva categoría para comenzar.`
-                      : "No hay categorías. Agrega una nueva categoría para comenzar."}
+                      : 'No hay categorías. Agrega una nueva categoría para comenzar.'}
                   </TableCell>
                 </TableRow>
               )}
@@ -705,7 +741,7 @@ export function CategoriesView() {
               <Label htmlFor="edit-name">Nombre</Label>
               <Input
                 id="edit-name"
-                value={editCategory?.name || ""}
+                value={editCategory?.name || ''}
                 onChange={(e) =>
                   setEditCategory((prev) =>
                     prev ? { ...prev, name: e.target.value } : null
@@ -733,14 +769,18 @@ export function CategoriesView() {
             </div>
             {/* Recurrence Frequency */}
             <div className="grid gap-2">
-              <Label htmlFor="edit-recurrence-frequency">Frecuencia de Pago (opcional)</Label>
+              <Label htmlFor="edit-recurrence-frequency">
+                Frecuencia de Pago (opcional)
+              </Label>
               <Select
-                value={editCategoryRecurrenceFrequency || "none"}
+                value={editCategoryRecurrenceFrequency || 'none'}
                 onValueChange={(value) => {
-                  if (value === "none") {
+                  if (value === 'none') {
                     setEditCategoryRecurrenceFrequency(null);
                   } else {
-                    setEditCategoryRecurrenceFrequency(value as RecurrenceFrequency);
+                    setEditCategoryRecurrenceFrequency(
+                      value as RecurrenceFrequency
+                    );
                   }
                 }}
               >
@@ -748,9 +788,13 @@ export function CategoriesView() {
                   <SelectValue placeholder="Selecciona frecuencia" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">Un solo pago (predeterminado)</SelectItem>
+                  <SelectItem value="none">
+                    Un solo pago (predeterminado)
+                  </SelectItem>
                   <SelectItem value="weekly">Semanal (cada 7 días)</SelectItem>
-                  <SelectItem value="bi-weekly">Quincenal (cada 14 días)</SelectItem>
+                  <SelectItem value="bi-weekly">
+                    Quincenal (cada 14 días)
+                  </SelectItem>
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
@@ -761,19 +805,21 @@ export function CategoriesView() {
             <div className="grid gap-2">
               <Label htmlFor="edit-default-day">
                 {editCategoryRecurrenceFrequency
-                  ? "Día del Primer Pago"
-                  : "Día por Defecto (opcional)"}
+                  ? 'Día del Primer Pago'
+                  : 'Día por Defecto (opcional)'}
               </Label>
               <Input
                 id="edit-default-day"
                 type="number"
                 min="1"
                 max="31"
-                placeholder={editCategoryRecurrenceFrequency ? "Ej: 5" : "Ej: 15"}
-                value={editCategoryDefaultDay || ""}
+                placeholder={
+                  editCategoryRecurrenceFrequency ? 'Ej: 5' : 'Ej: 15'
+                }
+                value={editCategoryDefaultDay || ''}
                 onChange={(e) => {
                   const value = e.target.value;
-                  if (value === "") {
+                  if (value === '') {
                     setEditCategoryDefaultDay(null);
                   } else {
                     const numValue = parseInt(value, 10);
@@ -785,8 +831,8 @@ export function CategoriesView() {
               />
               <p className="text-xs text-muted-foreground">
                 {editCategoryRecurrenceFrequency
-                  ? "Los pagos subsecuentes se calcularán automáticamente según la frecuencia"
-                  : "Especifica el día preferido del mes (1-31) para los gastos de esta categoría"}
+                  ? 'Los pagos subsecuentes se calcularán automáticamente según la frecuencia'
+                  : 'Especifica el día preferido del mes (1-31) para los gastos de esta categoría'}
               </p>
             </div>
           </div>
@@ -800,14 +846,13 @@ export function CategoriesView() {
                 setEditCategoryTipoGasto(undefined);
                 setEditCategoryDefaultDay(null);
                 setEditCategoryRecurrenceFrequency(null);
-                setEditCategoryRecurrenceStartDay(null);
               }}
-              disabled={loadingState.isLoading("editCategory")}
+              disabled={loadingState.isLoading('editCategory')}
             >
               Cancelar
             </Button>
             <CategoryFundLoadingButton
-              isLoading={loadingState.isLoading("editCategory")}
+              isLoading={loadingState.isLoading('editCategory')}
               loadingText="Guardando..."
               onClick={handleEditCategory}
             >
@@ -852,20 +897,20 @@ export function CategoriesView() {
             <AlertDialogDescription asChild>
               <div className="space-y-2">
                 <p>
-                  Esta categoría tiene{" "}
+                  Esta categoría tiene{' '}
                   <strong>{deleteValidation?.expenseCount}</strong> gastos
                   registrados.
                 </p>
                 {deleteValidation?.affectedFunds &&
                   deleteValidation.affectedFunds.length > 0 && (
                     <p>
-                      Fondos afectados:{" "}
+                      Fondos afectados:{' '}
                       <strong>
-                        {deleteValidation.affectedFunds.join(", ")}
+                        {deleteValidation.affectedFunds.join(', ')}
                       </strong>
                     </p>
                   )}
-                <p className="text-destructive font-medium">
+                <p className="font-medium text-destructive">
                   Al eliminar la categoría, también se eliminarán todos los
                   gastos asociados. Esta acción no se puede deshacer.
                 </p>

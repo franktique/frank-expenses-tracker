@@ -1,5 +1,5 @@
-import { sql } from "@/lib/db";
-import { Fund } from "@/types/funds";
+import { sql } from '@/lib/db';
+import { Fund } from '@/types/funds';
 
 export interface SourceFundValidationResult {
   isValid: boolean;
@@ -37,7 +37,7 @@ export async function validateSourceFundForCategory(
     `;
 
     if (!category) {
-      errors.push("La categoría especificada no existe");
+      errors.push('La categoría especificada no existe');
       return { isValid: false, errors, warnings };
     }
 
@@ -47,7 +47,7 @@ export async function validateSourceFundForCategory(
     `;
 
     if (!sourceFund) {
-      errors.push("El fondo origen especificado no existe");
+      errors.push('El fondo origen especificado no existe');
       return { isValid: false, errors, warnings };
     }
 
@@ -95,7 +95,7 @@ export async function validateSourceFundForCategory(
             sourceFund.name
           }" no está asociado con la categoría "${
             category.name
-          }". Fondos permitidos: ${allowedFundNames.join(", ")}`
+          }". Fondos permitidos: ${allowedFundNames.join(', ')}`
         );
         return { isValid: false, errors, warnings };
       }
@@ -132,10 +132,10 @@ export async function validateSourceFundForCategory(
       data: validationData,
     };
   } catch (error) {
-    console.error("Error validating source fund for category:", error);
+    console.error('Error validating source fund for category:', error);
     return {
       isValid: false,
-      errors: ["Error interno del servidor al validar el fondo origen"],
+      errors: ['Error interno del servidor al validar el fondo origen'],
       warnings: [],
     };
   }
@@ -178,13 +178,13 @@ export async function validateExpenseSourceFunds(
       `;
 
       if (!destinationFund) {
-        errors.push("El fondo de destino especificado no existe");
+        errors.push('El fondo de destino especificado no existe');
         return { isValid: false, errors, warnings };
       }
 
       // Prevent transfer to the same fund
       if (sourceFundId === destinationFundId) {
-        errors.push("No se puede transferir dinero al mismo fondo");
+        errors.push('No se puede transferir dinero al mismo fondo');
         return { isValid: false, errors, warnings };
       }
 
@@ -222,10 +222,10 @@ export async function validateExpenseSourceFunds(
       data: validationData,
     };
   } catch (error) {
-    console.error("Error validating expense source funds:", error);
+    console.error('Error validating expense source funds:', error);
     return {
       isValid: false,
-      errors: ["Error interno del servidor al validar los fondos del gasto"],
+      errors: ['Error interno del servidor al validar los fondos del gasto'],
       warnings: [],
     };
   }
@@ -251,7 +251,7 @@ export async function getAvailableSourceFundsForCategory(
       return {
         funds: [],
         hasRestrictions: false,
-        categoryName: "",
+        categoryName: '',
       };
     }
 
@@ -313,11 +313,11 @@ export async function getAvailableSourceFundsForCategory(
       categoryName: category.name,
     };
   } catch (error) {
-    console.error("Error getting available source funds for category:", error);
+    console.error('Error getting available source funds for category:', error);
     return {
       funds: [],
       hasRestrictions: false,
-      categoryName: "",
+      categoryName: '',
     };
   }
 }
@@ -351,7 +351,7 @@ export async function validateSourceFundUpdate(
     `;
 
     if (!currentExpense) {
-      errors.push("El gasto especificado no existe");
+      errors.push('El gasto especificado no existe');
       return { isValid: false, errors, warnings };
     }
 
@@ -389,10 +389,10 @@ export async function validateSourceFundUpdate(
       newDestinationFundId !== undefined &&
       newDestinationFundId !== currentExpense.destination_fund_id
     ) {
-      const oldDestName = currentExpense.destination_fund_name || "ninguno";
+      const oldDestName = currentExpense.destination_fund_name || 'ninguno';
       warnings.push(
         `El fondo destino cambiará de "${oldDestName}" a ${
-          newDestinationFundId ? "un nuevo fondo" : "ninguno"
+          newDestinationFundId ? 'un nuevo fondo' : 'ninguno'
         }`
       );
     }
@@ -409,10 +409,10 @@ export async function validateSourceFundUpdate(
       },
     };
   } catch (error) {
-    console.error("Error validating source fund update:", error);
+    console.error('Error validating source fund update:', error);
     return {
       isValid: false,
-      errors: ["Error interno del servidor al validar la actualización"],
+      errors: ['Error interno del servidor al validar la actualización'],
       warnings: [],
     };
   }
@@ -429,7 +429,7 @@ export function validateSourceFundSelection(
   if (required && !selectedSourceFund) {
     return {
       isValid: false,
-      error: "Debe seleccionar un fondo origen para el gasto",
+      error: 'Debe seleccionar un fondo origen para el gasto',
     };
   }
 
@@ -440,7 +440,7 @@ export function validateSourceFundSelection(
   ) {
     return {
       isValid: false,
-      error: "El fondo origen seleccionado no está asociado con esta categoría",
+      error: 'El fondo origen seleccionado no está asociado con esta categoría',
     };
   }
 
@@ -452,43 +452,43 @@ export function validateSourceFundSelection(
  */
 export const SOURCE_FUND_VALIDATION_MESSAGES = {
   // Required field errors
-  SOURCE_FUND_REQUIRED: "Debe seleccionar un fondo origen para el gasto",
-  CATEGORY_REQUIRED: "Debe seleccionar una categoría para el gasto",
+  SOURCE_FUND_REQUIRED: 'Debe seleccionar un fondo origen para el gasto',
+  CATEGORY_REQUIRED: 'Debe seleccionar una categoría para el gasto',
 
   // Existence errors
-  SOURCE_FUND_NOT_FOUND: "El fondo origen especificado no existe",
-  DESTINATION_FUND_NOT_FOUND: "El fondo de destino especificado no existe",
-  CATEGORY_NOT_FOUND: "La categoría especificada no existe",
-  EXPENSE_NOT_FOUND: "El gasto especificado no existe",
+  SOURCE_FUND_NOT_FOUND: 'El fondo origen especificado no existe',
+  DESTINATION_FUND_NOT_FOUND: 'El fondo de destino especificado no existe',
+  CATEGORY_NOT_FOUND: 'La categoría especificada no existe',
+  EXPENSE_NOT_FOUND: 'El gasto especificado no existe',
 
   // Relationship errors
   SOURCE_FUND_INVALID_FOR_CATEGORY:
-    "El fondo origen seleccionado no está asociado con esta categoría",
-  SAME_FUND_TRANSFER: "No se puede transferir dinero al mismo fondo",
+    'El fondo origen seleccionado no está asociado con esta categoría',
+  SAME_FUND_TRANSFER: 'No se puede transferir dinero al mismo fondo',
 
   // Balance warnings
   INSUFFICIENT_BALANCE:
-    "El monto excede el balance disponible en el fondo origen",
-  ZERO_BALANCE: "El fondo origen tiene balance cero o negativo",
+    'El monto excede el balance disponible en el fondo origen',
+  ZERO_BALANCE: 'El fondo origen tiene balance cero o negativo',
 
   // General errors
-  VALIDATION_FAILED: "Error de validación en los datos del fondo origen",
-  SERVER_ERROR: "Error interno del servidor al validar el fondo origen",
+  VALIDATION_FAILED: 'Error de validación en los datos del fondo origen',
+  SERVER_ERROR: 'Error interno del servidor al validar el fondo origen',
 
   // Update specific
-  UPDATE_VALIDATION_FAILED: "Error validando la actualización del fondo origen",
+  UPDATE_VALIDATION_FAILED: 'Error validando la actualización del fondo origen',
   CATEGORY_CHANGE_INVALID:
-    "El cambio de categoría hace inválido el fondo origen actual",
+    'El cambio de categoría hace inválido el fondo origen actual',
 } as const;
 
 /**
  * Warning messages for source fund operations
  */
 export const SOURCE_FUND_WARNING_MESSAGES = {
-  NO_FUND_RESTRICTIONS: "Esta categoría acepta gastos desde cualquier fondo",
-  LOW_BALANCE: "El fondo origen tiene un balance bajo",
-  TRANSFER_OPERATION: "Este gasto representa una transferencia entre fondos",
+  NO_FUND_RESTRICTIONS: 'Esta categoría acepta gastos desde cualquier fondo',
+  LOW_BALANCE: 'El fondo origen tiene un balance bajo',
+  TRANSFER_OPERATION: 'Este gasto representa una transferencia entre fondos',
   CATEGORY_CHANGE:
-    "El cambio de categoría puede afectar los fondos disponibles",
-  FUND_CHANGE: "El cambio de fondo origen afectará los balances",
+    'El cambio de categoría puede afectar los fondos disponibles',
+  FUND_CHANGE: 'El cambio de fondo origen afectará los balances',
 } as const;

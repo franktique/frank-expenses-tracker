@@ -1,14 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import {
-  CalendarIcon,
-  ChevronDown,
-  ChevronUp,
-  Settings,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { useState, useEffect } from 'react';
+import { CalendarIcon, ChevronDown, ChevronUp, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Dialog,
   DialogContent,
@@ -16,37 +11,37 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+} from '@/components/ui/collapsible';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+} from '@/components/ui/popover';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
-import { useBudget, type PaymentMethod } from "@/context/budget-context";
-import { cn, formatDate } from "@/lib/utils";
-import { FundFilter } from "@/components/fund-filter";
-import { FundSelectionConstraintIndicator } from "@/components/fund-category-relationship-indicator";
-import { SourceFundSelector } from "@/components/source-fund-selector";
-import { CreditCardSelector } from "@/components/credit-card-selector";
-import { Fund } from "@/types/funds";
-import { CreditCard } from "@/types/credit-cards";
+} from '@/components/ui/select';
+import { useToast } from '@/components/ui/use-toast';
+import { useBudget, type PaymentMethod } from '@/context/budget-context';
+import { cn, formatDate } from '@/lib/utils';
+import { FundFilter } from '@/components/fund-filter';
+import { FundSelectionConstraintIndicator } from '@/components/fund-category-relationship-indicator';
+import { SourceFundSelector } from '@/components/source-fund-selector';
+import { CreditCardSelector } from '@/components/credit-card-selector';
+import { Fund } from '@/types/funds';
+import { CreditCard } from '@/types/credit-cards';
 
 /**
  * Props for ExpenseFormDialog component
@@ -129,19 +124,19 @@ export function ExpenseFormDialog({
   const { toast } = useToast();
 
   // Form state
-  const [newExpenseCategory, setNewExpenseCategory] = useState("");
-  const [categorySearch, setCategorySearch] = useState("");
+  const [newExpenseCategory, setNewExpenseCategory] = useState('');
+  const [categorySearch, setCategorySearch] = useState('');
   const [newExpensePeriod, setNewExpensePeriod] = useState(
-    activePeriod?.id || ""
+    activePeriod?.id || ''
   );
   const [newExpenseDate, setNewExpenseDate] = useState<Date | undefined>(
     new Date()
   );
-  const [newExpenseEvent, setNewExpenseEvent] = useState("");
+  const [newExpenseEvent, setNewExpenseEvent] = useState('');
   const [newExpensePaymentMethod, setNewExpensePaymentMethod] =
-    useState<PaymentMethod>("credit");
-  const [newExpenseDescription, setNewExpenseDescription] = useState("");
-  const [newExpenseAmount, setNewExpenseAmount] = useState("");
+    useState<PaymentMethod>('credit');
+  const [newExpenseDescription, setNewExpenseDescription] = useState('');
+  const [newExpenseAmount, setNewExpenseAmount] = useState('');
   const [newExpenseDestinationFund, setNewExpenseDestinationFund] =
     useState<Fund | null>(null);
   const [newExpenseSourceFund, setNewExpenseSourceFund] = useState<Fund | null>(
@@ -208,37 +203,37 @@ export function ExpenseFormDialog({
     if (open) {
       // Initialize form with defaults
       if (!preSelectedCategoryId) {
-        setNewExpenseCategory("");
+        setNewExpenseCategory('');
       }
-      setNewExpensePeriod(activePeriod?.id || "");
+      setNewExpensePeriod(activePeriod?.id || '');
       setNewExpenseDate(new Date());
-      setNewExpenseEvent("");
-      setNewExpensePaymentMethod("credit");
-      setNewExpenseDescription("");
-      setNewExpenseAmount("");
+      setNewExpenseEvent('');
+      setNewExpensePaymentMethod('credit');
+      setNewExpenseDescription('');
+      setNewExpenseAmount('');
       setNewExpenseSourceFund(null);
       setNewExpenseDestinationFund(null);
       setNewExpenseCreditCard(null);
       setNewExpensePending(false);
-      setCategorySearch("");
+      setCategorySearch('');
       setAvailableFundsForNewExpense(funds || []);
       setIsFundSectionOpen(false);
     }
   }, [open, preSelectedCategoryId, activePeriod, funds]);
 
   const resetForm = () => {
-    setNewExpenseCategory("");
-    setNewExpensePeriod(activePeriod?.id || "");
+    setNewExpenseCategory('');
+    setNewExpensePeriod(activePeriod?.id || '');
     setNewExpenseDate(new Date());
-    setNewExpenseEvent("");
-    setNewExpensePaymentMethod("credit");
-    setNewExpenseDescription("");
-    setNewExpenseAmount("");
+    setNewExpenseEvent('');
+    setNewExpensePaymentMethod('credit');
+    setNewExpenseDescription('');
+    setNewExpenseAmount('');
     setNewExpenseSourceFund(null);
     setNewExpenseDestinationFund(null);
     setNewExpenseCreditCard(null);
     setNewExpensePending(false);
-    setCategorySearch("");
+    setCategorySearch('');
     setAvailableFundsForNewExpense(funds || []);
     setIsFundSectionOpen(false);
   };
@@ -253,10 +248,10 @@ export function ExpenseFormDialog({
       !newExpenseSourceFund
     ) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
-          "Los campos obligatorios no pueden estar vacíos. Debe seleccionar un fondo origen.",
-        variant: "destructive",
+          'Los campos obligatorios no pueden estar vacíos. Debe seleccionar un fondo origen.',
+        variant: 'destructive',
       });
       return;
     }
@@ -264,9 +259,9 @@ export function ExpenseFormDialog({
     const amount = Number.parseFloat(newExpenseAmount);
     if (isNaN(amount) || amount <= 0) {
       toast({
-        title: "Error",
-        description: "El monto debe ser un número positivo",
-        variant: "destructive",
+        title: 'Error',
+        description: 'El monto debe ser un número positivo',
+        variant: 'destructive',
       });
       return;
     }
@@ -277,9 +272,9 @@ export function ExpenseFormDialog({
       newExpenseSourceFund.id === newExpenseDestinationFund.id
     ) {
       toast({
-        title: "Error",
-        description: "El fondo origen y destino no pueden ser el mismo",
-        variant: "destructive",
+        title: 'Error',
+        description: 'El fondo origen y destino no pueden ser el mismo',
+        variant: 'destructive',
       });
       return;
     }
@@ -303,8 +298,8 @@ export function ExpenseFormDialog({
       onOpenChange(false);
 
       toast({
-        title: "Gasto agregado",
-        description: "El gasto ha sido registrado exitosamente",
+        title: 'Gasto agregado',
+        description: 'El gasto ha sido registrado exitosamente',
       });
 
       // Call onSuccess callback if provided
@@ -313,9 +308,9 @@ export function ExpenseFormDialog({
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "No se pudo agregar el gasto. Por favor intenta de nuevo.",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudo agregar el gasto. Por favor intenta de nuevo.',
+        variant: 'destructive',
       });
     }
   };
@@ -371,7 +366,7 @@ export function ExpenseFormDialog({
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
                       {category.fund_name && (
-                        <span className="text-xs text-muted-foreground ml-2">
+                        <span className="ml-2 text-xs text-muted-foreground">
                           ({category.fund_name})
                         </span>
                       )}
@@ -387,12 +382,12 @@ export function ExpenseFormDialog({
           </div>
 
           {/* Collapsible Fund Configuration Section with Orange Border */}
-          <div className="border border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950 rounded-lg p-3">
+          <div className="rounded-lg border border-orange-200 bg-orange-50 p-3 dark:border-orange-800 dark:bg-orange-950">
             <Collapsible
               open={isFundSectionOpen}
               onOpenChange={setIsFundSectionOpen}
             >
-              <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-orange-800 dark:text-orange-200 hover:text-orange-900 dark:hover:text-orange-100 transition-colors">
+              <CollapsibleTrigger className="flex w-full items-center justify-between text-sm font-medium text-orange-800 transition-colors hover:text-orange-900 dark:text-orange-200 dark:hover:text-orange-100">
                 <div className="flex items-center gap-2">
                   <Settings className="h-4 w-4" />
                   <span>Configuración de Fondos</span>
@@ -403,13 +398,13 @@ export function ExpenseFormDialog({
                   <ChevronDown className="h-4 w-4" />
                 )}
               </CollapsibleTrigger>
-              <CollapsibleContent className="pt-3 space-y-3">
+              <CollapsibleContent className="space-y-3 pt-3">
                 {newExpenseCategory && (
                   <FundSelectionConstraintIndicator
                     categoryId={newExpenseCategory}
                     availableFunds={availableFundsForNewExpense}
-                    selectedFund={newExpenseDestinationFund}
-                    currentFilterFund={currentFundFilter}
+                    selectedFund={newExpenseDestinationFund ?? null}
+                    currentFilterFund={currentFundFilter ?? null}
                     className=""
                   />
                 )}
@@ -463,7 +458,7 @@ export function ExpenseFormDialog({
               <SelectContent>
                 {periods.map((period) => (
                   <SelectItem key={period.id} value={period.id}>
-                    {period.name} {period.isOpen ? "(Activo)" : ""}
+                    {period.name} {period.isOpen ? '(Activo)' : ''}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -476,10 +471,10 @@ export function ExpenseFormDialog({
               <PopoverTrigger asChild>
                 <Button
                   id="date"
-                  variant={"outline"}
+                  variant={'outline'}
                   className={cn(
-                    "w-full justify-start text-left font-normal",
-                    !newExpenseDate && "text-muted-foreground"
+                    'w-full justify-start text-left font-normal',
+                    !newExpenseDate && 'text-muted-foreground'
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />

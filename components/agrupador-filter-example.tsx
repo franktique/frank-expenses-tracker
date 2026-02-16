@@ -1,10 +1,10 @@
 // Example usage of AgrupadorFilter component
 // This file demonstrates how to integrate the AgrupadorFilter into a dashboard
 
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { AgrupadorFilter } from "./agrupador-filter";
+import { useState, useEffect } from 'react';
+import { AgrupadorFilter } from './agrupador-filter';
 
 type GrouperData = {
   grouper_id: number;
@@ -26,11 +26,11 @@ export function AgrupadorFilterExample() {
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const mockData: GrouperData[] = [
-        { grouper_id: 1, grouper_name: "Alimentación", total_amount: 1500 },
-        { grouper_id: 2, grouper_name: "Transporte", total_amount: 800 },
-        { grouper_id: 3, grouper_name: "Entretenimiento", total_amount: 400 },
-        { grouper_id: 4, grouper_name: "Salud", total_amount: 600 },
-        { grouper_id: 5, grouper_name: "Educación", total_amount: 300 },
+        { grouper_id: 1, grouper_name: 'Alimentación', total_amount: 1500 },
+        { grouper_id: 2, grouper_name: 'Transporte', total_amount: 800 },
+        { grouper_id: 3, grouper_name: 'Entretenimiento', total_amount: 400 },
+        { grouper_id: 4, grouper_name: 'Salud', total_amount: 600 },
+        { grouper_id: 5, grouper_name: 'Educación', total_amount: 300 },
       ];
 
       setAllGroupers(mockData);
@@ -50,11 +50,11 @@ export function AgrupadorFilterExample() {
     // 2. Make API calls with the selected grouper IDs
     // 3. Update other components that depend on the filter
 
-    console.log("Selected groupers:", selected);
+    console.log('Selected groupers:', selected);
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4 p-4">
       <h2 className="text-lg font-semibold">Dashboard Agrupadores</h2>
 
       <div className="flex items-center gap-4">
@@ -69,8 +69,8 @@ export function AgrupadorFilterExample() {
       </div>
 
       {/* Chart components would go here */}
-      <div className="mt-6 p-4 border rounded-lg">
-        <h3 className="font-medium mb-2">Selected Groupers:</h3>
+      <div className="mt-6 rounded-lg border p-4">
+        <h3 className="mb-2 font-medium">Selected Groupers:</h3>
         {selectedGroupers.length === 0 ? (
           <p className="text-muted-foreground">No groupers selected</p>
         ) : selectedGroupers.length === allGroupers.length ? (

@@ -5,17 +5,17 @@
  * This script tests the migration and fallback logic for category-fund relationships
  */
 
-const { spawn } = require("child_process");
-const path = require("path");
+const { spawn } = require('child_process');
+const path = require('path');
 
 // Colors for console output
 const colors = {
-  green: "\x1b[32m",
-  red: "\x1b[31m",
-  yellow: "\x1b[33m",
-  blue: "\x1b[34m",
-  reset: "\x1b[0m",
-  bold: "\x1b[1m",
+  green: '\x1b[32m',
+  red: '\x1b[31m',
+  yellow: '\x1b[33m',
+  blue: '\x1b[34m',
+  reset: '\x1b[0m',
+  bold: '\x1b[1m',
 };
 
 function log(message, color = colors.reset) {
@@ -56,12 +56,12 @@ async function runTest(testName, testFunction) {
 }
 
 async function makeRequest(url, options = {}) {
-  const fetch = (await import("node-fetch")).default;
-  const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+  const fetch = (await import('node-fetch')).default;
+  const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
 
   const response = await fetch(`${baseUrl}${url}`, {
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
       ...options.headers,
     },
     ...options,
@@ -73,7 +73,7 @@ async function makeRequest(url, options = {}) {
 
 async function testMigrationStatus() {
   const { response, data } = await makeRequest(
-    "/api/migrate-category-fund-relationships"
+    '/api/migrate-category-fund-relationships'
   );
 
   if (!response.ok) {
@@ -88,14 +88,14 @@ async function testMigrationStatus() {
 
 async function testMigrationExecution() {
   const { response, data } = await makeRequest(
-    "/api/migrate-category-fund-relationships",
+    '/api/migrate-category-fund-relationships',
     {
-      method: "POST",
+      method: 'POST',
     }
   );
 
   if (!data.success) {
-    throw new Error(`Migration failed: ${data.error || "Unknown error"}`);
+    throw new Error(`Migration failed: ${data.error || 'Unknown error'}`);
   }
 
   logInfo(`Migration result: ${data.message}`);
@@ -107,7 +107,7 @@ async function testMigrationExecution() {
 }
 
 async function testCategoriesAPI() {
-  const { response, data } = await makeRequest("/api/categories");
+  const { response, data } = await makeRequest('/api/categories');
 
   if (!response.ok) {
     throw new Error(
@@ -122,7 +122,7 @@ async function testCategoriesAPI() {
   );
 
   if (categoriesWithFunds.length === 0) {
-    logWarning("No categories found with fund relationships");
+    logWarning('No categories found with fund relationships');
   } else {
     logInfo(
       `Found ${categoriesWithFunds.length} categories with fund relationships`
@@ -149,31 +149,31 @@ async function testCategoriesAPI() {
 async function testCategoryCreation() {
   // Test creating category with legacy fund_id
   const { response: response1, data: data1 } = await makeRequest(
-    "/api/categories",
+    '/api/categories',
     {
-      method: "POST",
+      method: 'POST',
       body: JSON.stringify({
-        name: "Test Legacy Category",
-        fund_id: "some-fund-id", // This should work for backward compatibility
+        name: 'Test Legacy Category',
+        fund_id: 'some-fund-id', // This should work for backward compatibility
       }),
     }
   );
 
   // Test creating category with new fund_ids array
   const { response: response2, data: data2 } = await makeRequest(
-    "/api/categories",
+    '/api/categories',
     {
-      method: "POST",
+      method: 'POST',
       body: JSON.stringify({
-        name: "Test Multi-Fund Category",
-        fund_ids: ["fund-1", "fund-2"], // This should work with new system
+        name: 'Test Multi-Fund Category',
+        fund_ids: ['fund-1', 'fund-2'], // This should work with new system
       }),
     }
   );
 
   // Note: These might fail if the funds don't exist, but we're testing the API structure
   logInfo(
-    "Category creation API structure is compatible with both legacy and new formats"
+    'Category creation API structure is compatible with both legacy and new formats'
   );
 }
 
@@ -181,7 +181,7 @@ async function testFallbackLogic() {
   // This would require a more complex setup with actual database data
   // For now, we'll just verify the API endpoints are accessible
 
-  const { response, data } = await makeRequest("/api/categories");
+  const { response, data } = await makeRequest('/api/categories');
 
   if (response.ok) {
     // Check that categories without specific fund relationships are handled
@@ -195,35 +195,35 @@ async function testFallbackLogic() {
       logInfo(
         `Found ${categoriesWithoutFunds.length} categories without specific fund relationships`
       );
-      logInfo("These should accept expenses from any fund (fallback behavior)");
+      logInfo('These should accept expenses from any fund (fallback behavior)');
     }
   }
 }
 
 async function runJestTests() {
   return new Promise((resolve) => {
-    logInfo("Running Jest tests for backward compatibility...");
+    logInfo('Running Jest tests for backward compatibility...');
 
     const jestProcess = spawn(
-      "npm",
-      ["test", "category-fund-backward-compatibility"],
+      'npm',
+      ['test', 'category-fund-backward-compatibility'],
       {
-        stdio: "inherit",
+        stdio: 'inherit',
         cwd: process.cwd(),
       }
     );
 
-    jestProcess.on("close", (code) => {
+    jestProcess.on('close', (code) => {
       if (code === 0) {
-        logSuccess("Jest tests passed");
+        logSuccess('Jest tests passed');
         resolve(true);
       } else {
-        logError("Jest tests failed");
+        logError('Jest tests failed');
         resolve(false);
       }
     });
 
-    jestProcess.on("error", (error) => {
+    jestProcess.on('error', (error) => {
       logError(`Jest test execution failed: ${error.message}`);
       resolve(false);
     });
@@ -231,59 +231,59 @@ async function runJestTests() {
 }
 
 async function main() {
-  logHeader("Category-Fund Backward Compatibility Test Suite");
+  logHeader('Category-Fund Backward Compatibility Test Suite');
 
   let passedTests = 0;
   let totalTests = 0;
 
   // Test 1: Migration Status Check
-  logHeader("Migration Status Check");
+  logHeader('Migration Status Check');
   totalTests++;
-  if (await runTest("Check migration status", testMigrationStatus)) {
+  if (await runTest('Check migration status', testMigrationStatus)) {
     passedTests++;
   }
 
   // Test 2: Migration Execution
-  logHeader("Migration Execution");
+  logHeader('Migration Execution');
   totalTests++;
-  if (await runTest("Execute migration", testMigrationExecution)) {
+  if (await runTest('Execute migration', testMigrationExecution)) {
     passedTests++;
   }
 
   // Test 3: Categories API Backward Compatibility
-  logHeader("Categories API Backward Compatibility");
+  logHeader('Categories API Backward Compatibility');
   totalTests++;
-  if (await runTest("Test categories API", testCategoriesAPI)) {
+  if (await runTest('Test categories API', testCategoriesAPI)) {
     passedTests++;
   }
 
   // Test 4: Category Creation Compatibility
-  logHeader("Category Creation Compatibility");
+  logHeader('Category Creation Compatibility');
   totalTests++;
-  if (await runTest("Test category creation", testCategoryCreation)) {
+  if (await runTest('Test category creation', testCategoryCreation)) {
     passedTests++;
   }
 
   // Test 5: Fallback Logic
-  logHeader("Fallback Logic");
+  logHeader('Fallback Logic');
   totalTests++;
-  if (await runTest("Test fallback logic", testFallbackLogic)) {
+  if (await runTest('Test fallback logic', testFallbackLogic)) {
     passedTests++;
   }
 
   // Test 6: Unit Tests
-  logHeader("Unit Tests");
+  logHeader('Unit Tests');
   totalTests++;
-  if (await runTest("Run Jest unit tests", runJestTests)) {
+  if (await runTest('Run Jest unit tests', runJestTests)) {
     passedTests++;
   }
 
   // Summary
-  logHeader("Test Summary");
+  logHeader('Test Summary');
   log(`\nTests passed: ${passedTests}/${totalTests}`);
 
   if (passedTests === totalTests) {
-    logSuccess("All backward compatibility tests passed! 🎉");
+    logSuccess('All backward compatibility tests passed! 🎉');
     process.exit(0);
   } else {
     logError(`${totalTests - passedTests} tests failed`);

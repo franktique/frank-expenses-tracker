@@ -1,9 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   CreateExtraPaymentSchema,
   LOAN_ERROR_MESSAGES,
-} from "@/types/loan-simulator";
+} from '@/types/loan-simulator';
 
 /**
  * GET /api/loan-scenarios/[id]/extra-payments
@@ -23,8 +23,8 @@ export async function GET(
     if (!uuidRegex.test(id)) {
       return NextResponse.json(
         {
-          error: "ID de préstamo inválido",
-          code: "INVALID_ID",
+          error: 'ID de préstamo inválido',
+          code: 'INVALID_ID',
         },
         { status: 400 }
       );
@@ -39,7 +39,7 @@ export async function GET(
       return NextResponse.json(
         {
           error: LOAN_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "SCENARIO_NOT_FOUND",
+          code: 'SCENARIO_NOT_FOUND',
         },
         { status: 404 }
       );
@@ -64,14 +64,14 @@ export async function GET(
       count: extraPayments.length,
     });
   } catch (error) {
-    console.error("Error fetching extra payments:", error);
+    console.error('Error fetching extra payments:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -81,8 +81,8 @@ export async function GET(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al cargar los pagos extra",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al cargar los pagos extra',
+        code: 'INTERNAL_SERVER_ERROR',
       },
       { status: 500 }
     );
@@ -114,8 +114,8 @@ export async function POST(
     if (!uuidRegex.test(id)) {
       return NextResponse.json(
         {
-          error: "ID de préstamo inválido",
-          code: "INVALID_ID",
+          error: 'ID de préstamo inválido',
+          code: 'INVALID_ID',
         },
         { status: 400 }
       );
@@ -128,7 +128,7 @@ export async function POST(
     if (!validation.success) {
       return NextResponse.json(
         {
-          error: "Datos inválidos",
+          error: 'Datos inválidos',
           details: validation.error.errors,
         },
         { status: 400 }
@@ -146,7 +146,7 @@ export async function POST(
       return NextResponse.json(
         {
           error: LOAN_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "SCENARIO_NOT_FOUND",
+          code: 'SCENARIO_NOT_FOUND',
         },
         { status: 404 }
       );
@@ -157,7 +157,7 @@ export async function POST(
       return NextResponse.json(
         {
           error: `El número de pago no puede exceder el plazo del préstamo (${scenario.term_months} meses)`,
-          code: "INVALID_PAYMENT_NUMBER",
+          code: 'INVALID_PAYMENT_NUMBER',
         },
         { status: 400 }
       );
@@ -173,8 +173,8 @@ export async function POST(
     if (existing) {
       return NextResponse.json(
         {
-          error: "Ya existe un pago extra para este número de pago",
-          code: "DUPLICATE_EXTRA_PAYMENT",
+          error: 'Ya existe un pago extra para este número de pago',
+          code: 'DUPLICATE_EXTRA_PAYMENT',
           existing: { id: existing.id },
         },
         { status: 409 }
@@ -200,14 +200,14 @@ export async function POST(
 
     return NextResponse.json(extraPayment, { status: 201 });
   } catch (error) {
-    console.error("Error creating extra payment:", error);
+    console.error('Error creating extra payment:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -217,8 +217,8 @@ export async function POST(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al crear el pago extra",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al crear el pago extra',
+        code: 'INTERNAL_SERVER_ERROR',
       },
       { status: 500 }
     );

@@ -2,7 +2,7 @@
  * Utility functions for category styling in dashboard components
  */
 
-import { BudgetSummaryItem } from "@/types/dashboard";
+import { BudgetSummaryItem } from '@/types/dashboard';
 
 /**
  * Determines CSS classes for category name styling based on expense data
@@ -17,9 +17,9 @@ import { BudgetSummaryItem } from "@/types/dashboard";
  */
 export function getCategoryNameStyle(item: BudgetSummaryItem): string {
   // Handle edge cases for null, undefined, and invalid values
-  if (!item || typeof item.total_amount !== "number") {
+  if (!item || typeof item.total_amount !== 'number') {
     // Default to active styling for invalid data
-    return "";
+    return '';
   }
 
   // Category has no expenses if total_amount is 0
@@ -27,5 +27,5 @@ export function getCategoryNameStyle(item: BudgetSummaryItem): string {
   const hasNoExpenses = item.total_amount === 0;
 
   // Return appropriate Tailwind CSS classes
-  return hasNoExpenses ? "!text-black dark:!text-white" : "";
+  return hasNoExpenses ? '!text-black dark:!text-white' : '';
 }

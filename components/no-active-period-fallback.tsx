@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React from "react";
-import { useRouter } from "next/navigation";
+import React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   CalendarRange,
   Plus,
@@ -9,17 +9,17 @@ import {
   BookOpen,
   ArrowRight,
   CheckCircle,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useBudget } from "@/context/budget-context";
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useBudget } from '@/context/budget-context';
 
 interface NoActivePeriodFallbackProps {
   showCompact?: boolean;
@@ -28,7 +28,7 @@ interface NoActivePeriodFallbackProps {
 
 export function NoActivePeriodFallback({
   showCompact = false,
-  className = "",
+  className = '',
 }: NoActivePeriodFallbackProps) {
   const router = useRouter();
   const { periods } = useBudget();
@@ -47,7 +47,7 @@ export function NoActivePeriodFallback({
             No hay periodo activo. Activa un periodo para ver los datos.
           </span>
           <Button
-            onClick={() => router.push("/periodos")}
+            onClick={() => router.push('/periodos')}
             size="sm"
             variant="outline"
           >
@@ -61,13 +61,13 @@ export function NoActivePeriodFallback({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Main message */}
-      <div className="text-center space-y-4">
-        <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
+      <div className="space-y-4 text-center">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted">
           <CalendarRange className="h-8 w-8 text-muted-foreground" />
         </div>
         <div>
           <h2 className="text-2xl font-bold">No hay periodo activo</h2>
-          <p className="text-muted-foreground max-w-md mx-auto">
+          <p className="mx-auto max-w-md text-muted-foreground">
             Para comenzar a usar la aplicación y ver tus datos financieros,
             necesitas tener un periodo presupuestario activo.
           </p>
@@ -75,7 +75,7 @@ export function NoActivePeriodFallback({
       </div>
 
       {/* Action cards */}
-      <div className="grid gap-4 md:grid-cols-2 max-w-2xl mx-auto">
+      <div className="mx-auto grid max-w-2xl gap-4 md:grid-cols-2">
         {hasNoPeriods ? (
           // No periods exist - guide to create one
           <Card className="border-primary/20">
@@ -105,7 +105,7 @@ export function NoActivePeriodFallback({
                 </div>
               </div>
               <Button
-                onClick={() => router.push("/periodos")}
+                onClick={() => router.push('/periodos')}
                 className="w-full"
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -122,9 +122,9 @@ export function NoActivePeriodFallback({
                 Activar periodo existente
               </CardTitle>
               <CardDescription>
-                Tienes {periods.length} periodo{periods.length !== 1 ? "s" : ""}{" "}
+                Tienes {periods.length} periodo{periods.length !== 1 ? 's' : ''}{' '}
                 creado
-                {periods.length !== 1 ? "s" : ""}. Activa uno para comenzar.
+                {periods.length !== 1 ? 's' : ''}. Activa uno para comenzar.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -143,7 +143,7 @@ export function NoActivePeriodFallback({
                 </div>
               </div>
               <Button
-                onClick={() => router.push("/periodos")}
+                onClick={() => router.push('/periodos')}
                 className="w-full"
               >
                 <Play className="mr-2 h-4 w-4" />
@@ -167,7 +167,7 @@ export function NoActivePeriodFallback({
           <CardContent className="space-y-4">
             <div className="space-y-2 text-sm text-muted-foreground">
               <p>Un periodo te permite:</p>
-              <ul className="space-y-1 ml-4">
+              <ul className="ml-4 space-y-1">
                 <li>• Organizar gastos e ingresos por mes</li>
                 <li>• Establecer presupuestos por categoría</li>
                 <li>• Hacer seguimiento a tus metas financieras</li>
@@ -175,7 +175,7 @@ export function NoActivePeriodFallback({
               </ul>
             </div>
             <Button
-              onClick={() => router.push("/periodos")}
+              onClick={() => router.push('/periodos')}
               variant="outline"
               className="w-full"
             >
@@ -187,7 +187,7 @@ export function NoActivePeriodFallback({
       </div>
 
       {/* Quick start guide */}
-      <Card className="max-w-2xl mx-auto">
+      <Card className="mx-auto max-w-2xl">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BookOpen className="h-5 w-5" />
@@ -200,7 +200,7 @@ export function NoActivePeriodFallback({
         <CardContent>
           <div className="space-y-3">
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm flex items-center justify-center font-medium">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
                 1
               </div>
               <div>
@@ -211,7 +211,7 @@ export function NoActivePeriodFallback({
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm flex items-center justify-center font-medium">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
                 2
               </div>
               <div>
@@ -223,7 +223,7 @@ export function NoActivePeriodFallback({
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm flex items-center justify-center font-medium">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
                 3
               </div>
               <div>
@@ -234,7 +234,7 @@ export function NoActivePeriodFallback({
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <div className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm flex items-center justify-center font-medium">
+              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground">
                 4
               </div>
               <div>
@@ -246,8 +246,8 @@ export function NoActivePeriodFallback({
             </div>
           </div>
 
-          <div className="mt-6 pt-4 border-t">
-            <Button onClick={() => router.push("/periodos")} className="w-full">
+          <div className="mt-6 border-t pt-4">
+            <Button onClick={() => router.push('/periodos')} className="w-full">
               Comenzar ahora
               <ArrowRight className="ml-2 h-4 w-4" />
             </Button>

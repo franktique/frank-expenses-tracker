@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function POST() {
   try {
@@ -26,10 +26,10 @@ export async function POST() {
 
     return NextResponse.json({
       success: true,
-      message: "Settings table created and initialized successfully",
+      message: 'Settings table created and initialized successfully',
     });
   } catch (error) {
-    console.error("Error setting up settings table:", error);
+    console.error('Error setting up settings table:', error);
     return NextResponse.json(
       { success: false, error: (error as Error).message },
       { status: 500 }

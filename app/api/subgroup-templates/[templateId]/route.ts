@@ -5,17 +5,17 @@
  * DELETE: Delete template
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 import {
   getTemplateById,
   updateTemplate,
   deleteTemplate,
-} from "@/lib/subgroup-template-db-utils";
+} from '@/lib/subgroup-template-db-utils';
 import type {
   UpdateTemplateRequest,
   TemplateResponse,
   DeleteTemplateResponse,
-} from "@/types/subgroup-templates";
+} from '@/types/subgroup-templates';
 
 /**
  * GET /api/subgroup-templates/[templateId]
@@ -34,7 +34,7 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          error: "Template not found",
+          error: 'Template not found',
           statusCode: 404,
         },
         { status: 404 }
@@ -50,9 +50,9 @@ export async function GET(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error fetching template:", error);
+    console.error('Error fetching template:', error);
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to fetch template";
+      error instanceof Error ? error.message : 'Failed to fetch template';
 
     return NextResponse.json(
       {
@@ -84,7 +84,7 @@ export async function PATCH(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid request body",
+          error: 'Invalid request body',
           statusCode: 400,
         },
         { status: 400 }
@@ -103,12 +103,12 @@ export async function PATCH(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error updating template:", error);
+    console.error('Error updating template:', error);
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to update template";
+      error instanceof Error ? error.message : 'Failed to update template';
 
     // Check if template not found
-    if (errorMessage.includes("not found")) {
+    if (errorMessage.includes('not found')) {
       return NextResponse.json(
         {
           success: false,
@@ -120,7 +120,7 @@ export async function PATCH(
     }
 
     // Check if it's a duplicate name error
-    if (errorMessage.includes("already exists")) {
+    if (errorMessage.includes('already exists')) {
       return NextResponse.json(
         {
           success: false,
@@ -132,7 +132,7 @@ export async function PATCH(
     }
 
     // Check if it's a validation error
-    if (errorMessage.includes("cannot be empty")) {
+    if (errorMessage.includes('cannot be empty')) {
       return NextResponse.json(
         {
           success: false,
@@ -170,18 +170,18 @@ export async function DELETE(
     return NextResponse.json(
       {
         success: true,
-        message: "Template deleted successfully",
+        message: 'Template deleted successfully',
         statusCode: 200,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error deleting template:", error);
+    console.error('Error deleting template:', error);
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to delete template";
+      error instanceof Error ? error.message : 'Failed to delete template';
 
     // Check if template not found
-    if (errorMessage.includes("not found")) {
+    if (errorMessage.includes('not found')) {
       return NextResponse.json(
         {
           success: false,

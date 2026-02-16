@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   CreateInterestRateScenarioSchema,
   INTEREST_RATE_ERROR_MESSAGES,
@@ -7,8 +7,8 @@ import {
   type InterestRateScenarioListResponse,
   type InterestRateScenarioWithConversions,
   type RateType,
-} from "@/types/interest-rate-simulator";
-import { convertRate } from "@/lib/interest-rate-calculations";
+} from '@/types/interest-rate-simulator';
+import { convertRate } from '@/lib/interest-rate-calculations';
 
 /**
  * GET /api/interest-rate-scenarios
@@ -29,37 +29,38 @@ export async function GET() {
       ORDER BY created_at DESC
     `;
 
-    const mappedScenarios: InterestRateScenarioWithConversions[] = scenarios.map(
-      (row: {
-        id: string;
-        name: string;
-        input_rate: string;
-        input_rate_type: string;
-        notes: string | null;
-        created_at: string;
-        updated_at: string;
-      }) => {
-        const inputRate = parseFloat(row.input_rate);
-        const inputRateType = row.input_rate_type as RateType;
+    const mappedScenarios: InterestRateScenarioWithConversions[] =
+      scenarios.map(
+        (row: {
+          id: string;
+          name: string;
+          input_rate: string;
+          input_rate_type: string;
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        }) => {
+          const inputRate = parseFloat(row.input_rate);
+          const inputRateType = row.input_rate_type as RateType;
 
-        const scenario: InterestRateScenario = {
-          id: row.id,
-          name: row.name,
-          inputRate,
-          inputRateType,
-          notes: row.notes ?? undefined,
-          createdAt: row.created_at,
-          updatedAt: row.updated_at,
-        };
+          const scenario: InterestRateScenario = {
+            id: row.id,
+            name: row.name,
+            inputRate,
+            inputRateType,
+            notes: row.notes ?? undefined,
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+          };
 
-        const conversions = convertRate(inputRate, inputRateType);
+          const conversions = convertRate(inputRate, inputRateType);
 
-        return {
-          ...scenario,
-          conversions,
-        };
-      }
-    );
+          return {
+            ...scenario,
+            conversions,
+          };
+        }
+      );
 
     const response: InterestRateScenarioListResponse = {
       scenarios: mappedScenarios,
@@ -68,18 +69,20 @@ export async function GET() {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("Error listing interest rate scenarios:", error);
+    console.error('Error listing interest rate scenarios:', error);
 
     // Handle table not found
     if (
       error instanceof Error &&
-      error.message.includes('relation "interest_rate_scenarios" does not exist')
+      error.message.includes(
+        'relation "interest_rate_scenarios" does not exist'
+      )
     ) {
       return NextResponse.json(
         {
           error: INTEREST_RATE_ERROR_MESSAGES.TABLES_NOT_FOUND,
-          code: "TABLES_NOT_FOUND",
-          migrationEndpoint: "/api/migrate-interest-rate-simulator",
+          code: 'TABLES_NOT_FOUND',
+          migrationEndpoint: '/api/migrate-interest-rate-simulator',
         },
         { status: 404 }
       );
@@ -88,8 +91,8 @@ export async function GET() {
     return NextResponse.json(
       {
         error: INTEREST_RATE_ERROR_MESSAGES.INTERNAL_ERROR,
-        code: "INTERNAL_ERROR",
-        details: error instanceof Error ? error.message : "Unknown error",
+        code: 'INTERNAL_ERROR',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -110,7 +113,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: INTEREST_RATE_ERROR_MESSAGES.VALIDATION_ERROR,
-          code: "VALIDATION_ERROR",
+          code: 'VALIDATION_ERROR',
           details: validation.error.errors,
         },
         { status: 400 }
@@ -129,7 +132,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: INTEREST_RATE_ERROR_MESSAGES.DUPLICATE_NAME,
-          code: "DUPLICATE_NAME",
+          code: 'DUPLICATE_NAME',
         },
         { status: 409 }
       );
@@ -166,23 +169,28 @@ export async function POST(request: NextRequest) {
       notes: scenario.notes ?? undefined,
       createdAt: scenario.created_at,
       updatedAt: scenario.updated_at,
-      conversions: convertRate(parseFloat(scenario.input_rate), scenario.input_rate_type as RateType),
+      conversions: convertRate(
+        parseFloat(scenario.input_rate),
+        scenario.input_rate_type as RateType
+      ),
     };
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    console.error("Error creating interest rate scenario:", error);
+    console.error('Error creating interest rate scenario:', error);
 
     // Handle table not found
     if (
       error instanceof Error &&
-      error.message.includes('relation "interest_rate_scenarios" does not exist')
+      error.message.includes(
+        'relation "interest_rate_scenarios" does not exist'
+      )
     ) {
       return NextResponse.json(
         {
           error: INTEREST_RATE_ERROR_MESSAGES.TABLES_NOT_FOUND,
-          code: "TABLES_NOT_FOUND",
-          migrationEndpoint: "/api/migrate-interest-rate-simulator",
+          code: 'TABLES_NOT_FOUND',
+          migrationEndpoint: '/api/migrate-interest-rate-simulator',
         },
         { status: 404 }
       );
@@ -191,12 +199,12 @@ export async function POST(request: NextRequest) {
     // Handle unique constraint violation
     if (
       error instanceof Error &&
-      error.message.includes("interest_rate_scenarios_name_unique")
+      error.message.includes('interest_rate_scenarios_name_unique')
     ) {
       return NextResponse.json(
         {
           error: INTEREST_RATE_ERROR_MESSAGES.DUPLICATE_NAME,
-          code: "DUPLICATE_NAME",
+          code: 'DUPLICATE_NAME',
         },
         { status: 409 }
       );
@@ -205,8 +213,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       {
         error: INTEREST_RATE_ERROR_MESSAGES.INTERNAL_ERROR,
-        code: "INTERNAL_ERROR",
-        details: error instanceof Error ? error.message : "Unknown error",
+        code: 'INTERNAL_ERROR',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useTabs } from './tab-context';
@@ -9,7 +9,7 @@ export function TabAccessibilityAnnouncer() {
   const announcementRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const activeTab = tabs.find(tab => tab.id === activeTabId);
+    const activeTab = tabs.find((tab) => tab.id === activeTabId);
     if (activeTab && announcementRef.current) {
       const announcement = `Switched to ${activeTab.title} tab`;
       announcementRef.current.textContent = announcement;
@@ -49,7 +49,7 @@ export function TabKeyboardNavigation() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!activeTabId) return;
 
-      const currentIndex = tabs.findIndex(tab => tab.id === activeTabId);
+      const currentIndex = tabs.findIndex((tab) => tab.id === activeTabId);
       if (currentIndex === -1) return;
 
       let nextIndex = currentIndex;
@@ -150,7 +150,9 @@ export function useFocusTrap(isActive: boolean) {
     if (focusableElements.length === 0) return;
 
     const firstElement = focusableElements[0] as HTMLElement;
-    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+    const lastElement = focusableElements[
+      focusableElements.length - 1
+    ] as HTMLElement;
 
     // Focus first element when trap is activated
     firstElement?.focus();
@@ -202,9 +204,14 @@ export function TabScreenReaderHelpers() {
       <div aria-live="polite" aria-atomic="true">
         {tabs.length > 0 && (
           <p>
-            Tab list contains {tabs.length} {tabs.length === 1 ? 'tab' : 'tabs'}.
+            Tab list contains {tabs.length} {tabs.length === 1 ? 'tab' : 'tabs'}
+            .
             {activeTabId && (
-              <> Currently active: {tabs.find(t => t.id === activeTabId)?.title}</>
+              <>
+                {' '}
+                Currently active:{' '}
+                {tabs.find((t) => t.id === activeTabId)?.title}
+              </>
             )}
           </p>
         )}
@@ -213,10 +220,9 @@ export function TabScreenReaderHelpers() {
       {/* Instructions for keyboard users */}
       <div aria-live="polite" aria-atomic="false">
         <p>
-          Use left and right arrow keys to navigate tabs.
-          Press Enter or Space to activate a tab.
-          Press Ctrl+T to open a new tab.
-          Press Ctrl+W to close the current tab.
+          Use left and right arrow keys to navigate tabs. Press Enter or Space
+          to activate a tab. Press Ctrl+T to open a new tab. Press Ctrl+W to
+          close the current tab.
         </p>
       </div>
     </div>
@@ -232,7 +238,7 @@ export function TabSkipLink() {
   return (
     <a
       href="#tabbar"
-      className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 bg-primary text-primary-foreground px-3 py-2 rounded-md z-50"
+      className="sr-only z-50 rounded-md bg-primary px-3 py-2 text-primary-foreground focus:not-sr-only focus:absolute focus:left-2 focus:top-2"
     >
       Skip to tab navigation
     </a>
@@ -245,38 +251,39 @@ export const colorBlindFriendlyThemes = {
     active: '#2563eb',
     hover: '#f1f5f9',
     text: '#1e293b',
-    muted: '#64748b'
+    muted: '#64748b',
   },
   protanopia: {
     active: '#0ea5e9',
     hover: '#f0f9ff',
     text: '#0c4a6e',
-    muted: '#0369a1'
+    muted: '#0369a1',
   },
   deuteranopia: {
     active: '#059669',
     hover: '#ecfdf5',
     text: '#064e3b',
-    muted: '#047857'
+    muted: '#047857',
   },
   tritanopia: {
     active: '#7c3aed',
     hover: '#f5f3ff',
     text: '#4c1d95',
-    muted: '#6d28d9'
-  }
+    muted: '#6d28d9',
+  },
 };
 
 // Hook for colorblind friendly mode
 export function useColorBlindMode() {
-  const [colorBlindType, setColorBlindType] = useState<keyof typeof colorBlindFriendlyThemes>('default');
+  const [colorBlindType, setColorBlindType] =
+    useState<keyof typeof colorBlindFriendlyThemes>('default');
 
   const colors = colorBlindFriendlyThemes[colorBlindType];
 
   return {
     colors,
     colorBlindType,
-    setColorBlindType
+    setColorBlindType,
   };
 }
 
@@ -287,13 +294,13 @@ export const tabAriaLabels = {
   tabList: 'Application tabs',
   tabPanel: (title: string) => `Content for ${title} tab`,
   closeButton: 'Close tab',
-  pinButton: (isPinned: boolean) => isPinned ? 'Unpin tab' : 'Pin tab',
+  pinButton: (isPinned: boolean) => (isPinned ? 'Unpin tab' : 'Pin tab'),
   addTabButton: 'Add new tab',
-  tabContextMenu: 'Tab context menu'
+  tabContextMenu: 'Tab context menu',
 };
 
 export const tabAriaDescriptions = {
   keyboardNavigation: 'Use arrow keys to navigate, Enter to select',
   tabActions: 'Right-click for more options',
-  modifiedTab: 'This tab has unsaved changes'
+  modifiedTab: 'This tab has unsaved changes',
 };

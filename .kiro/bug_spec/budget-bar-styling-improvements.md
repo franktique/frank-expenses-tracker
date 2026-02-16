@@ -15,7 +15,7 @@
 
 ```typescript
 // BEFORE (simple transparency):
-const budgetColor = baseColor + "80";
+const budgetColor = baseColor + '80';
 
 // AFTER (intelligent color brightening):
 const hexToRgb = (hex: string) => {

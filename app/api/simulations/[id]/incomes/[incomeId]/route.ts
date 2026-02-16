@@ -1,9 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   UpdateSimulationIncomeSchema,
   SIMULATION_INCOME_ERROR_MESSAGES,
-} from "@/types/funds";
+} from '@/types/funds';
 
 // PUT /api/simulations/[id]/incomes/[incomeId] - Update simulation income
 export async function PUT(
@@ -19,8 +19,8 @@ export async function PUT(
     if (isNaN(simulationId) || simulationId <= 0) {
       return NextResponse.json(
         {
-          error: "ID de simulación inválido",
-          code: "INVALID_SIMULATION_ID",
+          error: 'ID de simulación inválido',
+          code: 'INVALID_SIMULATION_ID',
         },
         { status: 400 }
       );
@@ -29,8 +29,8 @@ export async function PUT(
     if (isNaN(incomeIdNum) || incomeIdNum <= 0) {
       return NextResponse.json(
         {
-          error: "ID de ingreso inválido",
-          code: "INVALID_INCOME_ID",
+          error: 'ID de ingreso inválido',
+          code: 'INVALID_INCOME_ID',
         },
         { status: 400 }
       );
@@ -43,7 +43,7 @@ export async function PUT(
     if (!validation.success) {
       return NextResponse.json(
         {
-          error: "Datos de ingreso inválidos",
+          error: 'Datos de ingreso inválidos',
           validation_errors: validation.error.errors,
         },
         { status: 400 }
@@ -62,7 +62,7 @@ export async function PUT(
       return NextResponse.json(
         {
           error: SIMULATION_INCOME_ERROR_MESSAGES.INCOME_NOT_FOUND,
-          code: "INCOME_NOT_FOUND",
+          code: 'INCOME_NOT_FOUND',
           income_id: incomeIdNum,
         },
         { status: 404 }
@@ -73,7 +73,7 @@ export async function PUT(
     if (description === undefined && amount === undefined) {
       return NextResponse.json({
         success: true,
-        message: "No hay cambios para actualizar",
+        message: 'No hay cambios para actualizar',
         income: existingIncome,
       });
     }
@@ -103,21 +103,21 @@ export async function PUT(
 
     return NextResponse.json({
       success: true,
-      message: "Ingreso simulado actualizado exitosamente",
+      message: 'Ingreso simulado actualizado exitosamente',
       income: updatedIncome,
     });
   } catch (error) {
-    console.error("Error updating simulation income:", error);
+    console.error('Error updating simulation income:', error);
 
     if (error instanceof Error) {
       if (
-        error.message.includes("connection") ||
-        error.message.includes("timeout")
+        error.message.includes('connection') ||
+        error.message.includes('timeout')
       ) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -127,8 +127,8 @@ export async function PUT(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al actualizar ingreso",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al actualizar ingreso',
+        code: 'INTERNAL_SERVER_ERROR',
         retryable: true,
       },
       { status: 500 }
@@ -150,8 +150,8 @@ export async function DELETE(
     if (isNaN(simulationId) || simulationId <= 0) {
       return NextResponse.json(
         {
-          error: "ID de simulación inválido",
-          code: "INVALID_SIMULATION_ID",
+          error: 'ID de simulación inválido',
+          code: 'INVALID_SIMULATION_ID',
         },
         { status: 400 }
       );
@@ -160,8 +160,8 @@ export async function DELETE(
     if (isNaN(incomeIdNum) || incomeIdNum <= 0) {
       return NextResponse.json(
         {
-          error: "ID de ingreso inválido",
-          code: "INVALID_INCOME_ID",
+          error: 'ID de ingreso inválido',
+          code: 'INVALID_INCOME_ID',
         },
         { status: 400 }
       );
@@ -177,7 +177,7 @@ export async function DELETE(
       return NextResponse.json(
         {
           error: SIMULATION_INCOME_ERROR_MESSAGES.INCOME_NOT_FOUND,
-          code: "INCOME_NOT_FOUND",
+          code: 'INCOME_NOT_FOUND',
           income_id: incomeIdNum,
         },
         { status: 404 }
@@ -203,20 +203,20 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: "Ingreso simulado eliminado exitosamente",
+      message: 'Ingreso simulado eliminado exitosamente',
     });
   } catch (error) {
-    console.error("Error deleting simulation income:", error);
+    console.error('Error deleting simulation income:', error);
 
     if (error instanceof Error) {
       if (
-        error.message.includes("connection") ||
-        error.message.includes("timeout")
+        error.message.includes('connection') ||
+        error.message.includes('timeout')
       ) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -227,7 +227,7 @@ export async function DELETE(
     return NextResponse.json(
       {
         error: SIMULATION_INCOME_ERROR_MESSAGES.DELETE_FAILED,
-        code: "INTERNAL_SERVER_ERROR",
+        code: 'INTERNAL_SERVER_ERROR',
         retryable: true,
       },
       { status: 500 }

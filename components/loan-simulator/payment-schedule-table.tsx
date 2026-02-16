@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useMemo, useState } from "react";
+import { useMemo, useState } from 'react';
 import {
   Table,
   TableBody,
@@ -8,14 +8,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Search, Calendar, DollarSign, TrendingUp } from "lucide-react";
-import type { AmortizationPayment, ExtraPayment, CurrencyCode } from "@/types/loan-simulator";
-import { formatCurrency, formatDate } from "@/lib/loan-calculations";
+} from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Search, Calendar, DollarSign, TrendingUp } from 'lucide-react';
+import type {
+  AmortizationPayment,
+  ExtraPayment,
+  CurrencyCode,
+} from '@/types/loan-simulator';
+import { formatCurrency, formatDate } from '@/lib/loan-calculations';
 
 interface PaymentScheduleTableProps {
   payments: AmortizationPayment[];
@@ -30,9 +34,9 @@ export function PaymentScheduleTable({
   extraPayments,
   onAddExtraPayment,
   onRemoveExtraPayment,
-  currency = "USD",
+  currency = 'USD',
 }: PaymentScheduleTableProps) {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 25;
 
@@ -51,7 +55,8 @@ export function PaymentScheduleTable({
 
     const term = searchTerm.toLowerCase();
     return payments.filter((payment) => {
-      const searchStr = `${payment.paymentNumber} ${payment.date} ${payment.paymentAmount} ${payment.remainingBalance}`.toLowerCase();
+      const searchStr =
+        `${payment.paymentNumber} ${payment.date} ${payment.paymentAmount} ${payment.remainingBalance}`.toLowerCase();
       return searchStr.includes(term);
     });
   }, [payments, searchTerm]);
@@ -88,15 +93,16 @@ export function PaymentScheduleTable({
           Calendario de Pagos
           {extraPayments.length > 0 && (
             <Badge variant="secondary">
-              {extraPayments.length} pago{extraPayments.length !== 1 ? "s" : ""} extra
+              {extraPayments.length} pago{extraPayments.length !== 1 ? 's' : ''}{' '}
+              extra
             </Badge>
           )}
         </CardTitle>
 
         {/* Search */}
-        <div className="flex gap-2 mt-4">
-          <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <div className="mt-4 flex gap-2">
+          <div className="relative max-w-sm flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               placeholder="Buscar por pago, fecha, monto..."
               value={searchTerm}
@@ -108,8 +114,10 @@ export function PaymentScheduleTable({
 
         {/* Extra Payments Summary */}
         {extraPayments.length > 0 && (
-          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
-            <h4 className="font-semibold text-sm mb-2">Pagos Extra Aplicados:</h4>
+          <div className="mt-4 rounded-lg bg-blue-50 p-4 dark:bg-blue-950">
+            <h4 className="mb-2 text-sm font-semibold">
+              Pagos Extra Aplicados:
+            </h4>
             <div className="space-y-1">
               {extraPayments
                 .sort((a, b) => a.paymentNumber - b.paymentNumber)
@@ -119,7 +127,8 @@ export function PaymentScheduleTable({
                     className="flex items-center justify-between text-sm"
                   >
                     <span>
-                      Pago #{ep.paymentNumber}: {formatCurrency(ep.amount, currency)}
+                      Pago #{ep.paymentNumber}:{' '}
+                      {formatCurrency(ep.amount, currency)}
                       {ep.description && ` (${ep.description})`}
                     </span>
                     {onRemoveExtraPayment && (
@@ -141,7 +150,7 @@ export function PaymentScheduleTable({
 
       <CardContent>
         {/* Payment Table */}
-        <div className="border rounded-lg">
+        <div className="rounded-lg border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -151,18 +160,24 @@ export function PaymentScheduleTable({
                 <TableHead className="text-right">Capital</TableHead>
                 <TableHead className="text-right">Interés</TableHead>
                 <TableHead className="text-right">Balance</TableHead>
-                {onAddExtraPayment && <TableHead className="w-[100px]"></TableHead>}
+                {onAddExtraPayment && (
+                  <TableHead className="w-[100px]"></TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
               {paginatedPayments.map((payment) => {
-                const extraPayment = extraPaymentsMap.get(payment.paymentNumber);
+                const extraPayment = extraPaymentsMap.get(
+                  payment.paymentNumber
+                );
                 const isFinalPayment = payment.remainingBalance === 0;
 
                 return (
                   <TableRow
                     key={payment.paymentNumber}
-                    className={extraPayment ? "bg-blue-50 dark:bg-blue-950/50" : ""}
+                    className={
+                      extraPayment ? 'bg-blue-50 dark:bg-blue-950/50' : ''
+                    }
                   >
                     <TableCell className="font-medium">
                       {payment.paymentNumber}
@@ -184,11 +199,11 @@ export function PaymentScheduleTable({
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      <DollarSign className="inline h-3 w-3 text-green-600 dark:text-green-400 mr-1" />
+                      <DollarSign className="mr-1 inline h-3 w-3 text-green-600 dark:text-green-400" />
                       {formatCurrency(payment.principalPortion, currency)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <TrendingUp className="inline h-3 w-3 text-orange-600 dark:text-orange-400 mr-1" />
+                      <TrendingUp className="mr-1 inline h-3 w-3 text-orange-600 dark:text-orange-400" />
                       {formatCurrency(payment.interestPortion, currency)}
                     </TableCell>
                     <TableCell className="text-right font-medium">
@@ -218,7 +233,7 @@ export function PaymentScheduleTable({
         </div>
 
         {/* Page Totals */}
-        <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+        <div className="mt-4 rounded-lg bg-muted/50 p-4">
           <div className="grid grid-cols-3 gap-4 text-sm">
             <div>
               <span className="text-muted-foreground">Capital pagado: </span>
@@ -243,9 +258,10 @@ export function PaymentScheduleTable({
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4">
+          <div className="mt-4 flex items-center justify-between">
             <div className="text-sm text-muted-foreground">
-              Mostrando {startIndex + 1} - {Math.min(endIndex, filteredPayments.length)} de{" "}
+              Mostrando {startIndex + 1} -{' '}
+              {Math.min(endIndex, filteredPayments.length)} de{' '}
               {filteredPayments.length} pagos
             </div>
             <div className="flex gap-2">
@@ -273,7 +289,7 @@ export function PaymentScheduleTable({
                   return (
                     <Button
                       key={pageNum}
-                      variant={currentPage === pageNum ? "default" : "outline"}
+                      variant={currentPage === pageNum ? 'default' : 'outline'}
                       size="sm"
                       className="h-8 w-8 p-0"
                       onClick={() => setCurrentPage(pageNum)}
@@ -286,7 +302,9 @@ export function PaymentScheduleTable({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
                 disabled={currentPage === totalPages}
               >
                 Siguiente

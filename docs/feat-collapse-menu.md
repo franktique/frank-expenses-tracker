@@ -11,6 +11,7 @@ Implement a modern collapsible sidebar that allows users to maximize workspace w
 ## Current State Analysis
 
 The application already has a sophisticated sidebar system built with:
+
 - **SidebarProvider** with state management (`expanded`/`collapsed` states)
 - **Cookie persistence** for sidebar state (7-day expiry)
 - **Keyboard shortcut** support (Ctrl+B / Cmd+B)
@@ -18,6 +19,7 @@ The application already has a sophisticated sidebar system built with:
 - **CSS transitions** with smooth animations (200ms duration)
 
 ### Existing Components
+
 - `/components/app-sidebar.tsx` - Main sidebar with menu items
 - `/components/ui/sidebar.tsx` - Core UI system with all necessary primitives
 - `SidebarTrigger` - Built-in toggle button component
@@ -26,6 +28,7 @@ The application already has a sophisticated sidebar system built with:
 ## Proposed Solution
 
 Implement an **icon-mode collapsible sidebar** with:
+
 1. A toggle button in the sidebar header
 2. Collapsed state showing only icons (3rem width)
 3. Tooltips on hover showing menu item names when collapsed
@@ -35,6 +38,7 @@ Implement an **icon-mode collapsible sidebar** with:
 ## Design Mockup
 
 ### Expanded State (Current)
+
 ```
 ┌─────────────────────────────────┐
 │ $ Budget Tracker  ☀️  [«]      │
@@ -49,6 +53,7 @@ Implement an **icon-mode collapsible sidebar** with:
 ```
 
 ### Collapsed State (New)
+
 ```
 ┌───────┐
 │ $  [»]│
@@ -101,20 +106,22 @@ Implement an **icon-mode collapsible sidebar** with:
 
 ### Key Changes by File
 
-| File | Changes |
-|------|---------|
-| `components/app-sidebar.tsx` | Add collapsible="icon", SidebarTrigger, tooltips |
-| `components/ui/sidebar.tsx` | May need tooltip wrapper adjustments |
-| `components/simple-tab-layout.tsx` | Content area transition handling |
-| `app/globals.css` | Any additional styling if needed |
+| File                               | Changes                                          |
+| ---------------------------------- | ------------------------------------------------ |
+| `components/app-sidebar.tsx`       | Add collapsible="icon", SidebarTrigger, tooltips |
+| `components/ui/sidebar.tsx`        | May need tooltip wrapper adjustments             |
+| `components/simple-tab-layout.tsx` | Content area transition handling                 |
+| `app/globals.css`                  | Any additional styling if needed                 |
 
 ### CSS Variables (Already Available)
+
 ```css
---sidebar-width: 16rem;        /* Expanded width */
---sidebar-width-icon: 3rem;    /* Collapsed width */
+--sidebar-width: 16rem; /* Expanded width */
+--sidebar-width-icon: 3rem; /* Collapsed width */
 ```
 
 ### State Flow
+
 ```
 User clicks toggle → toggleSidebar() → state updates →
 cookie saved → CSS transition → UI re-renders with new width
@@ -123,6 +130,7 @@ cookie saved → CSS transition → UI re-renders with new width
 ## Dependencies
 
 All required dependencies are already installed:
+
 - `@radix-ui/react-tooltip` (for tooltips)
 - `@radix-ui/react-collapsible` (for collapsible behavior)
 - Tailwind CSS (for styling)
@@ -148,6 +156,7 @@ All required dependencies are already installed:
 ## Implementation Summary
 
 ### Files Modified:
+
 1. **`components/app-sidebar.tsx`**
    - Added `collapsible="icon"` to Sidebar component
    - Added toggle button (PanelLeftClose/PanelLeft icons) to header
@@ -161,6 +170,7 @@ All required dependencies are already installed:
    - Centered icon in collapsed state
 
 ### Features Delivered:
+
 - **Toggle Button**: Click button in header to collapse/expand
 - **Keyboard Shortcut**: Ctrl+B (Cmd+B on Mac) to toggle
 - **Tooltips**: Hover over icons when collapsed to see menu item names

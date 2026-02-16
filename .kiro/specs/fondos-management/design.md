@@ -266,16 +266,16 @@ current_balance = initial_balance
 
 ```typescript
 const ERROR_MESSAGES = {
-  FUND_NOT_FOUND: "El fondo especificado no existe",
-  FUND_NAME_REQUIRED: "El nombre del fondo es obligatorio",
-  FUND_NAME_DUPLICATE: "Ya existe un fondo con este nombre",
+  FUND_NOT_FOUND: 'El fondo especificado no existe',
+  FUND_NAME_REQUIRED: 'El nombre del fondo es obligatorio',
+  FUND_NAME_DUPLICATE: 'Ya existe un fondo con este nombre',
   FUND_DELETE_RESTRICTED:
-    "No se puede eliminar un fondo con categorías o transacciones asociadas",
-  FUND_BALANCE_CALCULATION_ERROR: "Error al calcular el balance del fondo",
-  CATEGORY_FUND_REQUIRED: "Debe seleccionar un fondo para la categoría",
+    'No se puede eliminar un fondo con categorías o transacciones asociadas',
+  FUND_BALANCE_CALCULATION_ERROR: 'Error al calcular el balance del fondo',
+  CATEGORY_FUND_REQUIRED: 'Debe seleccionar un fondo para la categoría',
   EXPENSE_FUND_FILTER_REQUIRED:
-    "Debe seleccionar un fondo para filtrar los gastos",
-  TRANSFER_SAME_FUND_ERROR: "No se puede transferir dinero al mismo fondo",
+    'Debe seleccionar un fondo para filtrar los gastos',
+  TRANSFER_SAME_FUND_ERROR: 'No se puede transferir dinero al mismo fondo',
 };
 ```
 
@@ -362,13 +362,11 @@ const ERROR_MESSAGES = {
 ### Migration Strategy
 
 1. **Database Migration**
-
    - Add new columns with default values
    - Create funds table with default fund
    - Update existing records to reference default fund
 
 2. **Backward Compatibility**
-
    - Existing categories/incomes without fund_id → Default to 'Disponible'
    - Existing API calls continue to work
    - Gradual rollout of fund-aware features
@@ -381,13 +379,11 @@ const ERROR_MESSAGES = {
 ### Performance Optimizations
 
 1. **Database Indexes**
-
    - Index on fund_id columns for fast filtering
    - Composite indexes for fund + date queries
    - Index on fund balance calculations
 
 2. **Caching Strategy**
-
    - Cache fund balances with invalidation on updates
    - Cache fund lists for dropdown components
    - Cache dashboard data with fund-based keys
@@ -400,13 +396,11 @@ const ERROR_MESSAGES = {
 ### Security Considerations
 
 1. **Access Control**
-
    - Verify user ownership of funds
    - Validate fund references in all operations
    - Prevent unauthorized fund modifications
 
 2. **Data Validation**
-
    - Server-side validation for all fund operations
    - Sanitize fund names and descriptions
    - Validate decimal precision for balances

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Area,
@@ -9,15 +9,18 @@ import {
   XAxis,
   YAxis,
   Legend,
-} from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { InvestmentPeriodDetail, CurrencyCode } from "@/types/invest-simulator";
-import { formatCurrency } from "@/types/invest-simulator";
+} from 'recharts';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type {
+  InvestmentPeriodDetail,
+  CurrencyCode,
+} from '@/types/invest-simulator';
+import { formatCurrency } from '@/types/invest-simulator';
 
 interface InvestProjectionChartProps {
   schedule: InvestmentPeriodDetail[];
   currency: CurrencyCode;
-  compoundingFrequency: "daily" | "monthly";
+  compoundingFrequency: 'daily' | 'monthly';
 }
 
 export function InvestProjectionChart({
@@ -39,29 +42,31 @@ export function InvestProjectionChart({
     if (active && payload && payload.length) {
       const data = payload[0].payload;
       return (
-        <div className="bg-white dark:bg-gray-900 p-3 border rounded-lg shadow-lg">
-          <p className="font-semibold mb-2">
-            {compoundingFrequency === "monthly" ? `Mes ${label}` : `Día ${label}`}
+        <div className="rounded-lg border bg-white p-3 shadow-lg dark:bg-gray-900">
+          <p className="mb-2 font-semibold">
+            {compoundingFrequency === 'monthly'
+              ? `Mes ${label}`
+              : `Día ${label}`}
           </p>
           <p className="text-sm text-muted-foreground">{data.date}</p>
           <div className="mt-2 space-y-1">
             <p className="text-sm">
-              <span className="inline-block w-3 h-3 bg-purple-500 rounded mr-2" />
-              Saldo Total:{" "}
+              <span className="mr-2 inline-block h-3 w-3 rounded bg-purple-500" />
+              Saldo Total:{' '}
               <span className="font-semibold">
                 {formatCurrency(data.saldoTotal, currency)}
               </span>
             </p>
             <p className="text-sm">
-              <span className="inline-block w-3 h-3 bg-blue-500 rounded mr-2" />
-              Aportes:{" "}
+              <span className="mr-2 inline-block h-3 w-3 rounded bg-blue-500" />
+              Aportes:{' '}
               <span className="font-semibold">
                 {formatCurrency(data.aportes, currency)}
               </span>
             </p>
             <p className="text-sm">
-              <span className="inline-block w-3 h-3 bg-green-500 rounded mr-2" />
-              Intereses:{" "}
+              <span className="mr-2 inline-block h-3 w-3 rounded bg-green-500" />
+              Intereses:{' '}
               <span className="font-semibold text-green-600">
                 {formatCurrency(data.intereses, currency)}
               </span>
@@ -112,10 +117,10 @@ export function InvestProjectionChart({
                 tickLine={false}
                 axisLine={false}
                 label={{
-                  value: compoundingFrequency === "monthly" ? "Meses" : "Días",
-                  position: "insideBottomRight",
+                  value: compoundingFrequency === 'monthly' ? 'Meses' : 'Días',
+                  position: 'insideBottomRight',
                   offset: -5,
-                  style: { fontSize: 12, fill: "var(--muted-foreground)" },
+                  style: { fontSize: 12, fill: 'var(--muted-foreground)' },
                 }}
               />
               <YAxis
@@ -131,8 +136,8 @@ export function InvestProjectionChart({
                 height={36}
                 formatter={(value: string) => {
                   const labels: Record<string, string> = {
-                    aportes: "Capital Aportado",
-                    intereses: "Intereses Acumulados",
+                    aportes: 'Capital Aportado',
+                    intereses: 'Intereses Acumulados',
                   };
                   return labels[value] || value;
                 }}

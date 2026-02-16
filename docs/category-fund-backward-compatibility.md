@@ -314,12 +314,10 @@ curl -X POST http://localhost:3000/api/categories/[category-id]/migrate-funds \
 ### Common Issues
 
 1. **Categories without fund relationships**
-
    - **Symptom**: Categories show "accepts all funds"
    - **Solution**: Run `ensureBackwardCompatibility()` to assign default fund
 
 2. **Conflicting fund relationships**
-
    - **Symptom**: `fund_id` doesn't match `associated_funds`
    - **Solution**: Use migration utility to sync relationships
 

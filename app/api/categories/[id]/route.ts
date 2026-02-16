@@ -1,7 +1,7 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { UpdateCategorySchema, DEFAULT_FUND_NAME } from "@/types/funds";
-import { updateBudgetDefaultDatesForCategory } from "@/lib/category-budget-sync";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { UpdateCategorySchema, DEFAULT_FUND_NAME } from '@/types/funds';
+import { updateBudgetDefaultDatesForCategory } from '@/lib/category-budget-sync';
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +20,7 @@ export async function GET(
 
     if (!category) {
       return NextResponse.json(
-        { error: "Category not found" },
+        { error: 'Category not found' },
         { status: 404 }
       );
     }
@@ -49,7 +49,7 @@ export async function GET(
 
     return NextResponse.json(enhancedCategory);
   } catch (error) {
-    console.error("Error fetching category:", error);
+    console.error('Error fetching category:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -69,19 +69,26 @@ export async function PUT(
     const validationResult = UpdateCategorySchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: validationResult.error.errors },
+        { error: 'Validation failed', details: validationResult.error.errors },
         { status: 400 }
       );
     }
 
-    const { name, fund_id, fund_ids, tipo_gasto, default_day, recurrence_frequency } = validationResult.data;
+    const {
+      name,
+      fund_id,
+      fund_ids,
+      tipo_gasto,
+      default_day,
+      recurrence_frequency,
+    } = validationResult.data;
 
     // Check if category exists
     const [existingCategory] =
       await sql`SELECT * FROM categories WHERE id = ${id}`;
     if (!existingCategory) {
       return NextResponse.json(
-        { error: "Category not found" },
+        { error: 'Category not found' },
         { status: 404 }
       );
     }
@@ -96,7 +103,7 @@ export async function PUT(
         `;
         if (existingFunds.length !== fund_ids.length) {
           return NextResponse.json(
-            { error: "Algunos fondos especificados no existen" },
+            { error: 'Algunos fondos especificados no existen' },
             { status: 400 }
           );
         }
@@ -194,7 +201,7 @@ export async function PUT(
         const [fund] = await sql`SELECT id FROM funds WHERE id = ${fund_id}`;
         if (!fund) {
           return NextResponse.json(
-            { error: "El fondo especificado no existe" },
+            { error: 'El fondo especificado no existe' },
             { status: 400 }
           );
         }
@@ -253,7 +260,7 @@ export async function PUT(
       updatedCategory = result[0];
     } else if (fund_ids === undefined) {
       return NextResponse.json(
-        { error: "No fields to update" },
+        { error: 'No fields to update' },
         { status: 400 }
       );
     }
@@ -267,7 +274,7 @@ export async function PUT(
 
     if (!updatedCategory) {
       return NextResponse.json(
-        { error: "Category not found" },
+        { error: 'Category not found' },
         { status: 404 }
       );
     }
@@ -301,7 +308,10 @@ export async function PUT(
 
     // If default_day was updated, sync all related budget default_dates
     if (default_day !== undefined) {
-      const syncResult = await updateBudgetDefaultDatesForCategory(id, default_day);
+      const syncResult = await updateBudgetDefaultDatesForCategory(
+        id,
+        default_day
+      );
       console.log(`Budget sync result: ${syncResult.message}`);
     }
 
@@ -313,7 +323,7 @@ export async function PUT(
 
     return NextResponse.json(enhancedCategory);
   } catch (error) {
-    console.error("Error updating category:", error);
+    console.error('Error updating category:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -335,14 +345,14 @@ export async function DELETE(
 
     if (!deletedCategory) {
       return NextResponse.json(
-        { error: "Category not found" },
+        { error: 'Category not found' },
         { status: 404 }
       );
     }
 
     return NextResponse.json(deletedCategory);
   } catch (error) {
-    console.error("Error deleting category:", error);
+    console.error('Error deleting category:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

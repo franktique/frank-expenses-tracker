@@ -3,16 +3,16 @@
  * Extends the general error handling with projection-specific scenarios
  */
 
-import { categorizeError, AppError, ERROR_MESSAGES } from "./error-handling";
-import { toast } from "@/components/ui/use-toast";
+import { categorizeError, AppError, ERROR_MESSAGES } from './error-handling';
+import { toast } from '@/components/ui/use-toast';
 
 export type ProjectionErrorType =
-  | "missing_budget_data"
-  | "partial_budget_data"
-  | "projection_api_failure"
-  | "filter_conflict"
-  | "session_storage_error"
-  | "category_projection_failure";
+  | 'missing_budget_data'
+  | 'partial_budget_data'
+  | 'projection_api_failure'
+  | 'filter_conflict'
+  | 'session_storage_error'
+  | 'category_projection_failure';
 
 export interface ProjectionError extends AppError {
   projectionType?: ProjectionErrorType;
@@ -39,8 +39,8 @@ export function categorizeProjectionError(
   // Handle null, undefined, or non-error values
   if (!error) {
     return {
-      type: "unknown",
-      message: "Error desconocido en modo proyección",
+      type: 'unknown',
+      message: 'Error desconocido en modo proyección',
       retryable: false,
       context,
     };
@@ -48,12 +48,12 @@ export function categorizeProjectionError(
 
   // Handle primitive values (numbers, strings, etc.)
   if (
-    typeof error === "number" ||
-    typeof error === "string" ||
-    typeof error === "boolean"
+    typeof error === 'number' ||
+    typeof error === 'string' ||
+    typeof error === 'boolean'
   ) {
     return {
-      type: "unknown",
+      type: 'unknown',
       message: `Error en modo proyección: ${String(error)}`,
       retryable: false,
       context,
@@ -66,11 +66,11 @@ export function categorizeProjectionError(
     const message = error.message.toLowerCase();
 
     // Missing budget data scenario
-    if (message.includes("no budget") || message.includes("sin presupuesto")) {
+    if (message.includes('no budget') || message.includes('sin presupuesto')) {
       return {
         ...baseError,
-        projectionType: "missing_budget_data",
-        message: "No hay datos de presupuesto disponibles para la proyección",
+        projectionType: 'missing_budget_data',
+        message: 'No hay datos de presupuesto disponibles para la proyección',
         retryable: false,
         context,
       };
@@ -78,24 +78,24 @@ export function categorizeProjectionError(
 
     // Partial budget data scenario
     if (
-      message.includes("partial budget") ||
-      message.includes("presupuesto parcial")
+      message.includes('partial budget') ||
+      message.includes('presupuesto parcial')
     ) {
       return {
         ...baseError,
-        projectionType: "partial_budget_data",
-        message: "Algunos agrupadores no tienen presupuesto asignado",
+        projectionType: 'partial_budget_data',
+        message: 'Algunos agrupadores no tienen presupuesto asignado',
         retryable: false,
         context,
       };
     }
 
     // API failure specific to projection
-    if (message.includes("projection") || message.includes("proyección")) {
+    if (message.includes('projection') || message.includes('proyección')) {
       return {
         ...baseError,
-        projectionType: "projection_api_failure",
-        message: "Error al cargar datos de proyección",
+        projectionType: 'projection_api_failure',
+        message: 'Error al cargar datos de proyección',
         retryable: true,
         context,
       };
@@ -103,13 +103,13 @@ export function categorizeProjectionError(
 
     // Filter conflicts in projection mode
     if (
-      message.includes("filter conflict") ||
-      message.includes("conflicto de filtros")
+      message.includes('filter conflict') ||
+      message.includes('conflicto de filtros')
     ) {
       return {
         ...baseError,
-        projectionType: "filter_conflict",
-        message: "Conflicto entre filtros y modo proyección",
+        projectionType: 'filter_conflict',
+        message: 'Conflicto entre filtros y modo proyección',
         retryable: false,
         context,
       };
@@ -117,13 +117,13 @@ export function categorizeProjectionError(
 
     // Session storage errors
     if (
-      message.includes("session storage") ||
-      message.includes("almacenamiento")
+      message.includes('session storage') ||
+      message.includes('almacenamiento')
     ) {
       return {
         ...baseError,
-        projectionType: "session_storage_error",
-        message: "Error al guardar preferencias de proyección",
+        projectionType: 'session_storage_error',
+        message: 'Error al guardar preferencias de proyección',
         retryable: true,
         context,
       };
@@ -131,13 +131,13 @@ export function categorizeProjectionError(
 
     // Category projection failures
     if (
-      message.includes("category projection") ||
-      message.includes("categorías")
+      message.includes('category projection') ||
+      message.includes('categorías')
     ) {
       return {
         ...baseError,
-        projectionType: "category_projection_failure",
-        message: "Error al proyectar datos de categorías",
+        projectionType: 'category_projection_failure',
+        message: 'Error al proyectar datos de categorías',
         retryable: true,
         context,
       };
@@ -173,7 +173,7 @@ export function handleProjectionModeError(
 
   try {
     // Check if error is already a ProjectionError
-    if (error && typeof error === "object" && "projectionType" in error) {
+    if (error && typeof error === 'object' && 'projectionType' in error) {
       projectionError = error as ProjectionError;
     } else {
       // Categorize the error if it's not already a ProjectionError
@@ -181,16 +181,16 @@ export function handleProjectionModeError(
     }
   } catch (categorizationError) {
     // Fallback if categorization fails
-    console.warn("Error categorization failed:", categorizationError);
+    console.warn('Error categorization failed:', categorizationError);
     projectionError = {
-      type: "unknown",
-      message: "Error desconocido en modo proyección",
+      type: 'unknown',
+      message: 'Error desconocido en modo proyección',
       retryable: false,
       context,
     };
   }
 
-  console.error("Simulate mode error:", {
+  console.error('Simulate mode error:', {
     error: projectionError,
     context,
     timestamp: new Date().toISOString(),
@@ -198,28 +198,32 @@ export function handleProjectionModeError(
 
   // Handle different error types with specific strategies
   switch (projectionError.projectionType) {
-    case "missing_budget_data":
+    case 'missing_budget_data':
       handleMissingBudgetData(projectionError, context, fallbackActions);
       break;
 
-    case "partial_budget_data":
+    case 'partial_budget_data':
       handlePartialBudgetData(projectionError, context, fallbackActions);
       break;
 
-    case "projection_api_failure":
+    case 'projection_api_failure':
       handleProjectionApiFailure(projectionError, context, fallbackActions);
       break;
 
-    case "filter_conflict":
+    case 'filter_conflict':
       handleFilterConflict(projectionError, context, fallbackActions);
       break;
 
-    case "session_storage_error":
+    case 'session_storage_error':
       handleSessionStorageError(projectionError, context, fallbackActions);
       break;
 
-    case "category_projection_failure":
-      handleCategoryProjectionFailure(projectionError, context, fallbackActions);
+    case 'category_projection_failure':
+      handleCategoryProjectionFailure(
+        projectionError,
+        context,
+        fallbackActions
+      );
       break;
 
     default:
@@ -239,24 +243,24 @@ function handleMissingBudgetData(
   fallbackActions: any
 ) {
   let description =
-    "No se encontraron datos de presupuesto para mostrar la proyección.";
+    'No se encontraron datos de presupuesto para mostrar la proyección.';
 
   if (context.selectedEstudio) {
     description +=
-      " Verifica que el estudio seleccionado tenga presupuestos configurados.";
+      ' Verifica que el estudio seleccionado tenga presupuestos configurados.';
   }
 
   if (context.selectedGroupers?.length > 0) {
     description +=
-      " Los agrupadores seleccionados no tienen presupuesto asignado.";
+      ' Los agrupadores seleccionados no tienen presupuesto asignado.';
   }
 
   toast({
-    title: "Sin datos de presupuesto",
+    title: 'Sin datos de presupuesto',
     description,
-    variant: "destructive",
+    variant: 'destructive',
     action: {
-      altText: "Ver datos reales",
+      altText: 'Ver datos reales',
       onClick: () => {
         fallbackActions.disableProjectionMode();
         fallbackActions.showActualData();
@@ -274,18 +278,18 @@ function handlePartialBudgetData(
   fallbackActions: any
 ) {
   let description =
-    "Algunos agrupadores no tienen presupuesto asignado y se mostrarán con valor cero.";
+    'Algunos agrupadores no tienen presupuesto asignado y se mostrarán con valor cero.';
 
   if (context.selectedGroupers?.length > 0) {
     description += ` De los ${context.selectedGroupers.length} agrupadores seleccionados, algunos no tienen presupuesto.`;
   }
 
   toast({
-    title: "Presupuesto parcial",
+    title: 'Presupuesto parcial',
     description,
-    variant: "default",
+    variant: 'default',
     action: {
-      altText: "Continuar proyección",
+      altText: 'Continuar proyección',
       onClick: () => {
         // Continue with projection showing zero values for missing budget data
         fallbackActions.refreshData();
@@ -303,15 +307,15 @@ function handleProjectionApiFailure(
   fallbackActions: any
 ) {
   let description =
-    "Error al cargar datos de proyección. Mostrando datos reales en su lugar.";
+    'Error al cargar datos de proyección. Mostrando datos reales en su lugar.';
 
   if (error.retryable) {
     toast({
-      title: "Error en proyección",
+      title: 'Error en proyección',
       description,
-      variant: "destructive",
+      variant: 'destructive',
       action: {
-        altText: "Reintentar",
+        altText: 'Reintentar',
         onClick: () => {
           fallbackActions.refreshData();
         },
@@ -322,9 +326,9 @@ function handleProjectionApiFailure(
     fallbackActions.showActualData();
 
     toast({
-      title: "Error en proyección",
+      title: 'Error en proyección',
       description,
-      variant: "destructive",
+      variant: 'destructive',
     });
   }
 }
@@ -338,19 +342,19 @@ function handleFilterConflict(
   fallbackActions: any
 ) {
   let description =
-    "Los filtros aplicados no son compatibles con el modo proyección.";
+    'Los filtros aplicados no son compatibles con el modo proyección.';
 
-  if (context.paymentMethod && context.paymentMethod !== "all") {
+  if (context.paymentMethod && context.paymentMethod !== 'all') {
     description +=
-      " Los presupuestos no dependen del método de pago seleccionado.";
+      ' Los presupuestos no dependen del método de pago seleccionado.';
   }
 
   toast({
-    title: "Conflicto de filtros",
+    title: 'Conflicto de filtros',
     description,
-    variant: "default",
+    variant: 'default',
     action: {
-      altText: "Ajustar filtros",
+      altText: 'Ajustar filtros',
       onClick: () => {
         // Continue projection but inform about filter behavior
         fallbackActions.refreshData();
@@ -368,12 +372,12 @@ function handleSessionStorageError(
   fallbackActions: any
 ) {
   const description =
-    "No se pudo guardar la preferencia de proyección. El modo proyección funcionará pero no se recordará al recargar la página.";
+    'No se pudo guardar la preferencia de proyección. El modo proyección funcionará pero no se recordará al recargar la página.';
 
   toast({
-    title: "Error de almacenamiento",
+    title: 'Error de almacenamiento',
     description,
-    variant: "default",
+    variant: 'default',
   });
 
   // Continue with projection even if storage fails
@@ -388,14 +392,14 @@ function handleCategoryProjectionFailure(
   fallbackActions: any
 ) {
   const description =
-    "Error al proyectar datos de categorías. Mostrando datos reales para el desglose de categorías.";
+    'Error al proyectar datos de categorías. Mostrando datos reales para el desglose de categorías.';
 
   toast({
-    title: "Error en proyección de categorías",
+    title: 'Error en proyección de categorías',
     description,
-    variant: "destructive",
+    variant: 'destructive',
     action: {
-      altText: "Reintentar",
+      altText: 'Reintentar',
       onClick: () => {
         fallbackActions.refreshData();
       },
@@ -413,15 +417,15 @@ function handleGenericProjectionError(
 ) {
   const description =
     error.message ||
-    "Error desconocido en modo proyección. Mostrando datos reales.";
+    'Error desconocido en modo proyección. Mostrando datos reales.';
 
   fallbackActions.disableProjectionMode();
   fallbackActions.showActualData();
 
   toast({
-    title: "Error en proyección",
+    title: 'Error en proyección',
     description,
-    variant: "destructive",
+    variant: 'destructive',
   });
 }
 
@@ -440,18 +444,18 @@ export function validateBudgetData(
       return {
         isValid: false,
         error: categorizeProjectionError(
-          new Error("No budget data available"),
+          new Error('No budget data available'),
           context
         ),
       };
     }
   } catch (error) {
-    console.error("Error in validateBudgetData initial check:", error);
+    console.error('Error in validateBudgetData initial check:', error);
     return {
       isValid: false,
       error: {
-        type: "unknown",
-        message: "Error validating budget data",
+        type: 'unknown',
+        message: 'Error validating budget data',
         retryable: false,
         context,
       },
@@ -471,7 +475,7 @@ export function validateBudgetData(
       return {
         isValid: false,
         error: categorizeProjectionError(
-          new Error("No budget amounts found in data"),
+          new Error('No budget amounts found in data'),
           context
         ),
       };
@@ -482,7 +486,7 @@ export function validateBudgetData(
       return {
         isValid: true, // Still valid, but with warning
         error: categorizeProjectionError(
-          new Error("Partial budget data available"),
+          new Error('Partial budget data available'),
           context
         ),
       };
@@ -490,12 +494,12 @@ export function validateBudgetData(
 
     return { isValid: true };
   } catch (error) {
-    console.error("Error in validateBudgetData processing:", error);
+    console.error('Error in validateBudgetData processing:', error);
     return {
       isValid: false,
       error: {
-        type: "unknown",
-        message: "Error processing budget data validation",
+        type: 'unknown',
+        message: 'Error processing budget data validation',
         retryable: false,
         context,
       },
@@ -558,7 +562,7 @@ export function createErrorRecoveryStrategies(
         return await originalFetch();
       } catch (error) {
         // Return empty data structure to prevent UI crashes
-        console.warn("Graceful degradation: returning empty data", error);
+        console.warn('Graceful degradation: returning empty data', error);
         return [];
       }
     },
@@ -569,17 +573,17 @@ export function createErrorRecoveryStrategies(
  * Simulation-specific error messages
  */
 export const PROJECTION_ERROR_MESSAGES = {
-  NO_BUDGET_DATA: "No hay datos de presupuesto disponibles para la proyección",
-  PARTIAL_BUDGET_DATA: "Algunos agrupadores no tienen presupuesto asignado",
-  PROJECTION_API_FAILURE: "Error al cargar datos de proyección",
+  NO_BUDGET_DATA: 'No hay datos de presupuesto disponibles para la proyección',
+  PARTIAL_BUDGET_DATA: 'Algunos agrupadores no tienen presupuesto asignado',
+  PROJECTION_API_FAILURE: 'Error al cargar datos de proyección',
   FILTER_CONFLICT:
-    "Los filtros aplicados no son compatibles con el modo proyección",
-  SESSION_STORAGE_ERROR: "Error al guardar preferencias de proyección",
-  CATEGORY_PROJECTION_FAILURE: "Error al proyectar datos de categorías",
-  FALLBACK_TO_ACTUAL: "Mostrando datos reales en lugar de proyección",
+    'Los filtros aplicados no son compatibles con el modo proyección',
+  SESSION_STORAGE_ERROR: 'Error al guardar preferencias de proyección',
+  CATEGORY_PROJECTION_FAILURE: 'Error al proyectar datos de categorías',
+  FALLBACK_TO_ACTUAL: 'Mostrando datos reales en lugar de proyección',
   RETRY_PROJECTION:
     "Haz clic en 'Reintentar' para volver a intentar la proyección",
-  CONTINUE_WITH_PARTIAL: "Continuar con proyección parcial",
+  CONTINUE_WITH_PARTIAL: 'Continuar con proyección parcial',
 } as const;
 
 /**
@@ -595,8 +599,8 @@ export function saveProjectionValidationToSession(
       context,
       timestamp: new Date().toISOString(),
     };
-    sessionStorage.setItem("projection-validation", JSON.stringify(data));
+    sessionStorage.setItem('projection-validation', JSON.stringify(data));
   } catch (error) {
-    console.warn("Failed to save projection validation to session:", error);
+    console.warn('Failed to save projection validation to session:', error);
   }
 }

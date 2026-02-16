@@ -1,10 +1,10 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   UpdateInvestmentScenarioSchema,
   INVEST_ERROR_MESSAGES,
   type InvestmentScenario,
-} from "@/types/invest-simulator";
+} from '@/types/invest-simulator';
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "NOT_FOUND",
+          code: 'NOT_FOUND',
         },
         { status: 404 }
       );
@@ -62,7 +62,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error fetching investment scenario:", error);
+    console.error('Error fetching investment scenario:', error);
 
     // Check if tables don't exist
     if (
@@ -72,8 +72,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.TABLES_NOT_FOUND,
-          code: "TABLES_NOT_FOUND",
-          migrationEndpoint: "/api/migrate-invest-simulator",
+          code: 'TABLES_NOT_FOUND',
+          migrationEndpoint: '/api/migrate-invest-simulator',
         },
         { status: 404 }
       );
@@ -81,8 +81,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(
       {
-        error: "Error al obtener escenario de inversión",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error al obtener escenario de inversión',
+        code: 'INTERNAL_SERVER_ERROR',
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
@@ -105,8 +105,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     if (!validation.success) {
       return NextResponse.json(
         {
-          error: "Datos de entrada inválidos",
-          code: "VALIDATION_ERROR",
+          error: 'Datos de entrada inválidos',
+          code: 'VALIDATION_ERROR',
           details: validation.error.errors,
         },
         { status: 400 }
@@ -122,7 +122,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "NOT_FOUND",
+          code: 'NOT_FOUND',
         },
         { status: 404 }
       );
@@ -142,7 +142,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         return NextResponse.json(
           {
             error: INVEST_ERROR_MESSAGES.DUPLICATE_NAME,
-            code: "DUPLICATE_NAME",
+            code: 'DUPLICATE_NAME',
           },
           { status: 409 }
         );
@@ -151,7 +151,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     // Build update query dynamically
     // Handle notes specially: if explicitly set to null, clear it; if undefined, keep existing
-    const notesValue = updates.notes === null ? null : (updates.notes ?? undefined);
+    const notesValue =
+      updates.notes === null ? null : (updates.notes ?? undefined);
 
     const [scenario] = await sql`
       UPDATE investment_scenarios
@@ -199,7 +200,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error updating investment scenario:", error);
+    console.error('Error updating investment scenario:', error);
 
     // Check if tables don't exist
     if (
@@ -209,8 +210,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.TABLES_NOT_FOUND,
-          code: "TABLES_NOT_FOUND",
-          migrationEndpoint: "/api/migrate-invest-simulator",
+          code: 'TABLES_NOT_FOUND',
+          migrationEndpoint: '/api/migrate-invest-simulator',
         },
         { status: 404 }
       );
@@ -219,13 +220,13 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Handle unique constraint violation
     if (
       error instanceof Error &&
-      (error.message.includes("unique constraint") ||
-        error.message.includes("duplicate key"))
+      (error.message.includes('unique constraint') ||
+        error.message.includes('duplicate key'))
     ) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.DUPLICATE_NAME,
-          code: "DUPLICATE_NAME",
+          code: 'DUPLICATE_NAME',
         },
         { status: 409 }
       );
@@ -233,8 +234,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(
       {
-        error: "Error al actualizar escenario de inversión",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error al actualizar escenario de inversión',
+        code: 'INTERNAL_SERVER_ERROR',
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
@@ -260,7 +261,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "NOT_FOUND",
+          code: 'NOT_FOUND',
         },
         { status: 404 }
       );
@@ -277,7 +278,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       deletedId: id,
     });
   } catch (error) {
-    console.error("Error deleting investment scenario:", error);
+    console.error('Error deleting investment scenario:', error);
 
     // Check if tables don't exist
     if (
@@ -287,8 +288,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.TABLES_NOT_FOUND,
-          code: "TABLES_NOT_FOUND",
-          migrationEndpoint: "/api/migrate-invest-simulator",
+          code: 'TABLES_NOT_FOUND',
+          migrationEndpoint: '/api/migrate-invest-simulator',
         },
         { status: 404 }
       );
@@ -296,8 +297,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(
       {
-        error: "Error al eliminar escenario de inversión",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error al eliminar escenario de inversión',
+        code: 'INTERNAL_SERVER_ERROR',
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }

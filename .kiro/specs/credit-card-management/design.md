@@ -62,11 +62,11 @@ export interface CreditCard {
 
 // Credit Card franchise enum
 export type CreditCardFranchise =
-  | "visa"
-  | "mastercard"
-  | "american_express"
-  | "discover"
-  | "other";
+  | 'visa'
+  | 'mastercard'
+  | 'american_express'
+  | 'discover'
+  | 'other';
 
 // Enhanced Expense interface
 export interface Expense {
@@ -85,34 +85,34 @@ export interface Expense {
 ```typescript
 export const CreditCardSchema = z.object({
   id: z.string().uuid(),
-  bank_name: z.string().min(1, "El nombre del banco es obligatorio").max(255),
+  bank_name: z.string().min(1, 'El nombre del banco es obligatorio').max(255),
   franchise: z.enum([
-    "visa",
-    "mastercard",
-    "american_express",
-    "discover",
-    "other",
+    'visa',
+    'mastercard',
+    'american_express',
+    'discover',
+    'other',
   ]),
   last_four_digits: z
     .string()
-    .regex(/^[0-9]{4}$/, "Deben ser exactamente 4 dígitos"),
+    .regex(/^[0-9]{4}$/, 'Deben ser exactamente 4 dígitos'),
   is_active: z.boolean(),
   created_at: z.string(),
   updated_at: z.string(),
 });
 
 export const CreateCreditCardSchema = z.object({
-  bank_name: z.string().min(1, "El nombre del banco es obligatorio").max(255),
+  bank_name: z.string().min(1, 'El nombre del banco es obligatorio').max(255),
   franchise: z.enum([
-    "visa",
-    "mastercard",
-    "american_express",
-    "discover",
-    "other",
+    'visa',
+    'mastercard',
+    'american_express',
+    'discover',
+    'other',
   ]),
   last_four_digits: z
     .string()
-    .regex(/^[0-9]{4}$/, "Deben ser exactamente 4 dígitos"),
+    .regex(/^[0-9]{4}$/, 'Deben ser exactamente 4 dígitos'),
   is_active: z.boolean().optional().default(true),
 });
 

@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from '@/components/ui/popover';
 
-import { MinimalPaymentMethodSelector } from "@/components/minimal-payment-method-selector";
-import { PaymentMethodBadges } from "@/components/payment-method-badges";
-import { Edit3, AlertCircle } from "lucide-react";
+import { MinimalPaymentMethodSelector } from '@/components/minimal-payment-method-selector';
+import { PaymentMethodBadges } from '@/components/payment-method-badges';
+import { Edit3, AlertCircle } from 'lucide-react';
 
 interface PaymentMethodTableSelectorProps {
   selectedMethods: string[];
@@ -36,7 +36,7 @@ export function PaymentMethodTableSelector({
       onSelectionChange(methods);
       setIsOpen(false);
     } catch (error) {
-      console.error("Error changing payment method selection:", error);
+      console.error('Error changing payment method selection:', error);
     }
   };
 
@@ -45,7 +45,7 @@ export function PaymentMethodTableSelector({
       <div className="flex-1">
         <PaymentMethodBadges selectedMethods={selectedMethods} />
         {validationError && (
-          <div className="text-xs text-red-600 mt-1">{validationError}</div>
+          <div className="mt-1 text-xs text-red-600">{validationError}</div>
         )}
       </div>
 
@@ -56,12 +56,12 @@ export function PaymentMethodTableSelector({
             size="sm"
             disabled={disabled}
             className={
-              hasUnsavedChanges ? "text-orange-600 hover:text-orange-700" : ""
+              hasUnsavedChanges ? 'text-orange-600 hover:text-orange-700' : ''
             }
             title={
               disabled
-                ? "Edición deshabilitada"
-                : "Editar métodos de pago para este agrupador"
+                ? 'Edición deshabilitada'
+                : 'Editar métodos de pago para este agrupador'
             }
           >
             <Edit3 className="h-3 w-3" />
@@ -82,7 +82,7 @@ export function PaymentMethodTableSelector({
           className="flex items-center"
           title="Tienes cambios sin guardar en los métodos de pago. Haz clic en 'Guardar Cambios' para aplicar los cambios."
         >
-          <AlertCircle className="w-4 h-4 text-orange-500" />
+          <AlertCircle className="h-4 w-4 text-orange-500" />
         </div>
       )}
     </div>

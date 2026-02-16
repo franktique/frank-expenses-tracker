@@ -1,9 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   UpdateLoanScenarioSchema,
   LOAN_ERROR_MESSAGES,
-} from "@/types/loan-simulator";
+} from '@/types/loan-simulator';
 
 /**
  * GET /api/loan-scenarios/[id]
@@ -23,8 +23,8 @@ export async function GET(
     if (!uuidRegex.test(id)) {
       return NextResponse.json(
         {
-          error: "ID de préstamo inválido",
-          code: "INVALID_ID",
+          error: 'ID de préstamo inválido',
+          code: 'INVALID_ID',
         },
         { status: 400 }
       );
@@ -50,7 +50,7 @@ export async function GET(
       return NextResponse.json(
         {
           error: LOAN_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "SCENARIO_NOT_FOUND",
+          code: 'SCENARIO_NOT_FOUND',
         },
         { status: 404 }
       );
@@ -75,14 +75,14 @@ export async function GET(
       extraPayments,
     });
   } catch (error) {
-    console.error("Error fetching loan scenario:", error);
+    console.error('Error fetching loan scenario:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -92,8 +92,8 @@ export async function GET(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al cargar el escenario de préstamo",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al cargar el escenario de préstamo',
+        code: 'INTERNAL_SERVER_ERROR',
       },
       { status: 500 }
     );
@@ -127,8 +127,8 @@ export async function PUT(
     if (!uuidRegex.test(id)) {
       return NextResponse.json(
         {
-          error: "ID de préstamo inválido",
-          code: "INVALID_ID",
+          error: 'ID de préstamo inválido',
+          code: 'INVALID_ID',
         },
         { status: 400 }
       );
@@ -141,7 +141,7 @@ export async function PUT(
     if (!validation.success) {
       return NextResponse.json(
         {
-          error: "Datos inválidos",
+          error: 'Datos inválidos',
           details: validation.error.errors,
         },
         { status: 400 }
@@ -157,7 +157,7 @@ export async function PUT(
       return NextResponse.json(
         {
           error: LOAN_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "SCENARIO_NOT_FOUND",
+          code: 'SCENARIO_NOT_FOUND',
         },
         { status: 404 }
       );
@@ -179,7 +179,7 @@ export async function PUT(
         return NextResponse.json(
           {
             error: LOAN_ERROR_MESSAGES.DUPLICATE_NAME,
-            code: "DUPLICATE_NAME",
+            code: 'DUPLICATE_NAME',
             existing: { id: duplicate.id, name: duplicate.name },
           },
           { status: 409 }
@@ -217,25 +217,25 @@ export async function PUT(
 
     const query = `
       UPDATE loan_scenarios
-      SET ${updateFields.join(", ")}
+      SET ${updateFields.join(', ')}
       WHERE id = $${updateValues.length}
       RETURNING *
     `;
 
     // Use sql.query for dynamic SQL with placeholders
-    const { sql: sqlClient } = await import("@/lib/db");
+    const { sql: sqlClient } = await import('@/lib/db');
     const [updated] = await sqlClient.query(query, updateValues);
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Error updating loan scenario:", error);
+    console.error('Error updating loan scenario:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -245,8 +245,9 @@ export async function PUT(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al actualizar el escenario de préstamo",
-        code: "INTERNAL_SERVER_ERROR",
+        error:
+          'Error interno del servidor al actualizar el escenario de préstamo',
+        code: 'INTERNAL_SERVER_ERROR',
       },
       { status: 500 }
     );
@@ -271,8 +272,8 @@ export async function DELETE(
     if (!uuidRegex.test(id)) {
       return NextResponse.json(
         {
-          error: "ID de préstamo inválido",
-          code: "INVALID_ID",
+          error: 'ID de préstamo inválido',
+          code: 'INVALID_ID',
         },
         { status: 400 }
       );
@@ -287,7 +288,7 @@ export async function DELETE(
       return NextResponse.json(
         {
           error: LOAN_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "SCENARIO_NOT_FOUND",
+          code: 'SCENARIO_NOT_FOUND',
         },
         { status: 404 }
       );
@@ -307,7 +308,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: "Escenario de préstamo eliminado exitosamente",
+      message: 'Escenario de préstamo eliminado exitosamente',
       deleted: {
         id,
         name: existing.name,
@@ -315,14 +316,14 @@ export async function DELETE(
       },
     });
   } catch (error) {
-    console.error("Error deleting loan scenario:", error);
+    console.error('Error deleting loan scenario:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -332,8 +333,9 @@ export async function DELETE(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al eliminar el escenario de préstamo",
-        code: "INTERNAL_SERVER_ERROR",
+        error:
+          'Error interno del servidor al eliminar el escenario de préstamo',
+        code: 'INTERNAL_SERVER_ERROR',
       },
       { status: 500 }
     );

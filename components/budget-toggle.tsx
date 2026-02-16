@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { AlertCircle, RefreshCw } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface BudgetToggleProps {
   showBudgets: boolean;
@@ -25,33 +25,33 @@ export function BudgetToggle({
   error = null,
   onRetry,
 }: BudgetToggleProps) {
-  const handleToggle = (checked: boolean | "indeterminate") => {
-    if (typeof checked === "boolean") {
+  const handleToggle = (checked: boolean | 'indeterminate') => {
+    if (typeof checked === 'boolean') {
       onToggle(checked);
     }
   };
 
   return (
-    <div className={cn("flex items-center space-x-2", className)}>
+    <div className={cn('flex items-center space-x-2', className)}>
       <Checkbox
         id="budget-toggle"
         checked={showBudgets}
         onCheckedChange={handleToggle}
         disabled={disabled || isLoading}
-        aria-describedby={disabled ? "budget-toggle-description" : undefined}
+        aria-describedby={disabled ? 'budget-toggle-description' : undefined}
       />
       <Label
         htmlFor="budget-toggle"
         className={cn(
-          "cursor-pointer select-none flex items-center gap-1",
-          (disabled || isLoading) && "cursor-not-allowed opacity-70",
-          error && "text-destructive"
+          'flex cursor-pointer select-none items-center gap-1',
+          (disabled || isLoading) && 'cursor-not-allowed opacity-70',
+          error && 'text-destructive'
         )}
       >
         {error && <AlertCircle className="h-3 w-3" />}
         Mostrar Presupuestos
         {isLoading && (
-          <span className="ml-2 text-xs text-muted-foreground flex items-center gap-1">
+          <span className="ml-2 flex items-center gap-1 text-xs text-muted-foreground">
             <RefreshCw className="h-3 w-3 animate-spin" />
             (cargando...)
           </span>
@@ -76,7 +76,7 @@ export function BudgetToggle({
           title="Reintentar cargar presupuestos"
           disabled={isLoading}
         >
-          <RefreshCw className="h-3 w-3 mr-1" />
+          <RefreshCw className="mr-1 h-3 w-3" />
           Reintentar
         </Button>
       )}

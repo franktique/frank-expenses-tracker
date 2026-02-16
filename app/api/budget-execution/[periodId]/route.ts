@@ -1,11 +1,11 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import type {
   BudgetExecutionViewMode,
   BudgetExecutionResponse,
   BudgetExecutionData,
   BudgetDetail,
-} from "@/types/funds";
+} from '@/types/funds';
 import {
   format,
   parseISO,
@@ -13,10 +13,10 @@ import {
   endOfWeek,
   getWeek,
   getDaysInMonth,
-} from "date-fns";
-import { es } from "date-fns/locale";
-import { expandBudgetPayments } from "@/lib/budget-recurrence-utils";
-import type { ExpandedBudgetPayment } from "@/types/funds";
+} from 'date-fns';
+import { es } from 'date-fns/locale';
+import { expandBudgetPayments } from '@/lib/budget-recurrence-utils';
+import type { ExpandedBudgetPayment } from '@/types/funds';
 
 /**
  * GET /api/budget-execution/[periodId]
@@ -33,11 +33,11 @@ export async function GET(
 ) {
   try {
     const { periodId } = await context.params;
-    const viewMode = (request.nextUrl.searchParams.get("viewMode") ||
-      "daily") as BudgetExecutionViewMode;
+    const viewMode = (request.nextUrl.searchParams.get('viewMode') ||
+      'daily') as BudgetExecutionViewMode;
 
     // Validate viewMode
-    if (!["daily", "weekly"].includes(viewMode)) {
+    if (!['daily', 'weekly'].includes(viewMode)) {
       return NextResponse.json(
         { error: "Invalid viewMode. Must be 'daily' or 'weekly'." },
         { status: 400 }
@@ -52,10 +52,7 @@ export async function GET(
     `;
 
     if (!periodResult || periodResult.length === 0) {
-      return NextResponse.json(
-        { error: "Period not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Period not found' }, { status: 404 });
     }
 
     const period = periodResult[0];
@@ -104,7 +101,7 @@ export async function GET(
         summary: {
           totalBudget: 0,
           averagePerDay: 0,
-          peakDate: "",
+          peakDate: '',
           peakAmount: 0,
         },
         budgetDetails: {},
@@ -152,8 +149,10 @@ export async function GET(
     // Group expanded payments by date or week
     const aggregated: Record<string, number> = {};
     const budgetDetails: Record<string, BudgetDetail[]> = {};
-    const dateToWeekMap: Record<string, { weekNumber: number; weekStart: string; weekEnd: string }> =
-      {};
+    const dateToWeekMap: Record<
+      string,
+      { weekNumber: number; weekStart: string; weekEnd: string }
+    > = {};
 
     // Create a map to lookup budget info by budget ID
     const budgetInfoMap = new Map(
@@ -171,7 +170,7 @@ export async function GET(
       let dateKey: string;
       const executionDate = parseISO(payment.date);
 
-      if (viewMode === "daily") {
+      if (viewMode === 'daily') {
         // Use YYYY-MM-DD format
         dateKey = payment.date;
       } else {
@@ -183,14 +182,13 @@ export async function GET(
         dateKey = `week-${weekNum}`;
         dateToWeekMap[dateKey] = {
           weekNumber: weekNum,
-          weekStart: format(weekStart, "yyyy-MM-dd"),
-          weekEnd: format(weekEnd, "yyyy-MM-dd"),
+          weekStart: format(weekStart, 'yyyy-MM-dd'),
+          weekEnd: format(weekEnd, 'yyyy-MM-dd'),
         };
       }
 
       // Aggregate amounts
-      aggregated[dateKey] =
-        (aggregated[dateKey] || 0) + payment.amount;
+      aggregated[dateKey] = (aggregated[dateKey] || 0) + payment.amount;
 
       // Build budget details for this date/week
       const budgetInfo = budgetInfoMap.get(payment.budgetId);
@@ -213,7 +211,7 @@ export async function GET(
     // Convert to array and format response
     let data: BudgetExecutionData[] = Object.entries(aggregated)
       .map(([dateKey, amount]) => {
-        if (viewMode === "daily") {
+        if (viewMode === 'daily') {
           const date = parseISO(dateKey);
           return {
             date: dateKey,
@@ -233,7 +231,7 @@ export async function GET(
         }
       })
       .sort((a, b) => {
-        if (viewMode === "daily") {
+        if (viewMode === 'daily') {
           return new Date(a.date).getTime() - new Date(b.date).getTime();
         } else {
           return (a.weekNumber || 0) - (b.weekNumber || 0);
@@ -242,8 +240,8 @@ export async function GET(
 
     // Calculate summary statistics
     const totalBudget = data.reduce((sum, item) => sum + item.amount, 0);
-    
-    let peakData = { date: "", amount: 0 };
+
+    let peakData = { date: '', amount: 0 };
     if (data.length > 0) {
       peakData = data.reduce((max, item) =>
         item.amount > max.amount ? item : max
@@ -253,7 +251,7 @@ export async function GET(
     const summary = {
       totalBudget,
       averagePerDay: data.length > 0 ? totalBudget / data.length : 0,
-      peakDate: peakData.date || "",
+      peakDate: peakData.date || '',
       peakAmount: peakData.amount || 0,
     };
 
@@ -266,7 +264,7 @@ export async function GET(
       budgetDetails,
     } as BudgetExecutionResponse);
   } catch (error) {
-    console.error("Error fetching budget execution data:", error);
+    console.error('Error fetching budget execution data:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

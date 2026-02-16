@@ -1,6 +1,6 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { CreateIncomeSchema, DEFAULT_FUND_NAME } from "@/types/funds";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { CreateIncomeSchema, DEFAULT_FUND_NAME } from '@/types/funds';
 
 export async function GET() {
   try {
@@ -23,7 +23,7 @@ export async function GET() {
     `;
     return NextResponse.json(incomes);
   } catch (error) {
-    console.error("Error fetching incomes:", error);
+    console.error('Error fetching incomes:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     const validationResult = CreateIncomeSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: validationResult.error.errors },
+        { error: 'Validation failed', details: validationResult.error.errors },
         { status: 400 }
       );
     }
@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
           period_id = latestPeriod.id;
         } else {
           return NextResponse.json(
-            { error: "No hay periodos disponibles. Crea un periodo primero." },
+            { error: 'No hay periodos disponibles. Crea un periodo primero.' },
             { status: 400 }
           );
         }
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       const [fund] = await sql`SELECT id FROM funds WHERE id = ${fund_id}`;
       if (!fund) {
         return NextResponse.json(
-          { error: "El fondo especificado no existe" },
+          { error: 'El fondo especificado no existe' },
           { status: 400 }
         );
       }
@@ -96,17 +96,17 @@ export async function POST(request: NextRequest) {
     let dateToSave = date;
 
     // If it's an ISO string, ensure we use only the date part
-    if (typeof date === "string" && date.includes("T")) {
+    if (typeof date === 'string' && date.includes('T')) {
       // Extract only the date part (YYYY-MM-DD)
-      dateToSave = date.split("T")[0];
+      dateToSave = date.split('T')[0];
     }
 
     // Insert the income with fund assignment
     const [newIncome] = await sql`
       INSERT INTO incomes (period_id, date, description, amount, event, fund_id)
       VALUES (${period_id}, ${dateToSave}, ${description}, ${amount}, ${
-      event || null
-    }, ${fund_id})
+        event || null
+      }, ${fund_id})
       RETURNING *
     `;
 
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(incomeWithFund);
   } catch (error) {
-    console.error("Error creating income:", error);
+    console.error('Error creating income:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

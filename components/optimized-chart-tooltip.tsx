@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React, { memo } from "react";
-import { formatCurrency } from "@/lib/utils";
+import React, { memo } from 'react';
+import { formatCurrency } from '@/lib/utils';
 
 interface TooltipPayload {
   value: number;
@@ -52,28 +52,28 @@ export const OptimizedGrouperTooltip = memo<OptimizedTooltipProps>(
     // Memoize tooltip content to prevent unnecessary re-renders
     const tooltipContent = React.useMemo(() => {
       return (
-        <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
-          <p className="font-semibold text-foreground mb-2">{grouperName}</p>
+        <div className="rounded-lg border border-border bg-background p-3 shadow-lg">
+          <p className="mb-2 font-semibold text-foreground">{grouperName}</p>
 
           {projectionMode ? (
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-primary">Presupuesto:</span>{" "}
+                <span className="font-medium text-primary">Presupuesto:</span>{' '}
                 {formattedAmount}
               </p>
               {showBudgets && formattedBudgetAmount && (
-                <p className="text-xs text-muted-foreground italic">
+                <p className="text-xs italic text-muted-foreground">
                   Presupuesto original: {formattedBudgetAmount}
                 </p>
               )}
-              <p className="text-xs text-blue-600 italic">
+              <p className="text-xs italic text-blue-600">
                 * Datos simulados basados en presupuesto
               </p>
             </div>
           ) : (
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-primary">Gastos:</span>{" "}
+                <span className="font-medium text-primary">Gastos:</span>{' '}
                 {formattedAmount}
               </p>
               {showBudgets && formattedBudgetAmount && (
@@ -128,7 +128,7 @@ export const OptimizedGrouperTooltip = memo<OptimizedTooltipProps>(
   }
 );
 
-OptimizedGrouperTooltip.displayName = "OptimizedGrouperTooltip";
+OptimizedGrouperTooltip.displayName = 'OptimizedGrouperTooltip';
 
 // Memoized tooltip content for category charts with enhanced performance
 export const OptimizedCategoryTooltip = memo<OptimizedTooltipProps>(
@@ -158,28 +158,28 @@ export const OptimizedCategoryTooltip = memo<OptimizedTooltipProps>(
     // Memoize tooltip content to prevent unnecessary re-renders
     const tooltipContent = React.useMemo(() => {
       return (
-        <div className="bg-background border border-border rounded-lg p-3 shadow-lg">
-          <p className="font-semibold text-foreground mb-2">{categoryName}</p>
+        <div className="rounded-lg border border-border bg-background p-3 shadow-lg">
+          <p className="mb-2 font-semibold text-foreground">{categoryName}</p>
 
           {projectionMode ? (
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-primary">Presupuesto:</span>{" "}
+                <span className="font-medium text-primary">Presupuesto:</span>{' '}
                 {formattedAmount}
               </p>
               {showBudgets && formattedBudgetAmount && (
-                <p className="text-xs text-muted-foreground italic">
+                <p className="text-xs italic text-muted-foreground">
                   Presupuesto original: {formattedBudgetAmount}
                 </p>
               )}
-              <p className="text-xs text-blue-600 italic">
+              <p className="text-xs italic text-blue-600">
                 * Datos simulados basados en presupuesto
               </p>
             </div>
           ) : (
             <div className="space-y-1">
               <p className="text-sm text-muted-foreground">
-                <span className="font-medium text-primary">Gastos:</span>{" "}
+                <span className="font-medium text-primary">Gastos:</span>{' '}
                 {formattedAmount}
               </p>
               {showBudgets && formattedBudgetAmount && (
@@ -203,7 +203,7 @@ export const OptimizedCategoryTooltip = memo<OptimizedTooltipProps>(
   }
 );
 
-OptimizedCategoryTooltip.displayName = "OptimizedCategoryTooltip";
+OptimizedCategoryTooltip.displayName = 'OptimizedCategoryTooltip';
 
 // Generic optimized tooltip for period comparison and weekly cumulative charts
 export const OptimizedGenericTooltip = memo<{
@@ -226,12 +226,12 @@ export const OptimizedGenericTooltip = memo<{
       return null;
     }
 
-    const displayLabel = formatLabel ? formatLabel(label || "") : label;
+    const displayLabel = formatLabel ? formatLabel(label || '') : label;
 
     return (
-      <div className="bg-background border border-border rounded-lg p-3 shadow-lg max-w-xs">
+      <div className="max-w-xs rounded-lg border border-border bg-background p-3 shadow-lg">
         {displayLabel && (
-          <p className="font-semibold text-foreground mb-2">{displayLabel}</p>
+          <p className="mb-2 font-semibold text-foreground">{displayLabel}</p>
         )}
 
         <div className="space-y-1">
@@ -245,7 +245,7 @@ export const OptimizedGenericTooltip = memo<{
             return (
               <p key={index} className="text-sm text-muted-foreground">
                 <span
-                  className="inline-block w-3 h-3 rounded-full mr-2"
+                  className="mr-2 inline-block h-3 w-3 rounded-full"
                   style={{ backgroundColor: entry.color }}
                 />
                 <span className="font-medium">{name}:</span> {displayValue}
@@ -255,7 +255,7 @@ export const OptimizedGenericTooltip = memo<{
         </div>
 
         {projectionMode && (
-          <p className="text-xs text-blue-600 italic mt-2">
+          <p className="mt-2 text-xs italic text-blue-600">
             * Datos simulados basados en presupuesto
           </p>
         )}
@@ -264,4 +264,4 @@ export const OptimizedGenericTooltip = memo<{
   }
 );
 
-OptimizedGenericTooltip.displayName = "OptimizedGenericTooltip";
+OptimizedGenericTooltip.displayName = 'OptimizedGenericTooltip';

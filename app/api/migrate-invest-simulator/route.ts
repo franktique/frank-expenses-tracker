@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 /**
  * POST /api/migrate-invest-simulator
@@ -22,8 +22,10 @@ export async function POST(request: NextRequest) {
     `;
 
     const tableNames = existingTables.map((t: any) => t.table_name);
-    const scenariosExists = tableNames.includes("investment_scenarios");
-    const comparisonsExists = tableNames.includes("investment_rate_comparisons");
+    const scenariosExists = tableNames.includes('investment_scenarios');
+    const comparisonsExists = tableNames.includes(
+      'investment_rate_comparisons'
+    );
 
     // Create investment_scenarios table
     if (!scenariosExists) {
@@ -45,9 +47,9 @@ export async function POST(request: NextRequest) {
           CONSTRAINT investment_scenarios_compounding_check CHECK (compounding_frequency IN ('daily', 'monthly'))
         )
       `;
-      console.log("Created investment_scenarios table");
+      console.log('Created investment_scenarios table');
     } else {
-      console.log("investment_scenarios table already exists");
+      console.log('investment_scenarios table already exists');
 
       // Check if compounding_frequency column exists, add it if not
       const compoundingCol = await sql`
@@ -63,7 +65,9 @@ export async function POST(request: NextRequest) {
           ADD COLUMN compounding_frequency VARCHAR(10) NOT NULL DEFAULT 'monthly',
           ADD CONSTRAINT investment_scenarios_compounding_check CHECK (compounding_frequency IN ('daily', 'monthly'))
         `;
-        console.log("Added compounding_frequency column to investment_scenarios table");
+        console.log(
+          'Added compounding_frequency column to investment_scenarios table'
+        );
       }
 
       // Check if notes column exists, add it if not
@@ -79,7 +83,7 @@ export async function POST(request: NextRequest) {
           ALTER TABLE investment_scenarios
           ADD COLUMN notes TEXT
         `;
-        console.log("Added notes column to investment_scenarios table");
+        console.log('Added notes column to investment_scenarios table');
       }
     }
 
@@ -95,16 +99,18 @@ export async function POST(request: NextRequest) {
           CONSTRAINT investment_rate_comparisons_unique_rate UNIQUE (investment_scenario_id, rate)
         )
       `;
-      console.log("Created investment_rate_comparisons table");
+      console.log('Created investment_rate_comparisons table');
 
       // Create index for faster queries
       await sql`
         CREATE INDEX idx_investment_rate_comparisons_scenario
         ON investment_rate_comparisons(investment_scenario_id)
       `;
-      console.log("Created index on investment_rate_comparisons(investment_scenario_id)");
+      console.log(
+        'Created index on investment_rate_comparisons(investment_scenario_id)'
+      );
     } else {
-      console.log("investment_rate_comparisons table already exists");
+      console.log('investment_rate_comparisons table already exists');
     }
 
     // Verify tables were created successfully
@@ -120,7 +126,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Investment simulator migration completed successfully",
+      message: 'Investment simulator migration completed successfully',
       tables: createdTables,
       created: {
         investment_scenarios: !scenariosExists,
@@ -128,13 +134,13 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error during investment simulator migration:", error);
+    console.error('Error during investment simulator migration:', error);
 
     // Handle duplicate table errors (likely from concurrent requests)
     if (error instanceof Error) {
       if (
-        error.message.includes("already exists") ||
-        error.message.includes("duplicate key")
+        error.message.includes('already exists') ||
+        error.message.includes('duplicate key')
       ) {
         // Verify tables exist despite the error
         const verification = await sql`
@@ -150,18 +156,18 @@ export async function POST(request: NextRequest) {
         if (createdTables.length === 2) {
           return NextResponse.json({
             success: true,
-            message: "Investment simulator tables already exist",
+            message: 'Investment simulator tables already exist',
             tables: createdTables,
-            note: "Tables were created by another concurrent request",
+            note: 'Tables were created by another concurrent request',
           });
         }
       }
 
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -171,8 +177,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor durante la migración",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor durante la migración',
+        code: 'INTERNAL_SERVER_ERROR',
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
@@ -199,13 +205,13 @@ export async function GET() {
 
     // Get table counts if they exist
     let counts: Record<string, number> = {};
-    if (existingTables.includes("investment_scenarios")) {
+    if (existingTables.includes('investment_scenarios')) {
       const [scenarioCount] = await sql`
         SELECT COUNT(*) as count FROM investment_scenarios
       `;
       counts.scenarios = parseInt(scenarioCount.count);
     }
-    if (existingTables.includes("investment_rate_comparisons")) {
+    if (existingTables.includes('investment_rate_comparisons')) {
       const [comparisonCount] = await sql`
         SELECT COUNT(*) as count FROM investment_rate_comparisons
       `;
@@ -217,15 +223,22 @@ export async function GET() {
       tables: existingTables,
       counts,
       status:
-        existingTables.length === 2 ? "fully_migrated" : existingTables.length === 0 ? "not_migrated" : "partially_migrated",
+        existingTables.length === 2
+          ? 'fully_migrated'
+          : existingTables.length === 0
+            ? 'not_migrated'
+            : 'partially_migrated',
     });
   } catch (error) {
-    console.error("Error checking investment simulator migration status:", error);
+    console.error(
+      'Error checking investment simulator migration status:',
+      error
+    );
 
     return NextResponse.json(
       {
-        error: "Error al verificar el estado de la migración",
-        code: "VERIFICATION_ERROR",
+        error: 'Error al verificar el estado de la migración',
+        code: 'VERIFICATION_ERROR',
       },
       { status: 500 }
     );

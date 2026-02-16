@@ -1,24 +1,24 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
-import { SimulationBudgetForm } from "@/components/simulation-budget-form";
-import { SimulationIncomeInput } from "@/components/simulation-income-input";
-import { SimulationBreadcrumb } from "@/components/simulation-breadcrumb";
-import { SimulationNavigation } from "@/components/simulation-navigation";
-import { SimulationQuickActions } from "@/components/simulation-quick-actions";
-import { PeriodSelectorDialog } from "@/components/period-selector-dialog";
-import { ArrowLeft, Settings, BarChart3, Loader2, Copy } from "lucide-react";
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/components/ui/use-toast';
+import { SimulationBudgetForm } from '@/components/simulation-budget-form';
+import { SimulationIncomeInput } from '@/components/simulation-income-input';
+import { SimulationBreadcrumb } from '@/components/simulation-breadcrumb';
+import { SimulationNavigation } from '@/components/simulation-navigation';
+import { SimulationQuickActions } from '@/components/simulation-quick-actions';
+import { PeriodSelectorDialog } from '@/components/period-selector-dialog';
+import { ArrowLeft, Settings, BarChart3, Loader2, Copy } from 'lucide-react';
 
 // Types
 type Simulation = {
@@ -40,21 +40,24 @@ export default function SimulationConfigPage() {
   // State
   const [simulation, setSimulation] = useState<Simulation | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState("budget");
+  const [activeTab, setActiveTab] = useState('budget');
   const [totalIncome, setTotalIncome] = useState(0);
   const [isPeriodSelectorOpen, setIsPeriodSelectorOpen] = useState(false);
-  const [existingDataCount, setExistingDataCount] = useState({ incomes: 0, budgets: 0 });
+  const [existingDataCount, setExistingDataCount] = useState({
+    incomes: 0,
+    budgets: 0,
+  });
 
   // Load simulation data
   useEffect(() => {
     const loadSimulation = async () => {
       if (isNaN(simulationId)) {
         toast({
-          title: "Error",
-          description: "ID de simulación inválido",
-          variant: "destructive",
+          title: 'Error',
+          description: 'ID de simulación inválido',
+          variant: 'destructive',
         });
-        router.push("/simular");
+        router.push('/simular');
         return;
       }
 
@@ -64,26 +67,26 @@ export default function SimulationConfigPage() {
         if (!response.ok) {
           if (response.status === 404) {
             toast({
-              title: "Simulación no encontrada",
-              description: "La simulación solicitada no existe",
-              variant: "destructive",
+              title: 'Simulación no encontrada',
+              description: 'La simulación solicitada no existe',
+              variant: 'destructive',
             });
-            router.push("/simular");
+            router.push('/simular');
             return;
           }
-          throw new Error("Error al cargar la simulación");
+          throw new Error('Error al cargar la simulación');
         }
 
         const simulationData = await response.json();
         setSimulation(simulationData);
       } catch (error) {
         toast({
-          title: "Error",
+          title: 'Error',
           description:
-            (error as Error).message || "Error al cargar la simulación",
-          variant: "destructive",
+            (error as Error).message || 'Error al cargar la simulación',
+          variant: 'destructive',
         });
-        router.push("/simular");
+        router.push('/simular');
       } finally {
         setIsLoading(false);
       }
@@ -94,7 +97,7 @@ export default function SimulationConfigPage() {
 
   // Handle navigation back to simulation list
   const handleBackToList = () => {
-    router.push("/simular");
+    router.push('/simular');
   };
 
   // Load existing data count for period selector
@@ -107,7 +110,9 @@ export default function SimulationConfigPage() {
   const loadExistingDataCount = async () => {
     try {
       // Load incomes count
-      const incomesResponse = await fetch(`/api/simulations/${simulationId}/incomes`);
+      const incomesResponse = await fetch(
+        `/api/simulations/${simulationId}/incomes`
+      );
       if (incomesResponse.ok) {
         const incomesData = await incomesResponse.json();
         setExistingDataCount((prev) => ({
@@ -117,7 +122,9 @@ export default function SimulationConfigPage() {
       }
 
       // Load budgets count
-      const budgetsResponse = await fetch(`/api/simulations/${simulationId}/budgets`);
+      const budgetsResponse = await fetch(
+        `/api/simulations/${simulationId}/budgets`
+      );
       if (budgetsResponse.ok) {
         const budgetsData = await budgetsResponse.json();
         setExistingDataCount((prev) => ({
@@ -126,7 +133,7 @@ export default function SimulationConfigPage() {
         }));
       }
     } catch (error) {
-      console.error("Error loading existing data count:", error);
+      console.error('Error loading existing data count:', error);
     }
   };
 
@@ -140,7 +147,7 @@ export default function SimulationConfigPage() {
           setSimulation(updatedSimulation);
         })
         .catch((error) => {
-          console.error("Error refreshing simulation data:", error);
+          console.error('Error refreshing simulation data:', error);
         });
     }
   };
@@ -149,10 +156,10 @@ export default function SimulationConfigPage() {
   const handlePeriodCopySuccess = (
     periodId: string,
     periodName: string,
-    mode: "merge" | "replace"
+    mode: 'merge' | 'replace'
   ) => {
     toast({
-      title: "Datos copiados exitosamente",
+      title: 'Datos copiados exitosamente',
       description: `Los datos del período "${periodName}" han sido copiados a la simulación`,
     });
 
@@ -170,7 +177,7 @@ export default function SimulationConfigPage() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin" />
           <span className="ml-2">Cargando simulación...</span>
@@ -181,7 +188,7 @@ export default function SimulationConfigPage() {
 
   if (!simulation) {
     return (
-      <div className="container mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <Card>
           <CardHeader>
             <CardTitle>Simulación no encontrada</CardTitle>
@@ -201,7 +208,7 @@ export default function SimulationConfigPage() {
   }
 
   return (
-    <div className="container mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8 space-y-6">
+    <div className="container mx-auto space-y-6 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
       {/* Enhanced Breadcrumb Navigation */}
       <SimulationBreadcrumb
         simulationId={simulation.id}
@@ -223,12 +230,12 @@ export default function SimulationConfigPage() {
         onNavigateToAnalytics={() =>
           router.push(`/simular/${simulation.id}/analytics`)
         }
-        onNavigateToList={() => router.push("/simular")}
+        onNavigateToList={() => router.push('/simular')}
         onDuplicate={async () => {
           try {
-            const response = await fetch("/api/simulations", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
+            const response = await fetch('/api/simulations', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 name: `${simulation.name} (Copia)`,
                 description: simulation.description,
@@ -239,15 +246,15 @@ export default function SimulationConfigPage() {
               const newSimulation = await response.json();
               router.push(`/simular/${newSimulation.id}`);
               toast({
-                title: "Simulación duplicada",
-                description: "Se ha creado una copia de la simulación",
+                title: 'Simulación duplicada',
+                description: 'Se ha creado una copia de la simulación',
               });
             }
           } catch (error) {
             toast({
-              title: "Error",
-              description: "No se pudo duplicar la simulación",
-              variant: "destructive",
+              title: 'Error',
+              description: 'No se pudo duplicar la simulación',
+              variant: 'destructive',
             });
           }
         }}
@@ -257,15 +264,15 @@ export default function SimulationConfigPage() {
 
       {/* Header with navigation */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-        <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
+        <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
           <Button variant="ghost" onClick={handleBackToList} className="w-fit">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Simulaciones
           </Button>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold">{simulation.name}</h1>
+            <h1 className="text-xl font-bold sm:text-2xl">{simulation.name}</h1>
             {simulation.description && (
-              <p className="text-sm sm:text-base text-muted-foreground">
+              <p className="text-sm text-muted-foreground sm:text-base">
                 {simulation.description}
               </p>
             )}
@@ -296,7 +303,7 @@ export default function SimulationConfigPage() {
           <TabsTrigger
             value="analytics"
             disabled
-            className="flex items-center space-x-1 sm:space-x-2 opacity-50 cursor-not-allowed"
+            className="flex cursor-not-allowed items-center space-x-1 opacity-50 sm:space-x-2"
           >
             <BarChart3 className="h-4 w-4" />
             <span>Análisis</span>
@@ -311,7 +318,8 @@ export default function SimulationConfigPage() {
                 <div>
                   <CardTitle>Datos de la Simulación</CardTitle>
                   <CardDescription>
-                    Configura los ingresos y presupuestos, o cópialos desde un período existente
+                    Configura los ingresos y presupuestos, o cópialos desde un
+                    período existente
                   </CardDescription>
                 </div>
                 <Button
@@ -360,12 +368,12 @@ export default function SimulationConfigPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="text-center py-8">
-                <BarChart3 className="h-16 w-16 mx-auto mb-4 text-blue-600" />
-                <h3 className="text-lg font-semibold mb-2">
+              <div className="py-8 text-center">
+                <BarChart3 className="mx-auto mb-4 h-16 w-16 text-blue-600" />
+                <h3 className="mb-2 text-lg font-semibold">
                   Análisis Avanzado Disponible
                 </h3>
-                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                <p className="mx-auto mb-6 max-w-md text-muted-foreground">
                   Accede al análisis completo con gráficos comparativos,
                   métricas de variación y herramientas de exportación
                 </p>
@@ -381,25 +389,25 @@ export default function SimulationConfigPage() {
               </div>
 
               {/* Quick preview of simulation status */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-medium text-blue-900 mb-2">Vista Previa</h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <h4 className="mb-2 font-medium text-blue-900">Vista Previa</h4>
+                <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
                   <div>
-                    <span className="text-blue-600 font-medium">Estado:</span>
+                    <span className="font-medium text-blue-600">Estado:</span>
                     <p className="text-blue-800">
                       {simulation.budget_count > 0
                         ? `${simulation.budget_count} categorías configuradas`
-                        : "Sin presupuestos configurados"}
+                        : 'Sin presupuestos configurados'}
                     </p>
                   </div>
                   <div>
-                    <span className="text-blue-600 font-medium">Análisis:</span>
+                    <span className="font-medium text-blue-600">Análisis:</span>
                     <p className="text-blue-800">
                       Comparación histórica disponible
                     </p>
                   </div>
                   <div>
-                    <span className="text-blue-600 font-medium">
+                    <span className="font-medium text-blue-600">
                       Exportación:
                     </span>
                     <p className="text-blue-800">Datos CSV y resúmenes</p>

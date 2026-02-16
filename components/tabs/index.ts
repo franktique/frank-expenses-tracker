@@ -1,12 +1,18 @@
 // Tab system components
 export { TabProvider, useTabs } from './tab-context';
-export { Tab, EnhancedTab, PinnedTab, ClosableTab, SystemTab } from './tab';
+export {
+  Tab as TabComponent,
+  EnhancedTab,
+  PinnedTab,
+  ClosableTab,
+  SystemTab,
+} from './tab';
 export { TabBar, CompactTabBar, DraggableTabBar } from './tab-bar';
 export {
   TabContent,
   TabContentWithErrorBoundary,
   MobileTabContent,
-  TabContentFactory
+  TabContentFactory,
 } from './tab-content';
 
 // Layout and navigation
@@ -18,7 +24,7 @@ export {
   TabContextMenu,
   TabContextMenuContainer,
   TabManagementPanel,
-  TabQuickActions
+  TabQuickActions,
 } from './tab-context-menu';
 
 // Accessibility
@@ -33,7 +39,7 @@ export {
   useColorBlindMode,
   tabAriaLabels,
   tabAriaDescriptions,
-  colorBlindFriendlyThemes
+  colorBlindFriendlyThemes,
 } from './tab-accessibility';
 
 // Re-export types for convenience
@@ -48,7 +54,7 @@ export type {
   TabContextMenuProps,
   RouteConfig,
   TabStorageData,
-  TabKeyboardShortcuts
+  TabKeyboardShortcuts,
 } from '@/types/tabs';
 
 // Re-export utilities
@@ -59,5 +65,5 @@ export {
   generateTabId,
   isRouteClosable,
   getBaseRoute,
-  validateTabData
+  validateTabData,
 } from '@/utils/tab-utils';

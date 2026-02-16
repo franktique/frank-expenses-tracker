@@ -3,8 +3,8 @@
  * Handles logic for reordering sub-groups and uncategorized categories in the simulation budget table
  */
 
-import type { Subgroup } from "@/types/simulation";
-import type { TableRowItem } from "@/lib/subgroup-table-utils";
+import type { Subgroup } from '@/types/simulation';
+import type { TableRowItem } from '@/lib/subgroup-table-utils';
 
 /**
  * Move a sub-group to a new position in the order array
@@ -19,7 +19,7 @@ export function moveSubgroupInOrder(
   subgroupOrder: string[],
   draggedId: string,
   targetId: string | null,
-  position: "before" | "after"
+  position: 'before' | 'after'
 ): string[] {
   const newOrder = [...subgroupOrder];
 
@@ -37,7 +37,7 @@ export function moveSubgroupInOrder(
       // Target not found, append to end
       newOrder.push(draggedItem);
     } else {
-      if (position === "after") {
+      if (position === 'after') {
         targetIndex += 1;
       }
       newOrder.splice(targetIndex, 0, draggedItem);
@@ -79,7 +79,9 @@ export function reorganizeTableRowsWithSubgroupOrder(
 
   // Get uncategorized categories
   const uncategorizedCategories = categories.filter(
-    (cat) => !categoriesInSubgroups.has(cat.id) && !excludedCategoryIds.includes(cat.id)
+    (cat) =>
+      !categoriesInSubgroups.has(cat.id) &&
+      !excludedCategoryIds.includes(cat.id)
   );
 
   // Create mapping of sub-group ID to sub-group for quick lookup
@@ -99,11 +101,15 @@ export function reorganizeTableRowsWithSubgroupOrder(
     );
     // Add new subgroups at the end, sorted by displayOrder
     const newSubgroupsSorted = newSubgroupIds.sort(
-      (a, b) => (subgroupMap.get(a)?.displayOrder ?? 0) - (subgroupMap.get(b)?.displayOrder ?? 0)
+      (a, b) =>
+        (subgroupMap.get(a)?.displayOrder ?? 0) -
+        (subgroupMap.get(b)?.displayOrder ?? 0)
     );
     orderedSubgroupIds = [...customOrderedIds, ...newSubgroupsSorted];
   } else {
-    orderedSubgroupIds = subgroups.sort((a, b) => a.displayOrder - b.displayOrder).map((s) => s.id);
+    orderedSubgroupIds = subgroups
+      .sort((a, b) => a.displayOrder - b.displayOrder)
+      .map((s) => s.id);
   }
 
   // Process sub-groups in custom order
@@ -115,7 +121,7 @@ export function reorganizeTableRowsWithSubgroupOrder(
 
     // Add sub-group header
     rows.push({
-      type: "subgroup_header",
+      type: 'subgroup_header',
       id: subgroup.id,
       subgroupId: subgroup.id,
       subgroupName: subgroup.name,
@@ -128,7 +134,7 @@ export function reorganizeTableRowsWithSubgroupOrder(
       for (const categoryId of subgroup.categoryIds) {
         if (!excludedCategoryIds.includes(categoryId)) {
           rows.push({
-            type: "category",
+            type: 'category',
             id: categoryId,
             categoryId,
             displayOrder: sgIndex,
@@ -139,7 +145,7 @@ export function reorganizeTableRowsWithSubgroupOrder(
 
     // Add sub-group subtotal row
     rows.push({
-      type: "subgroup_subtotal",
+      type: 'subgroup_subtotal',
       id: `${subgroup.id}_subtotal`,
       subgroupId: subgroup.id,
       displayOrder: sgIndex,
@@ -149,7 +155,7 @@ export function reorganizeTableRowsWithSubgroupOrder(
   // Add uncategorized categories
   for (const category of uncategorizedCategories) {
     rows.push({
-      type: "category",
+      type: 'category',
       id: category.id,
       categoryId: category.id,
       displayOrder: Infinity,
@@ -166,7 +172,10 @@ export function reorganizeTableRowsWithSubgroupOrder(
  * @param subgroups - Array of all sub-groups
  * @returns true if sub-group exists
  */
-export function validateSubgroupId(subgroupId: string, subgroups: Subgroup[]): boolean {
+export function validateSubgroupId(
+  subgroupId: string,
+  subgroups: Subgroup[]
+): boolean {
   return subgroups.some((sg) => sg.id === subgroupId);
 }
 

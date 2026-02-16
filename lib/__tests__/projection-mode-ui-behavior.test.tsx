@@ -2,8 +2,8 @@
  * @jest-environment jsdom
  */
 
-import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import {
   describe,
   it,
@@ -11,8 +11,8 @@ import {
   beforeEach,
   afterEach,
   jest,
-} from "@jest/globals";
-import "@testing-library/jest-dom";
+} from '@jest/globals';
+import '@testing-library/jest-dom';
 
 // Mock the UI components
 const MockCheckbox = ({
@@ -52,23 +52,23 @@ const MockLabel = ({
 
 // Mock toast function
 const mockToast = jest.fn();
-jest.mock("@/components/ui/use-toast", () => ({
+jest.mock('@/components/ui/use-toast', () => ({
   toast: mockToast,
 }));
 
 // Mock UI components
-jest.mock("@/components/ui/checkbox", () => ({
+jest.mock('@/components/ui/checkbox', () => ({
   Checkbox: MockCheckbox,
 }));
 
-jest.mock("@/components/ui/label", () => ({
+jest.mock('@/components/ui/label', () => ({
   Label: MockLabel,
 }));
 
-describe("Projection Mode UI Behavior", () => {
+describe('Projection Mode UI Behavior', () => {
   // Mock component that includes projection mode UI
   const ProjectionModeComponent = ({
-    activeTab = "current",
+    activeTab = 'current',
     projectionMode = false,
     onProjectionModeChange = jest.fn(),
   }: {
@@ -83,7 +83,7 @@ describe("Projection Mode UI Behavior", () => {
             id="projection-mode"
             checked={projectionMode}
             onCheckedChange={onProjectionModeChange}
-            disabled={activeTab !== "current"}
+            disabled={activeTab !== 'current'}
           />
           <MockLabel htmlFor="projection-mode">Proyectar</MockLabel>
         </div>
@@ -99,19 +99,19 @@ describe("Projection Mode UI Behavior", () => {
     data: Array<{ name: string; value: number; isProjectiond?: boolean }>;
     isProjecting?: boolean;
   }) => {
-    const title = isProjecting ? "Gráfico (Proyección)" : "Gráfico";
+    const title = isProjecting ? 'Gráfico (Proyección)' : 'Gráfico';
 
     return (
       <div data-testid="mock-chart">
         <h3 data-testid="chart-title">{title}</h3>
         <div data-testid="chart-legend">
-          {isProjecting ? "Presupuesto" : "Gastos"}
+          {isProjecting ? 'Presupuesto' : 'Gastos'}
         </div>
         {data.map((item, index) => (
           <div
             key={index}
             data-testid={`chart-bar-${index}`}
-            className={item.isProjectiond ? "projectiond-bar" : "normal-bar"}
+            className={item.isProjectiond ? 'projectiond-bar' : 'normal-bar'}
             style={{
               opacity: item.isProjectiond ? 0.7 : 1,
             }}
@@ -153,40 +153,40 @@ describe("Projection Mode UI Behavior", () => {
     jest.clearAllMocks();
   });
 
-  describe("Checkbox UI Behavior", () => {
-    it("should render projection mode checkbox", () => {
+  describe('Checkbox UI Behavior', () => {
+    it('should render projection mode checkbox', () => {
       render(<ProjectionModeComponent />);
 
-      const checkbox = screen.getByTestId("projection-mode");
-      const label = screen.getByTestId("projection-mode-label");
+      const checkbox = screen.getByTestId('projection-mode');
+      const label = screen.getByTestId('projection-mode-label');
 
       expect(checkbox).toBeInTheDocument();
       expect(label).toBeInTheDocument();
-      expect(label).toHaveTextContent("Proyectar");
+      expect(label).toHaveTextContent('Proyectar');
     });
 
-    it("should be enabled on current tab", () => {
+    it('should be enabled on current tab', () => {
       render(<ProjectionModeComponent activeTab="current" />);
 
-      const checkbox = screen.getByTestId("projection-mode");
+      const checkbox = screen.getByTestId('projection-mode');
       expect(checkbox).not.toBeDisabled();
     });
 
-    it("should be disabled on period comparison tab", () => {
+    it('should be disabled on period comparison tab', () => {
       render(<ProjectionModeComponent activeTab="period-comparison" />);
 
-      const checkbox = screen.getByTestId("projection-mode");
+      const checkbox = screen.getByTestId('projection-mode');
       expect(checkbox).toBeDisabled();
     });
 
-    it("should be disabled on weekly cumulative tab", () => {
+    it('should be disabled on weekly cumulative tab', () => {
       render(<ProjectionModeComponent activeTab="weekly-cumulative" />);
 
-      const checkbox = screen.getByTestId("projection-mode");
+      const checkbox = screen.getByTestId('projection-mode');
       expect(checkbox).toBeDisabled();
     });
 
-    it("should toggle when clicked", () => {
+    it('should toggle when clicked', () => {
       const mockOnChange = jest.fn();
       render(
         <ProjectionModeComponent
@@ -195,133 +195,137 @@ describe("Projection Mode UI Behavior", () => {
         />
       );
 
-      const checkbox = screen.getByTestId("projection-mode");
+      const checkbox = screen.getByTestId('projection-mode');
       fireEvent.click(checkbox);
 
       expect(mockOnChange).toHaveBeenCalledWith(true);
     });
 
-    it("should reflect checked state", () => {
+    it('should reflect checked state', () => {
       render(<ProjectionModeComponent projectionMode={true} />);
 
-      const checkbox = screen.getByTestId("projection-mode") as HTMLInputElement;
+      const checkbox = screen.getByTestId(
+        'projection-mode'
+      ) as HTMLInputElement;
       expect(checkbox.checked).toBe(true);
     });
 
-    it("should reflect unchecked state", () => {
+    it('should reflect unchecked state', () => {
       render(<ProjectionModeComponent projectionMode={false} />);
 
-      const checkbox = screen.getByTestId("projection-mode") as HTMLInputElement;
+      const checkbox = screen.getByTestId(
+        'projection-mode'
+      ) as HTMLInputElement;
       expect(checkbox.checked).toBe(false);
     });
   });
 
-  describe("Chart Visual Indicators", () => {
+  describe('Chart Visual Indicators', () => {
     const mockData = [
-      { name: "Alimentación", value: 500, isProjectiond: false },
-      { name: "Transporte", value: 300, isProjectiond: false },
+      { name: 'Alimentación', value: 500, isProjectiond: false },
+      { name: 'Transporte', value: 300, isProjectiond: false },
     ];
 
     const mockProjectiondData = [
-      { name: "Alimentación", value: 600, isProjectiond: true },
-      { name: "Transporte", value: 400, isProjectiond: true },
+      { name: 'Alimentación', value: 600, isProjectiond: true },
+      { name: 'Transporte', value: 400, isProjectiond: true },
     ];
 
-    it("should show normal chart title when not projecting", () => {
+    it('should show normal chart title when not projecting', () => {
       render(<MockChart data={mockData} isProjecting={false} />);
 
-      const title = screen.getByTestId("chart-title");
-      expect(title).toHaveTextContent("Gráfico");
+      const title = screen.getByTestId('chart-title');
+      expect(title).toHaveTextContent('Gráfico');
     });
 
-    it("should show projection indicator in chart title", () => {
+    it('should show projection indicator in chart title', () => {
       render(<MockChart data={mockProjectiondData} isProjecting={true} />);
 
-      const title = screen.getByTestId("chart-title");
-      expect(title).toHaveTextContent("Gráfico (Proyección)");
+      const title = screen.getByTestId('chart-title');
+      expect(title).toHaveTextContent('Gráfico (Proyección)');
     });
 
     it("should show 'Gastos' in legend when not projecting", () => {
       render(<MockChart data={mockData} isProjecting={false} />);
 
-      const legend = screen.getByTestId("chart-legend");
-      expect(legend).toHaveTextContent("Gastos");
+      const legend = screen.getByTestId('chart-legend');
+      expect(legend).toHaveTextContent('Gastos');
     });
 
     it("should show 'Presupuesto' in legend when projecting", () => {
       render(<MockChart data={mockProjectiondData} isProjecting={true} />);
 
-      const legend = screen.getByTestId("chart-legend");
-      expect(legend).toHaveTextContent("Presupuesto");
+      const legend = screen.getByTestId('chart-legend');
+      expect(legend).toHaveTextContent('Presupuesto');
     });
 
-    it("should apply projection styling to chart bars", () => {
+    it('should apply projection styling to chart bars', () => {
       render(<MockChart data={mockProjectiondData} isProjecting={true} />);
 
       const bars = screen.getAllByTestId(/chart-bar-/);
       bars.forEach((bar) => {
-        expect(bar).toHaveClass("projectiond-bar");
-        expect(bar).toHaveStyle({ opacity: "0.7" });
+        expect(bar).toHaveClass('projectiond-bar');
+        expect(bar).toHaveStyle({ opacity: '0.7' });
       });
     });
 
-    it("should apply normal styling to chart bars when not projecting", () => {
+    it('should apply normal styling to chart bars when not projecting', () => {
       render(<MockChart data={mockData} isProjecting={false} />);
 
       const bars = screen.getAllByTestId(/chart-bar-/);
       bars.forEach((bar) => {
-        expect(bar).toHaveClass("normal-bar");
-        expect(bar).toHaveStyle({ opacity: "1" });
+        expect(bar).toHaveClass('normal-bar');
+        expect(bar).toHaveStyle({ opacity: '1' });
       });
     });
   });
 
-  describe("Tooltip Behavior", () => {
-    it("should show expense format in tooltip when not projecting", () => {
+  describe('Tooltip Behavior', () => {
+    it('should show expense format in tooltip when not projecting', () => {
       render(
         <MockTooltip isProjecting={false} value={500} label="Alimentación" />
       );
 
-      const tooltipValue = screen.getByTestId("tooltip-value");
-      expect(tooltipValue).toHaveTextContent("Gastos: $500");
+      const tooltipValue = screen.getByTestId('tooltip-value');
+      expect(tooltipValue).toHaveTextContent('Gastos: $500');
     });
 
-    it("should show budget format in tooltip when projecting", () => {
+    it('should show budget format in tooltip when projecting', () => {
       render(
         <MockTooltip isProjecting={true} value={600} label="Alimentación" />
       );
 
-      const tooltipValue = screen.getByTestId("tooltip-value");
-      expect(tooltipValue).toHaveTextContent("Presupuesto: $600");
+      const tooltipValue = screen.getByTestId('tooltip-value');
+      expect(tooltipValue).toHaveTextContent('Presupuesto: $600');
     });
 
-    it("should include proper label in tooltip", () => {
+    it('should include proper label in tooltip', () => {
       render(
         <MockTooltip isProjecting={true} value={600} label="Alimentación" />
       );
 
-      const tooltipLabel = screen.getByTestId("tooltip-label");
-      expect(tooltipLabel).toHaveTextContent("Alimentación");
+      const tooltipLabel = screen.getByTestId('tooltip-label');
+      expect(tooltipLabel).toHaveTextContent('Alimentación');
     });
   });
 
-  describe("Accessibility", () => {
-    it("should have proper ARIA attributes", () => {
+  describe('Accessibility', () => {
+    it('should have proper ARIA attributes', () => {
       render(<ProjectionModeComponent />);
 
-      const checkbox = screen.getByTestId("projection-mode");
-      expect(checkbox).toHaveAttribute("type", "checkbox");
-      expect(checkbox).toHaveAttribute("id", "projection-mode");
+      const checkbox = screen.getByTestId('projection-mode');
+      expect(checkbox).toHaveAttribute('type', 'checkbox');
+      expect(checkbox).toHaveAttribute('id', 'projection-mode');
     });
 
-    it("should associate label with checkbox", () => {
+    it('should associate label with checkbox', () => {
       render(<ProjectionModeComponent />);
 
-      const label = screen.getByTestId("projection-mode-label");
-      expect(label).toHaveAttribute("for", "projection-mode");
+      const label = screen.getByTestId('projection-mode-label');
+      expect(label).toHaveAttribute('for', 'projection-mode');
     });
 
-    it("should be keyboard accessible", () => {
+    it('should be keyboard accessible', () => {
       const mockOnChange = jest.fn();
       render(
         <ProjectionModeComponent
@@ -330,39 +334,39 @@ describe("Projection Mode UI Behavior", () => {
         />
       );
 
-      const checkbox = screen.getByTestId("projection-mode");
+      const checkbox = screen.getByTestId('projection-mode');
 
       // Focus the checkbox
       checkbox.focus();
       expect(checkbox).toHaveFocus();
 
       // Press space to toggle
-      fireEvent.keyDown(checkbox, { key: " ", code: "Space" });
-      fireEvent.keyUp(checkbox, { key: " ", code: "Space" });
+      fireEvent.keyDown(checkbox, { key: ' ', code: 'Space' });
+      fireEvent.keyUp(checkbox, { key: ' ', code: 'Space' });
 
       // Should trigger change
       expect(mockOnChange).toHaveBeenCalled();
     });
 
-    it("should have proper tooltip role", () => {
+    it('should have proper tooltip role', () => {
       render(
         <MockTooltip isProjecting={true} value={600} label="Alimentación" />
       );
 
-      const tooltip = screen.getByTestId("mock-tooltip");
-      expect(tooltip).toHaveAttribute("role", "tooltip");
+      const tooltip = screen.getByTestId('mock-tooltip');
+      expect(tooltip).toHaveAttribute('role', 'tooltip');
     });
 
-    it("should indicate disabled state visually", () => {
+    it('should indicate disabled state visually', () => {
       render(<ProjectionModeComponent activeTab="period-comparison" />);
 
-      const checkbox = screen.getByTestId("projection-mode");
+      const checkbox = screen.getByTestId('projection-mode');
       expect(checkbox).toBeDisabled();
     });
   });
 
-  describe("User Interaction Flow", () => {
-    it("should handle complete toggle flow", async () => {
+  describe('User Interaction Flow', () => {
+    it('should handle complete toggle flow', async () => {
       const mockOnChange = jest.fn();
       const { rerender } = render(
         <ProjectionModeComponent
@@ -372,7 +376,7 @@ describe("Projection Mode UI Behavior", () => {
         />
       );
 
-      const checkbox = screen.getByTestId("projection-mode");
+      const checkbox = screen.getByTestId('projection-mode');
 
       // Initial state
       expect(checkbox).not.toBeChecked();
@@ -397,7 +401,7 @@ describe("Projection Mode UI Behavior", () => {
       expect(mockOnChange).toHaveBeenCalledWith(false);
     });
 
-    it("should prevent interaction when disabled", () => {
+    it('should prevent interaction when disabled', () => {
       const mockOnChange = jest.fn();
       render(
         <ProjectionModeComponent
@@ -406,7 +410,7 @@ describe("Projection Mode UI Behavior", () => {
         />
       );
 
-      const checkbox = screen.getByTestId("projection-mode");
+      const checkbox = screen.getByTestId('projection-mode');
 
       // Try to click disabled checkbox
       fireEvent.click(checkbox);
@@ -415,7 +419,7 @@ describe("Projection Mode UI Behavior", () => {
       expect(mockOnChange).not.toHaveBeenCalled();
     });
 
-    it("should maintain state across tab switches", () => {
+    it('should maintain state across tab switches', () => {
       const mockOnChange = jest.fn();
       const { rerender } = render(
         <ProjectionModeComponent
@@ -425,7 +429,7 @@ describe("Projection Mode UI Behavior", () => {
         />
       );
 
-      let checkbox = screen.getByTestId("projection-mode");
+      let checkbox = screen.getByTestId('projection-mode');
       expect(checkbox).toBeChecked();
       expect(checkbox).not.toBeDisabled();
 
@@ -438,7 +442,7 @@ describe("Projection Mode UI Behavior", () => {
         />
       );
 
-      checkbox = screen.getByTestId("projection-mode");
+      checkbox = screen.getByTestId('projection-mode');
       expect(checkbox).toBeChecked(); // State preserved
       expect(checkbox).toBeDisabled(); // But disabled
 
@@ -451,30 +455,30 @@ describe("Projection Mode UI Behavior", () => {
         />
       );
 
-      checkbox = screen.getByTestId("projection-mode");
+      checkbox = screen.getByTestId('projection-mode');
       expect(checkbox).toBeChecked(); // State still preserved
       expect(checkbox).not.toBeDisabled(); // And enabled again
     });
   });
 
-  describe("Error States", () => {
-    it("should handle missing data gracefully", () => {
+  describe('Error States', () => {
+    it('should handle missing data gracefully', () => {
       render(<MockChart data={[]} isProjecting={true} />);
 
-      const chart = screen.getByTestId("mock-chart");
+      const chart = screen.getByTestId('mock-chart');
       expect(chart).toBeInTheDocument();
 
-      const title = screen.getByTestId("chart-title");
-      expect(title).toHaveTextContent("Gráfico (Proyección)");
+      const title = screen.getByTestId('chart-title');
+      expect(title).toHaveTextContent('Gráfico (Proyección)');
 
       // Should not crash with empty data
       const bars = screen.queryAllByTestId(/chart-bar-/);
       expect(bars).toHaveLength(0);
     });
 
-    it("should handle undefined values in data", () => {
+    it('should handle undefined values in data', () => {
       const dataWithUndefined = [
-        { name: "Test", value: undefined as any, isProjectiond: true },
+        { name: 'Test', value: undefined as any, isProjectiond: true },
       ];
 
       expect(() => {

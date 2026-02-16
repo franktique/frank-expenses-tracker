@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useState, useCallback } from "react";
-import { FileSpreadsheet, Upload } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { useState, useCallback } from 'react';
+import { FileSpreadsheet, Upload } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { useBudget, type PaymentMethod } from "@/context/budget-context";
-import { useToast } from "@/components/ui/use-toast";
-import { CSVPreviewTable, type CSVExpenseItem } from "./csv-preview-table";
+} from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
+import { useBudget, type PaymentMethod } from '@/context/budget-context';
+import { useToast } from '@/components/ui/use-toast';
+import { CSVPreviewTable, type CSVExpenseItem } from './csv-preview-table';
 // Función para generar IDs únicos (reemplazo de uuid)
 function generateId(): string {
   return (
@@ -31,7 +31,7 @@ type ImportResult = {
   errors: string[];
 };
 
-type ImportStage = "upload" | "preview" | "importing" | "complete";
+type ImportStage = 'upload' | 'preview' | 'importing' | 'complete';
 
 export function CSVImportDialogEnhanced({
   open,
@@ -40,20 +40,27 @@ export function CSVImportDialogEnhanced({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { categories, periods, activePeriod, addExpense } = useBudget();
+  const {
+    categories,
+    periods,
+    activePeriod,
+    addExpense,
+    getDefaultFund,
+    funds,
+  } = useBudget();
   const { toast } = useToast();
 
   const [file, setFile] = useState<File | null>(null);
-  const [stage, setStage] = useState<ImportStage>("upload");
+  const [stage, setStage] = useState<ImportStage>('upload');
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [progress, setProgress] = useState(0);
   const [previewData, setPreviewData] = useState<CSVExpenseItem[]>([]);
   const [skipHeader, setSkipHeader] = useState(true);
-  const [separator, setSeparator] = useState(",");
+  const [separator, setSeparator] = useState(',');
 
   const resetState = () => {
     setFile(null);
-    setStage("upload");
+    setStage('upload');
     setImportResult(null);
     setProgress(0);
     setPreviewData([]);
@@ -67,7 +74,7 @@ export function CSVImportDialogEnhanced({
   };
 
   const parseCSV = (text: string): CSVExpenseItem[] => {
-    const lines = text.split("\n");
+    const lines = text.split('\n');
     const result: CSVExpenseItem[] = [];
 
     // Skip header if the option is selected
@@ -80,7 +87,7 @@ export function CSVImportDialogEnhanced({
       // Split by the selected separator, handling quoted values
       const values: string[] = [];
       let inQuotes = false;
-      let currentValue = "";
+      let currentValue = '';
 
       for (let j = 0; j < line.length; j++) {
         const char = line[j];
@@ -89,7 +96,7 @@ export function CSVImportDialogEnhanced({
           inQuotes = !inQuotes;
         } else if (char === separator && !inQuotes) {
           values.push(currentValue.trim());
-          currentValue = "";
+          currentValue = '';
         } else {
           currentValue += char;
         }
@@ -125,8 +132,8 @@ export function CSVImportDialogEnhanced({
         let date: Date | undefined;
         try {
           // Primero intentar con formato DD/MM/YYYY que es el más común en español
-          if (fecha.includes("/")) {
-            const parts = fecha.split("/");
+          if (fecha.includes('/')) {
+            const parts = fecha.split('/');
             if (parts.length === 3) {
               // Asegurarse que tenemos día, mes y año en el orden correcto
               const day = parseInt(parts[0], 10);
@@ -149,7 +156,7 @@ export function CSVImportDialogEnhanced({
 
           // Si todavía es inválido, lanzar error
           if (!date || isNaN(date.getTime())) {
-            throw new Error("Formato de fecha inválido");
+            throw new Error('Formato de fecha inválido');
           }
         } catch (error) {
           hasError = true;
@@ -159,12 +166,12 @@ export function CSVImportDialogEnhanced({
         // Validate payment method
         let paymentMethod: PaymentMethod | undefined;
         const medioLower = medio.toLowerCase();
-        if (medioLower.includes("cred")) {
-          paymentMethod = "credit";
-        } else if (medioLower.includes("deb")) {
-          paymentMethod = "debit";
-        } else if (medioLower.includes("efec") || medioLower.includes("cash")) {
-          paymentMethod = "cash";
+        if (medioLower.includes('cred')) {
+          paymentMethod = 'credit';
+        } else if (medioLower.includes('deb')) {
+          paymentMethod = 'debit';
+        } else if (medioLower.includes('efec') || medioLower.includes('cash')) {
+          paymentMethod = 'cash';
         } else {
           hasError = true;
           errors.payment_method = true;
@@ -174,10 +181,10 @@ export function CSVImportDialogEnhanced({
         let amount: number | undefined;
         try {
           // Remove currency symbol and thousands separators
-          const cleanAmount = monto.replace(/[^\d.-]/g, "");
+          const cleanAmount = monto.replace(/[^\d.-]/g, '');
           amount = Number(cleanAmount);
           if (isNaN(amount) || amount <= 0) {
-            throw new Error("Monto inválido");
+            throw new Error('Monto inválido');
           }
         } catch (error) {
           hasError = true;
@@ -237,14 +244,14 @@ export function CSVImportDialogEnhanced({
 
       const csvData = parseCSV(text);
       setPreviewData(csvData);
-      setStage("preview");
+      setStage('preview');
     } catch (error) {
       toast({
-        title: "Error al procesar archivo",
+        title: 'Error al procesar archivo',
         description: `Ocurrió un error al leer el archivo: ${
           (error as Error).message
         }`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setProgress(100);
@@ -347,15 +354,15 @@ export function CSVImportDialogEnhanced({
 
     if (validItems.length === 0) {
       toast({
-        title: "No hay datos válidos",
+        title: 'No hay datos válidos',
         description:
-          "Todos los registros tienen errores que deben ser corregidos antes de importar.",
-        variant: "destructive",
+          'Todos los registros tienen errores que deben ser corregidos antes de importar.',
+        variant: 'destructive',
       });
       return;
     }
 
-    setStage("importing");
+    setStage('importing');
     setProgress(10);
 
     try {
@@ -381,6 +388,8 @@ export function CSVImportDialogEnhanced({
           }
 
           // Add expense
+          const defaultFund = getDefaultFund();
+          const sourceFundId = defaultFund?.id || funds[0]?.id || '';
           addExpense(
             item.category_id,
             item.period_id || activePeriod.id,
@@ -388,7 +397,8 @@ export function CSVImportDialogEnhanced({
             item.evento,
             item.payment_method,
             item.descripcion,
-            item.amount
+            item.amount,
+            sourceFundId
           );
 
           result.imported++;
@@ -403,19 +413,19 @@ export function CSVImportDialogEnhanced({
       }
 
       setImportResult(result);
-      setStage("complete");
+      setStage('complete');
 
       toast({
-        title: "Importación completada",
+        title: 'Importación completada',
         description: `Se importaron ${result.imported} de ${result.total} gastos.`,
       });
     } catch (error) {
       toast({
-        title: "Error al importar",
+        title: 'Error al importar',
         description: `Ocurrió un error durante la importación: ${
           (error as Error).message
         }`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setProgress(100);
@@ -423,7 +433,7 @@ export function CSVImportDialogEnhanced({
   };
 
   const handleClose = () => {
-    if (stage !== "importing") {
+    if (stage !== 'importing') {
       resetState();
       onOpenChange(false);
     }
@@ -431,7 +441,7 @@ export function CSVImportDialogEnhanced({
 
   const renderContent = () => {
     switch (stage) {
-      case "upload":
+      case 'upload':
         return (
           <>
             <Alert className="mb-4">
@@ -439,7 +449,7 @@ export function CSVImportDialogEnhanced({
               <AlertTitle>Formato esperado</AlertTitle>
               <AlertDescription>
                 El archivo CSV debe tener las siguientes columnas:
-                <ol className="list-decimal pl-5 mt-2 space-y-1">
+                <ol className="mt-2 list-decimal space-y-1 pl-5">
                   <li>
                     Categoría (debe coincidir con una categoría existente)
                   </li>
@@ -459,11 +469,11 @@ export function CSVImportDialogEnhanced({
               </AlertDescription>
             </Alert>
 
-            <div className="grid w-full max-w-sm items-center gap-1.5 mx-auto my-6">
-              <label htmlFor="csv-file" className="text-center mb-2">
+            <div className="mx-auto my-6 grid w-full max-w-sm items-center gap-1.5">
+              <label htmlFor="csv-file" className="mb-2 text-center">
                 Selecciona un archivo CSV para importar gastos
               </label>
-              <div className="flex items-center justify-center p-8 border-2 border-dashed rounded-lg">
+              <div className="flex items-center justify-center rounded-lg border-2 border-dashed p-8">
                 <input
                   id="csv-file"
                   type="file"
@@ -472,7 +482,7 @@ export function CSVImportDialogEnhanced({
                   onChange={handleFileChange}
                 />
                 <div className="text-center">
-                  <Upload className="mx-auto h-8 w-8 mb-2 text-muted-foreground" />
+                  <Upload className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
                   <label
                     htmlFor="csv-file"
                     className="cursor-pointer text-primary hover:underline"
@@ -484,7 +494,7 @@ export function CSVImportDialogEnhanced({
               </div>
 
               {file && (
-                <div className="space-y-4 mt-4">
+                <div className="mt-4 space-y-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="skip-header"
@@ -505,7 +515,7 @@ export function CSVImportDialogEnhanced({
                     <div>
                       <label
                         htmlFor="separator"
-                        className="text-sm font-medium mb-1 block"
+                        className="mb-1 block text-sm font-medium"
                       >
                         Separador de campos
                       </label>
@@ -526,7 +536,7 @@ export function CSVImportDialogEnhanced({
               )}
             </div>
 
-            <div className="flex justify-end gap-2 mt-4">
+            <div className="mt-4 flex justify-end gap-2">
               <Button variant="outline" onClick={handleClose}>
                 Cancelar
               </Button>
@@ -537,7 +547,7 @@ export function CSVImportDialogEnhanced({
           </>
         );
 
-      case "preview":
+      case 'preview':
         return (
           <CSVPreviewTable
             data={previewData}
@@ -549,10 +559,10 @@ export function CSVImportDialogEnhanced({
           />
         );
 
-      case "importing":
+      case 'importing':
         return (
           <div className="py-6 text-center">
-            <h3 className="font-medium mb-6">Importando datos...</h3>
+            <h3 className="mb-6 font-medium">Importando datos...</h3>
             <Progress value={progress} className="mb-4" />
             <p className="text-sm text-muted-foreground">
               Por favor, espere mientras se importan los gastos.
@@ -560,26 +570,26 @@ export function CSVImportDialogEnhanced({
           </div>
         );
 
-      case "complete":
+      case 'complete':
         return (
           <div className="py-6">
-            <h3 className="font-medium mb-2 text-center">
+            <h3 className="mb-2 text-center font-medium">
               Importación completada
             </h3>
             <div className="mb-4 text-center">
               <p>
-                Se importaron {importResult?.imported} de {importResult?.total}{" "}
+                Se importaron {importResult?.imported} de {importResult?.total}{' '}
                 gastos.
               </p>
             </div>
 
             {importResult && importResult.errors.length > 0 && (
               <div className="mt-4">
-                <h4 className="font-medium mb-2">
+                <h4 className="mb-2 font-medium">
                   Errores ({importResult.errors.length})
                 </h4>
-                <div className="max-h-48 overflow-auto bg-muted p-3 rounded text-sm">
-                  <ul className="list-disc pl-5 space-y-1">
+                <div className="max-h-48 overflow-auto rounded bg-muted p-3 text-sm">
+                  <ul className="list-disc space-y-1 pl-5">
                     {importResult.errors.map((error, index) => (
                       <li key={index}>{error}</li>
                     ))}
@@ -588,7 +598,7 @@ export function CSVImportDialogEnhanced({
               </div>
             )}
 
-            <div className="flex justify-end mt-4">
+            <div className="mt-4 flex justify-end">
               <Button onClick={handleClose}>Cerrar</Button>
             </div>
           </div>
@@ -598,7 +608,7 @@ export function CSVImportDialogEnhanced({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className={stage === "preview" ? "max-w-5xl" : "max-w-md"}>
+      <DialogContent className={stage === 'preview' ? 'max-w-5xl' : 'max-w-md'}>
         <DialogHeader>
           <DialogTitle>Importar gastos desde CSV</DialogTitle>
           <DialogDescription>

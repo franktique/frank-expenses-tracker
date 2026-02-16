@@ -4,10 +4,10 @@
  * DELETE: Remove the applied template from a simulation
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { getAppliedTemplate } from "@/lib/subgroup-template-db-utils";
-import type { AppliedTemplateResponse } from "@/types/subgroup-templates";
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { getAppliedTemplate } from '@/lib/subgroup-template-db-utils';
+import type { AppliedTemplateResponse } from '@/types/subgroup-templates';
 
 /**
  * GET /api/simulations/[id]/applied-template
@@ -25,7 +25,7 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid simulation ID",
+          error: 'Invalid simulation ID',
           statusCode: 400,
         },
         { status: 400 }
@@ -43,9 +43,9 @@ export async function GET(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error getting applied template:", error);
+    console.error('Error getting applied template:', error);
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to get applied template";
+      error instanceof Error ? error.message : 'Failed to get applied template';
 
     return NextResponse.json(
       {
@@ -74,7 +74,7 @@ export async function DELETE(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid simulation ID",
+          error: 'Invalid simulation ID',
           statusCode: 400,
         },
         { status: 400 }
@@ -90,15 +90,18 @@ export async function DELETE(
     return NextResponse.json(
       {
         success: true,
-        message: "Applied template removed successfully. You can now apply a different template.",
+        message:
+          'Applied template removed successfully. You can now apply a different template.',
         statusCode: 200,
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error removing applied template:", error);
+    console.error('Error removing applied template:', error);
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to remove applied template";
+      error instanceof Error
+        ? error.message
+        : 'Failed to remove applied template';
 
     return NextResponse.json(
       {

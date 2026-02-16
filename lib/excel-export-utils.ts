@@ -1,4 +1,4 @@
-import * as XLSX from "xlsx";
+import * as XLSX from 'xlsx';
 
 /**
  * Export data structure for simulation
@@ -45,9 +45,9 @@ export interface SimulationExportData {
  * Format currency for Excel display (text only - used for summary labels)
  */
 function formatCurrency(value: number): string {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(value);
@@ -57,14 +57,11 @@ function formatCurrency(value: number): string {
  * Apply Excel currency formatting to a cell
  * Uses Excel number format code for Colombian Peso
  */
-function applyCurrencyFormat(
-  sheet: XLSX.WorkSheet,
-  cellAddress: string
-): void {
+function applyCurrencyFormat(sheet: XLSX.WorkSheet, cellAddress: string): void {
   if (!sheet[cellAddress]) return;
 
   // Ensure cell type is numeric
-  if (sheet[cellAddress].t !== "n") return;
+  if (sheet[cellAddress].t !== 'n') return;
 
   // Apply currency format: $ with thousand separators, no decimals
   if (!sheet[cellAddress].z) {
@@ -82,12 +79,12 @@ export function generateSimulationExcel(
 
   // Sheet 1: Resumen (Summary)
   const summaryData = [
-    ["RESUMEN DE SIMULACIÓN"],
+    ['RESUMEN DE SIMULACIÓN'],
     [],
-    ["Concepto", "Valor"],
-    ["Simulación", data.simulation.name],
+    ['Concepto', 'Valor'],
+    ['Simulación', data.simulation.name],
     [],
-    ["INGRESOS"],
+    ['INGRESOS'],
   ];
 
   // Add income details with raw numeric values
@@ -97,33 +94,33 @@ export function generateSimulationExcel(
 
   summaryData.push(
     [],
-    ["Total Ingresos", data.totalIncome],
+    ['Total Ingresos', data.totalIncome],
     [],
-    ["PRESUPUESTOS"],
-    ["Total Efectivo", data.totals.efectivo],
-    ["Total Crédito", data.totals.credito],
-    ["Total Ahorro Efectivo", data.totals.ahorro_efectivo],
-    ["Total Ahorro Crédito", data.totals.ahorro_credito],
-    ["Total General", data.totals.general],
+    ['PRESUPUESTOS'],
+    ['Total Efectivo', data.totals.efectivo],
+    ['Total Crédito', data.totals.credito],
+    ['Total Ahorro Efectivo', data.totals.ahorro_efectivo],
+    ['Total Ahorro Crédito', data.totals.ahorro_credito],
+    ['Total General', data.totals.general],
     [],
-    ["Categorías Configuradas", data.categoryCount],
-    ["Total Categorías", data.totalCategories]
+    ['Categorías Configuradas', data.categoryCount],
+    ['Total Categorías', data.totalCategories]
   );
 
   const summarySheet = XLSX.utils.aoa_to_sheet(summaryData);
 
   // Set column widths for summary sheet
-  summarySheet["!cols"] = [{ wch: 30 }, { wch: 20 }];
+  summarySheet['!cols'] = [{ wch: 30 }, { wch: 20 }];
 
   // Apply styling and number formatting to summary sheet
-  const summaryRange = XLSX.utils.decode_range(summarySheet["!ref"] || "A1");
+  const summaryRange = XLSX.utils.decode_range(summarySheet['!ref'] || 'A1');
   for (let R = summaryRange.s.r; R <= summaryRange.e.r; ++R) {
     for (let C = summaryRange.s.c; C <= summaryRange.e.c; ++C) {
       const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
       if (!summarySheet[cellAddress]) continue;
 
       // Apply currency format to numeric values in column B (index 1)
-      if (C === 1 && summarySheet[cellAddress].t === "n") {
+      if (C === 1 && summarySheet[cellAddress].t === 'n') {
         applyCurrencyFormat(summarySheet, cellAddress);
       }
 
@@ -132,8 +129,8 @@ export function generateSimulationExcel(
         R === 0 ||
         R === 5 ||
         R === 5 + data.incomes.length + 2 ||
-        summarySheet[cellAddress].v === "Concepto" ||
-        summarySheet[cellAddress].v === "Total Ingresos"
+        summarySheet[cellAddress].v === 'Concepto' ||
+        summarySheet[cellAddress].v === 'Total Ingresos'
       ) {
         if (!summarySheet[cellAddress].s) {
           summarySheet[cellAddress].s = {};
@@ -148,19 +145,21 @@ export function generateSimulationExcel(
 
   // Sheet 2: Presupuestos (Budgets)
   const budgetHeaders = [
-    "Categoría",
-    "Efectivo",
-    "Crédito",
-    "Ahorro Efectivo",
-    "Ahorro Crédito",
-    "Total",
-    "Balance",
+    'Categoría',
+    'Efectivo',
+    'Crédito',
+    'Ahorro Efectivo',
+    'Ahorro Crédito',
+    'Total',
+    'Balance',
   ];
 
   const budgetData: any[][] = [budgetHeaders];
 
   // Helper function to calculate subgroup subtotals
-  const calculateSubgroupSubtotals = (categoryIds: (string | number)[]): {
+  const calculateSubgroupSubtotals = (
+    categoryIds: (string | number)[]
+  ): {
     efectivo: number;
     credito: number;
     ahorro_efectivo: number;
@@ -173,7 +172,9 @@ export function generateSimulationExcel(
     let ahorroCredito = 0;
 
     categoryIds.forEach((categoryId) => {
-      const budget = data.budgets.find((b) => String(b.category_id) === String(categoryId));
+      const budget = data.budgets.find(
+        (b) => String(b.category_id) === String(categoryId)
+      );
       if (budget) {
         efectivo += budget.efectivo_amount;
         credito += budget.credito_amount;
@@ -205,17 +206,19 @@ export function generateSimulationExcel(
       // Add subgroup header row (with indent formatting)
       budgetData.push([
         `  [${subgroup.name}]`, // Indent with spaces
-        "", // Efectivo
-        "", // Crédito
-        "", // Ahorro Efectivo
-        "", // Ahorro Crédito
-        "", // Total
-        "", // Balance
+        '', // Efectivo
+        '', // Crédito
+        '', // Ahorro Efectivo
+        '', // Ahorro Crédito
+        '', // Total
+        '', // Balance
       ]);
 
       // Add categories within the subgroup
       subgroup.categoryIds.forEach((categoryId) => {
-        const budget = data.budgets.find((b) => String(b.category_id) === String(categoryId));
+        const budget = data.budgets.find(
+          (b) => String(b.category_id) === String(categoryId)
+        );
         if (budget) {
           budgetData.push([
             `    ${budget.category_name}`, // Extra indent for categories within subgroup
@@ -238,17 +241,17 @@ export function generateSimulationExcel(
         subtotals.ahorro_efectivo,
         subtotals.ahorro_credito,
         subtotals.total,
-        "", // No balance for subtotals
+        '', // No balance for subtotals
       ]);
 
       // Add empty row for spacing
-      budgetData.push(["", "", "", "", "", "", ""]);
+      budgetData.push(['', '', '', '', '', '', '']);
     });
   }
 
   // Add uncategorized categories (those not in any subgroup)
   if (categorizedIds.size < data.budgets.length) {
-    budgetData.push(["Categorías Sin Grupo", "", "", "", "", "", ""]);
+    budgetData.push(['Categorías Sin Grupo', '', '', '', '', '', '']);
     data.budgets.forEach((budget) => {
       if (!categorizedIds.has(budget.category_id)) {
         budgetData.push([
@@ -262,7 +265,7 @@ export function generateSimulationExcel(
         ]);
       }
     });
-    budgetData.push(["", "", "", "", "", "", ""]);
+    budgetData.push(['', '', '', '', '', '', '']);
   } else if (!data.subgroups || data.subgroups.length === 0) {
     // If no subgroups, add all budgets normally
     data.budgets.forEach((budget) => {
@@ -280,19 +283,19 @@ export function generateSimulationExcel(
 
   // Add totals row with raw numeric values
   budgetData.push([
-    "TOTALES",
+    'TOTALES',
     data.totals.efectivo,
     data.totals.credito,
     data.totals.ahorro_efectivo,
     data.totals.ahorro_credito,
     data.totals.general,
-    "", // No balance for totals
+    '', // No balance for totals
   ]);
 
   const budgetSheet = XLSX.utils.aoa_to_sheet(budgetData);
 
   // Set column widths for budget sheet
-  budgetSheet["!cols"] = [
+  budgetSheet['!cols'] = [
     { wch: 30 }, // Categoría
     { wch: 18 }, // Efectivo
     { wch: 18 }, // Crédito
@@ -303,21 +306,32 @@ export function generateSimulationExcel(
   ];
 
   // Apply styling and number formatting to budget sheet
-  const budgetRange = XLSX.utils.decode_range(budgetSheet["!ref"] || "A1");
+  const budgetRange = XLSX.utils.decode_range(budgetSheet['!ref'] || 'A1');
   for (let R = budgetRange.s.r; R <= budgetRange.e.r; ++R) {
     for (let C = budgetRange.s.c; C <= budgetRange.e.c; ++C) {
       const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
       if (!budgetSheet[cellAddress]) continue;
 
       const cellValue = budgetSheet[cellAddress].v;
-      const isSubgroupHeader = typeof cellValue === "string" && cellValue.startsWith("  [");
-      const isSubgroupSubtotal = typeof cellValue === "string" && cellValue.includes("Subtotal:");
-      const isSectionHeader = typeof cellValue === "string" && cellValue === "Categorías Sin Grupo";
-      const isEmpty = cellValue === "" || cellValue === undefined;
+      const isSubgroupHeader =
+        typeof cellValue === 'string' && cellValue.startsWith('  [');
+      const isSubgroupSubtotal =
+        typeof cellValue === 'string' && cellValue.includes('Subtotal:');
+      const isSectionHeader =
+        typeof cellValue === 'string' && cellValue === 'Categorías Sin Grupo';
+      const isEmpty = cellValue === '' || cellValue === undefined;
 
       // Apply currency format to numeric columns (B=Efectivo, C=Crédito, D=Ahorro Efectivo, E=Ahorro Crédito, F=Total, G=Balance)
       // Skip header row (R === 0), section headers, subgroup rows, and empty rows
-      if (R > 0 && C >= 1 && C <= 6 && !isEmpty && !isSubgroupHeader && !isSectionHeader && !isSubgroupSubtotal) {
+      if (
+        R > 0 &&
+        C >= 1 &&
+        C <= 6 &&
+        !isEmpty &&
+        !isSubgroupHeader &&
+        !isSectionHeader &&
+        !isSubgroupSubtotal
+      ) {
         applyCurrencyFormat(budgetSheet, cellAddress);
       }
 
@@ -329,7 +343,7 @@ export function generateSimulationExcel(
         budgetSheet[cellAddress].s = {
           ...budgetSheet[cellAddress].s,
           font: { bold: true },
-          fill: { fgColor: { rgb: "E8F4F8" } },
+          fill: { fgColor: { rgb: 'E8F4F8' } },
         };
       }
 
@@ -341,7 +355,7 @@ export function generateSimulationExcel(
         budgetSheet[cellAddress].s = {
           ...budgetSheet[cellAddress].s,
           font: { bold: true },
-          fill: { fgColor: { rgb: "D4E4F8" } },
+          fill: { fgColor: { rgb: 'D4E4F8' } },
         };
       }
 
@@ -352,8 +366,8 @@ export function generateSimulationExcel(
         }
         budgetSheet[cellAddress].s = {
           ...budgetSheet[cellAddress].s,
-          font: { bold: true, color: { rgb: "1F4E78" } },
-          fill: { fgColor: { rgb: "E7F0F7" } },
+          font: { bold: true, color: { rgb: '1F4E78' } },
+          fill: { fgColor: { rgb: 'E7F0F7' } },
         };
       }
 
@@ -364,8 +378,8 @@ export function generateSimulationExcel(
         }
         budgetSheet[cellAddress].s = {
           ...budgetSheet[cellAddress].s,
-          font: { italic: true, color: { rgb: "595959" } },
-          fill: { fgColor: { rgb: "F2F2F2" } },
+          font: { italic: true, color: { rgb: '595959' } },
+          fill: { fgColor: { rgb: 'F2F2F2' } },
         };
         // Apply currency format to subtotal numeric cells
         if (C >= 1 && C <= 5) {
@@ -380,16 +394,16 @@ export function generateSimulationExcel(
         }
         budgetSheet[cellAddress].s = {
           ...budgetSheet[cellAddress].s,
-          font: { bold: true, color: { rgb: "4472C4" } },
-          fill: { fgColor: { rgb: "E7E6E6" } },
+          font: { bold: true, color: { rgb: '4472C4' } },
+          fill: { fgColor: { rgb: 'E7E6E6' } },
         };
       }
     }
   }
 
   // Add sheets to workbook
-  XLSX.utils.book_append_sheet(workbook, summarySheet, "Resumen");
-  XLSX.utils.book_append_sheet(workbook, budgetSheet, "Presupuestos");
+  XLSX.utils.book_append_sheet(workbook, summarySheet, 'Resumen');
+  XLSX.utils.book_append_sheet(workbook, budgetSheet, 'Presupuestos');
 
   return workbook;
 }
@@ -403,18 +417,18 @@ export function downloadExcelFile(
 ): void {
   // Generate Excel file
   const excelBuffer = XLSX.write(workbook, {
-    bookType: "xlsx",
-    type: "array",
+    bookType: 'xlsx',
+    type: 'array',
   });
 
   // Create blob
   const blob = new Blob([excelBuffer], {
-    type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });
 
   // Create download link
   const url = window.URL.createObjectURL(blob);
-  const link = document.createElement("a");
+  const link = document.createElement('a');
   link.href = url;
   link.download = filename;
 
@@ -433,10 +447,10 @@ export function downloadExcelFile(
 export function generateSimulationFilename(simulationName: string): string {
   const timestamp = new Date()
     .toISOString()
-    .replace(/[:.]/g, "-")
+    .replace(/[:.]/g, '-')
     .substring(0, 19);
   const sanitizedName = simulationName
-    .replace(/[^a-z0-9]/gi, "-")
+    .replace(/[^a-z0-9]/gi, '-')
     .toLowerCase();
   return `simulacion-${sanitizedName}-${timestamp}.xlsx`;
 }
@@ -468,7 +482,7 @@ export async function exportSimulationToExcel(
     // Download file
     downloadExcelFile(workbook, filename);
   } catch (error) {
-    console.error("Error exporting simulation to Excel:", error);
+    console.error('Error exporting simulation to Excel:', error);
     throw error;
   }
 }

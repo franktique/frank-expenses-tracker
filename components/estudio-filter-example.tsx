@@ -1,10 +1,10 @@
 // Example usage of EstudioFilter component
 // This file demonstrates how to integrate the EstudioFilter into a dashboard
 
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { EstudioFilter } from "./estudio-filter";
+import { useState, useEffect } from 'react';
+import { EstudioFilter } from './estudio-filter';
 
 type EstudioData = {
   id: number;
@@ -26,7 +26,7 @@ export function EstudioFilterExample() {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch("/api/estudios");
+      const response = await fetch('/api/estudios');
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -43,9 +43,9 @@ export function EstudioFilterExample() {
         setSelectedEstudio(data[0].id);
       }
     } catch (error) {
-      console.error("Error fetching estudios:", error);
+      console.error('Error fetching estudios:', error);
       const errorMessage =
-        error instanceof Error ? error.message : "Error al cargar los estudios";
+        error instanceof Error ? error.message : 'Error al cargar los estudios';
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -64,7 +64,7 @@ export function EstudioFilterExample() {
     // 2. Make API calls with the selected estudio ID
     // 3. Update other components that depend on the filter
 
-    console.log("Selected estudio:", selected);
+    console.log('Selected estudio:', selected);
   };
 
   const handleRetry = () => {
@@ -72,7 +72,7 @@ export function EstudioFilterExample() {
   };
 
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4 p-4">
       <h2 className="text-lg font-semibold">Dashboard Agrupadores</h2>
 
       <div className="flex items-center gap-4">
@@ -89,8 +89,8 @@ export function EstudioFilterExample() {
       </div>
 
       {/* Chart components would go here */}
-      <div className="mt-6 p-4 border rounded-lg">
-        <h3 className="font-medium mb-2">Selected Estudio:</h3>
+      <div className="mt-6 rounded-lg border p-4">
+        <h3 className="mb-2 font-medium">Selected Estudio:</h3>
         {selectedEstudio === null ? (
           <p className="text-muted-foreground">No estudio selected</p>
         ) : (
@@ -105,7 +105,7 @@ export function EstudioFilterExample() {
                     <strong>Name:</strong> {selectedEstudioData.name}
                   </p>
                   <p>
-                    <strong>Groupers:</strong>{" "}
+                    <strong>Groupers:</strong>{' '}
                     {selectedEstudioData.grouper_count}
                   </p>
                   <p>

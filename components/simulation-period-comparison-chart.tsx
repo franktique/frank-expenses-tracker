@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { memo, useMemo } from "react";
+import React, { memo, useMemo } from 'react';
 import {
   BarChart,
   Bar,
@@ -13,17 +13,17 @@ import {
   LineChart,
   Line,
   ReferenceLine,
-} from "recharts";
-import { formatCurrency } from "@/lib/utils";
+} from 'recharts';
+import { formatCurrency } from '@/lib/utils';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { TrendingUp, TrendingDown, Minus, AlertTriangle } from "lucide-react";
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
 
 // Types for period comparison with simulation
 interface PeriodData {
@@ -52,7 +52,7 @@ interface SimulationPeriodData {
 interface TransformedPeriodData {
   period_name: string;
   is_simulation?: boolean;
-  [key: `grouper_${number}`]: number | boolean | string | undefined;
+  [key: string]: number | boolean | string | undefined;
 }
 
 interface PeriodComparisonTooltipProps {
@@ -72,20 +72,20 @@ const PeriodComparisonTooltip = memo<PeriodComparisonTooltipProps>(
     const isSimulation = payload[0]?.payload?.is_simulation;
 
     return (
-      <div className="bg-background border border-border rounded-lg p-3 shadow-lg max-w-sm">
-        <div className="flex items-center gap-2 mb-2">
+      <div className="max-w-sm rounded-lg border border-border bg-background p-3 shadow-lg">
+        <div className="mb-2 flex items-center gap-2">
           <p className="font-semibold text-foreground">{label}</p>
           {isSimulation && (
             <Badge
               variant="outline"
-              className="text-blue-600 border-blue-600 text-xs"
+              className="border-blue-600 text-xs text-blue-600"
             >
               Simulación
             </Badge>
           )}
         </div>
 
-        <div className="space-y-1 max-h-48 overflow-y-auto">
+        <div className="max-h-48 space-y-1 overflow-y-auto">
           {payload
             .filter((entry) => entry.value > 0)
             .sort((a, b) => (b.value as number) - (a.value as number))
@@ -94,26 +94,26 @@ const PeriodComparisonTooltip = memo<PeriodComparisonTooltipProps>(
               const grouperKey = entry.dataKey as string;
               const grouperName =
                 grouperNames[grouperKey] ||
-                grouperKey.replace("grouper_", "Agrupador ");
+                grouperKey.replace('grouper_', 'Agrupador ');
 
               return (
                 <p
                   key={index}
-                  className="text-sm flex items-center justify-between"
+                  className="flex items-center justify-between text-sm"
                 >
                   <span className="flex items-center gap-2">
                     <span
-                      className="inline-block w-3 h-3 rounded-full"
+                      className="inline-block h-3 w-3 rounded-full"
                       style={{ backgroundColor: entry.color }}
                     />
                     <span
-                      className="truncate max-w-[120px]"
+                      className="max-w-[120px] truncate"
                       title={grouperName}
                     >
                       {grouperName}
                     </span>
                   </span>
-                  <span className="font-medium ml-2">
+                  <span className="ml-2 font-medium">
                     {formatCurrency(entry.value as number)}
                   </span>
                 </p>
@@ -121,14 +121,14 @@ const PeriodComparisonTooltip = memo<PeriodComparisonTooltipProps>(
             })}
 
           {payload.filter((entry) => entry.value > 0).length > 8 && (
-            <p className="text-xs text-muted-foreground italic">
+            <p className="text-xs italic text-muted-foreground">
               ... y {payload.filter((entry) => entry.value > 0).length - 8} más
             </p>
           )}
         </div>
 
         {isSimulation && (
-          <p className="text-xs text-blue-600 italic mt-2 border-t pt-2">
+          <p className="mt-2 border-t pt-2 text-xs italic text-blue-600">
             * Datos de simulación basados en presupuestos configurados
           </p>
         )}
@@ -137,7 +137,7 @@ const PeriodComparisonTooltip = memo<PeriodComparisonTooltipProps>(
   }
 );
 
-PeriodComparisonTooltip.displayName = "PeriodComparisonTooltip";
+PeriodComparisonTooltip.displayName = 'PeriodComparisonTooltip';
 
 // Main period comparison chart with simulation
 interface SimulationPeriodComparisonChartProps {
@@ -156,8 +156,8 @@ export const SimulationPeriodComparisonChart =
       historicalData,
       simulationData,
       selectedGroupers = [],
-      title = "Comparación de Períodos con Simulación",
-      description = "Análisis histórico vs simulación por períodos",
+      title = 'Comparación de Períodos con Simulación',
+      description = 'Análisis histórico vs simulación por períodos',
       isLoading = false,
       showVarianceIndicators = true,
     }) => {
@@ -238,25 +238,25 @@ export const SimulationPeriodComparisonChart =
 
         // Generate colors for groupers
         const colorPalette = [
-          "#8884d8",
-          "#83a6ed",
-          "#8dd1e1",
-          "#82ca9d",
-          "#a4de6c",
-          "#d0ed57",
-          "#ffc658",
-          "#ff8042",
-          "#ff6361",
-          "#bc5090",
-          "#58508d",
-          "#003f5c",
-          "#2f4b7c",
-          "#665191",
-          "#a05195",
-          "#d45087",
-          "#f95d6a",
-          "#ff7c43",
-          "#ffa600",
+          '#8884d8',
+          '#83a6ed',
+          '#8dd1e1',
+          '#82ca9d',
+          '#a4de6c',
+          '#d0ed57',
+          '#ffc658',
+          '#ff8042',
+          '#ff6361',
+          '#bc5090',
+          '#58508d',
+          '#003f5c',
+          '#2f4b7c',
+          '#665191',
+          '#a05195',
+          '#d45087',
+          '#f95d6a',
+          '#ff7c43',
+          '#ffa600',
         ];
 
         const grouperColors: { [key: string]: string } = {};
@@ -272,7 +272,7 @@ export const SimulationPeriodComparisonChart =
           historical_avg: number;
           simulation_value: number;
           variance_percentage: number;
-          trend: "increase" | "decrease" | "stable";
+          trend: 'increase' | 'decrease' | 'stable';
         }> = [];
 
         if (transformedSimulation && transformedHistorical.length > 0) {
@@ -295,10 +295,10 @@ export const SimulationPeriodComparisonChart =
                 const variancePercentage =
                   ((simulationValue - historicalAvg) / historicalAvg) * 100;
 
-                let trend: "increase" | "decrease" | "stable" = "stable";
+                let trend: 'increase' | 'decrease' | 'stable' = 'stable';
                 if (Math.abs(variancePercentage) > 10) {
                   // 10% threshold for significance
-                  trend = variancePercentage > 0 ? "increase" : "decrease";
+                  trend = variancePercentage > 0 ? 'increase' : 'decrease';
                 }
 
                 variance.push({
@@ -330,8 +330,8 @@ export const SimulationPeriodComparisonChart =
               <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-center items-center h-[500px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              <div className="flex h-[500px] items-center justify-center">
+                <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
               </div>
             </CardContent>
           </Card>
@@ -346,7 +346,7 @@ export const SimulationPeriodComparisonChart =
               <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-center items-center h-[500px]">
+              <div className="flex h-[500px] items-center justify-center">
                 <p className="text-muted-foreground">
                   No hay datos disponibles para mostrar
                 </p>
@@ -367,7 +367,7 @@ export const SimulationPeriodComparisonChart =
               {simulationData && (
                 <Badge
                   variant="outline"
-                  className="text-blue-600 border-blue-600"
+                  className="border-blue-600 text-blue-600"
                 >
                   Incluye Simulación
                 </Badge>
@@ -404,7 +404,7 @@ export const SimulationPeriodComparisonChart =
                     }
                   />
                   <Legend
-                    wrapperStyle={{ paddingTop: "20px" }}
+                    wrapperStyle={{ paddingTop: '20px' }}
                     iconType="rect"
                   />
 
@@ -416,7 +416,7 @@ export const SimulationPeriodComparisonChart =
                         dataKey={grouperKey}
                         name={
                           grouperName.length > 20
-                            ? grouperName.substring(0, 20) + "..."
+                            ? grouperName.substring(0, 20) + '...'
                             : grouperName
                         }
                         fill={colors[grouperKey]}
@@ -434,11 +434,11 @@ export const SimulationPeriodComparisonChart =
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 text-amber-500" />
                   <h4 className="text-sm font-medium">
-                    Variaciones Significativas ({">"}10%)
+                    Variaciones Significativas ({'>'}10%)
                   </h4>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-3">
                   {varianceData
                     .filter((item) => Math.abs(item.variance_percentage) > 10)
                     .sort(
@@ -450,18 +450,18 @@ export const SimulationPeriodComparisonChart =
                     .map((item) => (
                       <div
                         key={item.grouper_id}
-                        className="flex items-center justify-between p-3 rounded-lg border bg-card"
+                        className="flex items-center justify-between rounded-lg border bg-card p-3"
                       >
                         <div className="flex items-center gap-2">
-                          {item.trend === "increase" ? (
+                          {item.trend === 'increase' ? (
                             <TrendingUp className="h-4 w-4 text-green-600" />
-                          ) : item.trend === "decrease" ? (
+                          ) : item.trend === 'decrease' ? (
                             <TrendingDown className="h-4 w-4 text-red-600" />
                           ) : (
                             <Minus className="h-4 w-4 text-gray-500" />
                           )}
                           <span
-                            className="text-sm font-medium truncate max-w-[120px]"
+                            className="max-w-[120px] truncate text-sm font-medium"
                             title={item.grouper_name}
                           >
                             {item.grouper_name}
@@ -469,15 +469,15 @@ export const SimulationPeriodComparisonChart =
                         </div>
                         <Badge
                           variant={
-                            item.trend === "increase"
-                              ? "default"
-                              : item.trend === "decrease"
-                              ? "destructive"
-                              : "secondary"
+                            item.trend === 'increase'
+                              ? 'default'
+                              : item.trend === 'decrease'
+                                ? 'destructive'
+                                : 'secondary'
                           }
                           className="text-xs"
                         >
-                          {item.variance_percentage > 0 ? "+" : ""}
+                          {item.variance_percentage > 0 ? '+' : ''}
                           {item.variance_percentage.toFixed(1)}%
                         </Badge>
                       </div>
@@ -487,7 +487,7 @@ export const SimulationPeriodComparisonChart =
                 {varianceData.filter(
                   (item) => Math.abs(item.variance_percentage) > 10
                 ).length === 0 && (
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="text-sm italic text-muted-foreground">
                     No se detectaron variaciones significativas entre la
                     simulación y el promedio histórico.
                   </p>
@@ -500,4 +500,4 @@ export const SimulationPeriodComparisonChart =
     }
   );
 
-SimulationPeriodComparisonChart.displayName = "SimulationPeriodComparisonChart";
+SimulationPeriodComparisonChart.displayName = 'SimulationPeriodComparisonChart';

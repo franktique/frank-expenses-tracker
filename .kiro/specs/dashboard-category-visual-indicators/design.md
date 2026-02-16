@@ -47,7 +47,7 @@ function getCategoryNameStyle(item: BudgetSummaryItem): string {
   // Category has no expenses if total_amount is 0
   const hasNoExpenses = item.total_amount === 0;
 
-  return hasNoExpenses ? "text-muted-foreground" : "";
+  return hasNoExpenses ? 'text-muted-foreground' : '';
 }
 ```
 
@@ -106,7 +106,6 @@ If the `total_amount` field is missing or invalid:
 ### Unit Tests
 
 1. **Utility Function Tests**
-
    - Test `getCategoryNameStyle` with various `total_amount` values
    - Verify correct CSS class returns for active/inactive states
    - Test edge cases (null, undefined, negative values)

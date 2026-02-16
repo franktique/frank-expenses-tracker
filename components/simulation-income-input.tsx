@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, useCallback } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+} from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import {
   Table,
   TableBody,
@@ -17,11 +17,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
-import { formatCurrency } from "@/lib/utils";
-import { Loader2, Plus, Trash2, Edit2, DollarSign } from "lucide-react";
-import type { SimulationIncome } from "@/types/funds";
+} from '@/components/ui/table';
+import { useToast } from '@/components/ui/use-toast';
+import { formatCurrency } from '@/lib/utils';
+import { Loader2, Plus, Trash2, Edit2, DollarSign } from 'lucide-react';
+import type { SimulationIncome } from '@/types/funds';
 
 interface SimulationIncomeInputProps {
   simulationId: number;
@@ -41,10 +41,10 @@ export function SimulationIncomeInput({
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [newIncome, setNewIncome] = useState({ description: "", amount: "" });
+  const [newIncome, setNewIncome] = useState({ description: '', amount: '' });
   const [editIncome, setEditIncome] = useState({
-    description: "",
-    amount: "",
+    description: '',
+    amount: '',
   });
   const [isAddingNew, setIsAddingNew] = useState(false);
 
@@ -54,7 +54,7 @@ export function SimulationIncomeInput({
     try {
       const response = await fetch(`/api/simulations/${simulationId}/incomes`);
       if (!response.ok) {
-        throw new Error("Error al cargar ingresos");
+        throw new Error('Error al cargar ingresos');
       }
       const data = await response.json();
       setIncomes(data.incomes || []);
@@ -65,9 +65,9 @@ export function SimulationIncomeInput({
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: (error as Error).message || "Error al cargar ingresos",
-        variant: "destructive",
+        title: 'Error',
+        description: (error as Error).message || 'Error al cargar ingresos',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -88,9 +88,9 @@ export function SimulationIncomeInput({
   const handleAddIncome = async () => {
     if (!newIncome.description.trim() || !newIncome.amount) {
       toast({
-        title: "Error",
-        description: "Completa todos los campos",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Completa todos los campos',
+        variant: 'destructive',
       });
       return;
     }
@@ -98,9 +98,9 @@ export function SimulationIncomeInput({
     const amount = parseFloat(newIncome.amount);
     if (isNaN(amount) || amount <= 0) {
       toast({
-        title: "Error",
-        description: "El monto debe ser un número positivo",
-        variant: "destructive",
+        title: 'Error',
+        description: 'El monto debe ser un número positivo',
+        variant: 'destructive',
       });
       return;
     }
@@ -108,8 +108,8 @@ export function SimulationIncomeInput({
     setIsSaving(true);
     try {
       const response = await fetch(`/api/simulations/${simulationId}/incomes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           description: newIncome.description.trim(),
           amount,
@@ -118,22 +118,22 @@ export function SimulationIncomeInput({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al crear ingreso");
+        throw new Error(errorData.error || 'Error al crear ingreso');
       }
 
-      setNewIncome({ description: "", amount: "" });
+      setNewIncome({ description: '', amount: '' });
       setIsAddingNew(false);
       await loadIncomes();
 
       toast({
-        title: "Ingreso agregado",
-        description: "El ingreso ha sido agregado exitosamente",
+        title: 'Ingreso agregado',
+        description: 'El ingreso ha sido agregado exitosamente',
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: (error as Error).message || "Error al crear ingreso",
-        variant: "destructive",
+        title: 'Error',
+        description: (error as Error).message || 'Error al crear ingreso',
+        variant: 'destructive',
       });
     } finally {
       setIsSaving(false);
@@ -153,9 +153,9 @@ export function SimulationIncomeInput({
   const handleSaveEdit = async (incomeId: number) => {
     if (!editIncome.description.trim() || !editIncome.amount) {
       toast({
-        title: "Error",
-        description: "Completa todos los campos",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Completa todos los campos',
+        variant: 'destructive',
       });
       return;
     }
@@ -163,9 +163,9 @@ export function SimulationIncomeInput({
     const amount = parseFloat(editIncome.amount);
     if (isNaN(amount) || amount <= 0) {
       toast({
-        title: "Error",
-        description: "El monto debe ser un número positivo",
-        variant: "destructive",
+        title: 'Error',
+        description: 'El monto debe ser un número positivo',
+        variant: 'destructive',
       });
       return;
     }
@@ -175,8 +175,8 @@ export function SimulationIncomeInput({
       const response = await fetch(
         `/api/simulations/${simulationId}/incomes/${incomeId}`,
         {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             description: editIncome.description.trim(),
             amount,
@@ -186,21 +186,21 @@ export function SimulationIncomeInput({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al actualizar ingreso");
+        throw new Error(errorData.error || 'Error al actualizar ingreso');
       }
 
       setEditingId(null);
       await loadIncomes();
 
       toast({
-        title: "Ingreso actualizado",
-        description: "El ingreso ha sido actualizado exitosamente",
+        title: 'Ingreso actualizado',
+        description: 'El ingreso ha sido actualizado exitosamente',
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: (error as Error).message || "Error al actualizar ingreso",
-        variant: "destructive",
+        title: 'Error',
+        description: (error as Error).message || 'Error al actualizar ingreso',
+        variant: 'destructive',
       });
     } finally {
       setIsSaving(false);
@@ -209,7 +209,7 @@ export function SimulationIncomeInput({
 
   // Handle delete income
   const handleDeleteIncome = async (incomeId: number) => {
-    if (!confirm("¿Estás seguro de eliminar este ingreso?")) {
+    if (!confirm('¿Estás seguro de eliminar este ingreso?')) {
       return;
     }
 
@@ -218,26 +218,26 @@ export function SimulationIncomeInput({
       const response = await fetch(
         `/api/simulations/${simulationId}/incomes/${incomeId}`,
         {
-          method: "DELETE",
+          method: 'DELETE',
         }
       );
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al eliminar ingreso");
+        throw new Error(errorData.error || 'Error al eliminar ingreso');
       }
 
       await loadIncomes();
 
       toast({
-        title: "Ingreso eliminado",
-        description: "El ingreso ha sido eliminado exitosamente",
+        title: 'Ingreso eliminado',
+        description: 'El ingreso ha sido eliminado exitosamente',
       });
     } catch (error) {
       toast({
-        title: "Error",
-        description: (error as Error).message || "Error al eliminar ingreso",
-        variant: "destructive",
+        title: 'Error',
+        description: (error as Error).message || 'Error al eliminar ingreso',
+        variant: 'destructive',
       });
     } finally {
       setIsSaving(false);
@@ -275,8 +275,8 @@ export function SimulationIncomeInput({
             <TableHeader>
               <TableRow>
                 <TableHead className="w-1/2">Descripción</TableHead>
-                <TableHead className="text-right w-1/3">Monto</TableHead>
-                <TableHead className="text-right w-32">Acciones</TableHead>
+                <TableHead className="w-1/3 text-right">Monto</TableHead>
+                <TableHead className="w-32 text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -325,7 +325,7 @@ export function SimulationIncomeInput({
                             {isSaving ? (
                               <Loader2 className="h-4 w-4 animate-spin" />
                             ) : (
-                              "Guardar"
+                              'Guardar'
                             )}
                           </Button>
                           <Button
@@ -374,14 +374,14 @@ export function SimulationIncomeInput({
             </TableBody>
           </Table>
         ) : (
-          <div className="text-center py-6 text-muted-foreground">
+          <div className="py-6 text-center text-muted-foreground">
             No hay ingresos simulados. Agrega uno para comenzar.
           </div>
         )}
 
         {/* Add New Income Form */}
         {isAddingNew ? (
-          <div className="border rounded-lg p-4 space-y-3">
+          <div className="space-y-3 rounded-lg border p-4">
             <div className="space-y-2">
               <label className="text-sm font-medium">Descripción</label>
               <Input
@@ -416,14 +416,14 @@ export function SimulationIncomeInput({
                     Guardando...
                   </>
                 ) : (
-                  "Guardar"
+                  'Guardar'
                 )}
               </Button>
               <Button
                 variant="outline"
                 onClick={() => {
                   setIsAddingNew(false);
-                  setNewIncome({ description: "", amount: "" });
+                  setNewIncome({ description: '', amount: '' });
                 }}
                 disabled={isSaving}
               >
@@ -444,8 +444,8 @@ export function SimulationIncomeInput({
         )}
 
         {/* Total Income Summary */}
-        <div className="mt-4 pt-4 border-t">
-          <div className="flex justify-between items-center">
+        <div className="mt-4 border-t pt-4">
+          <div className="flex items-center justify-between">
             <span className="text-lg font-semibold">Total Ingresos:</span>
             <span className="text-2xl font-bold text-green-600">
               {formatCurrency(totalIncome)}

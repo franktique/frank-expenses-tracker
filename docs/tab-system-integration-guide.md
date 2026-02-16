@@ -69,18 +69,18 @@ import { EnhancedConditionalLayout } from '@/components/enhanced-conditional-lay
 
 ### Keyboard Shortcuts
 
-| Shortcut | Action |
-|----------|--------|
-| Ctrl+T | New tab |
-| Ctrl+W | Close current tab |
-| Ctrl+Tab | Next tab |
-| Ctrl+Shift+Tab | Previous tab |
-| Ctrl+1-9 | Go to tab 1-9 |
-| Ctrl+D | Duplicate tab |
-| Ctrl+P | Pin/unpin tab |
-| Alt+← | Browser back |
-| Alt+→ | Browser forward |
-| F5 | Refresh tab |
+| Shortcut       | Action            |
+| -------------- | ----------------- |
+| Ctrl+T         | New tab           |
+| Ctrl+W         | Close current tab |
+| Ctrl+Tab       | Next tab          |
+| Ctrl+Shift+Tab | Previous tab      |
+| Ctrl+1-9       | Go to tab 1-9     |
+| Ctrl+D         | Duplicate tab     |
+| Ctrl+P         | Pin/unpin tab     |
+| Alt+←          | Browser back      |
+| Alt+→          | Browser forward   |
+| F5             | Refresh tab       |
 
 ### State Persistence
 
@@ -158,7 +158,7 @@ The tab-aware sidebar automatically integrates with the tab system:
 import { TabAwareSidebar } from '@/components/tabs';
 
 // In your layout
-<TabAwareSidebar />
+<TabAwareSidebar />;
 ```
 
 ### Keyboard Shortcuts Hook
@@ -171,7 +171,7 @@ import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 function MyComponent() {
   const { shortcuts } = useKeyboardShortcuts({
     enabled: true,
-    preventDefault: true
+    preventDefault: true,
   });
 
   // Shortcuts are automatically registered
@@ -191,7 +191,7 @@ const tabPreferences = {
   persistState: true,
   enableAnimations: true,
   showTabCloseButtons: true,
-  defaultTabBehavior: 'replace' // 'replace' | 'new'
+  defaultTabBehavior: 'replace', // 'replace' | 'new'
 };
 ```
 
@@ -205,7 +205,7 @@ const persistence = new TabPersistenceManager({
   maxClosedTabs: 20,
   maxStorageAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   enableCompression: false,
-  enableEncryption: false
+  enableEncryption: false,
 });
 ```
 
@@ -217,9 +217,7 @@ The tab system includes mobile-specific components:
 import { ResponsiveTabLayout } from '@/components/tabs';
 
 // Automatically switches to mobile layout on small screens
-<ResponsiveTabLayout>
-  {children}
-</ResponsiveTabLayout>
+<ResponsiveTabLayout>{children}</ResponsiveTabLayout>;
 ```
 
 ## Testing
@@ -236,9 +234,7 @@ function TestComponent() {
 
   return (
     <div>
-      <button onClick={() => addTab('/test', 'Test Tab')}>
-        Add Tab
-      </button>
+      <button onClick={() => addTab('/test', 'Test Tab')}>Add Tab</button>
       <div data-testid="tab-count">{tabs.length}</div>
       <div data-testid="active-tab">{activeTabId}</div>
     </div>
@@ -272,7 +268,9 @@ test('tab navigation', async ({ page }) => {
   await page.click('[data-testid="add-tab-button"]');
 
   // Check tab is created
-  await expect(page.locator('[data-testid="tab-bar"]')).toContainText('New Tab');
+  await expect(page.locator('[data-testid="tab-bar"]')).toContainText(
+    'New Tab'
+  );
 
   // Switch tabs
   await page.click('text=Dashboard');
@@ -316,6 +314,7 @@ To migrate existing navigation:
 4. **Test user flows**: Verify all navigation works as expected
 
 ### Before
+
 ```tsx
 const handleNavigate = () => {
   router.push('/categorias');
@@ -323,6 +322,7 @@ const handleNavigate = () => {
 ```
 
 ### After
+
 ```tsx
 const { addTab } = useTabs();
 
@@ -360,4 +360,4 @@ For issues and questions:
 
 ---
 
-*This guide covers the complete integration of the multi-tab navigation system. For specific implementation details, refer to the individual component documentation.*
+_This guide covers the complete integration of the multi-tab navigation system. For specific implementation details, refer to the individual component documentation._

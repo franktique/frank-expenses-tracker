@@ -1,10 +1,10 @@
-import { z } from "zod";
+import { z } from 'zod';
 import {
   PaymentMethodEnum,
   type PaymentMethod,
   VALID_PAYMENT_METHODS,
   PAYMENT_METHOD_LABELS,
-} from "./estudios";
+} from './estudios';
 
 // Re-export PaymentMethod types and constants for backward compatibility
 export {
@@ -30,20 +30,20 @@ export const FundSchema = z.object({
   id: z.string().uuid(),
   name: z
     .string()
-    .min(1, "El nombre del fondo es obligatorio")
-    .max(255, "El nombre del fondo es demasiado largo"),
+    .min(1, 'El nombre del fondo es obligatorio')
+    .max(255, 'El nombre del fondo es demasiado largo'),
   description: z
     .string()
-    .max(500, "La descripción es demasiado larga")
+    .max(500, 'La descripción es demasiado larga')
     .optional(),
   initial_balance: z
     .number()
-    .min(0, "El balance inicial no puede ser negativo")
+    .min(0, 'El balance inicial no puede ser negativo')
     .default(0),
   current_balance: z.number(),
   start_date: z
     .string()
-    .refine((date) => !isNaN(Date.parse(date)), "Fecha de inicio inválida"),
+    .refine((date) => !isNaN(Date.parse(date)), 'Fecha de inicio inválida'),
   created_at: z.string(),
   updated_at: z.string(),
 });
@@ -52,78 +52,79 @@ export const FundSchema = z.object({
 export const CreateFundSchema = z.object({
   name: z
     .string()
-    .min(1, "El nombre del fondo es obligatorio")
-    .max(255, "El nombre del fondo es demasiado largo"),
+    .min(1, 'El nombre del fondo es obligatorio')
+    .max(255, 'El nombre del fondo es demasiado largo'),
   description: z
     .string()
-    .max(500, "La descripción es demasiado larga")
+    .max(500, 'La descripción es demasiado larga')
     .optional(),
   initial_balance: z
     .number()
-    .min(0, "El balance inicial no puede ser negativo")
+    .min(0, 'El balance inicial no puede ser negativo')
     .default(0),
   start_date: z
     .string()
-    .refine((date) => !isNaN(Date.parse(date)), "Fecha de inicio inválida"),
+    .refine((date) => !isNaN(Date.parse(date)), 'Fecha de inicio inválida'),
 });
 
 // Fund update schema (for API requests)
 export const UpdateFundSchema = z.object({
   name: z
     .string()
-    .min(1, "El nombre del fondo es obligatorio")
-    .max(255, "El nombre del fondo es demasiado largo")
+    .min(1, 'El nombre del fondo es obligatorio')
+    .max(255, 'El nombre del fondo es demasiado largo')
     .optional(),
   description: z
     .string()
-    .max(500, "La descripción es demasiado larga")
+    .max(500, 'La descripción es demasiado larga')
     .optional(),
   initial_balance: z
     .number()
-    .min(0, "El balance inicial no puede ser negativo")
+    .min(0, 'El balance inicial no puede ser negativo')
     .optional(),
   // Note: start_date is not included as it cannot be modified after creation
 });
 
 // Tipo Gasto (expense type) definitions
 export const TIPO_GASTO_VALUES = {
-  FIJO: "F",
-  VARIABLE: "V",
-  SEMI_FIJO: "SF",
-  EVENTUAL: "E",
+  FIJO: 'F',
+  VARIABLE: 'V',
+  SEMI_FIJO: 'SF',
+  EVENTUAL: 'E',
 } as const;
 
 export const TIPO_GASTO_LABELS = {
-  F: "Fijo",
-  V: "Variable",
-  SF: "Semi Fijo",
-  E: "Eventual",
+  F: 'Fijo',
+  V: 'Variable',
+  SF: 'Semi Fijo',
+  E: 'Eventual',
 } as const;
 
-export type TipoGasto = typeof TIPO_GASTO_VALUES[keyof typeof TIPO_GASTO_VALUES];
+export type TipoGasto =
+  (typeof TIPO_GASTO_VALUES)[keyof typeof TIPO_GASTO_VALUES];
 
 // Tipo Gasto sort order definitions for custom 3-cycle sorting
 export const TIPO_GASTO_SORT_ORDERS = {
   // State 1: Fijo → Semi-Fijo → Variable → Eventual
   STATE_1: {
-    F: 1,   // Fijo
-    SF: 2,  // Semi-Fijo
-    V: 3,   // Variable
-    E: 4,   // Eventual
+    F: 1, // Fijo
+    SF: 2, // Semi-Fijo
+    V: 3, // Variable
+    E: 4, // Eventual
   } as const,
   // State 2: Variable → Semi-Fijo → Fijo → Eventual
   STATE_2: {
-    V: 1,   // Variable
-    SF: 2,  // Semi-Fijo
-    F: 3,   // Fijo
-    E: 4,   // Eventual
+    V: 1, // Variable
+    SF: 2, // Semi-Fijo
+    F: 3, // Fijo
+    E: 4, // Eventual
   } as const,
 } as const;
 
 // Recurrence frequency types (must be defined before CategorySchema)
 export const RECURRENCE_FREQUENCIES = {
-  WEEKLY: "weekly",
-  BI_WEEKLY: "bi-weekly",
+  WEEKLY: 'weekly',
+  BI_WEEKLY: 'bi-weekly',
 } as const;
 
 export type RecurrenceFrequency =
@@ -132,12 +133,12 @@ export type RecurrenceFrequency =
   | null;
 
 export const RECURRENCE_LABELS = {
-  weekly: "Semanal (cada 7 días)",
-  "bi-weekly": "Quincenal (cada 14 días)",
+  weekly: 'Semanal (cada 7 días)',
+  'bi-weekly': 'Quincenal (cada 14 días)',
 } as const;
 
 export const RecurrenceFrequencyEnum = z
-  .enum(["weekly", "bi-weekly"])
+  .enum(['weekly', 'bi-weekly'])
   .nullable()
   .optional();
 
@@ -166,15 +167,15 @@ export const CategorySchema = z.object({
   id: z.string().uuid(),
   name: z
     .string()
-    .min(1, "El nombre de la categoría es obligatorio")
-    .max(255, "El nombre de la categoría es demasiado largo"),
+    .min(1, 'El nombre de la categoría es obligatorio')
+    .max(255, 'El nombre de la categoría es demasiado largo'),
   fund_id: z.string().uuid().optional(),
   fund_name: z.string().optional(),
   tipo_gasto: z
-    .enum(["F", "V", "SF", "E"], {
+    .enum(['F', 'V', 'SF', 'E'], {
       errorMap: () => ({
         message:
-          "El tipo de gasto debe ser F (Fijo), V (Variable), SF (Semi Fijo) o E (Eventual)",
+          'El tipo de gasto debe ser F (Fijo), V (Variable), SF (Semi Fijo) o E (Eventual)',
       }),
     })
     .optional(),
@@ -185,23 +186,23 @@ export const CategorySchema = z.object({
 export const CreateCategorySchema = z.object({
   name: z
     .string()
-    .min(1, "El nombre de la categoría es obligatorio")
-    .max(255, "El nombre de la categoría es demasiado largo"),
+    .min(1, 'El nombre de la categoría es obligatorio')
+    .max(255, 'El nombre de la categoría es demasiado largo'),
   fund_id: z.string().uuid().optional(),
   fund_ids: z.array(z.string().uuid()).optional(), // New field for multiple fund relationships
   tipo_gasto: z
-    .enum(["F", "V", "SF", "E"], {
+    .enum(['F', 'V', 'SF', 'E'], {
       errorMap: () => ({
         message:
-          "El tipo de gasto debe ser F (Fijo), V (Variable), SF (Semi Fijo) o E (Eventual)",
+          'El tipo de gasto debe ser F (Fijo), V (Variable), SF (Semi Fijo) o E (Eventual)',
       }),
     })
     .optional(),
   default_day: z
     .number()
-    .int("El día debe ser un número entero")
-    .min(1, "El día debe estar entre 1 y 31")
-    .max(31, "El día debe estar entre 1 y 31")
+    .int('El día debe ser un número entero')
+    .min(1, 'El día debe estar entre 1 y 31')
+    .max(31, 'El día debe estar entre 1 y 31')
     .nullable()
     .optional(), // Preferred day of month (1-31)
   recurrence_frequency: RecurrenceFrequencyEnum,
@@ -211,24 +212,24 @@ export const CreateCategorySchema = z.object({
 export const UpdateCategorySchema = z.object({
   name: z
     .string()
-    .min(1, "El nombre de la categoría es obligatorio")
-    .max(255, "El nombre de la categoría es demasiado largo")
+    .min(1, 'El nombre de la categoría es obligatorio')
+    .max(255, 'El nombre de la categoría es demasiado largo')
     .optional(),
   fund_id: z.string().uuid().optional(),
   fund_ids: z.array(z.string().uuid()).optional(), // New field for multiple fund relationships
   tipo_gasto: z
-    .enum(["F", "V", "SF", "E"], {
+    .enum(['F', 'V', 'SF', 'E'], {
       errorMap: () => ({
         message:
-          "El tipo de gasto debe ser F (Fijo), V (Variable), SF (Semi Fijo) o E (Eventual)",
+          'El tipo de gasto debe ser F (Fijo), V (Variable), SF (Semi Fijo) o E (Eventual)',
       }),
     })
     .optional(),
   default_day: z
     .number()
-    .int("El día debe ser un número entero")
-    .min(1, "El día debe estar entre 1 y 31")
-    .max(31, "El día debe estar entre 1 y 31")
+    .int('El día debe ser un número entero')
+    .min(1, 'El día debe estar entre 1 y 31')
+    .max(31, 'El día debe estar entre 1 y 31')
     .nullable()
     .optional(), // Preferred day of month (1-31)
   recurrence_frequency: RecurrenceFrequencyEnum,
@@ -244,7 +245,7 @@ export const CategoryFundRelationshipSchema = z.object({
 });
 
 export const UpdateCategoryFundsSchema = z.object({
-  fund_ids: z.array(z.string().uuid()).min(0, "Fund IDs array is required"),
+  fund_ids: z.array(z.string().uuid()).min(0, 'Fund IDs array is required'),
 });
 
 // Enhanced Income interface with fund support
@@ -262,13 +263,13 @@ export interface Income {
 export const IncomeSchema = z.object({
   id: z.string().uuid(),
   period_id: z.string().uuid(),
-  date: z.string().refine((date) => !isNaN(Date.parse(date)), "Fecha inválida"),
+  date: z.string().refine((date) => !isNaN(Date.parse(date)), 'Fecha inválida'),
   description: z
     .string()
-    .min(1, "La descripción es obligatoria")
-    .max(500, "La descripción es demasiado larga"),
-  amount: z.number().positive("El monto debe ser positivo"),
-  event: z.string().max(255, "El evento es demasiado largo").optional(),
+    .min(1, 'La descripción es obligatoria')
+    .max(500, 'La descripción es demasiado larga'),
+  amount: z.number().positive('El monto debe ser positivo'),
+  event: z.string().max(255, 'El evento es demasiado largo').optional(),
   fund_id: z.string().uuid().optional(),
   fund_name: z.string().optional(),
 });
@@ -276,13 +277,13 @@ export const IncomeSchema = z.object({
 // Income creation schema
 export const CreateIncomeSchema = z.object({
   period_id: z.string().uuid(),
-  date: z.string().refine((date) => !isNaN(Date.parse(date)), "Fecha inválida"),
+  date: z.string().refine((date) => !isNaN(Date.parse(date)), 'Fecha inválida'),
   description: z
     .string()
-    .min(1, "La descripción es obligatoria")
-    .max(500, "La descripción es demasiado larga"),
-  amount: z.number().positive("El monto debe ser positivo"),
-  event: z.string().max(255, "El evento es demasiado largo").optional(),
+    .min(1, 'La descripción es obligatoria')
+    .max(500, 'La descripción es demasiado larga'),
+  amount: z.number().positive('El monto debe ser positivo'),
+  event: z.string().max(255, 'El evento es demasiado largo').optional(),
   fund_id: z.string().uuid().optional(),
 });
 
@@ -291,15 +292,15 @@ export const UpdateIncomeSchema = z.object({
   period_id: z.string().uuid().optional(),
   date: z
     .string()
-    .refine((date) => !isNaN(Date.parse(date)), "Fecha inválida")
+    .refine((date) => !isNaN(Date.parse(date)), 'Fecha inválida')
     .optional(),
   description: z
     .string()
-    .min(1, "La descripción es obligatoria")
-    .max(500, "La descripción es demasiado larga")
+    .min(1, 'La descripción es obligatoria')
+    .max(500, 'La descripción es demasiado larga')
     .optional(),
-  amount: z.number().positive("El monto debe ser positivo").optional(),
-  event: z.string().max(255, "El evento es demasiado largo").optional(),
+  amount: z.number().positive('El monto debe ser positivo').optional(),
+  event: z.string().max(255, 'El evento es demasiado largo').optional(),
   fund_id: z.string().uuid().optional(),
 });
 
@@ -322,6 +323,7 @@ export interface Expense {
     bank_name: string;
     franchise: string;
     last_four_digits: string;
+    is_active?: boolean; // Credit card active status
   }; // Populated in joins when credit card is associated
   pending?: boolean; // New field for pending status
 }
@@ -330,14 +332,14 @@ export const ExpenseSchema = z.object({
   id: z.string().uuid(),
   category_id: z.string().uuid(),
   period_id: z.string().uuid(),
-  date: z.string().refine((date) => !isNaN(Date.parse(date)), "Fecha inválida"),
-  event: z.string().max(255, "El evento es demasiado largo").optional(),
+  date: z.string().refine((date) => !isNaN(Date.parse(date)), 'Fecha inválida'),
+  event: z.string().max(255, 'El evento es demasiado largo').optional(),
   payment_method: PaymentMethodEnum,
   description: z
     .string()
-    .min(1, "La descripción es obligatoria")
-    .max(500, "La descripción es demasiado larga"),
-  amount: z.number().positive("El monto debe ser positivo"),
+    .min(1, 'La descripción es obligatoria')
+    .max(500, 'La descripción es demasiado larga'),
+  amount: z.number().positive('El monto debe ser positivo'),
   source_fund_id: z.string().uuid(), // Required source fund field
   source_fund_name: z.string().optional(),
   destination_fund_id: z.string().uuid().optional(),
@@ -357,14 +359,14 @@ export const ExpenseSchema = z.object({
 export const CreateExpenseSchema = z.object({
   category_id: z.string().uuid(),
   period_id: z.string().uuid(),
-  date: z.string().refine((date) => !isNaN(Date.parse(date)), "Fecha inválida"),
-  event: z.string().max(255, "El evento es demasiado largo").optional(),
+  date: z.string().refine((date) => !isNaN(Date.parse(date)), 'Fecha inválida'),
+  event: z.string().max(255, 'El evento es demasiado largo').optional(),
   payment_method: PaymentMethodEnum,
   description: z
     .string()
-    .min(1, "La descripción es obligatoria")
-    .max(500, "La descripción es demasiado larga"),
-  amount: z.number().positive("El monto debe ser positivo"),
+    .min(1, 'La descripción es obligatoria')
+    .max(500, 'La descripción es demasiado larga'),
+  amount: z.number().positive('El monto debe ser positivo'),
   source_fund_id: z.string().uuid(), // Required source fund field
   destination_fund_id: z.string().uuid().optional(),
   credit_card_id: z.string().uuid().nullable().optional(), // Optional credit card field
@@ -376,16 +378,16 @@ export const UpdateExpenseSchema = z.object({
   category_id: z.string().uuid().optional(),
   date: z
     .string()
-    .refine((date) => !isNaN(Date.parse(date)), "Fecha inválida")
+    .refine((date) => !isNaN(Date.parse(date)), 'Fecha inválida')
     .optional(),
-  event: z.string().max(255, "El evento es demasiado largo").optional(),
+  event: z.string().max(255, 'El evento es demasiado largo').optional(),
   payment_method: PaymentMethodEnum.optional(),
   description: z
     .string()
-    .min(1, "La descripción es obligatoria")
-    .max(500, "La descripción es demasiado larga")
+    .min(1, 'La descripción es obligatoria')
+    .max(500, 'La descripción es demasiado larga')
     .optional(),
-  amount: z.number().positive("El monto debe ser positivo").optional(),
+  amount: z.number().positive('El monto debe ser positivo').optional(),
   source_fund_id: z.string().uuid().optional(), // Optional source fund field for updates
   destination_fund_id: z.string().uuid().optional(),
   credit_card_id: z.string().uuid().nullable().optional(), // Optional credit card field for updates
@@ -406,8 +408,8 @@ export const PeriodSchema = z.object({
   id: z.string().uuid(),
   name: z
     .string()
-    .min(1, "El nombre del período es obligatorio")
-    .max(255, "El nombre del período es demasiado largo"),
+    .min(1, 'El nombre del período es obligatorio')
+    .max(255, 'El nombre del período es demasiado largo'),
   month: z.number().int().min(1).max(12),
   year: z.number().int().min(2000).max(3000),
   is_open: z.boolean(),
@@ -441,11 +443,11 @@ export const BudgetSchema = z.object({
   id: z.string().uuid(),
   category_id: z.string().uuid(),
   period_id: z.string().uuid(),
-  expected_amount: z.number().min(0, "El monto esperado no puede ser negativo"),
+  expected_amount: z.number().min(0, 'El monto esperado no puede ser negativo'),
   payment_method: PaymentMethodEnum,
   default_date: z
     .string()
-    .refine((date) => !isNaN(Date.parse(date)), "Fecha inválida")
+    .refine((date) => !isNaN(Date.parse(date)), 'Fecha inválida')
     .nullable()
     .optional(), // Calculated date based on category default_day
   // Note: recurrence settings validated at category level
@@ -494,7 +496,7 @@ export const FundTransferSchema = z.object({
   destination_fund_id: z.string().uuid(),
   destination_fund_name: z.string(),
   amount: z.number().positive(),
-  date: z.string().refine((date) => !isNaN(Date.parse(date)), "Fecha inválida"),
+  date: z.string().refine((date) => !isNaN(Date.parse(date)), 'Fecha inválida'),
   description: z.string(),
   expense_id: z.string().uuid(),
 });
@@ -510,7 +512,7 @@ export interface FundAnalytics {
   allocation_percentage: number;
   recent_transactions: Array<{
     id: string;
-    type: "income" | "expense" | "transfer_in" | "transfer_out";
+    type: 'income' | 'expense' | 'transfer_in' | 'transfer_out';
     amount: number;
     date: string;
     description: string;
@@ -573,51 +575,51 @@ export interface FundBalanceRecalculationResult {
 }
 
 // Default fund constants
-export const DEFAULT_FUND_NAME = "Disponible";
+export const DEFAULT_FUND_NAME = 'Disponible';
 export const DEFAULT_FUND_DESCRIPTION =
-  "Fondo por defecto para categorías sin asignación específica";
+  'Fondo por defecto para categorías sin asignación específica';
 
 // Fund validation error messages
 export const FUND_ERROR_MESSAGES = {
-  FUND_NOT_FOUND: "El fondo especificado no existe",
-  FUND_NAME_REQUIRED: "El nombre del fondo es obligatorio",
-  FUND_NAME_DUPLICATE: "Ya existe un fondo con este nombre",
+  FUND_NOT_FOUND: 'El fondo especificado no existe',
+  FUND_NAME_REQUIRED: 'El nombre del fondo es obligatorio',
+  FUND_NAME_DUPLICATE: 'Ya existe un fondo con este nombre',
   FUND_DELETE_RESTRICTED:
-    "No se puede eliminar un fondo con categorías o transacciones asociadas",
-  FUND_BALANCE_CALCULATION_ERROR: "Error al calcular el balance del fondo",
-  CATEGORY_FUND_REQUIRED: "Debe seleccionar un fondo para la categoría",
+    'No se puede eliminar un fondo con categorías o transacciones asociadas',
+  FUND_BALANCE_CALCULATION_ERROR: 'Error al calcular el balance del fondo',
+  CATEGORY_FUND_REQUIRED: 'Debe seleccionar un fondo para la categoría',
   EXPENSE_FUND_FILTER_REQUIRED:
-    "Debe seleccionar un fondo para filtrar los gastos",
-  TRANSFER_SAME_FUND_ERROR: "No se puede transferir dinero al mismo fondo",
-  FUND_START_DATE_FUTURE: "La fecha de inicio no puede ser en el futuro",
-  FUND_INITIAL_BALANCE_NEGATIVE: "El balance inicial no puede ser negativo",
-  FUND_NAME_TOO_LONG: "El nombre del fondo es demasiado largo",
-  FUND_DESCRIPTION_TOO_LONG: "La descripción del fondo es demasiado larga",
+    'Debe seleccionar un fondo para filtrar los gastos',
+  TRANSFER_SAME_FUND_ERROR: 'No se puede transferir dinero al mismo fondo',
+  FUND_START_DATE_FUTURE: 'La fecha de inicio no puede ser en el futuro',
+  FUND_INITIAL_BALANCE_NEGATIVE: 'El balance inicial no puede ser negativo',
+  FUND_NAME_TOO_LONG: 'El nombre del fondo es demasiado largo',
+  FUND_DESCRIPTION_TOO_LONG: 'La descripción del fondo es demasiado larga',
 } as const;
 
 // Category-Fund relationship error messages
 export const CATEGORY_FUND_ERROR_MESSAGES = {
-  RELATIONSHIP_EXISTS: "La relación entre esta categoría y fondo ya existe",
+  RELATIONSHIP_EXISTS: 'La relación entre esta categoría y fondo ya existe',
   EXPENSES_EXIST:
-    "No se puede eliminar la relación porque existen {count} gastos registrados",
+    'No se puede eliminar la relación porque existen {count} gastos registrados',
   INVALID_FUND_FOR_CATEGORY:
-    "El fondo seleccionado no está asociado con esta categoría",
-  MIGRATION_FAILED: "Error durante la migración de relaciones categoría-fondo",
-  CATEGORY_NOT_FOUND: "La categoría especificada no existe",
-  RELATIONSHIP_NOT_FOUND: "La relación categoría-fondo no existe",
+    'El fondo seleccionado no está asociado con esta categoría',
+  MIGRATION_FAILED: 'Error durante la migración de relaciones categoría-fondo',
+  CATEGORY_NOT_FOUND: 'La categoría especificada no existe',
+  RELATIONSHIP_NOT_FOUND: 'La relación categoría-fondo no existe',
   CANNOT_DELETE_LAST_RELATIONSHIP:
-    "No se puede eliminar la última relación de fondo para una categoría con gastos",
-  SOME_FUNDS_NOT_EXIST: "Algunos fondos especificados no existen",
+    'No se puede eliminar la última relación de fondo para una categoría con gastos',
+  SOME_FUNDS_NOT_EXIST: 'Algunos fondos especificados no existen',
 } as const;
 
 // Source fund validation error messages
 export const SOURCE_FUND_ERROR_MESSAGES = {
-  SOURCE_FUND_REQUIRED: "Debe seleccionar un fondo origen para el gasto",
+  SOURCE_FUND_REQUIRED: 'Debe seleccionar un fondo origen para el gasto',
   SOURCE_FUND_INVALID_FOR_CATEGORY:
-    "El fondo origen seleccionado no está asociado con esta categoría",
-  SOURCE_FUND_NOT_FOUND: "El fondo origen especificado no existe",
+    'El fondo origen seleccionado no está asociado con esta categoría',
+  SOURCE_FUND_NOT_FOUND: 'El fondo origen especificado no existe',
   MIGRATION_SOURCE_FUND_MISSING:
-    "No se pudo determinar el fondo origen para el gasto",
+    'No se pudo determinar el fondo origen para el gasto',
 } as const;
 
 // Simulation Income types and schemas
@@ -635,9 +637,9 @@ export const SimulationIncomeSchema = z.object({
   simulation_id: z.number(),
   description: z
     .string()
-    .min(1, "La descripción es obligatoria")
-    .max(255, "La descripción es demasiado larga"),
-  amount: z.number().min(0, "El monto no puede ser negativo"),
+    .min(1, 'La descripción es obligatoria')
+    .max(255, 'La descripción es demasiado larga'),
+  amount: z.number().min(0, 'El monto no puede ser negativo'),
   created_at: z.string(),
   updated_at: z.string(),
 });
@@ -646,37 +648,37 @@ export const SimulationIncomeSchema = z.object({
 export const CreateSimulationIncomeSchema = z.object({
   description: z
     .string()
-    .min(1, "La descripción es obligatoria")
-    .max(255, "La descripción es demasiado larga"),
-  amount: z.number().positive("El monto debe ser positivo"),
+    .min(1, 'La descripción es obligatoria')
+    .max(255, 'La descripción es demasiado larga'),
+  amount: z.number().positive('El monto debe ser positivo'),
 });
 
 // Simulation income update schema (for API requests)
 export const UpdateSimulationIncomeSchema = z.object({
   description: z
     .string()
-    .min(1, "La descripción es obligatoria")
-    .max(255, "La descripción es demasiado larga")
+    .min(1, 'La descripción es obligatoria')
+    .max(255, 'La descripción es demasiado larga')
     .optional(),
-  amount: z.number().positive("El monto debe ser positivo").optional(),
+  amount: z.number().positive('El monto debe ser positivo').optional(),
 });
 
 // Simulation income validation error messages
 export const SIMULATION_INCOME_ERROR_MESSAGES = {
-  INCOME_NOT_FOUND: "El ingreso simulado no existe",
-  DESCRIPTION_REQUIRED: "La descripción es obligatoria",
-  AMOUNT_REQUIRED: "El monto es obligatorio",
-  AMOUNT_MUST_BE_POSITIVE: "El monto debe ser positivo",
-  SIMULATION_NOT_FOUND: "La simulación no existe",
-  DELETE_FAILED: "No se pudo eliminar el ingreso simulado",
+  INCOME_NOT_FOUND: 'El ingreso simulado no existe',
+  DESCRIPTION_REQUIRED: 'La descripción es obligatoria',
+  AMOUNT_REQUIRED: 'El monto es obligatorio',
+  AMOUNT_MUST_BE_POSITIVE: 'El monto debe ser positivo',
+  SIMULATION_NOT_FOUND: 'La simulación no existe',
+  DELETE_FAILED: 'No se pudo eliminar el ingreso simulado',
 } as const;
 
 // Tipo Gasto (expense type) error messages
 export const TIPO_GASTO_ERROR_MESSAGES = {
   INVALID_TYPE:
-    "El tipo de gasto debe ser F (Fijo), V (Variable) o SF (Semi Fijo)",
-  TYPE_REQUIRED: "El tipo de gasto es obligatorio",
-  TYPE_NOT_FOUND: "El tipo de gasto especificado no existe",
+    'El tipo de gasto debe ser F (Fijo), V (Variable) o SF (Semi Fijo)',
+  TYPE_REQUIRED: 'El tipo de gasto es obligatorio',
+  TYPE_NOT_FOUND: 'El tipo de gasto especificado no existe',
 } as const;
 
 // All-Periods Overspend Data Types
@@ -724,7 +726,7 @@ export interface BudgetExecutionData {
   dayOfWeek?: number; // 0-6 (for display purposes)
 }
 
-export type BudgetExecutionViewMode = "daily" | "weekly";
+export type BudgetExecutionViewMode = 'daily' | 'weekly';
 
 // Budget detail for a specific date/week (used in detail view)
 export interface BudgetDetail {

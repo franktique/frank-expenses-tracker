@@ -1,9 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   CreateSimulationIncomeSchema,
   SIMULATION_INCOME_ERROR_MESSAGES,
-} from "@/types/funds";
+} from '@/types/funds';
 
 // GET /api/simulations/[id]/incomes - Get simulation incomes
 export async function GET(
@@ -18,8 +18,8 @@ export async function GET(
     if (isNaN(simulationId) || simulationId <= 0) {
       return NextResponse.json(
         {
-          error: "ID de simulación inválido",
-          code: "INVALID_SIMULATION_ID",
+          error: 'ID de simulación inválido',
+          code: 'INVALID_SIMULATION_ID',
         },
         { status: 400 }
       );
@@ -34,7 +34,7 @@ export async function GET(
       return NextResponse.json(
         {
           error: SIMULATION_INCOME_ERROR_MESSAGES.SIMULATION_NOT_FOUND,
-          code: "SIMULATION_NOT_FOUND",
+          code: 'SIMULATION_NOT_FOUND',
           simulation_id: simulationId,
         },
         { status: 404 }
@@ -57,7 +57,8 @@ export async function GET(
 
     // Calculate total income
     const totalIncome = incomes.reduce(
-      (sum, income) => sum + Number(income.amount),
+      (sum: number, income: { amount: string | number }) =>
+        sum + Number(income.amount),
       0
     );
 
@@ -70,14 +71,14 @@ export async function GET(
       },
     });
   } catch (error) {
-    console.error("Error fetching simulation incomes:", error);
+    console.error('Error fetching simulation incomes:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -87,8 +88,8 @@ export async function GET(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al cargar ingresos",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al cargar ingresos',
+        code: 'INTERNAL_SERVER_ERROR',
         retryable: true,
       },
       { status: 500 }
@@ -109,8 +110,8 @@ export async function POST(
     if (isNaN(simulationId) || simulationId <= 0) {
       return NextResponse.json(
         {
-          error: "ID de simulación inválido",
-          code: "INVALID_SIMULATION_ID",
+          error: 'ID de simulación inválido',
+          code: 'INVALID_SIMULATION_ID',
         },
         { status: 400 }
       );
@@ -123,7 +124,7 @@ export async function POST(
     if (!validation.success) {
       return NextResponse.json(
         {
-          error: "Datos de ingreso inválidos",
+          error: 'Datos de ingreso inválidos',
           validation_errors: validation.error.errors,
         },
         { status: 400 }
@@ -141,7 +142,7 @@ export async function POST(
       return NextResponse.json(
         {
           error: SIMULATION_INCOME_ERROR_MESSAGES.SIMULATION_NOT_FOUND,
-          code: "SIMULATION_NOT_FOUND",
+          code: 'SIMULATION_NOT_FOUND',
           simulation_id: simulationId,
         },
         { status: 404 }
@@ -168,34 +169,34 @@ export async function POST(
 
     return NextResponse.json({
       success: true,
-      message: "Ingreso simulado creado exitosamente",
+      message: 'Ingreso simulado creado exitosamente',
       income: newIncome,
     });
   } catch (error) {
-    console.error("Error creating simulation income:", error);
+    console.error('Error creating simulation income:', error);
 
     if (error instanceof Error) {
       if (
-        error.message.includes("foreign key") ||
-        error.message.includes("constraint")
+        error.message.includes('foreign key') ||
+        error.message.includes('constraint')
       ) {
         return NextResponse.json(
           {
-            error: "Error de integridad de datos al crear ingreso",
-            code: "FOREIGN_KEY_CONSTRAINT",
+            error: 'Error de integridad de datos al crear ingreso',
+            code: 'FOREIGN_KEY_CONSTRAINT',
           },
           { status: 409 }
         );
       }
 
       if (
-        error.message.includes("connection") ||
-        error.message.includes("timeout")
+        error.message.includes('connection') ||
+        error.message.includes('timeout')
       ) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -205,8 +206,8 @@ export async function POST(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al crear ingreso",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al crear ingreso',
+        code: 'INTERNAL_SERVER_ERROR',
         retryable: true,
       },
       { status: 500 }

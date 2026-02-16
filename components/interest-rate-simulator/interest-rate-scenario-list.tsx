@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { RefreshCw, Trash2, Upload, Search, Calculator } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useState } from 'react';
+import { RefreshCw, Trash2, Upload, Search, Calculator } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import {
   Table,
   TableBody,
@@ -13,7 +13,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,9 +24,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import type { InterestRateScenarioWithConversions } from "@/types/interest-rate-simulator";
-import { RATE_TYPES, formatRateAsPercentage } from "@/types/interest-rate-simulator";
+} from '@/components/ui/alert-dialog';
+import type { InterestRateScenarioWithConversions } from '@/types/interest-rate-simulator';
+import {
+  RATE_TYPES,
+  formatRateAsPercentage,
+} from '@/types/interest-rate-simulator';
 
 interface InterestRateScenarioListProps {
   scenarios: InterestRateScenarioWithConversions[];
@@ -45,7 +48,7 @@ export function InterestRateScenarioList({
   onRefresh,
   loadedScenarioId,
 }: InterestRateScenarioListProps) {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const filteredScenarios = scenarios.filter((scenario) =>
@@ -62,10 +65,10 @@ export function InterestRateScenarioList({
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-CO", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+    return new Date(dateString).toLocaleDateString('es-CO', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   };
 
@@ -82,7 +85,7 @@ export function InterestRateScenarioList({
   return (
     <Card>
       <CardHeader className="pb-4">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <CardTitle className="flex items-center gap-2">
             <Calculator className="h-5 w-5 text-purple-600" />
             Mis Simulaciones de Tasas
@@ -94,7 +97,7 @@ export function InterestRateScenarioList({
                 placeholder="Buscar..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 w-[200px]"
+                className="w-[200px] pl-8"
               />
             </div>
             <Button
@@ -103,7 +106,9 @@ export function InterestRateScenarioList({
               onClick={onRefresh}
               disabled={isLoading}
             >
-              <RefreshCw className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+              <RefreshCw
+                className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
+              />
             </Button>
           </div>
         </div>
@@ -111,23 +116,24 @@ export function InterestRateScenarioList({
       <CardContent>
         {scenarios.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="p-4 bg-purple-100 dark:bg-purple-900/30 rounded-full mb-4">
+            <div className="mb-4 rounded-full bg-purple-100 p-4 dark:bg-purple-900/30">
               <Calculator className="h-8 w-8 text-purple-600 dark:text-purple-400" />
             </div>
-            <h3 className="text-lg font-medium mb-2">
+            <h3 className="mb-2 text-lg font-medium">
               No hay simulaciones guardadas
             </h3>
-            <p className="text-muted-foreground max-w-sm">
+            <p className="max-w-sm text-muted-foreground">
               Crea tu primera simulación de tasas y guárdala para acceder a ella
               más tarde.
             </p>
           </div>
         ) : filteredScenarios.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-center">
-            <Search className="h-8 w-8 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-medium mb-2">Sin resultados</h3>
+            <Search className="mb-4 h-8 w-8 text-muted-foreground" />
+            <h3 className="mb-2 text-lg font-medium">Sin resultados</h3>
             <p className="text-muted-foreground">
-              No se encontraron simulaciones que coincidan con &quot;{searchQuery}&quot;
+              No se encontraron simulaciones que coincidan con &quot;
+              {searchQuery}&quot;
             </p>
           </div>
         ) : (
@@ -149,8 +155,8 @@ export function InterestRateScenarioList({
                     key={scenario.id}
                     className={
                       scenario.id === loadedScenarioId
-                        ? "bg-purple-50 dark:bg-purple-950/20"
-                        : ""
+                        ? 'bg-purple-50 dark:bg-purple-950/20'
+                        : ''
                     }
                   >
                     <TableCell className="font-medium">
@@ -163,7 +169,7 @@ export function InterestRateScenarioList({
                         )}
                       </div>
                       {scenario.notes && (
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                        <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
                           {scenario.notes}
                         </p>
                       )}
@@ -183,7 +189,7 @@ export function InterestRateScenarioList({
                         {formatRateAsPercentage(scenario.conversions.ea, 2)}
                       </span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
+                    <TableCell className="text-sm text-muted-foreground">
                       {formatDate(scenario.createdAt)}
                     </TableCell>
                     <TableCell className="text-right">
@@ -192,9 +198,9 @@ export function InterestRateScenarioList({
                           variant="ghost"
                           size="sm"
                           onClick={() => onLoad(scenario)}
-                          className="text-purple-600 hover:text-purple-700 hover:bg-purple-50"
+                          className="text-purple-600 hover:bg-purple-50 hover:text-purple-700"
                         >
-                          <Upload className="h-4 w-4 mr-1" />
+                          <Upload className="mr-1 h-4 w-4" />
                           Cargar
                         </Button>
                         <AlertDialog>
@@ -202,7 +208,7 @@ export function InterestRateScenarioList({
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              className="text-red-600 hover:bg-red-50 hover:text-red-700"
                               disabled={deletingId === scenario.id}
                             >
                               {deletingId === scenario.id ? (
@@ -244,7 +250,7 @@ export function InterestRateScenarioList({
         )}
 
         {scenarios.length > 0 && (
-          <div className="mt-4 pt-4 border-t text-sm text-muted-foreground">
+          <div className="mt-4 border-t pt-4 text-sm text-muted-foreground">
             {filteredScenarios.length} de {scenarios.length} simulaciones
           </div>
         )}

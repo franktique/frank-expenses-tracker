@@ -3,7 +3,7 @@
  * Handles memoization, caching, and memory management
  */
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   budgetDataCache,
   withBudgetCache,
@@ -11,8 +11,8 @@ import {
   startBudgetCacheCleanup,
   handleMemoryPressure,
   type CacheKey,
-} from "@/lib/budget-data-cache";
-import { memoryEfficientUtils } from "@/lib/memory-management";
+} from '@/lib/budget-data-cache';
+import { memoryEfficientUtils } from '@/lib/memory-management';
 
 interface DashboardPerformanceOptions {
   enableCaching?: boolean;
@@ -92,12 +92,12 @@ export function useDashboardPerformance(
 
   // Memory pressure detection and handling
   const checkMemoryPressure = useCallback(() => {
-    if ("memory" in performance && (performance as any).memory) {
+    if ('memory' in performance && (performance as any).memory) {
       const memInfo = (performance as any).memory;
       const usedMemory = memInfo.usedJSHeapSize;
 
       if (usedMemory > memoryPressureThreshold) {
-        console.warn("Memory pressure detected, clearing cache");
+        console.warn('Memory pressure detected, clearing cache');
         handleMemoryPressure();
         return true;
       }
@@ -154,7 +154,7 @@ export function useDashboardPerformance(
       return {
         animationBegin: 0,
         animationDuration: shouldAnimate ? 300 : 0,
-        animationEasing: "ease-out",
+        animationEasing: 'ease-out',
         isAnimationActive: shouldAnimate,
       };
     },
@@ -202,7 +202,7 @@ export function useDashboardPerformance(
     const observer = new PerformanceObserver((list) => {
       const entries = list.getEntries();
       entries.forEach((entry) => {
-        if (entry.entryType === "measure" && entry.name.includes("dashboard")) {
+        if (entry.entryType === 'measure' && entry.name.includes('dashboard')) {
           console.log(
             `Dashboard performance: ${entry.name} took ${entry.duration}ms`
           );
@@ -210,7 +210,7 @@ export function useDashboardPerformance(
       });
     });
 
-    observer.observe({ entryTypes: ["measure"] });
+    observer.observe({ entryTypes: ['measure'] });
 
     return () => observer.disconnect();
   }, []);
@@ -274,7 +274,7 @@ export function useChartOptimization(
     () => ({
       animationBegin: 0,
       animationDuration: simulateMode ? 150 : 300, // Faster animations in simulate mode
-      animationEasing: "ease-out",
+      animationEasing: 'ease-out',
       isAnimationActive: data.length < 50, // Disable animations for large datasets
     }),
     [simulateMode, data.length]
@@ -283,16 +283,16 @@ export function useChartOptimization(
   // Memoize color calculations
   const colorConfig = useMemo(() => {
     const baseColors = [
-      "#8884d8",
-      "#83a6ed",
-      "#8dd1e1",
-      "#82ca9d",
-      "#a4de6c",
-      "#d0ed57",
-      "#ffc658",
-      "#ff8042",
-      "#ff6361",
-      "#bc5090",
+      '#8884d8',
+      '#83a6ed',
+      '#8dd1e1',
+      '#82ca9d',
+      '#a4de6c',
+      '#d0ed57',
+      '#ffc658',
+      '#ff8042',
+      '#ff6361',
+      '#bc5090',
     ];
 
     return {
@@ -301,7 +301,7 @@ export function useChartOptimization(
       getSimulateColor: (index: number, opacity = 0.7) =>
         `${baseColors[index % baseColors.length]}${Math.floor(opacity * 255)
           .toString(16)
-          .padStart(2, "0")}`,
+          .padStart(2, '0')}`,
     };
   }, []);
 
@@ -429,7 +429,7 @@ export function useChartRenderOptimization(
     enableVirtualization?: boolean;
     animationThreshold?: number;
     enableSmartAggregation?: boolean;
-    performanceMode?: "auto" | "performance" | "quality";
+    performanceMode?: 'auto' | 'performance' | 'quality';
   } = {}
 ) {
   const {
@@ -437,7 +437,7 @@ export function useChartRenderOptimization(
     enableVirtualization = true,
     animationThreshold = 20,
     enableSmartAggregation = true,
-    performanceMode = "auto",
+    performanceMode = 'auto',
   } = options;
 
   const renderCountRef = useRef(0);
@@ -484,13 +484,13 @@ export function useChartRenderOptimization(
 
     let processedData = chartData;
     const effectiveMaxItems =
-      performanceMode === "performance"
+      performanceMode === 'performance'
         ? Math.min(adaptiveThresholdRef.current, maxRenderItems)
         : maxRenderItems;
 
     // Apply different optimization strategies based on performance mode
     if (enableVirtualization && chartData.length > effectiveMaxItems) {
-      if (enableSmartAggregation && performanceMode !== "quality") {
+      if (enableSmartAggregation && performanceMode !== 'quality') {
         // Use smart aggregation from memory management utils
         processedData = memoryEfficientUtils.optimizeChartData(
           chartData,
@@ -549,7 +549,7 @@ export function useChartRenderOptimization(
     // Don't animate if last render was slow
     if (lastRenderTimeRef.current > 100) return false;
 
-    return performanceMode !== "performance";
+    return performanceMode !== 'performance';
   }, [
     simulateMode,
     optimizedChartData.length,
@@ -562,14 +562,14 @@ export function useChartRenderOptimization(
     const baseConfig = {
       animationBegin: 0,
       animationDuration: shouldAnimate ? (simulateMode ? 100 : 250) : 0,
-      animationEasing: "ease-out",
+      animationEasing: 'ease-out',
       isAnimationActive: shouldAnimate,
       // Reduce re-renders by disabling unnecessary features for large datasets
-      syncId: optimizedChartData.length > 20 ? undefined : "chart-sync",
+      syncId: optimizedChartData.length > 20 ? undefined : 'chart-sync',
     };
 
     // Add performance-specific optimizations
-    if (performanceMode === "performance") {
+    if (performanceMode === 'performance') {
       return {
         ...baseConfig,
         animationDuration: 0,
@@ -615,10 +615,10 @@ export function useChartRenderOptimization(
   const performanceGrade = useMemo(() => {
     const avgRenderTime = performanceMetrics.averageRenderTime;
 
-    if (avgRenderTime < 50) return "A";
-    if (avgRenderTime < 100) return "B";
-    if (avgRenderTime < 200) return "C";
-    return "D";
+    if (avgRenderTime < 50) return 'A';
+    if (avgRenderTime < 100) return 'B';
+    if (avgRenderTime < 200) return 'C';
+    return 'D';
   }, [performanceMetrics.averageRenderTime]);
 
   return {

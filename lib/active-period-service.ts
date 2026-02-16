@@ -5,22 +5,22 @@
  * and retry logic for network failures.
  */
 
-import { Period } from "../types/funds";
+import { Period } from '../types/funds';
 import {
   categorizeError,
   retryWithBackoff,
   fetchWithTimeout,
   handleApiResponse,
-} from "./error-handling";
+} from './error-handling';
 
 export type PeriodLoadingErrorType =
-  | "network"
-  | "authentication"
-  | "no_active_period"
-  | "invalid_cache"
-  | "server"
-  | "timeout"
-  | "unknown";
+  | 'network'
+  | 'authentication'
+  | 'no_active_period'
+  | 'invalid_cache'
+  | 'server'
+  | 'timeout'
+  | 'unknown';
 
 export interface PeriodLoadingError {
   type: PeriodLoadingErrorType;
@@ -52,13 +52,13 @@ function categorizePeriodError(error: unknown): PeriodLoadingError {
 
     // Authentication errors
     if (
-      message.includes("unauthorized") ||
-      message.includes("authentication") ||
-      message.includes("login")
+      message.includes('unauthorized') ||
+      message.includes('authentication') ||
+      message.includes('login')
     ) {
       return {
-        type: "authentication",
-        message: "Sesión expirada. Por favor, inicia sesión nuevamente.",
+        type: 'authentication',
+        message: 'Sesión expirada. Por favor, inicia sesión nuevamente.',
         originalError: error,
         retryable: false,
         timestamp,
@@ -67,14 +67,14 @@ function categorizePeriodError(error: unknown): PeriodLoadingError {
 
     // No active period found
     if (
-      message.includes("no active period") ||
-      message.includes("no hay periodo activo") ||
-      message.includes("active period not found")
+      message.includes('no active period') ||
+      message.includes('no hay periodo activo') ||
+      message.includes('active period not found')
     ) {
       return {
-        type: "no_active_period",
+        type: 'no_active_period',
         message:
-          "No hay un periodo activo configurado. Activa un periodo para continuar.",
+          'No hay un periodo activo configurado. Activa un periodo para continuar.',
         originalError: error,
         retryable: false,
         timestamp,
@@ -83,14 +83,14 @@ function categorizePeriodError(error: unknown): PeriodLoadingError {
 
     // Invalid cache errors
     if (
-      message.includes("invalid cache") ||
-      message.includes("cache corrupted") ||
-      message.includes("cache expired")
+      message.includes('invalid cache') ||
+      message.includes('cache corrupted') ||
+      message.includes('cache expired')
     ) {
       return {
-        type: "invalid_cache",
+        type: 'invalid_cache',
         message:
-          "Los datos almacenados están desactualizados. Recargando información...",
+          'Los datos almacenados están desactualizados. Recargando información...',
         originalError: error,
         retryable: true,
         timestamp,
@@ -100,8 +100,8 @@ function categorizePeriodError(error: unknown): PeriodLoadingError {
 
   // Map base error types to period loading error types
   const periodErrorType: PeriodLoadingErrorType =
-    baseError.type === "not_found"
-      ? "no_active_period"
+    baseError.type === 'not_found'
+      ? 'no_active_period'
       : (baseError.type as PeriodLoadingErrorType);
 
   return {
@@ -115,7 +115,7 @@ function categorizePeriodError(error: unknown): PeriodLoadingError {
  * Fetches all periods from the API and identifies the active one
  */
 async function fetchPeriodsFromAPI(): Promise<Period[]> {
-  const response = await fetchWithTimeout("/api/periods", {}, 10000);
+  const response = await fetchWithTimeout('/api/periods', {}, 10000);
   const data = await handleApiResponse(response);
 
   // Normalize period data to ensure consistent property names
@@ -156,7 +156,7 @@ export async function loadActivePeriod(
 
     if (!activePeriod) {
       const error = new Error(
-        "no active period: No active period found in the system"
+        'no active period: No active period found in the system'
       );
       throw error;
     }
@@ -206,7 +206,7 @@ export async function loadActivePeriodOrThrow(
 export function isPeriodErrorRetryable(error: PeriodLoadingError): boolean {
   return (
     error.retryable &&
-    !["authentication", "no_active_period"].includes(error.type)
+    !['authentication', 'no_active_period'].includes(error.type)
   );
 }
 
@@ -215,26 +215,26 @@ export function isPeriodErrorRetryable(error: PeriodLoadingError): boolean {
  */
 export function getPeriodErrorMessage(error: PeriodLoadingError): string {
   switch (error.type) {
-    case "network":
-      return "Error de conexión al cargar el periodo activo. Verifica tu conexión a internet.";
+    case 'network':
+      return 'Error de conexión al cargar el periodo activo. Verifica tu conexión a internet.';
 
-    case "authentication":
-      return "Tu sesión ha expirado. Por favor, inicia sesión nuevamente.";
+    case 'authentication':
+      return 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.';
 
-    case "no_active_period":
-      return "No hay un periodo activo configurado. Ve a la sección de periodos para activar uno.";
+    case 'no_active_period':
+      return 'No hay un periodo activo configurado. Ve a la sección de periodos para activar uno.';
 
-    case "invalid_cache":
-      return "Los datos almacenados están desactualizados. Recargando información...";
+    case 'invalid_cache':
+      return 'Los datos almacenados están desactualizados. Recargando información...';
 
-    case "timeout":
-      return "La carga del periodo tardó demasiado tiempo. Intenta nuevamente.";
+    case 'timeout':
+      return 'La carga del periodo tardó demasiado tiempo. Intenta nuevamente.';
 
-    case "server":
-      return "Error del servidor al cargar el periodo activo. Intenta nuevamente en unos momentos.";
+    case 'server':
+      return 'Error del servidor al cargar el periodo activo. Intenta nuevamente en unos momentos.';
 
     default:
-      return error.message || "Error desconocido al cargar el periodo activo.";
+      return error.message || 'Error desconocido al cargar el periodo activo.';
   }
 }
 
@@ -255,7 +255,7 @@ export function createPeriodLoader(
 class PeriodLoadingCircuitBreaker {
   private failureCount = 0;
   private lastFailureTime = 0;
-  private state: "closed" | "open" | "half-open" = "closed";
+  private state: 'closed' | 'open' | 'half-open' = 'closed';
 
   constructor(
     private failureThreshold = 5,
@@ -263,12 +263,12 @@ class PeriodLoadingCircuitBreaker {
   ) {}
 
   async execute<T>(operation: () => Promise<T>): Promise<T> {
-    if (this.state === "open") {
+    if (this.state === 'open') {
       if (Date.now() - this.lastFailureTime > this.recoveryTimeout) {
-        this.state = "half-open";
+        this.state = 'half-open';
       } else {
         throw new Error(
-          "Circuit breaker is open - service temporarily unavailable"
+          'Circuit breaker is open - service temporarily unavailable'
         );
       }
     }
@@ -285,7 +285,7 @@ class PeriodLoadingCircuitBreaker {
 
   private onSuccess() {
     this.failureCount = 0;
-    this.state = "closed";
+    this.state = 'closed';
   }
 
   private onFailure() {
@@ -293,7 +293,7 @@ class PeriodLoadingCircuitBreaker {
     this.lastFailureTime = Date.now();
 
     if (this.failureCount >= this.failureThreshold) {
-      this.state = "open";
+      this.state = 'open';
     }
   }
 
@@ -308,7 +308,7 @@ class PeriodLoadingCircuitBreaker {
   reset() {
     this.failureCount = 0;
     this.lastFailureTime = 0;
-    this.state = "closed";
+    this.state = 'closed';
   }
 }
 
@@ -329,9 +329,9 @@ export async function loadActivePeriodWithCircuitBreaker(
     );
   } catch (error) {
     const circuitBreakerError: PeriodLoadingError = {
-      type: "server",
+      type: 'server',
       message:
-        "Servicio temporalmente no disponible. Intenta nuevamente en unos minutos.",
+        'Servicio temporalmente no disponible. Intenta nuevamente en unos minutos.',
       originalError: error instanceof Error ? error : new Error(String(error)),
       retryable: false, // Don't retry when circuit breaker is open
       timestamp: Date.now(),
@@ -378,13 +378,13 @@ export async function loadActivePeriodWithAdaptiveRetry(
     let delay = baseDelay * Math.pow(2, attempt); // Base exponential backoff
 
     switch (lastError.type) {
-      case "network":
+      case 'network':
         delay *= 1.5; // Longer delays for network issues
         break;
-      case "timeout":
+      case 'timeout':
         delay *= 2; // Much longer delays for timeouts
         break;
-      case "server":
+      case 'server':
         delay *= 1.2; // Slightly longer for server errors
         break;
       default:
@@ -393,7 +393,7 @@ export async function loadActivePeriodWithAdaptiveRetry(
     }
 
     // Cap maximum delay (shorter for tests, longer for production)
-    const maxDelay = process.env.NODE_ENV === "test" ? 1000 : 30000;
+    const maxDelay = process.env.NODE_ENV === 'test' ? 1000 : 30000;
     delay = Math.min(delay, maxDelay);
 
     console.log(

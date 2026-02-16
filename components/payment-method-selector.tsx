@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertTriangle, CheckCircle, Info } from "lucide-react";
+import { useState, useEffect, useCallback } from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import {
   validatePaymentMethods,
   sanitizePaymentMethods,
   formatPaymentMethodsForDisplay,
   type PaymentMethod,
-} from "@/lib/payment-method-validation";
+} from '@/lib/payment-method-validation';
 
 export interface PaymentMethodSelectorProps {
   selectedMethods: string[];
@@ -26,17 +26,17 @@ export interface PaymentMethodSelectorProps {
 export type { PaymentMethod };
 
 export const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
-  { value: "cash", label: "Efectivo" },
-  { value: "credit", label: "Crédito" },
-  { value: "debit", label: "Débito" },
+  { value: 'cash', label: 'Efectivo' },
+  { value: 'credit', label: 'Crédito' },
+  { value: 'debit', label: 'Débito' },
 ];
 
 export function PaymentMethodSelector({
   selectedMethods,
   onSelectionChange,
   disabled = false,
-  label = "Métodos de Pago",
-  className = "",
+  label = 'Métodos de Pago',
+  className = '',
   showValidation = true,
   onValidationChange,
 }: PaymentMethodSelectorProps) {
@@ -90,7 +90,7 @@ export function PaymentMethodSelector({
         handleSelectionChange(PAYMENT_METHODS.map((method) => method.value));
       }
     } catch (error) {
-      console.error("Error handling all methods change:", error);
+      console.error('Error handling all methods change:', error);
     }
   };
 
@@ -110,7 +110,7 @@ export function PaymentMethodSelector({
 
       handleSelectionChange(newMethods);
     } catch (error) {
-      console.error("Error handling method change:", error);
+      console.error('Error handling method change:', error);
     }
   };
 
@@ -137,7 +137,7 @@ export function PaymentMethodSelector({
           <Label
             htmlFor="all-methods"
             className={`text-sm ${
-              disabled ? "text-muted-foreground" : "cursor-pointer"
+              disabled ? 'text-muted-foreground' : 'cursor-pointer'
             }`}
           >
             Todos los métodos
@@ -145,7 +145,7 @@ export function PaymentMethodSelector({
         </div>
 
         {/* Individual Payment Methods */}
-        <div className="space-y-2 pl-4 border-l-2 border-muted">
+        <div className="space-y-2 border-l-2 border-muted pl-4">
           {PAYMENT_METHODS.map((method) => (
             <div key={method.value} className="flex items-center space-x-2">
               <Checkbox
@@ -160,8 +160,8 @@ export function PaymentMethodSelector({
                 htmlFor={`method-${method.value}`}
                 className={`text-sm ${
                   disabled || isAllSelected
-                    ? "text-muted-foreground"
-                    : "cursor-pointer"
+                    ? 'text-muted-foreground'
+                    : 'cursor-pointer'
                 }`}
               >
                 {method.label}
@@ -172,7 +172,7 @@ export function PaymentMethodSelector({
 
         {/* Validation Messages */}
         {showValidation && hasUserInteracted && (
-          <div className="space-y-2 mt-3">
+          <div className="mt-3 space-y-2">
             {validationResult.errors.length > 0 && (
               <Alert variant="destructive" className="py-2">
                 <AlertTriangle className="h-3 w-3" />
@@ -185,7 +185,7 @@ export function PaymentMethodSelector({
             )}
 
             {validationResult.warnings.length > 0 && (
-              <Alert className="py-2 border-orange-200 bg-orange-50">
+              <Alert className="border-orange-200 bg-orange-50 py-2">
                 <Info className="h-3 w-3 text-orange-600" />
                 <AlertDescription className="text-xs text-orange-800">
                   {validationResult.warnings.map((warning, index) => (
@@ -198,10 +198,10 @@ export function PaymentMethodSelector({
             {validationResult.isValid &&
               validationResult.errors.length === 0 &&
               hasUserInteracted && (
-                <Alert className="py-2 border-green-200 bg-green-50">
+                <Alert className="border-green-200 bg-green-50 py-2">
                   <CheckCircle className="h-3 w-3 text-green-600" />
                   <AlertDescription className="text-xs text-green-800">
-                    Configuración válida:{" "}
+                    Configuración válida:{' '}
                     {formatPaymentMethodsForDisplay(
                       selectedMethods as PaymentMethod[]
                     )}
@@ -212,17 +212,17 @@ export function PaymentMethodSelector({
         )}
 
         {/* Helper Text */}
-        <div className="space-y-1 mt-3 p-2 bg-muted/50 rounded-md">
+        <div className="mt-3 space-y-1 rounded-md bg-muted/50 p-2">
           <p className="text-xs text-muted-foreground">
             {isAllSelected
-              ? "Se incluirán gastos de todos los métodos de pago (efectivo, crédito y débito)"
+              ? 'Se incluirán gastos de todos los métodos de pago (efectivo, crédito y débito)'
               : selectedMethods.length > 0
-              ? `Se incluirán gastos de: ${selectedMethods
-                  .map(
-                    (m) => PAYMENT_METHODS.find((pm) => pm.value === m)?.label
-                  )
-                  .join(", ")}`
-              : "⚠️ Ningún método seleccionado - no se incluirán gastos"}
+                ? `Se incluirán gastos de: ${selectedMethods
+                    .map(
+                      (m) => PAYMENT_METHODS.find((pm) => pm.value === m)?.label
+                    )
+                    .join(', ')}`
+                : '⚠️ Ningún método seleccionado - no se incluirán gastos'}
           </p>
           <p className="text-xs text-muted-foreground/80">
             💡 Tip: Selecciona "Todos los métodos" para incluir gastos de

@@ -11,6 +11,7 @@ Add balance remainder visualization to collapsed subgroups in the simulation bud
 ## Problem Statement
 
 Currently, when a subgroup is collapsed in the simulation form:
+
 - Users see the subgroup header (orange) with financial totals
 - Users see a subtotal row with aggregated efectivo, crédito, and expected savings
 - **Missing:** No balance remainder is displayed, so users cannot quickly see the impact on overall budget balance
@@ -20,6 +21,7 @@ When users expand the subgroup, they can see individual category balances, but t
 ## Solution Overview
 
 Display the running balance value in the SubgroupSubtotalRow component:
+
 - Add a balance cell to the subtotal row (same column position as category balance column)
 - Style with orange accent color (matching the subgroup header) to maintain visual hierarchy
 - Calculate the balance as: previous running balance - subgroup's net spend
@@ -28,6 +30,7 @@ Display the running balance value in the SubgroupSubtotalRow component:
 ## Implementation Plan
 
 ### Task 1: Update SubgroupSubtotalRow Component Props
+
 - [ ] **Status:** pending
 - **File:** `components/subgroup-subtotal-row.tsx`
 - **Changes:**
@@ -37,6 +40,7 @@ Display the running balance value in the SubgroupSubtotalRow component:
 - **Reasoning:** Need to pass the balance value from parent component to subtotal row
 
 ### Task 2: Add Balance Cell to SubgroupSubtotalRow
+
 - [ ] **Status:** pending
 - **File:** `components/subgroup-subtotal-row.tsx`
 - **Changes:**
@@ -47,6 +51,7 @@ Display the running balance value in the SubgroupSubtotalRow component:
 - **Reasoning:** Make balance visible in the subtotal row with consistent styling
 
 ### Task 3: Calculate Subgroup Balance in simulation-budget-form.tsx
+
 - [ ] **Status:** pending
 - **File:** `components/simulation-budget-form.tsx`
 - **Changes:**
@@ -59,6 +64,7 @@ Display the running balance value in the SubgroupSubtotalRow component:
 - **Reasoning:** Need to calculate what the balance is after all categories in each subgroup are deducted
 
 ### Task 4: Update SubgroupSubtotalRow Render Call
+
 - [ ] **Status:** pending
 - **File:** `components/simulation-budget-form.tsx`
 - **Changes:**
@@ -68,6 +74,7 @@ Display the running balance value in the SubgroupSubtotalRow component:
 - **Reasoning:** Pass the calculated balance to the subtotal row component
 
 ### Task 5: Test Balance Calculations
+
 - [ ] **Status:** pending
 - **Manual Testing:**
   - Collapse a subgroup and verify balance displays correctly
@@ -78,6 +85,7 @@ Display the running balance value in the SubgroupSubtotalRow component:
   - Check responsive design on mobile
 
 ### Task 6: Handle Edge Cases
+
 - [ ] **Status:** pending
 - **Changes:**
   - Ensure balance displays "-" if subgroup balance cannot be calculated
@@ -89,22 +97,26 @@ Display the running balance value in the SubgroupSubtotalRow component:
 ## Technical Details
 
 ### Color Scheme
+
 - **Orange Accent:** `text-accent` class
   - Light mode: HSL(25, 95%, 53%)
   - Dark mode: HSL(25, 85%, 53%)
 - **Styling:** `text-accent font-semibold` to match header prominence
 
 ### Alignment with Existing Patterns
+
 - Use existing `formatCurrency()` utility for number formatting
 - Follow SubgroupSubtotalRow component structure (muted background, dashed border)
 - Maintain consistency with category balance column styling
 - Use TableCell wrapper like other columns
 
 ### Files Modified
+
 1. `components/subgroup-subtotal-row.tsx` - Add balance cell and prop
 2. `components/simulation-budget-form.tsx` - Calculate subgroup balances and pass to component
 
 ### No New Files Required
+
 - Reuse existing calculation utilities
 - No new type definitions needed (number is sufficient)
 - No new components required

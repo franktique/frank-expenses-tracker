@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { sql, testConnection } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql, testConnection } from '@/lib/db';
 
 export async function POST() {
   try {
@@ -10,7 +10,7 @@ export async function POST() {
       return NextResponse.json(
         {
           success: false,
-          message: "Could not connect to the database: " + connectionTest.error,
+          message: 'Could not connect to the database: ' + connectionTest.error,
         },
         { status: 500 }
       );
@@ -33,7 +33,7 @@ export async function POST() {
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `;
-      console.log("Funds table created or already exists");
+      console.log('Funds table created or already exists');
 
       // Step 2: Create default fund 'Disponible' if it doesn't exist
       const existingDefaultFund = await sql`
@@ -72,7 +72,7 @@ export async function POST() {
           ALTER TABLE categories 
           ADD COLUMN fund_id UUID REFERENCES funds(id)
         `;
-        console.log("Added fund_id column to categories table");
+        console.log('Added fund_id column to categories table');
 
         // Update existing categories to reference the default fund
         await sql`
@@ -80,9 +80,9 @@ export async function POST() {
           SET fund_id = ${defaultFundId} 
           WHERE fund_id IS NULL
         `;
-        console.log("Updated existing categories to reference default fund");
+        console.log('Updated existing categories to reference default fund');
       } else {
-        console.log("fund_id column already exists in categories table");
+        console.log('fund_id column already exists in categories table');
       }
 
       // Step 4: Add fund_id column to incomes table if it doesn't exist
@@ -97,7 +97,7 @@ export async function POST() {
           ALTER TABLE incomes 
           ADD COLUMN fund_id UUID REFERENCES funds(id)
         `;
-        console.log("Added fund_id column to incomes table");
+        console.log('Added fund_id column to incomes table');
 
         // Update existing incomes to reference the default fund
         await sql`
@@ -105,9 +105,9 @@ export async function POST() {
           SET fund_id = ${defaultFundId} 
           WHERE fund_id IS NULL
         `;
-        console.log("Updated existing incomes to reference default fund");
+        console.log('Updated existing incomes to reference default fund');
       } else {
-        console.log("fund_id column already exists in incomes table");
+        console.log('fund_id column already exists in incomes table');
       }
 
       // Step 5: Add destination_fund_id column to expenses table if it doesn't exist
@@ -122,10 +122,10 @@ export async function POST() {
           ALTER TABLE expenses 
           ADD COLUMN destination_fund_id UUID REFERENCES funds(id)
         `;
-        console.log("Added destination_fund_id column to expenses table");
+        console.log('Added destination_fund_id column to expenses table');
       } else {
         console.log(
-          "destination_fund_id column already exists in expenses table"
+          'destination_fund_id column already exists in expenses table'
         );
       }
 
@@ -139,14 +139,14 @@ export async function POST() {
       await sql`
         CREATE INDEX IF NOT EXISTS idx_expenses_destination_fund_id ON expenses(destination_fund_id)
       `;
-      console.log("Created indexes for fund-related columns");
+      console.log('Created indexes for fund-related columns');
 
       // Commit transaction
       await sql`COMMIT`;
 
       return NextResponse.json({
         success: true,
-        message: "Fondos migration completed successfully",
+        message: 'Fondos migration completed successfully',
         defaultFundId: defaultFundId,
       });
     } catch (error) {
@@ -155,7 +155,7 @@ export async function POST() {
       throw error;
     }
   } catch (error) {
-    console.error("Error during fondos migration:", error);
+    console.error('Error during fondos migration:', error);
     return NextResponse.json(
       {
         success: false,
@@ -176,7 +176,7 @@ export async function DELETE() {
       return NextResponse.json(
         {
           success: false,
-          message: "Could not connect to the database: " + connectionTest.error,
+          message: 'Could not connect to the database: ' + connectionTest.error,
         },
         { status: 500 }
       );
@@ -198,7 +198,7 @@ export async function DELETE() {
           ALTER TABLE expenses 
           DROP COLUMN destination_fund_id
         `;
-        console.log("Removed destination_fund_id column from expenses table");
+        console.log('Removed destination_fund_id column from expenses table');
       }
 
       // Step 2: Remove fund-related columns from incomes table
@@ -213,7 +213,7 @@ export async function DELETE() {
           ALTER TABLE incomes 
           DROP COLUMN fund_id
         `;
-        console.log("Removed fund_id column from incomes table");
+        console.log('Removed fund_id column from incomes table');
       }
 
       // Step 3: Remove fund-related columns from categories table
@@ -228,14 +228,14 @@ export async function DELETE() {
           ALTER TABLE categories 
           DROP COLUMN fund_id
         `;
-        console.log("Removed fund_id column from categories table");
+        console.log('Removed fund_id column from categories table');
       }
 
       // Step 4: Drop funds table
       await sql`
         DROP TABLE IF EXISTS funds CASCADE
       `;
-      console.log("Dropped funds table");
+      console.log('Dropped funds table');
 
       // Step 5: Drop indexes
       await sql`
@@ -247,14 +247,14 @@ export async function DELETE() {
       await sql`
         DROP INDEX IF EXISTS idx_expenses_destination_fund_id
       `;
-      console.log("Dropped fund-related indexes");
+      console.log('Dropped fund-related indexes');
 
       // Commit transaction
       await sql`COMMIT`;
 
       return NextResponse.json({
         success: true,
-        message: "Fondos migration rollback completed successfully",
+        message: 'Fondos migration rollback completed successfully',
       });
     } catch (error) {
       // Rollback transaction on error
@@ -262,7 +262,7 @@ export async function DELETE() {
       throw error;
     }
   } catch (error) {
-    console.error("Error during fondos migration rollback:", error);
+    console.error('Error during fondos migration rollback:', error);
     return NextResponse.json(
       {
         success: false,

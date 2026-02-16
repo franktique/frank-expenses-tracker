@@ -25,27 +25,33 @@ The current `handleDuplicateSimulation` function only creates a new simulation w
 ## Solution Overview
 
 Extend the `handleDuplicateSimulation` function to:
+
 1. Create the new simulation (existing behavior)
 2. Fetch and copy all budgets from the source simulation
 3. Fetch and copy all incomes from the source simulation
 4. Fetch and copy all sub-groups with their category associations
 
 ### Option A: Client-Side Copy (Multiple API Calls)
+
 Perform all copy operations from the client using existing API endpoints.
 
 **Pros:**
+
 - Uses existing API endpoints, no new backend code needed
 - Simpler to implement
 
 **Cons:**
+
 - Multiple network round-trips
 - No transactional guarantee (partial failure possible)
 - Slower user experience
 
 ### Option B: Server-Side Copy API (Recommended)
+
 Create a new dedicated API endpoint `POST /api/simulations/[id]/copy` that handles all copy operations server-side in a single transaction.
 
 **Pros:**
+
 - Single network request from client
 - Atomic operation with transactional guarantee
 - Better error handling and rollback capability
@@ -53,6 +59,7 @@ Create a new dedicated API endpoint `POST /api/simulations/[id]/copy` that handl
 - Cleaner client code
 
 **Cons:**
+
 - Requires new API endpoint
 - More backend code
 
@@ -61,9 +68,11 @@ Create a new dedicated API endpoint `POST /api/simulations/[id]/copy` that handl
 ### Phase 1: Create Server-Side Copy API
 
 #### [x] Task 1.1: Create Copy API Endpoint
+
 **File:** `/app/api/simulations/[id]/copy/route.ts`
 
 Create `POST /api/simulations/[id]/copy` endpoint that:
+
 - Accepts optional `name` override (defaults to "{original_name} (Copia)")
 - Copies simulation metadata
 - Copies all `simulation_budgets` records
@@ -72,6 +81,7 @@ Create `POST /api/simulations/[id]/copy` endpoint that:
 - Returns the new simulation with all copied data
 
 **Request:**
+
 ```typescript
 POST /api/simulations/123/copy
 {
@@ -80,6 +90,7 @@ POST /api/simulations/123/copy
 ```
 
 **Response:**
+
 ```typescript
 {
   "success": true,
@@ -98,19 +109,25 @@ POST /api/simulations/123/copy
 ```
 
 #### [x] Task 1.2: Implement Budget Copying Logic
+
 Within the copy endpoint:
+
 - Fetch all budgets from source simulation
 - Insert budgets with new simulation_id
 - Preserve: `category_id`, `efectivo_amount`, `credito_amount`, `expected_savings`
 
 #### [x] Task 1.3: Implement Income Copying Logic
+
 Within the copy endpoint:
+
 - Fetch all incomes from source simulation
 - Insert incomes with new simulation_id
 - Preserve: `description`, `amount`
 
 #### [x] Task 1.4: Implement Subgroup Copying Logic
+
 Within the copy endpoint:
+
 - Fetch all subgroups from source simulation
 - Create new subgroups with new simulation_id
 - Generate new UUIDs for subgroup IDs
@@ -121,20 +138,24 @@ Within the copy endpoint:
 ### Phase 2: Update Client Component
 
 #### [x] Task 2.1: Update handleDuplicateSimulation Function
+
 **File:** `/components/simulation-list.tsx`
 
 Modify `handleDuplicateSimulation` to:
+
 - Call new `POST /api/simulations/[id]/copy` endpoint
 - Handle success/error responses
 - Show appropriate toast messages with copy summary
 
 #### [x] Task 2.2: Add Loading State Improvements
+
 - Show "Duplicando simulación..." message with details
 - Update toast to show counts of copied items
 
 ### Phase 3: Testing & Validation
 
 #### [ ] Task 3.1: Manual Testing Checklist
+
 - [ ] Copy simulation with budgets only
 - [ ] Copy simulation with incomes only
 - [ ] Copy simulation with subgroups only
@@ -146,6 +167,7 @@ Modify `handleDuplicateSimulation` to:
 - [ ] Test concurrent copy operations
 
 #### [ ] Task 3.2: Edge Cases
+
 - [ ] Handle simulations with 100+ budgets
 - [ ] Handle subgroups with special characters in names
 - [ ] Verify category IDs are preserved correctly (UUID vs integer)
@@ -153,6 +175,7 @@ Modify `handleDuplicateSimulation` to:
 ## Database Tables Involved
 
 ### Source Tables to Read From:
+
 1. `simulations` - Base simulation metadata
 2. `simulation_budgets` - Budget details per category
 3. `simulation_incomes` - Income entries
@@ -161,23 +184,23 @@ Modify `handleDuplicateSimulation` to:
 
 ### Data Mapping:
 
-| Source Field | Target Field | Notes |
-|-------------|--------------|-------|
-| `simulation.name` | `new_simulation.name` | Append " (Copia)" |
-| `simulation.description` | `new_simulation.description` | Direct copy |
-| `budget.category_id` | `new_budget.category_id` | Same category |
-| `budget.efectivo_amount` | `new_budget.efectivo_amount` | Direct copy |
-| `budget.credito_amount` | `new_budget.credito_amount` | Direct copy |
-| `budget.expected_savings` | `new_budget.expected_savings` | Direct copy |
-| `income.description` | `new_income.description` | Direct copy |
-| `income.amount` | `new_income.amount` | Direct copy |
-| `subgroup.id` | `new_subgroup.id` | Generate new UUID |
-| `subgroup.name` | `new_subgroup.name` | Direct copy |
-| `subgroup.display_order` | `new_subgroup.display_order` | Direct copy |
-| `subgroup.custom_order` | `new_subgroup.custom_order` | Direct copy |
-| `subgroup.custom_visibility` | `new_subgroup.custom_visibility` | Direct copy |
-| `subgroup_cat.category_id` | `new_subgroup_cat.category_id` | Same category |
-| `subgroup_cat.order_within_subgroup` | `new_subgroup_cat.order_within_subgroup` | Direct copy |
+| Source Field                         | Target Field                             | Notes             |
+| ------------------------------------ | ---------------------------------------- | ----------------- |
+| `simulation.name`                    | `new_simulation.name`                    | Append " (Copia)" |
+| `simulation.description`             | `new_simulation.description`             | Direct copy       |
+| `budget.category_id`                 | `new_budget.category_id`                 | Same category     |
+| `budget.efectivo_amount`             | `new_budget.efectivo_amount`             | Direct copy       |
+| `budget.credito_amount`              | `new_budget.credito_amount`              | Direct copy       |
+| `budget.expected_savings`            | `new_budget.expected_savings`            | Direct copy       |
+| `income.description`                 | `new_income.description`                 | Direct copy       |
+| `income.amount`                      | `new_income.amount`                      | Direct copy       |
+| `subgroup.id`                        | `new_subgroup.id`                        | Generate new UUID |
+| `subgroup.name`                      | `new_subgroup.name`                      | Direct copy       |
+| `subgroup.display_order`             | `new_subgroup.display_order`             | Direct copy       |
+| `subgroup.custom_order`              | `new_subgroup.custom_order`              | Direct copy       |
+| `subgroup.custom_visibility`         | `new_subgroup.custom_visibility`         | Direct copy       |
+| `subgroup_cat.category_id`           | `new_subgroup_cat.category_id`           | Same category     |
+| `subgroup_cat.order_within_subgroup` | `new_subgroup_cat.order_within_subgroup` | Direct copy       |
 
 ## Files to Modify
 

@@ -1,12 +1,12 @@
-import React from "react";
-import { renderHook, act } from "@testing-library/react";
+import React from 'react';
+import { renderHook, act } from '@testing-library/react';
 import {
   usePaymentMethodValidation,
   usePaymentMethodApi,
-} from "../use-payment-method-validation";
+} from '../use-payment-method-validation';
 
-describe("usePaymentMethodValidation", () => {
-  it("should initialize with default values", () => {
+describe('usePaymentMethodValidation', () => {
+  it('should initialize with default values', () => {
     const { result } = renderHook(() => usePaymentMethodValidation());
 
     expect(result.current.methods).toEqual([]);
@@ -15,8 +15,8 @@ describe("usePaymentMethodValidation", () => {
     expect(result.current.hasUserInteracted).toBe(false);
   });
 
-  it("should initialize with provided initial methods", () => {
-    const initialMethods = ["cash", "credit"];
+  it('should initialize with provided initial methods', () => {
+    const initialMethods = ['cash', 'credit'];
     const { result } = renderHook(() =>
       usePaymentMethodValidation({ initialMethods })
     );
@@ -25,13 +25,13 @@ describe("usePaymentMethodValidation", () => {
     expect(result.current.isValid).toBe(true);
   });
 
-  it("should validate methods when they change", () => {
+  it('should validate methods when they change', () => {
     const { result } = renderHook(() =>
       usePaymentMethodValidation({ validateOnChange: true })
     );
 
     act(() => {
-      result.current.setMethods(["invalid_method"]);
+      result.current.setMethods(['invalid_method']);
     });
 
     expect(result.current.isValid).toBe(false);
@@ -39,36 +39,36 @@ describe("usePaymentMethodValidation", () => {
     expect(result.current.hasUserInteracted).toBe(true);
   });
 
-  it("should sanitize methods when enabled", () => {
+  it('should sanitize methods when enabled', () => {
     const { result } = renderHook(() =>
       usePaymentMethodValidation({ sanitizeOnChange: true })
     );
 
     act(() => {
-      result.current.setMethods(["cash", "invalid", "credit"]);
+      result.current.setMethods(['cash', 'invalid', 'credit']);
     });
 
-    expect(result.current.methods).toEqual(["cash", "credit"]);
+    expect(result.current.methods).toEqual(['cash', 'credit']);
   });
 
-  it("should not validate when validateOnChange is false", () => {
+  it('should not validate when validateOnChange is false', () => {
     const { result } = renderHook(() =>
       usePaymentMethodValidation({ validateOnChange: false })
     );
 
     act(() => {
-      result.current.setMethods(["invalid_method"]);
+      result.current.setMethods(['invalid_method']);
     });
 
     // Should still be valid because validation is disabled
-    expect(result.current.methods).toEqual(["invalid_method"]);
+    expect(result.current.methods).toEqual(['invalid_method']);
   });
 
-  it("should reset validation state", () => {
+  it('should reset validation state', () => {
     const { result } = renderHook(() => usePaymentMethodValidation());
 
     act(() => {
-      result.current.setMethods(["invalid_method"]);
+      result.current.setMethods(['invalid_method']);
     });
 
     expect(result.current.hasUserInteracted).toBe(true);
@@ -80,24 +80,24 @@ describe("usePaymentMethodValidation", () => {
     expect(result.current.hasUserInteracted).toBe(false);
   });
 
-  it("should validate methods manually", () => {
+  it('should validate methods manually', () => {
     const { result } = renderHook(() => usePaymentMethodValidation());
 
-    const validationResult = result.current.validateMethods(["cash", "credit"]);
+    const validationResult = result.current.validateMethods(['cash', 'credit']);
     expect(validationResult.isValid).toBe(true);
 
-    const invalidResult = result.current.validateMethods(["invalid"]);
+    const invalidResult = result.current.validateMethods(['invalid']);
     expect(invalidResult.isValid).toBe(false);
   });
 
-  it("should return sanitized methods", () => {
+  it('should return sanitized methods', () => {
     const { result } = renderHook(() => usePaymentMethodValidation());
 
     act(() => {
-      result.current.setMethods(["cash", "credit"]);
+      result.current.setMethods(['cash', 'credit']);
     });
 
-    expect(result.current.sanitizedMethods).toEqual(["cash", "credit"]);
+    expect(result.current.sanitizedMethods).toEqual(['cash', 'credit']);
 
     act(() => {
       result.current.setMethods([]);
@@ -107,7 +107,7 @@ describe("usePaymentMethodValidation", () => {
   });
 });
 
-describe("usePaymentMethodApi", () => {
+describe('usePaymentMethodApi', () => {
   // Mock fetch
   const mockFetch = jest.fn();
   global.fetch = mockFetch;
@@ -116,7 +116,7 @@ describe("usePaymentMethodApi", () => {
     mockFetch.mockClear();
   });
 
-  it("should initialize with default values", () => {
+  it('should initialize with default values', () => {
     const { result } = renderHook(() => usePaymentMethodApi());
 
     expect(result.current.isLoading).toBe(false);
@@ -125,7 +125,7 @@ describe("usePaymentMethodApi", () => {
     expect(result.current.canRetry).toBeFalsy(); // undefined is falsy
   });
 
-  it("should handle successful API calls", async () => {
+  it('should handle successful API calls', async () => {
     const mockResponse = { success: true, data: { id: 1 } };
     mockFetch.mockResolvedValueOnce({
       ok: true,
@@ -135,9 +135,9 @@ describe("usePaymentMethodApi", () => {
     const onSuccess = jest.fn();
     const { result } = renderHook(() => usePaymentMethodApi({ onSuccess }));
 
-    let apiResult;
+    let apiResult: any;
     await act(async () => {
-      apiResult = await result.current.handleApiCall(() => fetch("/api/test"));
+      apiResult = await result.current.handleApiCall(() => fetch('/api/test'));
     });
 
     expect(apiResult.success).toBe(true);
@@ -146,10 +146,10 @@ describe("usePaymentMethodApi", () => {
     expect(result.current.error).toBe(null);
   });
 
-  it("should handle API errors", async () => {
+  it('should handle API errors', async () => {
     const mockError = {
-      error: "Test error",
-      code: "TEST_ERROR",
+      error: 'Test error',
+      code: 'TEST_ERROR',
       retryable: true,
     };
     mockFetch.mockResolvedValueOnce({
@@ -161,52 +161,52 @@ describe("usePaymentMethodApi", () => {
     const onError = jest.fn();
     const { result } = renderHook(() => usePaymentMethodApi({ onError }));
 
-    let apiResult;
+    let apiResult: any;
     await act(async () => {
-      apiResult = await result.current.handleApiCall(() => fetch("/api/test"));
+      apiResult = await result.current.handleApiCall(() => fetch('/api/test'));
     });
 
     expect(apiResult.success).toBe(false);
     expect(onError).toHaveBeenCalledWith(
       expect.objectContaining({
-        error: "Test error",
-        code: "TEST_ERROR",
+        error: 'Test error',
+        code: 'TEST_ERROR',
       })
     );
     expect(result.current.error).toEqual(
       expect.objectContaining({
-        error: "Test error",
-        code: "TEST_ERROR",
+        error: 'Test error',
+        code: 'TEST_ERROR',
       })
     );
   });
 
-  it("should handle network errors", async () => {
-    mockFetch.mockRejectedValueOnce(new Error("Network error"));
+  it('should handle network errors', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
     const { result } = renderHook(() => usePaymentMethodApi());
 
-    let apiResult;
+    let apiResult: any;
     await act(async () => {
-      apiResult = await result.current.handleApiCall(() => fetch("/api/test"));
+      apiResult = await result.current.handleApiCall(() => fetch('/api/test'));
     });
 
     expect(apiResult.success).toBe(false);
     expect(result.current.error).toEqual(
       expect.objectContaining({
-        code: "NETWORK_ERROR",
+        code: 'NETWORK_ERROR',
         retryable: true,
       })
     );
   });
 
-  it("should clear errors", () => {
+  it('should clear errors', () => {
     const { result } = renderHook(() => usePaymentMethodApi());
 
     // Simulate an error state
     act(() => {
       result.current.handleApiCall(() =>
-        Promise.reject(new Error("Test error"))
+        Promise.reject(new Error('Test error'))
       );
     });
 
@@ -218,11 +218,11 @@ describe("usePaymentMethodApi", () => {
     expect(result.current.retryCount).toBe(0);
   });
 
-  it("should handle retries with exponential backoff", async () => {
+  it('should handle retries with exponential backoff', async () => {
     jest.useFakeTimers();
 
     const mockError = {
-      error: "Retryable error",
+      error: 'Retryable error',
       retryable: true,
     };
     mockFetch.mockResolvedValue({
@@ -235,7 +235,7 @@ describe("usePaymentMethodApi", () => {
 
     // First call to set up error state
     await act(async () => {
-      await result.current.handleApiCall(() => fetch("/api/test"));
+      await result.current.handleApiCall(() => fetch('/api/test'));
     });
 
     expect(result.current.retryCount).toBe(0);
@@ -243,7 +243,7 @@ describe("usePaymentMethodApi", () => {
 
     // Retry
     act(() => {
-      result.current.retry(() => fetch("/api/test"));
+      result.current.retry(() => fetch('/api/test'));
     });
 
     // Fast-forward the exponential backoff delay
@@ -256,9 +256,9 @@ describe("usePaymentMethodApi", () => {
     jest.useRealTimers();
   });
 
-  it("should respect max retries limit", async () => {
+  it('should respect max retries limit', async () => {
     const mockError = {
-      error: "Retryable error",
+      error: 'Retryable error',
       retryable: true,
     };
     mockFetch.mockResolvedValue({
@@ -271,24 +271,24 @@ describe("usePaymentMethodApi", () => {
 
     // First call
     await act(async () => {
-      await result.current.handleApiCall(() => fetch("/api/test"));
+      await result.current.handleApiCall(() => fetch('/api/test'));
     });
 
     // Retry once
     await act(async () => {
-      await result.current.retry(() => fetch("/api/test"));
+      await result.current.retry(() => fetch('/api/test'));
     });
 
     expect(result.current.retryCount).toBe(1);
     expect(result.current.canRetry).toBe(false);
 
     // Try to retry again - should fail
-    let retryResult;
+    let retryResult: any;
     await act(async () => {
-      retryResult = await result.current.retry(() => fetch("/api/test"));
+      retryResult = await result.current.retry(() => fetch('/api/test'));
     });
 
     expect(retryResult.success).toBe(false);
-    expect(retryResult.error.error).toContain("Máximo número de reintentos");
+    expect(retryResult.error.error).toContain('Máximo número de reintentos');
   });
 });

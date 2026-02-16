@@ -1,20 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import {
-  Check,
-  ChevronDown,
-  Filter,
-  X,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+import { useState, useEffect } from 'react';
+import { Check, ChevronDown, Filter, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
 
 export interface Category {
   id: string;
@@ -35,7 +30,8 @@ export function CategoryExclusionFilter({
   className,
 }: CategoryExclusionFilterProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [tempExcludedCategories, setTempExcludedCategories] = useState<string[]>(excludedCategories);
+  const [tempExcludedCategories, setTempExcludedCategories] =
+    useState<string[]>(excludedCategories);
 
   // Sync temp state with actual excluded categories when popover opens
   useEffect(() => {
@@ -56,7 +52,9 @@ export function CategoryExclusionFilter({
   const isIndeterminate = tempExcludedCategories.length > 0 && !isAllExcluded;
 
   // Check if there are unsaved changes
-  const hasChanges = JSON.stringify(tempExcludedCategories.sort()) !== JSON.stringify(excludedCategories.sort());
+  const hasChanges =
+    JSON.stringify(tempExcludedCategories.sort()) !==
+    JSON.stringify(excludedCategories.sort());
 
   // Handle "Exclude All" toggle
   const handleExcludeAll = () => {
@@ -75,7 +73,9 @@ export function CategoryExclusionFilter({
 
     if (isExcluded) {
       // Include this category (remove from exclusion)
-      setTempExcludedCategories(tempExcludedCategories.filter((id) => id !== categoryId));
+      setTempExcludedCategories(
+        tempExcludedCategories.filter((id) => id !== categoryId)
+      );
     } else {
       // Exclude this category (add to exclusion)
       setTempExcludedCategories([...tempExcludedCategories, categoryId]);
@@ -102,18 +102,18 @@ export function CategoryExclusionFilter({
   // Get display text for the trigger button
   const getDisplayText = () => {
     if (excludedCategories.length === 0) {
-      return "Excluir categorías";
+      return 'Excluir categorías';
     }
 
     if (isAllExcluded) {
-      return "Todas excluidas";
+      return 'Todas excluidas';
     }
 
     if (excludedCategories.length === 1) {
       const excludedCategory = categories.find(
         (c) => c.id === excludedCategories[0]
       );
-      return `Excluida: ${excludedCategory?.name || "1 categoría"}`;
+      return `Excluida: ${excludedCategory?.name || '1 categoría'}`;
     }
 
     return `${excludedCategories.length} excluidas`;
@@ -127,8 +127,9 @@ export function CategoryExclusionFilter({
           role="combobox"
           aria-expanded={isOpen}
           className={cn(
-            "w-[250px] justify-between",
-            excludedCategories.length > 0 && "border-orange-300 bg-orange-50 text-orange-900 hover:bg-orange-100 hover:text-orange-900",
+            'w-[250px] justify-between',
+            excludedCategories.length > 0 &&
+              'border-orange-300 bg-orange-50 text-orange-900 hover:bg-orange-100 hover:text-orange-900',
             className
           )}
         >
@@ -157,37 +158,37 @@ export function CategoryExclusionFilter({
       <PopoverContent className="w-[250px] p-0" align="start">
         <div className="p-2">
           {/* Header */}
-          <div className="px-2 py-2 text-sm font-medium text-muted-foreground border-b">
+          <div className="border-b px-2 py-2 text-sm font-medium text-muted-foreground">
             Excluir del cálculo de overspend
           </div>
 
           {/* Exclude All option */}
-          <div className="flex items-center space-x-2 px-2 py-2 hover:bg-accent hover:text-accent-foreground rounded-sm cursor-pointer">
+          <div className="flex cursor-pointer items-center space-x-2 rounded-sm px-2 py-2 hover:bg-accent hover:text-accent-foreground">
             <Checkbox
               id="exclude-all"
               checked={isAllExcluded}
               ref={(ref) => {
                 if (ref) {
-                  ref.indeterminate = isIndeterminate;
+                  (ref as any).indeterminate = isIndeterminate;
                 }
               }}
               onCheckedChange={handleExcludeAll}
             />
             <label
               htmlFor="exclude-all"
-              className="text-sm font-medium cursor-pointer flex-1"
+              className="flex-1 cursor-pointer text-sm font-medium"
             >
               Excluir todas
             </label>
           </div>
 
           {/* Separator */}
-          <div className="h-px bg-border my-1" />
+          <div className="my-1 h-px bg-border" />
 
           {/* Individual category options */}
           <div className="max-h-[300px] overflow-y-auto">
             {sortedCategories.length === 0 ? (
-              <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+              <div className="px-2 py-4 text-center text-sm text-muted-foreground">
                 No hay categorías disponibles
               </div>
             ) : (
@@ -197,7 +198,7 @@ export function CategoryExclusionFilter({
                 return (
                   <div
                     key={category.id}
-                    className="flex items-center space-x-2 px-2 py-2 hover:bg-accent hover:text-accent-foreground rounded-sm cursor-pointer"
+                    className="flex cursor-pointer items-center space-x-2 rounded-sm px-2 py-2 hover:bg-accent hover:text-accent-foreground"
                     onClick={() => handleCategoryToggle(category.id)}
                   >
                     <Checkbox
@@ -207,12 +208,14 @@ export function CategoryExclusionFilter({
                     />
                     <label
                       htmlFor={`category-${category.id}`}
-                      className="text-sm cursor-pointer flex-1 truncate"
+                      className="flex-1 cursor-pointer truncate text-sm"
                       title={category.name}
                     >
                       {category.name}
                     </label>
-                    {isExcluded && <Check className="h-4 w-4 text-orange-600" />}
+                    {isExcluded && (
+                      <Check className="h-4 w-4 text-orange-600" />
+                    )}
                   </div>
                 );
               })
@@ -222,7 +225,7 @@ export function CategoryExclusionFilter({
           {/* Footer with exclusion count and action buttons */}
           {sortedCategories.length > 0 && (
             <>
-              <div className="h-px bg-border my-1" />
+              <div className="my-1 h-px bg-border" />
               <div className="px-2 py-1 text-xs text-muted-foreground">
                 {tempExcludedCategories.length} de {categories.length} excluidas
               </div>
@@ -239,13 +242,13 @@ export function CategoryExclusionFilter({
                 </div>
               )}
               {/* Action buttons */}
-              <div className="h-px bg-border my-1" />
+              <div className="my-1 h-px bg-border" />
               <div className="flex gap-2 px-2 py-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleCancel}
-                  className="flex-1 h-7 text-xs"
+                  className="h-7 flex-1 text-xs"
                 >
                   Cancelar
                 </Button>
@@ -254,7 +257,7 @@ export function CategoryExclusionFilter({
                   size="sm"
                   onClick={handleApply}
                   disabled={!hasChanges}
-                  className="flex-1 h-7 text-xs"
+                  className="h-7 flex-1 text-xs"
                 >
                   Aplicar
                 </Button>

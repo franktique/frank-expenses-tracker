@@ -9,6 +9,7 @@
 The "Ahorro Esperado %" displayed in subgroup headers shows incorrect values that can exceed 100%, which is mathematically impossible for a percentage representing "savings as a portion of total budget."
 
 **User's Example:**
+
 - IT Suscripciones subgroup:
   - Efectivo (Cash): $144,697
   - Crédito (Credit): $0
@@ -23,6 +24,7 @@ The "Ahorro Esperado %" displayed in subgroup headers shows incorrect values tha
 The percentage is being calculated using a **net total** (after subtracting savings) as the denominator instead of the **gross total** (before subtracting savings).
 
 **Current (Incorrect) Calculation:**
+
 ```
 Step 1: Calculate net total
   total = efectivoAmount + creditoAmount - expectedSavings
@@ -34,6 +36,7 @@ Step 2: Calculate percentage
 ```
 
 **Expected (Correct) Calculation:**
+
 ```
 Step 1: Calculate gross total
   grossTotal = efectivoAmount + creditoAmount
@@ -62,9 +65,7 @@ This calculates the **net available funds** after savings, which is semantically
 
 ```typescript
 const ahorroEsperadoPercentage =
-  subtotals.total > 0
-    ? ((subtotals.expectedSavings / subtotals.total) * 100)
-    : 0;
+  subtotals.total > 0 ? (subtotals.expectedSavings / subtotals.total) * 100 : 0;
 ```
 
 This uses `subtotals.total` (which has savings subtracted) as the denominator, causing the percentage to exceed 100% when savings are a significant portion of the budget.
@@ -77,6 +78,7 @@ The `total` field in `Subtotals` serves **two different purposes**:
 2. **For percentage calculation**: It's being used incorrectly as the base for calculating savings percentage
 
 The percentage should answer the question:
+
 > "What percentage of our **budgeted spending** are we planning to save?"
 
 - **Correct denominator**: Efectivo + Crédito (gross budget before savings)
@@ -91,25 +93,24 @@ Change only the percentage calculation in `SubgroupHeaderRow` to use the gross t
 **File**: `/components/subgroup-header-row.tsx`
 
 **Current code** (lines 103-106):
+
 ```typescript
 const ahorroEsperadoPercentage =
-  subtotals.total > 0
-    ? ((subtotals.expectedSavings / subtotals.total) * 100)
-    : 0;
+  subtotals.total > 0 ? (subtotals.expectedSavings / subtotals.total) * 100 : 0;
 ```
 
 **Fixed code**:
+
 ```typescript
 const grossTotal = subtotals.efectivoAmount + subtotals.creditoAmount;
 const ahorroEsperadoPercentage =
-  grossTotal > 0
-    ? ((subtotals.expectedSavings / grossTotal) * 100)
-    : 0;
+  grossTotal > 0 ? (subtotals.expectedSavings / grossTotal) * 100 : 0;
 ```
 
 ### Why This Approach?
 
 ✅ **Pros:**
+
 - Minimal change (only 2 lines modified)
 - Isolated to percentage display only
 - Doesn't affect other components using `subtotals.total`
@@ -117,6 +118,7 @@ const ahorroEsperadoPercentage =
 - The `total` field continues to correctly represent net spending for the Total column
 
 ❌ **Alternative approach NOT recommended:**
+
 - Adding a `grossTotal` field to the `Subtotals` type would require changes in multiple files
 - Would break existing uses of `subtotals.total` in `SubgroupSubtotalRow`
 - Higher risk of introducing bugs
@@ -125,9 +127,11 @@ const ahorroEsperadoPercentage =
 ## Files Modified
 
 ### Primary File
+
 - `/components/subgroup-header-row.tsx` (lines 103-106)
 
 ### Files NOT Modified (using subtotals.total correctly)
+
 - `/components/subgroup-subtotal-row.tsx` (line 64) - Displays net total in Total column
 - `/lib/subgroup-calculations.ts` (line 68) - Calculates net total for Total column
 
@@ -136,6 +140,7 @@ const ahorroEsperadoPercentage =
 ### Test Cases
 
 #### [ ] Test Case 1: User's Reported Issue
+
 - **Input**:
   - Efectivo: $144,697
   - Crédito: $0
@@ -144,6 +149,7 @@ const ahorroEsperadoPercentage =
 - **Calculation**: (80,000 / 144,697) × 100 = 55.31%
 
 #### [ ] Test Case 2: 100% Savings (Maximum Possible)
+
 - **Input**:
   - Efectivo: $100,000
   - Crédito: $0
@@ -153,6 +159,7 @@ const ahorroEsperadoPercentage =
 - **Note**: This is the maximum valid percentage
 
 #### [ ] Test Case 3: With Credit Amount
+
 - **Input**:
   - Efectivo: $200,000
   - Crédito: $100,000
@@ -161,6 +168,7 @@ const ahorroEsperadoPercentage =
 - **Calculation**: (90,000 / 300,000) × 100 = 30%
 
 #### [ ] Test Case 4: Zero Savings
+
 - **Input**:
   - Efectivo: $100,000
   - Crédito: $50,000
@@ -169,6 +177,7 @@ const ahorroEsperadoPercentage =
 - **Calculation**: (0 / 150,000) × 100 = 0%
 
 #### [ ] Test Case 5: Small Savings Percentage
+
 - **Input**:
   - Efectivo: $1,000,000
   - Crédito: $0
@@ -180,17 +189,20 @@ const ahorroEsperadoPercentage =
 ### Regression Testing
 
 #### [ ] Verify Total % (Right Side) Still Works
+
 - The "Total %" displayed on the right side of the header
 - Uses `(subtotals.total / totalIncome) × 100`
 - Should continue working correctly (unaffected by this change)
 
 #### [ ] Verify Subtotal Row Displays Correct Net Total
+
 - The subtotal row beneath expanded subgroups
 - Should display: Efectivo + Crédito - Ahorro Esperado
 - Located in `/components/subgroup-subtotal-row.tsx` (line 64)
 - Should remain unchanged
 
 #### [ ] Verify No Visual Regressions
+
 - Percentage formatting (2 decimal places)
 - Display of "< 0.01%" for very small percentages
 - Display of "0%" for zero savings
@@ -214,10 +226,12 @@ After implementation:
 ## Task Breakdown
 
 ### Phase 1: Implementation
+
 - [x] Create detailed documentation in docs folder
 - [x] Update percentage calculation in `SubgroupHeaderRow` component
 
 ### Phase 2: Manual Testing
+
 - [ ] Test Case 1: User's example (144,697 efectivo, 80,000 ahorro) → 55.31%
 - [ ] Test Case 2: 100% savings scenario
 - [ ] Test Case 3: With credit amounts
@@ -225,12 +239,14 @@ After implementation:
 - [ ] Test Case 5: Very small percentage
 
 ### Phase 3: Regression Testing
+
 - [ ] Verify Total % (right side) still works correctly
 - [ ] Verify subtotal row shows correct net total
 - [ ] Check for console errors
 - [ ] Verify formatting and visual styling
 
 ### Phase 4: Documentation
+
 - [ ] Update this plan with test results
 - [ ] Mark all tasks as complete
 - [ ] Document any issues encountered
@@ -240,6 +256,7 @@ After implementation:
 **Risk Level**: **VERY LOW**
 
 **Reasoning**:
+
 - Only 2 lines of code changed
 - Change is isolated to display logic only
 - No database, API, or data structure changes
@@ -247,6 +264,7 @@ After implementation:
 - The `total` field continues to work correctly for other purposes
 
 **Potential Issues**:
+
 - None anticipated - this is a pure calculation fix
 
 ## Success Criteria
@@ -260,12 +278,12 @@ After implementation:
 
 ## Expected Behavior After Fix
 
-| Scenario | Efectivo | Crédito | Ahorro | Before (Wrong) | After (Correct) |
-|----------|----------|---------|--------|----------------|-----------------|
-| User's case | $144,697 | $0 | $80,000 | 123.65% ❌ | 55.31% ✓ |
-| Max savings | $100,000 | $0 | $100,000 | ∞% ❌ | 100.00% ✓ |
-| With credit | $200,000 | $100,000 | $90,000 | 45.00% ❌ | 30.00% ✓ |
-| Zero savings | $100,000 | $50,000 | $0 | 0% ✓ | 0% ✓ |
+| Scenario     | Efectivo | Crédito  | Ahorro   | Before (Wrong) | After (Correct) |
+| ------------ | -------- | -------- | -------- | -------------- | --------------- |
+| User's case  | $144,697 | $0       | $80,000  | 123.65% ❌     | 55.31% ✓        |
+| Max savings  | $100,000 | $0       | $100,000 | ∞% ❌          | 100.00% ✓       |
+| With credit  | $200,000 | $100,000 | $90,000  | 45.00% ❌      | 30.00% ✓        |
+| Zero savings | $100,000 | $50,000  | $0       | 0% ✓           | 0% ✓            |
 
 ## Notes
 

@@ -1,10 +1,10 @@
-import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import "@testing-library/jest-dom";
-import { PaymentMethodSelector } from "../payment-method-selector";
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { PaymentMethodSelector } from '../payment-method-selector';
 
 // Mock the UI components
-jest.mock("@/components/ui/checkbox", () => ({
+jest.mock('@/components/ui/checkbox', () => ({
   Checkbox: ({ id, checked, onCheckedChange, disabled, ...props }: any) => (
     <input
       type="checkbox"
@@ -18,7 +18,7 @@ jest.mock("@/components/ui/checkbox", () => ({
   ),
 }));
 
-jest.mock("@/components/ui/label", () => ({
+jest.mock('@/components/ui/label', () => ({
   Label: ({ htmlFor, children, className, ...props }: any) => (
     <label htmlFor={htmlFor} className={className} {...props}>
       {children}
@@ -26,7 +26,7 @@ jest.mock("@/components/ui/label", () => ({
   ),
 }));
 
-jest.mock("@/components/ui/card", () => ({
+jest.mock('@/components/ui/card', () => ({
   Card: ({ children, className }: any) => (
     <div className={className} data-testid="payment-method-card">
       {children}
@@ -37,14 +37,14 @@ jest.mock("@/components/ui/card", () => ({
   CardTitle: ({ children }: any) => <h3>{children}</h3>,
 }));
 
-describe("PaymentMethodSelector Integration", () => {
+describe('PaymentMethodSelector Integration', () => {
   const mockOnSelectionChange = jest.fn();
 
   beforeEach(() => {
     mockOnSelectionChange.mockClear();
   });
 
-  it("renders with default state (all methods selected)", () => {
+  it('renders with default state (all methods selected)', () => {
     render(
       <PaymentMethodSelector
         selectedMethods={[]}
@@ -52,43 +52,43 @@ describe("PaymentMethodSelector Integration", () => {
       />
     );
 
-    expect(screen.getByText("Métodos de Pago")).toBeInTheDocument();
-    expect(screen.getByText("Todos los métodos")).toBeInTheDocument();
-    expect(screen.getByTestId("all-methods")).toBeChecked();
+    expect(screen.getByText('Métodos de Pago')).toBeInTheDocument();
+    expect(screen.getByText('Todos los métodos')).toBeInTheDocument();
+    expect(screen.getByTestId('all-methods')).toBeChecked();
 
     // Individual methods should be disabled when "all methods" is selected
-    expect(screen.getByTestId("method-cash")).toBeDisabled();
-    expect(screen.getByTestId("method-credit")).toBeDisabled();
-    expect(screen.getByTestId("method-debit")).toBeDisabled();
+    expect(screen.getByTestId('method-cash')).toBeDisabled();
+    expect(screen.getByTestId('method-credit')).toBeDisabled();
+    expect(screen.getByTestId('method-debit')).toBeDisabled();
   });
 
-  it("renders with specific methods selected", () => {
+  it('renders with specific methods selected', () => {
     render(
       <PaymentMethodSelector
-        selectedMethods={["cash", "credit"]}
+        selectedMethods={['cash', 'credit']}
         onSelectionChange={mockOnSelectionChange}
       />
     );
 
-    expect(screen.getByTestId("all-methods")).not.toBeChecked();
-    expect(screen.getByTestId("method-cash")).toBeChecked();
-    expect(screen.getByTestId("method-credit")).toBeChecked();
-    expect(screen.getByTestId("method-debit")).not.toBeChecked();
+    expect(screen.getByTestId('all-methods')).not.toBeChecked();
+    expect(screen.getByTestId('method-cash')).toBeChecked();
+    expect(screen.getByTestId('method-credit')).toBeChecked();
+    expect(screen.getByTestId('method-debit')).not.toBeChecked();
   });
 
-  it("handles selecting all methods", () => {
+  it('handles selecting all methods', () => {
     render(
       <PaymentMethodSelector
-        selectedMethods={["cash"]}
+        selectedMethods={['cash']}
         onSelectionChange={mockOnSelectionChange}
       />
     );
 
-    fireEvent.click(screen.getByTestId("all-methods"));
+    fireEvent.click(screen.getByTestId('all-methods'));
     expect(mockOnSelectionChange).toHaveBeenCalledWith([]);
   });
 
-  it("handles deselecting all methods", () => {
+  it('handles deselecting all methods', () => {
     render(
       <PaymentMethodSelector
         selectedMethods={[]}
@@ -96,42 +96,42 @@ describe("PaymentMethodSelector Integration", () => {
       />
     );
 
-    fireEvent.click(screen.getByTestId("all-methods"));
+    fireEvent.click(screen.getByTestId('all-methods'));
     expect(mockOnSelectionChange).toHaveBeenCalledWith([
-      "cash",
-      "credit",
-      "debit",
+      'cash',
+      'credit',
+      'debit',
     ]);
   });
 
-  it("handles individual method selection", () => {
+  it('handles individual method selection', () => {
     render(
       <PaymentMethodSelector
-        selectedMethods={["cash"]}
+        selectedMethods={['cash']}
         onSelectionChange={mockOnSelectionChange}
       />
     );
 
-    fireEvent.click(screen.getByTestId("method-credit"));
-    expect(mockOnSelectionChange).toHaveBeenCalledWith(["cash", "credit"]);
+    fireEvent.click(screen.getByTestId('method-credit'));
+    expect(mockOnSelectionChange).toHaveBeenCalledWith(['cash', 'credit']);
   });
 
-  it("handles individual method deselection", () => {
+  it('handles individual method deselection', () => {
     render(
       <PaymentMethodSelector
-        selectedMethods={["cash", "credit"]}
+        selectedMethods={['cash', 'credit']}
         onSelectionChange={mockOnSelectionChange}
       />
     );
 
-    fireEvent.click(screen.getByTestId("method-cash"));
-    expect(mockOnSelectionChange).toHaveBeenCalledWith(["credit"]);
+    fireEvent.click(screen.getByTestId('method-cash'));
+    expect(mockOnSelectionChange).toHaveBeenCalledWith(['credit']);
   });
 
-  it("displays correct helper text for selected methods", () => {
+  it('displays correct helper text for selected methods', () => {
     render(
       <PaymentMethodSelector
-        selectedMethods={["cash", "debit"]}
+        selectedMethods={['cash', 'debit']}
         onSelectionChange={mockOnSelectionChange}
       />
     );
@@ -141,7 +141,7 @@ describe("PaymentMethodSelector Integration", () => {
     ).toBeInTheDocument();
   });
 
-  it("displays correct helper text for all methods", () => {
+  it('displays correct helper text for all methods', () => {
     render(
       <PaymentMethodSelector
         selectedMethods={[]}
@@ -154,7 +154,7 @@ describe("PaymentMethodSelector Integration", () => {
     ).toBeInTheDocument();
   });
 
-  it("displays enhanced tip text", () => {
+  it('displays enhanced tip text', () => {
     render(
       <PaymentMethodSelector
         selectedMethods={[]}
@@ -167,22 +167,22 @@ describe("PaymentMethodSelector Integration", () => {
     ).toBeInTheDocument();
   });
 
-  it("respects disabled prop", () => {
+  it('respects disabled prop', () => {
     render(
       <PaymentMethodSelector
-        selectedMethods={["cash"]}
+        selectedMethods={['cash']}
         onSelectionChange={mockOnSelectionChange}
         disabled={true}
       />
     );
 
-    expect(screen.getByTestId("all-methods")).toBeDisabled();
-    expect(screen.getByTestId("method-cash")).toBeDisabled();
-    expect(screen.getByTestId("method-credit")).toBeDisabled();
-    expect(screen.getByTestId("method-debit")).toBeDisabled();
+    expect(screen.getByTestId('all-methods')).toBeDisabled();
+    expect(screen.getByTestId('method-cash')).toBeDisabled();
+    expect(screen.getByTestId('method-credit')).toBeDisabled();
+    expect(screen.getByTestId('method-debit')).toBeDisabled();
   });
 
-  it("uses custom label when provided", () => {
+  it('uses custom label when provided', () => {
     render(
       <PaymentMethodSelector
         selectedMethods={[]}
@@ -191,6 +191,6 @@ describe("PaymentMethodSelector Integration", () => {
       />
     );
 
-    expect(screen.getByText("Custom Payment Methods")).toBeInTheDocument();
+    expect(screen.getByText('Custom Payment Methods')).toBeInTheDocument();
   });
 });

@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 /**
  * POST /api/migrate-loan-simulator
@@ -22,8 +22,8 @@ export async function POST(request: NextRequest) {
     `;
 
     const tableNames = existingTables.map((t: any) => t.table_name);
-    const scenariosExists = tableNames.includes("loan_scenarios");
-    const extraPaymentsExists = tableNames.includes("loan_extra_payments");
+    const scenariosExists = tableNames.includes('loan_scenarios');
+    const extraPaymentsExists = tableNames.includes('loan_extra_payments');
 
     // Create loan_scenarios table
     if (!scenariosExists) {
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
           CONSTRAINT loan_scenarios_currency_check CHECK (currency IN ('USD', 'COP', 'EUR', 'MXN', 'ARS', 'GBP'))
         )
       `;
-      console.log("Created loan_scenarios table");
+      console.log('Created loan_scenarios table');
     } else {
       // Check if currency column exists, add it if not
       const columns = await sql`
@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
           ADD COLUMN currency VARCHAR(3) NOT NULL DEFAULT 'USD',
           ADD CONSTRAINT loan_scenarios_currency_check CHECK (currency IN ('USD', 'COP', 'EUR', 'MXN', 'ARS', 'GBP'))
         `;
-        console.log("Added currency column to loan_scenarios table");
+        console.log('Added currency column to loan_scenarios table');
       }
 
       // Update principal column size if needed
@@ -69,15 +69,18 @@ export async function POST(request: NextRequest) {
         AND column_name = 'principal'
       `;
 
-      if (principalColumn.length > 0 && parseInt(principalColumn[0].numeric_precision) < 15) {
+      if (
+        principalColumn.length > 0 &&
+        parseInt(principalColumn[0].numeric_precision) < 15
+      ) {
         await sql`
           ALTER TABLE loan_scenarios
           ALTER COLUMN principal TYPE DECIMAL(15, 2)
         `;
-        console.log("Updated principal column to DECIMAL(15, 2)");
+        console.log('Updated principal column to DECIMAL(15, 2)');
       }
 
-      console.log("loan_scenarios table already exists");
+      console.log('loan_scenarios table already exists');
     }
 
     // Create loan_extra_payments table
@@ -93,16 +96,16 @@ export async function POST(request: NextRequest) {
           CONSTRAINT loan_extra_payments_unique_payment UNIQUE (loan_scenario_id, payment_number)
         )
       `;
-      console.log("Created loan_extra_payments table");
+      console.log('Created loan_extra_payments table');
 
       // Create index for faster queries
       await sql`
         CREATE INDEX idx_loan_extra_payments_scenario
         ON loan_extra_payments(loan_scenario_id)
       `;
-      console.log("Created index on loan_extra_payments(loan_scenario_id)");
+      console.log('Created index on loan_extra_payments(loan_scenario_id)');
     } else {
-      console.log("loan_extra_payments table already exists");
+      console.log('loan_extra_payments table already exists');
     }
 
     // Verify tables were created successfully
@@ -118,7 +121,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Loan simulator migration completed successfully",
+      message: 'Loan simulator migration completed successfully',
       tables: createdTables,
       created: {
         loan_scenarios: !scenariosExists,
@@ -126,13 +129,13 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error during loan simulator migration:", error);
+    console.error('Error during loan simulator migration:', error);
 
     // Handle duplicate table errors (likely from concurrent requests)
     if (error instanceof Error) {
       if (
-        error.message.includes("already exists") ||
-        error.message.includes("duplicate key")
+        error.message.includes('already exists') ||
+        error.message.includes('duplicate key')
       ) {
         // Verify tables exist despite the error
         const verification = await sql`
@@ -148,18 +151,18 @@ export async function POST(request: NextRequest) {
         if (createdTables.length === 2) {
           return NextResponse.json({
             success: true,
-            message: "Loan simulator tables already exist",
+            message: 'Loan simulator tables already exist',
             tables: createdTables,
-            note: "Tables were created by another concurrent request",
+            note: 'Tables were created by another concurrent request',
           });
         }
       }
 
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -169,8 +172,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor durante la migración",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor durante la migración',
+        code: 'INTERNAL_SERVER_ERROR',
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
@@ -197,13 +200,13 @@ export async function GET() {
 
     // Get table counts if they exist
     let counts: any = {};
-    if (existingTables.includes("loan_scenarios")) {
+    if (existingTables.includes('loan_scenarios')) {
       const [scenarioCount] = await sql`
         SELECT COUNT(*) as count FROM loan_scenarios
       `;
       counts.scenarios = scenarioCount.count;
     }
-    if (existingTables.includes("loan_extra_payments")) {
+    if (existingTables.includes('loan_extra_payments')) {
       const [paymentCount] = await sql`
         SELECT COUNT(*) as count FROM loan_extra_payments
       `;
@@ -215,15 +218,15 @@ export async function GET() {
       tables: existingTables,
       counts,
       status:
-        existingTables.length === 2 ? "fully_migrated" : "partially_migrated",
+        existingTables.length === 2 ? 'fully_migrated' : 'partially_migrated',
     });
   } catch (error) {
-    console.error("Error checking loan simulator migration status:", error);
+    console.error('Error checking loan simulator migration status:', error);
 
     return NextResponse.json(
       {
-        error: "Error al verificar el estado de la migración",
-        code: "VERIFICATION_ERROR",
+        error: 'Error al verificar el estado de la migración',
+        code: 'VERIFICATION_ERROR',
       },
       { status: 500 }
     );

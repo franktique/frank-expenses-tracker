@@ -1,19 +1,19 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 import {
   MultiFundSelector,
   useMultiFundSelection,
-} from "./multi-fund-selector";
-import { Fund } from "@/types/funds";
+} from './multi-fund-selector';
+import { Fund } from '@/types/funds';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 // Example usage of MultiFundSelector component
 export function MultiFundSelectorExample() {
@@ -74,7 +74,7 @@ export function MultiFundSelectorExample() {
 
             {!validation.isValid && (
               <div className="text-sm text-destructive">
-                Errors: {validation.errors.join(", ")}
+                Errors: {validation.errors.join(', ')}
               </div>
             )}
 

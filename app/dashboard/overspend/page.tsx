@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useMemo, useState, useEffect } from "react";
-import { useBudget } from "@/context/budget-context";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useMemo, useState, useEffect } from 'react';
+import { useBudget } from '@/context/budget-context';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   BarChart,
   Bar,
@@ -20,59 +20,68 @@ import {
   Legend,
   ResponsiveContainer,
   LabelList,
-} from "recharts";
-import { CategoryExclusionFilter } from "@/components/category-exclusion-filter";
-import { Settings } from "lucide-react";
+} from 'recharts';
+import { CategoryExclusionFilter } from '@/components/category-exclusion-filter';
+import { Settings } from 'lucide-react';
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
-  cash: "Efectivo",
-  debit: "Tarjeta Débito",
-  credit: "Tarjeta Crédito",
+  cash: 'Efectivo',
+  debit: 'Tarjeta Débito',
+  credit: 'Tarjeta Crédito',
 };
 
-const CASH_METHODS = ["cash", "debit"];
-const CREDIT_METHODS = ["credit"];
-const STORAGE_KEY = "overspend_current_period_excluded_categories";
+const CASH_METHODS = ['cash', 'debit'];
+const CREDIT_METHODS = ['credit'];
+const STORAGE_KEY = 'overspend_current_period_excluded_categories';
 
 function getMethodFilter(option: string) {
-  if (option === "cash") return CASH_METHODS;
-  if (option === "credit") return CREDIT_METHODS;
+  if (option === 'cash') return CASH_METHODS;
+  if (option === 'credit') return CREDIT_METHODS;
   return [...CASH_METHODS, ...CREDIT_METHODS];
 }
 
 export default function OverspendDashboard() {
   const { expenses, budgets, categories, activePeriod } = useBudget();
-  const [methodFilter, setMethodFilter] = useState<string>("all");
+  const [methodFilter, setMethodFilter] = useState<string>('all');
   const [excludedCategories, setExcludedCategories] = useState<string[]>([]);
   const [showCategoryFilter, setShowCategoryFilter] = useState(false);
   const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
 
   // Load excluded categories from localStorage on mount
   useEffect(() => {
-    if (typeof window === "undefined") return; // Skip on server-side rendering
+    if (typeof window === 'undefined') return; // Skip on server-side rendering
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
       if (stored) {
         const parsed = JSON.parse(stored);
-        console.log("📂 Loaded excluded categories from localStorage:", parsed);
+        console.log('📂 Loaded excluded categories from localStorage:', parsed);
         setExcludedCategories(parsed);
       }
       setHasLoadedFromStorage(true);
     } catch (error) {
-      console.warn("Failed to load excluded categories from localStorage:", error);
+      console.warn(
+        'Failed to load excluded categories from localStorage:',
+        error
+      );
       setHasLoadedFromStorage(true);
     }
   }, []);
 
   // Save excluded categories to localStorage whenever they change (but not during initial load)
   useEffect(() => {
-    if (typeof window === "undefined") return; // Skip on server-side rendering
+    if (typeof window === 'undefined') return; // Skip on server-side rendering
     if (!hasLoadedFromStorage) return; // Don't save until we've attempted to load
     try {
-      console.log("💾 Saving excluded categories to localStorage:", excludedCategories);
+      console.log(
+        '💾 Saving excluded categories to localStorage:',
+        excludedCategories
+      );
       localStorage.setItem(STORAGE_KEY, JSON.stringify(excludedCategories));
     } catch (error) {
-      console.warn("Failed to save excluded categories to localStorage:", error);
+      console.warn(
+        'Failed to save excluded categories to localStorage:',
+        error
+      );
     }
   }, [excludedCategories, hasLoadedFromStorage]);
 
@@ -111,7 +120,11 @@ export default function OverspendDashboard() {
 
   // Calculate overspend per category & method
   const overspendRows = useMemo(() => {
-    const rows = [];
+    const rows: Array<{
+      category: string;
+      planned: number;
+      overspent: number;
+    }> = [];
     const methods = getMethodFilter(methodFilter);
     // Use all categories with either planned or spent > 0, excluding the selected ones
     categories
@@ -134,7 +147,13 @@ export default function OverspendDashboard() {
       });
     // Order from most to least overspent
     return rows.sort((a, b) => b.overspent - a.overspent);
-  }, [plannedByCatAndMethod, spentByCatAndMethod, categories, methodFilter, excludedCategories]);
+  }, [
+    plannedByCatAndMethod,
+    spentByCatAndMethod,
+    categories,
+    methodFilter,
+    excludedCategories,
+  ]);
 
   // KPI values
   // Calculate overspend per category for each method, excluding selected categories
@@ -151,15 +170,15 @@ export default function OverspendDashboard() {
           spentCredit = 0;
         if (plannedByCatAndMethod[cat.id]) {
           plannedCash =
-            Number(plannedByCatAndMethod[cat.id]["cash"] || 0) +
-            Number(plannedByCatAndMethod[cat.id]["debit"] || 0);
-          plannedCredit = Number(plannedByCatAndMethod[cat.id]["credit"] || 0);
+            Number(plannedByCatAndMethod[cat.id]['cash'] || 0) +
+            Number(plannedByCatAndMethod[cat.id]['debit'] || 0);
+          plannedCredit = Number(plannedByCatAndMethod[cat.id]['credit'] || 0);
         }
         if (spentByCatAndMethod[cat.id]) {
           spentCash =
-            Number(spentByCatAndMethod[cat.id]["cash"] || 0) +
-            Number(spentByCatAndMethod[cat.id]["debit"] || 0);
-          spentCredit = Number(spentByCatAndMethod[cat.id]["credit"] || 0);
+            Number(spentByCatAndMethod[cat.id]['cash'] || 0) +
+            Number(spentByCatAndMethod[cat.id]['debit'] || 0);
+          spentCredit = Number(spentByCatAndMethod[cat.id]['credit'] || 0);
         }
         map[cat.id] = {
           cash: Math.max(0, spentCash - plannedCash),
@@ -167,12 +186,18 @@ export default function OverspendDashboard() {
         };
       });
     return map;
-  }, [categories, plannedByCatAndMethod, spentByCatAndMethod, activePeriod, excludedCategories]);
+  }, [
+    categories,
+    plannedByCatAndMethod,
+    spentByCatAndMethod,
+    activePeriod,
+    excludedCategories,
+  ]);
 
   // KPIs: sum only the overspent values visible in the chart
   // KPIs: always show total overspend for each method for the open period, regardless of filter
   const kpiCash = useMemo(() => {
-    if (methodFilter === "credit") return null;
+    if (methodFilter === 'credit') return null;
     return Object.values(overspendByCategory).reduce(
       (sum, v) => sum + (v.cash > 0 ? v.cash : 0),
       0
@@ -180,7 +205,7 @@ export default function OverspendDashboard() {
   }, [overspendByCategory, methodFilter]);
 
   const kpiCredit = useMemo(() => {
-    if (methodFilter === "cash") return null;
+    if (methodFilter === 'cash') return null;
     return Object.values(overspendByCategory).reduce(
       (sum, v) => sum + (v.credit > 0 ? v.credit : 0),
       0
@@ -189,7 +214,7 @@ export default function OverspendDashboard() {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col md:flex-row gap-4">
+      <div className="flex flex-col gap-4 md:flex-row">
         {kpiCash !== null && (
           <Card className="flex-1 bg-blue-50">
             <CardHeader>
@@ -201,7 +226,7 @@ export default function OverspendDashboard() {
                 {(!isNaN(kpiCash) && isFinite(kpiCash)
                   ? kpiCash
                   : 0
-                ).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                ).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
               </div>
             </CardContent>
           </Card>
@@ -217,7 +242,7 @@ export default function OverspendDashboard() {
                 {(!isNaN(kpiCredit) && isFinite(kpiCredit)
                   ? kpiCredit
                   : 0
-                ).toLocaleString("es-MX", { minimumFractionDigits: 2 })}
+                ).toLocaleString('es-MX', { minimumFractionDigits: 2 })}
               </div>
             </CardContent>
           </Card>
@@ -227,9 +252,9 @@ export default function OverspendDashboard() {
             variant="outline"
             size="sm"
             onClick={() => setShowCategoryFilter(!showCategoryFilter)}
-            className={showCategoryFilter ? "bg-gray-100" : ""}
+            className={showCategoryFilter ? 'bg-gray-100' : ''}
           >
-            <Settings className="h-4 w-4 mr-2" />
+            <Settings className="mr-2 h-4 w-4" />
             Filtros
           </Button>
           <Select value={methodFilter} onValueChange={setMethodFilter}>
@@ -247,7 +272,10 @@ export default function OverspendDashboard() {
       {showCategoryFilter && (
         <div className="flex justify-start">
           <CategoryExclusionFilter
-            categories={categories.map((cat) => ({ id: cat.id, name: cat.name }))}
+            categories={categories.map((cat) => ({
+              id: cat.id,
+              name: cat.name,
+            }))}
             excludedCategories={excludedCategories}
             onExclusionChange={setExcludedCategories}
           />
@@ -259,7 +287,7 @@ export default function OverspendDashboard() {
         </CardHeader>
         <CardContent>
           <div
-            style={{ width: "100%", height: 60 + overspendRows.length * 48 }}
+            style={{ width: '100%', height: 60 + overspendRows.length * 48 }}
           >
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
@@ -272,7 +300,7 @@ export default function OverspendDashboard() {
                 <YAxis type="category" dataKey="category" width={180} />
                 <Tooltip
                   formatter={(value: number) =>
-                    `$${value.toLocaleString("es-MX", {
+                    `$${value.toLocaleString('es-MX', {
                       minimumFractionDigits: 2,
                     })}`
                   }
@@ -289,11 +317,11 @@ export default function OverspendDashboard() {
                     dataKey="planned"
                     position="right"
                     formatter={(v: number | undefined) =>
-                      typeof v === "number" && v > 0
-                        ? `$${v.toLocaleString("es-MX", {
+                      typeof v === 'number' && v > 0
+                        ? `$${v.toLocaleString('es-MX', {
                             minimumFractionDigits: 2,
                           })}`
-                        : ""
+                        : ''
                     }
                   />
                 </Bar>
@@ -308,11 +336,11 @@ export default function OverspendDashboard() {
                     dataKey="overspent"
                     position="right"
                     formatter={(v: number | undefined) =>
-                      typeof v === "number" && v > 0
-                        ? `$${v.toLocaleString("es-MX", {
+                      typeof v === 'number' && v > 0
+                        ? `$${v.toLocaleString('es-MX', {
                             minimumFractionDigits: 2,
                           })}`
-                        : ""
+                        : ''
                     }
                   />
                 </Bar>

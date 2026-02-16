@@ -1,28 +1,28 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   let projectionMode = false;
-  let grouperIdStr = "";
+  let grouperIdStr = '';
 
   try {
     const { id } = await context.params;
     grouperIdStr = id;
     const grouperId = parseInt(id);
     const url = new URL(request.url);
-    const periodId = url.searchParams.get("periodId");
-    const paymentMethod = url.searchParams.get("paymentMethod"); // Legacy parameter for backward compatibility
-    const expensePaymentMethods = url.searchParams.get("expensePaymentMethods");
-    const budgetPaymentMethods = url.searchParams.get("budgetPaymentMethods");
-    const includeBudgets = url.searchParams.get("includeBudgets") === "true";
-    projectionMode = url.searchParams.get("projectionMode") === "true";
+    const periodId = url.searchParams.get('periodId');
+    const paymentMethod = url.searchParams.get('paymentMethod'); // Legacy parameter for backward compatibility
+    const expensePaymentMethods = url.searchParams.get('expensePaymentMethods');
+    const budgetPaymentMethods = url.searchParams.get('budgetPaymentMethods');
+    const includeBudgets = url.searchParams.get('includeBudgets') === 'true';
+    projectionMode = url.searchParams.get('projectionMode') === 'true';
 
     if (isNaN(grouperId) || !periodId) {
       return NextResponse.json(
-        { error: "Valid grouperId and periodId are required" },
+        { error: 'Valid grouperId and periodId are required' },
         { status: 400 }
       );
     }
@@ -34,13 +34,15 @@ export async function GET(
     // Handle expense payment methods (new parameter or legacy fallback)
     if (expensePaymentMethods) {
       try {
-        expensePaymentMethodsArray = expensePaymentMethods.split(",").map((method) => {
-          const trimmed = method.trim();
-          if (!["cash", "credit", "debit"].includes(trimmed)) {
-            throw new Error(`Invalid expense payment method: ${trimmed}`);
-          }
-          return trimmed;
-        });
+        expensePaymentMethodsArray = expensePaymentMethods
+          .split(',')
+          .map((method) => {
+            const trimmed = method.trim();
+            if (!['cash', 'credit', 'debit'].includes(trimmed)) {
+              throw new Error(`Invalid expense payment method: ${trimmed}`);
+            }
+            return trimmed;
+          });
       } catch (error) {
         return NextResponse.json(
           {
@@ -49,7 +51,7 @@ export async function GET(
           { status: 400 }
         );
       }
-    } else if (paymentMethod && paymentMethod !== "all") {
+    } else if (paymentMethod && paymentMethod !== 'all') {
       // Legacy backward compatibility
       expensePaymentMethodsArray = [paymentMethod];
     }
@@ -57,13 +59,15 @@ export async function GET(
     // Handle budget payment methods
     if (budgetPaymentMethods) {
       try {
-        budgetPaymentMethodsArray = budgetPaymentMethods.split(",").map((method) => {
-          const trimmed = method.trim();
-          if (!["cash", "credit", "debit"].includes(trimmed)) {
-            throw new Error(`Invalid budget payment method: ${trimmed}`);
-          }
-          return trimmed;
-        });
+        budgetPaymentMethodsArray = budgetPaymentMethods
+          .split(',')
+          .map((method) => {
+            const trimmed = method.trim();
+            if (!['cash', 'credit', 'debit'].includes(trimmed)) {
+              throw new Error(`Invalid budget payment method: ${trimmed}`);
+            }
+            return trimmed;
+          });
       } catch (error) {
         return NextResponse.json(
           {
@@ -116,7 +120,11 @@ export async function GET(
     }
 
     // Add budget payment method filter
-    if (includeBudgets && budgetPaymentMethodsArray && budgetPaymentMethodsArray.length > 0) {
+    if (
+      includeBudgets &&
+      budgetPaymentMethodsArray &&
+      budgetPaymentMethodsArray.length > 0
+    ) {
       fromClause += `
         AND b.payment_method = ANY($${paramIndex}::text[])`;
       queryParams.push(budgetPaymentMethodsArray);
@@ -145,7 +153,8 @@ export async function GET(
         total_amount DESC`;
 
     // Combine all parts
-    query = selectClause + fromClause + whereClause + groupByClause + orderByClause;
+    query =
+      selectClause + fromClause + whereClause + groupByClause + orderByClause;
 
     interface CategoryStatRow {
       category_id: number;
@@ -158,7 +167,8 @@ export async function GET(
     // However, usually `sql` is a tagged template literal. If `sql.query` exists, fine.
     // If not, we might need `sql(strings, ...values)`.
     // Given the existing code used `sql.query`, I'll assume it's correct but cast the result.
-    const categoryStats = (await (sql as any).query(query, queryParams)).rows as CategoryStatRow[];
+    const categoryStats = (await (sql as any).query(query, queryParams))
+      .rows as CategoryStatRow[];
 
     // Enhanced error handling for category projection mode
     if (projectionMode && includeBudgets) {
@@ -177,8 +187,8 @@ export async function GET(
         // Return data with warning metadata instead of throwing error
         return NextResponse.json(categoryStats, {
           headers: {
-            "X-Budget-Warning":
-              "No budget data available for category projection",
+            'X-Budget-Warning':
+              'No budget data available for category projection',
           },
         });
       }
@@ -200,8 +210,8 @@ export async function GET(
         );
         return NextResponse.json(categoryStats, {
           headers: {
-            "X-Budget-Warning":
-              "Partial budget data available for category projection",
+            'X-Budget-Warning':
+              'Partial budget data available for category projection',
           },
         });
       }
@@ -217,7 +227,7 @@ export async function GET(
     // Enhanced error handling with projection context
     const errorMessage = (error as Error).message;
     const isProjectionError =
-      projectionMode && errorMessage.toLowerCase().includes("budget");
+      projectionMode && errorMessage.toLowerCase().includes('budget');
 
     if (isProjectionError) {
       return NextResponse.json(

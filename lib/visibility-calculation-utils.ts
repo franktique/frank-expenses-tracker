@@ -3,8 +3,8 @@
  * Provides functions to filter and calculate budget values while respecting visibility state
  */
 
-import type { VisibilityState } from "@/types/simulation";
-import type { Subtotals } from "@/lib/subgroup-calculations";
+import type { VisibilityState } from '@/types/simulation';
+import type { Subtotals } from '@/lib/subgroup-calculations';
 
 /**
  * Check if an item is visible based on visibility state
@@ -47,7 +47,10 @@ export function isCategoryVisible(
   }
 
   // Check parent subgroup visibility
-  if (parentSubgroupId && !isSubgroupVisible(parentSubgroupId, visibilityState)) {
+  if (
+    parentSubgroupId &&
+    !isSubgroupVisible(parentSubgroupId, visibilityState)
+  ) {
     return false;
   }
 
@@ -77,7 +80,11 @@ export function countVisibleCategories(
   subgroupId: string,
   visibilityState: VisibilityState
 ): number {
-  const visible = filterVisibleCategories(categoryIds, subgroupId, visibilityState);
+  const visible = filterVisibleCategories(
+    categoryIds,
+    subgroupId,
+    visibilityState
+  );
   return visible.length;
 }
 
@@ -150,7 +157,7 @@ export function saveVisibilityToStorage(
     const key = getVisibilityStorageKey(simulationId);
     localStorage.setItem(key, JSON.stringify(visibilityState));
   } catch (error) {
-    console.error("Error saving visibility state to localStorage:", error);
+    console.error('Error saving visibility state to localStorage:', error);
   }
 }
 
@@ -165,12 +172,12 @@ export function loadVisibilityFromStorage(
     const stored = localStorage.getItem(key);
     if (stored) {
       const parsed = JSON.parse(stored);
-      if (typeof parsed === "object" && parsed !== null) {
+      if (typeof parsed === 'object' && parsed !== null) {
         return parsed as VisibilityState;
       }
     }
   } catch (error) {
-    console.error("Error loading visibility state from localStorage:", error);
+    console.error('Error loading visibility state from localStorage:', error);
   }
   return {};
 }
@@ -183,7 +190,7 @@ export function clearVisibilityFromStorage(simulationId: number): void {
     const key = getVisibilityStorageKey(simulationId);
     localStorage.removeItem(key);
   } catch (error) {
-    console.error("Error clearing visibility state from localStorage:", error);
+    console.error('Error clearing visibility state from localStorage:', error);
   }
 }
 

@@ -1,4 +1,4 @@
-import { toast } from "@/components/ui/use-toast";
+import { toast } from '@/components/ui/use-toast';
 
 export interface ApiError {
   message: string;
@@ -81,8 +81,8 @@ export async function parseApiError(response: Response): Promise<ApiError> {
   let errorData: any = {};
 
   try {
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
       errorData = await response.json();
     } else {
       errorData = { message: await response.text() };
@@ -103,37 +103,37 @@ export async function parseApiError(response: Response): Promise<ApiError> {
 /**
  * Handle API errors with appropriate user feedback
  */
-export function handleApiError(error: ApiError, context: string = "operación") {
+export function handleApiError(error: ApiError, context: string = 'operación') {
   const isConnectionError =
-    error.message.toLowerCase().includes("fetch") ||
-    error.message.toLowerCase().includes("network") ||
-    error.message.toLowerCase().includes("connection");
+    error.message.toLowerCase().includes('fetch') ||
+    error.message.toLowerCase().includes('network') ||
+    error.message.toLowerCase().includes('connection');
 
   let title = `Error en ${context}`;
   let description = error.message;
 
   if (isConnectionError) {
-    title = "Error de conexión";
-    description = "Verifique su conexión a internet e intente nuevamente.";
+    title = 'Error de conexión';
+    description = 'Verifique su conexión a internet e intente nuevamente.';
   } else if (error.status === 404) {
-    title = "Recurso no encontrado";
-    description = "El recurso solicitado no existe o ha sido eliminado.";
+    title = 'Recurso no encontrado';
+    description = 'El recurso solicitado no existe o ha sido eliminado.';
   } else if (error.status === 409) {
-    title = "Conflicto de datos";
+    title = 'Conflicto de datos';
     // Keep original message for conflict errors as they're usually specific
   } else if (error.status === 503) {
-    title = "Servicio no disponible";
+    title = 'Servicio no disponible';
     description =
-      "El servicio está temporalmente no disponible. Intente más tarde.";
+      'El servicio está temporalmente no disponible. Intente más tarde.';
   } else if (error.status && error.status >= 500) {
-    title = "Error del servidor";
-    description = "Ocurrió un error interno. Intente nuevamente.";
+    title = 'Error del servidor';
+    description = 'Ocurrió un error interno. Intente nuevamente.';
   }
 
   toast({
     title,
     description,
-    variant: "destructive",
+    variant: 'destructive',
   });
 }
 
@@ -147,24 +147,24 @@ export function validateEstudioName(name: string): {
   const trimmedName = name.trim();
 
   if (!trimmedName) {
-    return { valid: false, error: "El nombre del estudio es requerido" };
+    return { valid: false, error: 'El nombre del estudio es requerido' };
   }
 
   if (trimmedName.length > 255) {
-    return { valid: false, error: "El nombre no puede exceder 255 caracteres" };
+    return { valid: false, error: 'El nombre no puede exceder 255 caracteres' };
   }
 
   if (trimmedName.length < 2) {
     return {
       valid: false,
-      error: "El nombre debe tener al menos 2 caracteres",
+      error: 'El nombre debe tener al menos 2 caracteres',
     };
   }
 
   // Check for invalid characters (optional)
   const invalidChars = /[<>:"\/\\|?*\x00-\x1f]/;
   if (invalidChars.test(trimmedName)) {
-    return { valid: false, error: "El nombre contiene caracteres no válidos" };
+    return { valid: false, error: 'El nombre contiene caracteres no válidos' };
   }
 
   return { valid: true };
@@ -195,19 +195,19 @@ export function validateGrouperIds(grouperIds: any[]): {
   if (!Array.isArray(grouperIds)) {
     return {
       valid: false,
-      error: "Se requiere un array de IDs de agrupadores",
+      error: 'Se requiere un array de IDs de agrupadores',
     };
   }
 
   if (grouperIds.length === 0) {
-    return { valid: false, error: "Debe seleccionar al menos un agrupador" };
+    return { valid: false, error: 'Debe seleccionar al menos un agrupador' };
   }
 
   const invalidIds = grouperIds.filter(
     (id) => !Number.isInteger(id) || id <= 0
   );
   if (invalidIds.length > 0) {
-    return { valid: false, error: "Algunos IDs de agrupadores son inválidos" };
+    return { valid: false, error: 'Algunos IDs de agrupadores son inválidos' };
   }
 
   return { valid: true };

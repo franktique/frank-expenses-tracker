@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { PlusCircle, Copy, Trash2, Edit, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { PlusCircle, Copy, Trash2, Edit, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 
 import {
   AlertDialog,
@@ -20,7 +20,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 import {
   Table,
   TableBody,
@@ -28,18 +28,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
-import { formatDate } from "@/lib/utils";
-import { SimulationFormDialog } from "@/components/simulation-form-dialog";
-import { SimulationErrorWrapper } from "@/components/simulation-error-boundary";
-import { SimulationContextMenu } from "@/components/simulation-context-menu";
-import { useSimulationRetry } from "@/hooks/use-simulation-retry";
+} from '@/components/ui/table';
+import { useToast } from '@/components/ui/use-toast';
+import { formatDate } from '@/lib/utils';
+import { SimulationFormDialog } from '@/components/simulation-form-dialog';
+import { SimulationErrorWrapper } from '@/components/simulation-error-boundary';
+import { SimulationContextMenu } from '@/components/simulation-context-menu';
+import { useSimulationRetry } from '@/hooks/use-simulation-retry';
 import {
   SimulationDataFallback,
   EmptySimulationListFallback,
   SimulationLoadingSkeleton,
-} from "@/components/simulation-fallback-components";
+} from '@/components/simulation-fallback-components';
 
 // Types based on the API structure
 type Simulation = {
@@ -94,7 +94,7 @@ export function SimulationList({ onSelect }: SimulationListProps) {
 
     try {
       const data = await retry.executeWithRetry(async () => {
-        const response = await fetch("/api/simulations");
+        const response = await fetch('/api/simulations');
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
           throw new Error(
@@ -103,24 +103,24 @@ export function SimulationList({ onSelect }: SimulationListProps) {
           );
         }
         return response.json();
-      }, "Cargar simulaciones");
+      }, 'Cargar simulaciones');
 
       if (data) {
         setSimulations(data);
 
         if (showRefreshToast) {
           toast({
-            title: "Datos actualizados",
-            description: "Las simulaciones han sido actualizadas correctamente",
+            title: 'Datos actualizados',
+            description: 'Las simulaciones han sido actualizadas correctamente',
           });
         }
       } else {
         // Handle retry failure
         toast({
-          title: "Error",
+          title: 'Error',
           description:
-            "No se pudieron cargar las simulaciones después de varios intentos",
-          variant: "destructive",
+            'No se pudieron cargar las simulaciones después de varios intentos',
+          variant: 'destructive',
         });
       }
     } finally {
@@ -153,12 +153,12 @@ export function SimulationList({ onSelect }: SimulationListProps) {
 
     try {
       const response = await fetch(`/api/simulations/${deleteSimulation.id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al eliminar la simulación");
+        throw new Error(errorData.error || 'Error al eliminar la simulación');
       }
 
       // Refresh the list
@@ -169,15 +169,15 @@ export function SimulationList({ onSelect }: SimulationListProps) {
       setIsDeleteOpen(false);
 
       toast({
-        title: "Simulación eliminada",
-        description: "La simulación ha sido eliminada exitosamente",
+        title: 'Simulación eliminada',
+        description: 'La simulación ha sido eliminada exitosamente',
       });
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
-          (error as Error).message || "No se pudo eliminar la simulación",
-        variant: "destructive",
+          (error as Error).message || 'No se pudo eliminar la simulación',
+        variant: 'destructive',
       });
     } finally {
       setIsDeleting(false);
@@ -191,15 +191,15 @@ export function SimulationList({ onSelect }: SimulationListProps) {
     try {
       // Call the copy API endpoint which handles all data copying server-side
       const response = await fetch(`/api/simulations/${simulation.id}/copy`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al duplicar la simulación");
+        throw new Error(errorData.error || 'Error al duplicar la simulación');
       }
 
       const result = await response.json();
@@ -221,11 +221,11 @@ export function SimulationList({ onSelect }: SimulationListProps) {
 
       const description =
         copiedItems.length > 0
-          ? `Se copiaron: ${copiedItems.join(", ")}`
-          : "Simulación copiada (sin datos adicionales)";
+          ? `Se copiaron: ${copiedItems.join(', ')}`
+          : 'Simulación copiada (sin datos adicionales)';
 
       toast({
-        title: "Simulación duplicada",
+        title: 'Simulación duplicada',
         description,
       });
 
@@ -235,10 +235,10 @@ export function SimulationList({ onSelect }: SimulationListProps) {
       }
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
-          (error as Error).message || "No se pudo duplicar la simulación",
-        variant: "destructive",
+          (error as Error).message || 'No se pudo duplicar la simulación',
+        variant: 'destructive',
       });
     } finally {
       setIsDuplicating(null);
@@ -296,15 +296,15 @@ export function SimulationList({ onSelect }: SimulationListProps) {
       <div className="space-y-6">
         <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
+            <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">
               Simulaciones
             </h1>
-            <p className="text-sm sm:text-base text-muted-foreground">
+            <p className="text-sm text-muted-foreground sm:text-base">
               Crea y administra simulaciones de presupuesto para análisis de
               escenarios
             </p>
           </div>
-          <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-2">
+          <div className="flex flex-col space-y-2 sm:flex-row sm:space-x-2 sm:space-y-0">
             <Button
               variant="outline"
               onClick={handleRefresh}
@@ -312,9 +312,9 @@ export function SimulationList({ onSelect }: SimulationListProps) {
               className="w-full sm:w-auto"
             >
               <RefreshCw
-                className={`mr-2 h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`}
+                className={`mr-2 h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
               />
-              {isRefreshing ? "Actualizando..." : "Actualizar"}
+              {isRefreshing ? 'Actualizando...' : 'Actualizar'}
             </Button>
             <Button
               onClick={() => setIsCreateOpen(true)}
@@ -385,9 +385,9 @@ export function SimulationList({ onSelect }: SimulationListProps) {
                           </TableCell>
                           <TableCell>
                             {formatDate(new Date(simulation.created_at), {
-                              day: "numeric",
-                              month: "short",
-                              year: "numeric",
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric',
                             })}
                           </TableCell>
                           <TableCell className="text-right">
@@ -442,7 +442,7 @@ export function SimulationList({ onSelect }: SimulationListProps) {
               </div>
 
               {/* Mobile Card View */}
-              <div className="md:hidden space-y-4">
+              <div className="space-y-4 md:hidden">
                 {simulations.map((simulation) => (
                   <SimulationContextMenu
                     key={simulation.id}
@@ -454,33 +454,33 @@ export function SimulationList({ onSelect }: SimulationListProps) {
                     showNavigationOptions={true}
                   >
                     <Card
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
+                      className="cursor-pointer transition-colors hover:bg-muted/50"
                       onClick={() => onSelect?.(simulation.id)}
                     >
                       <CardContent className="p-4">
                         <div className="flex items-start justify-between">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-medium text-base truncate">
+                          <div className="min-w-0 flex-1">
+                            <h3 className="truncate text-base font-medium">
                               {simulation.name}
                             </h3>
-                            <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                              {simulation.description || "Sin descripción"}
+                            <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
+                              {simulation.description || 'Sin descripción'}
                             </p>
-                            <div className="flex items-center space-x-4 mt-2 text-xs text-muted-foreground">
+                            <div className="mt-2 flex items-center space-x-4 text-xs text-muted-foreground">
                               <span>
                                 {simulation.budget_count} categorías
                                 configuradas
                               </span>
                               <span>
                                 {formatDate(new Date(simulation.created_at), {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
+                                  day: 'numeric',
+                                  month: 'short',
+                                  year: 'numeric',
                                 })}
                               </span>
                             </div>
                           </div>
-                          <div className="flex space-x-1 ml-2">
+                          <div className="ml-2 flex space-x-1">
                             <Button
                               variant="ghost"
                               size="sm"
@@ -583,7 +583,7 @@ export function SimulationList({ onSelect }: SimulationListProps) {
                 disabled={isDeleting}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               >
-                {isDeleting ? "Eliminando..." : "Eliminar Simulación"}
+                {isDeleting ? 'Eliminando...' : 'Eliminar Simulación'}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

@@ -1,16 +1,16 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // Payment method type definition - Requirements 1.2, 3.1
-export const PaymentMethodEnum = z.enum(["cash", "credit", "debit"]);
+export const PaymentMethodEnum = z.enum(['cash', 'credit', 'debit']);
 export type PaymentMethod = z.infer<typeof PaymentMethodEnum>;
 
 // Payment methods array validation schema
 export const PaymentMethodsArraySchema = z
   .array(PaymentMethodEnum)
-  .min(1, "Debe seleccionar al menos un método de pago")
+  .min(1, 'Debe seleccionar al menos un método de pago')
   .refine(
     (methods) => new Set(methods).size === methods.length,
-    "No se permiten métodos de pago duplicados"
+    'No se permiten métodos de pago duplicados'
   )
   .nullable();
 
@@ -117,11 +117,11 @@ export const EstudioSchema = z.object({
   id: z.number().int().positive(),
   name: z
     .string()
-    .min(1, "El nombre del estudio es obligatorio")
-    .max(255, "El nombre del estudio es demasiado largo"),
+    .min(1, 'El nombre del estudio es obligatorio')
+    .max(255, 'El nombre del estudio es demasiado largo'),
   description: z
     .string()
-    .max(500, "La descripción es demasiado larga")
+    .max(500, 'La descripción es demasiado larga')
     .optional(),
   created_at: z.string(),
   updated_at: z.string(),
@@ -131,8 +131,8 @@ export const GrouperSchema = z.object({
   id: z.number().int().positive(),
   name: z
     .string()
-    .min(1, "El nombre del agrupador es obligatorio")
-    .max(255, "El nombre del agrupador es demasiado largo"),
+    .min(1, 'El nombre del agrupador es obligatorio')
+    .max(255, 'El nombre del agrupador es demasiado largo'),
   created_at: z.string(),
   updated_at: z.string(),
 });
@@ -143,8 +143,8 @@ export const EstudioGrouperSchema = z.object({
   grouper_id: z.number().int().positive(),
   percentage: z
     .number()
-    .min(0, "El porcentaje no puede ser negativo")
-    .max(100, "El porcentaje no puede ser mayor a 100")
+    .min(0, 'El porcentaje no puede ser negativo')
+    .max(100, 'El porcentaje no puede ser mayor a 100')
     .nullable()
     .optional(),
   payment_methods: PaymentMethodsArraySchema,
@@ -158,8 +158,8 @@ export const EstudioGrouperResponseSchema = z.object({
   is_assigned: z.boolean().optional(),
   percentage: z
     .number()
-    .min(0, "El porcentaje no puede ser negativo")
-    .max(100, "El porcentaje no puede ser mayor a 100")
+    .min(0, 'El porcentaje no puede ser negativo')
+    .max(100, 'El porcentaje no puede ser mayor a 100')
     .nullable()
     .optional(),
   payment_methods: PaymentMethodsArraySchema,
@@ -168,8 +168,8 @@ export const EstudioGrouperResponseSchema = z.object({
 export const UpdateEstudioGrouperRequestSchema = z.object({
   percentage: z
     .number()
-    .min(0, "El porcentaje no puede ser negativo")
-    .max(100, "El porcentaje no puede ser mayor a 100")
+    .min(0, 'El porcentaje no puede ser negativo')
+    .max(100, 'El porcentaje no puede ser mayor a 100')
     .nullable()
     .optional(),
   payment_methods: PaymentMethodsArraySchema.optional(),
@@ -178,7 +178,7 @@ export const UpdateEstudioGrouperRequestSchema = z.object({
 // Type guards and utility functions
 
 export function isValidPaymentMethod(method: string): method is PaymentMethod {
-  return ["cash", "credit", "debit"].includes(method);
+  return ['cash', 'credit', 'debit'].includes(method);
 }
 
 export function validatePaymentMethods(
@@ -213,29 +213,29 @@ export function hasPaymentMethodFiltering(
 // Constants
 
 export const VALID_PAYMENT_METHODS: PaymentMethod[] = [
-  "cash",
-  "credit",
-  "debit",
+  'cash',
+  'credit',
+  'debit',
 ];
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
-  cash: "Efectivo",
-  credit: "Crédito",
-  debit: "Débito",
+  cash: 'Efectivo',
+  credit: 'Crédito',
+  debit: 'Débito',
 };
 
 // Error messages
 export const ESTUDIO_ERROR_MESSAGES = {
-  ESTUDIO_NOT_FOUND: "El estudio especificado no existe",
-  GROUPER_NOT_FOUND: "El agrupador especificado no existe",
-  RELATIONSHIP_NOT_FOUND: "La relación estudio-agrupador no existe",
-  RELATIONSHIP_EXISTS: "El agrupador ya está asignado a este estudio",
-  INVALID_PERCENTAGE: "El porcentaje debe ser un número entre 0 y 100",
-  INVALID_PAYMENT_METHODS: "Los métodos de pago deben ser un array válido",
+  ESTUDIO_NOT_FOUND: 'El estudio especificado no existe',
+  GROUPER_NOT_FOUND: 'El agrupador especificado no existe',
+  RELATIONSHIP_NOT_FOUND: 'La relación estudio-agrupador no existe',
+  RELATIONSHIP_EXISTS: 'El agrupador ya está asignado a este estudio',
+  INVALID_PERCENTAGE: 'El porcentaje debe ser un número entre 0 y 100',
+  INVALID_PAYMENT_METHODS: 'Los métodos de pago deben ser un array válido',
   EMPTY_PAYMENT_METHODS_ARRAY:
-    "El array de métodos de pago no puede estar vacío. Use null para incluir todos los métodos",
-  DUPLICATE_PAYMENT_METHODS: "No se permiten métodos de pago duplicados",
+    'El array de métodos de pago no puede estar vacío. Use null para incluir todos los métodos',
+  DUPLICATE_PAYMENT_METHODS: 'No se permiten métodos de pago duplicados',
   INVALID_PAYMENT_METHOD_VALUES:
-    "Métodos de pago inválidos. Valores válidos: cash, credit, debit",
-  PAYMENT_METHODS_REQUIRED: "Debe seleccionar al menos un método de pago",
+    'Métodos de pago inválidos. Valores válidos: cash, credit, debit',
+  PAYMENT_METHODS_REQUIRED: 'Debe seleccionar al menos un método de pago',
 } as const;

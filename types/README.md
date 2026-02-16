@@ -51,7 +51,7 @@ The payment method filtering feature introduces several key types:
 
 ```typescript
 // Payment method enum
-type PaymentMethod = "cash" | "credit" | "debit";
+type PaymentMethod = 'cash' | 'credit' | 'debit';
 
 // Grouper response with payment method filtering
 interface EstudioGrouperResponse {
@@ -104,10 +104,10 @@ All types include Zod validation schemas for runtime type checking:
 // Payment method array validation
 const PaymentMethodsArraySchema = z
   .array(PaymentMethodEnum)
-  .min(1, "Debe seleccionar al menos un método de pago")
+  .min(1, 'Debe seleccionar al menos un método de pago')
   .refine(
     (methods) => new Set(methods).size === methods.length,
-    "No se permiten métodos de pago duplicados"
+    'No se permiten métodos de pago duplicados'
   )
   .nullable();
 ```
@@ -140,13 +140,13 @@ function hasPaymentMethodFiltering(filter: PaymentMethodFilter): boolean;
 
 ```typescript
 // Valid payment method values
-const VALID_PAYMENT_METHODS: PaymentMethod[] = ["cash", "credit", "debit"];
+const VALID_PAYMENT_METHODS: PaymentMethod[] = ['cash', 'credit', 'debit'];
 
 // Spanish labels for payment methods
 const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
-  cash: "Efectivo",
-  credit: "Crédito",
-  debit: "Débito",
+  cash: 'Efectivo',
+  credit: 'Crédito',
+  debit: 'Débito',
 };
 ```
 
@@ -156,10 +156,10 @@ Comprehensive error message constants are provided for consistent error handling
 
 ```typescript
 const ESTUDIO_ERROR_MESSAGES = {
-  INVALID_PAYMENT_METHODS: "Los métodos de pago deben ser un array válido",
+  INVALID_PAYMENT_METHODS: 'Los métodos de pago deben ser un array válido',
   EMPTY_PAYMENT_METHODS_ARRAY:
-    "El array de métodos de pago no puede estar vacío. Use null para incluir todos los métodos",
-  DUPLICATE_PAYMENT_METHODS: "No se permiten métodos de pago duplicados",
+    'El array de métodos de pago no puede estar vacío. Use null para incluir todos los métodos',
+  DUPLICATE_PAYMENT_METHODS: 'No se permiten métodos de pago duplicados',
   // ... more error messages
 } as const;
 ```
@@ -181,7 +181,7 @@ import {
   EstudioGrouperResponse,
   UpdateEstudioGrouperRequestSchema,
   validatePaymentMethods,
-} from "@/types/estudios";
+} from '@/types/estudios';
 
 export async function PUT(request: Request) {
   const body = await request.json();
@@ -192,7 +192,7 @@ export async function PUT(request: Request) {
     !validatePaymentMethods(validatedData.payment_methods)
   ) {
     return NextResponse.json(
-      { error: "Invalid payment methods" },
+      { error: 'Invalid payment methods' },
       { status: 400 }
     );
   }
@@ -204,7 +204,7 @@ export async function PUT(request: Request) {
 ### Component Usage
 
 ```typescript
-import { PaymentMethod, PAYMENT_METHOD_LABELS } from "@/types/estudios";
+import { PaymentMethod, PAYMENT_METHOD_LABELS } from '@/types/estudios';
 
 interface PaymentMethodSelectorProps {
   selectedMethods: PaymentMethod[];

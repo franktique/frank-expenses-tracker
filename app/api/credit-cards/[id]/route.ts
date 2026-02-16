@@ -1,10 +1,10 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   UpdateCreditCardSchema,
   UpdateCreditCardStatusSchema,
   CREDIT_CARD_ERROR_MESSAGES,
-} from "@/types/credit-cards";
+} from '@/types/credit-cards';
 
 export async function GET(
   request: NextRequest,
@@ -28,7 +28,7 @@ export async function GET(
 
     return NextResponse.json(creditCard);
   } catch (error) {
-    console.error("Error fetching credit card:", error);
+    console.error('Error fetching credit card:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -48,7 +48,7 @@ export async function PUT(
     const validationResult = UpdateCreditCardSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: validationResult.error.errors },
+        { error: 'Validation failed', details: validationResult.error.errors },
         { status: 400 }
       );
     }
@@ -126,7 +126,7 @@ export async function PUT(
 
     return NextResponse.json(updatedCard);
   } catch (error) {
-    console.error("Error updating credit card:", error);
+    console.error('Error updating credit card:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -183,7 +183,7 @@ export async function DELETE(
         expenseCount.count > 0 ? parseInt(expenseCount.count) : 0,
     });
   } catch (error) {
-    console.error("Error deleting credit card:", error);
+    console.error('Error deleting credit card:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

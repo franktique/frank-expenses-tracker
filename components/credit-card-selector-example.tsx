@@ -1,27 +1,27 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import {
   CreditCardSelector,
   useCreditCardSelection,
-} from "@/components/credit-card-selector";
-import { CreditCard } from "@/types/credit-cards";
+} from '@/components/credit-card-selector';
+import { CreditCard } from '@/types/credit-cards';
 
 // Example usage of CreditCardSelector component
 export function CreditCardSelectorExample() {
   const [selectedCard, setSelectedCard] = useState<CreditCard | null>(null);
   const [isRequired, setIsRequired] = useState(false);
   const [showNoCardOption, setShowNoCardOption] = useState(true);
-  const [customError, setCustomError] = useState<string | null>(null);
+  const [customError, setCustomError] = useState<string | undefined>(undefined);
 
   // Example using the hook
   const {
@@ -35,17 +35,17 @@ export function CreditCardSelectorExample() {
 
   const handleSubmit = () => {
     if (isRequired && !selectedCard) {
-      setCustomError("Debe seleccionar una tarjeta de crédito");
+      setCustomError('Debe seleccionar una tarjeta de crédito');
       return;
     }
-    setCustomError(null);
+    setCustomError(undefined);
 
-    console.log("Selected credit card:", selectedCard);
+    console.log('Selected credit card:', selectedCard);
     alert(
       `Tarjeta seleccionada: ${
         selectedCard
           ? `${selectedCard.bank_name} - ${selectedCard.franchise} ****${selectedCard.last_four_digits}`
-          : "Ninguna"
+          : 'Ninguna'
       }`
     );
   };
@@ -53,7 +53,7 @@ export function CreditCardSelectorExample() {
   const resetSelection = () => {
     setSelectedCard(null);
     setHookSelectedCard(null);
-    setCustomError(null);
+    setCustomError(undefined);
   };
 
   return (
@@ -83,21 +83,21 @@ export function CreditCardSelectorExample() {
 
             <div className="flex flex-wrap gap-4">
               <Button
-                variant={isRequired ? "default" : "outline"}
+                variant={isRequired ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setIsRequired(!isRequired)}
               >
-                {isRequired ? "Required: ON" : "Required: OFF"}
+                {isRequired ? 'Required: ON' : 'Required: OFF'}
               </Button>
 
               <Button
-                variant={showNoCardOption ? "default" : "outline"}
+                variant={showNoCardOption ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setShowNoCardOption(!showNoCardOption)}
               >
                 {showNoCardOption
-                  ? "No Card Option: ON"
-                  : "No Card Option: OFF"}
+                  ? 'No Card Option: ON'
+                  : 'No Card Option: OFF'}
               </Button>
 
               <Button
@@ -105,11 +105,11 @@ export function CreditCardSelectorExample() {
                 size="sm"
                 onClick={() =>
                   setCustomError(
-                    customError ? null : "Example validation error"
+                    customError ? undefined : 'Example validation error'
                   )
                 }
               >
-                {customError ? "Clear Error" : "Show Error"}
+                {customError ? 'Clear Error' : 'Show Error'}
               </Button>
             </div>
           </div>
@@ -153,34 +153,34 @@ export function CreditCardSelectorExample() {
           {/* Debug Information */}
           <div className="space-y-2">
             <h3 className="text-lg font-semibold">Debug Information</h3>
-            <div className="bg-muted p-4 rounded-lg space-y-2 text-sm">
+            <div className="space-y-2 rounded-lg bg-muted p-4 text-sm">
               <div>
-                <strong>Basic Selector:</strong>{" "}
+                <strong>Basic Selector:</strong>{' '}
                 {selectedCard
                   ? `${selectedCard.bank_name} - ${selectedCard.franchise} ****${selectedCard.last_four_digits}`
-                  : "None selected"}
+                  : 'None selected'}
               </div>
               <div>
-                <strong>Hook Selector:</strong>{" "}
+                <strong>Hook Selector:</strong>{' '}
                 {hookSelectedCard
                   ? `${hookSelectedCard.bank_name} - ${hookSelectedCard.franchise} ****${hookSelectedCard.last_four_digits}`
-                  : "None selected"}
+                  : 'None selected'}
               </div>
               <div>
                 <strong>Available Cards:</strong> {creditCards.length}
               </div>
               <div>
-                <strong>Loading:</strong> {isLoading ? "Yes" : "No"}
+                <strong>Loading:</strong> {isLoading ? 'Yes' : 'No'}
               </div>
               <div>
-                <strong>Hook Error:</strong> {hookError || "None"}
+                <strong>Hook Error:</strong> {hookError || 'None'}
               </div>
               <div>
-                <strong>Custom Error:</strong> {customError || "None"}
+                <strong>Custom Error:</strong> {customError || 'None'}
               </div>
               <div>
-                <strong>Validation:</strong>{" "}
-                {validation.isValid ? "Valid" : `Invalid - ${validation.error}`}
+                <strong>Validation:</strong>{' '}
+                {validation.isValid ? 'Valid' : `Invalid - ${validation.error}`}
               </div>
             </div>
           </div>
@@ -197,8 +197,8 @@ export function CreditCardSelectorExample() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div>
-            <h4 className="font-semibold mb-2">Basic Usage</h4>
-            <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+            <h4 className="mb-2 font-semibold">Basic Usage</h4>
+            <pre className="overflow-x-auto rounded bg-muted p-3 text-sm">
               {`<CreditCardSelector
   selectedCreditCard={selectedCard}
   onCreditCardChange={setSelectedCard}
@@ -207,8 +207,8 @@ export function CreditCardSelectorExample() {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-2">Required Selection</h4>
-            <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+            <h4 className="mb-2 font-semibold">Required Selection</h4>
+            <pre className="overflow-x-auto rounded bg-muted p-3 text-sm">
               {`<CreditCardSelector
   selectedCreditCard={selectedCard}
   onCreditCardChange={setSelectedCard}
@@ -219,8 +219,8 @@ export function CreditCardSelectorExample() {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-2">Using Hook</h4>
-            <pre className="bg-muted p-3 rounded text-sm overflow-x-auto">
+            <h4 className="mb-2 font-semibold">Using Hook</h4>
+            <pre className="overflow-x-auto rounded bg-muted p-3 text-sm">
               {`const {
   selectedCreditCard,
   setSelectedCreditCard,

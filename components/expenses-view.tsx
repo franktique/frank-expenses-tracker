@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect } from 'react';
 import {
   CalendarIcon,
   FileUp,
@@ -12,21 +12,21 @@ import {
   ChevronDown,
   ChevronUp,
   Settings,
-} from "lucide-react";
-import { ExpenseFormDialog } from "@/components/expense-form-dialog";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+} from 'lucide-react';
+import { ExpenseFormDialog } from '@/components/expense-form-dialog';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { CSVImportDialog } from "@/components/csv-import-dialog";
-import { CSVImportDialogEnhanced } from "@/components/csv-import-dialog-enhanced";
-import { ExportExpensesButton } from "@/components/export-expenses-button";
-import { ExportExpensesExcelButton } from "@/components/export-expenses-excel-button";
+} from '@/components/ui/card';
+import { CSVImportDialog } from '@/components/csv-import-dialog';
+import { CSVImportDialogEnhanced } from '@/components/csv-import-dialog-enhanced';
+import { ExportExpensesButton } from '@/components/export-expenses-button';
+import { ExportExpensesExcelButton } from '@/components/export-expenses-excel-button';
 import {
   Dialog,
   DialogContent,
@@ -34,28 +34,28 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+} from '@/components/ui/collapsible';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+} from '@/components/ui/popover';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -63,18 +63,18 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
-import { Badge } from "@/components/ui/badge";
-import { useBudget, type PaymentMethod } from "@/context/budget-context";
-import { cn, formatCurrency, formatDate } from "@/lib/utils";
-import { FundFilter } from "@/components/fund-filter";
-import { FundSelectionConstraintIndicator } from "@/components/fund-category-relationship-indicator";
-import { SourceFundSelector } from "@/components/source-fund-selector";
-import { CreditCardSelector } from "@/components/credit-card-selector";
-import { Fund } from "@/types/funds";
-import { CreditCard, CREDIT_CARD_FRANCHISE_LABELS } from "@/types/credit-cards";
-import { useRouter, useSearchParams } from "next/navigation";
+} from '@/components/ui/table';
+import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { useBudget, type PaymentMethod } from '@/context/budget-context';
+import { cn, formatCurrency, formatDate } from '@/lib/utils';
+import { FundFilter } from '@/components/fund-filter';
+import { FundSelectionConstraintIndicator } from '@/components/fund-category-relationship-indicator';
+import { SourceFundSelector } from '@/components/source-fund-selector';
+import { CreditCardSelector } from '@/components/credit-card-selector';
+import { Fund } from '@/types/funds';
+import { CreditCard, CREDIT_CARD_FRANCHISE_LABELS } from '@/types/credit-cards';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 // Helper function to get available funds for a category
 const getAvailableFundsForCategory = (
@@ -172,19 +172,19 @@ export function ExpensesView() {
   const [isImportOpen, setIsImportOpen] = useState(false);
   const [isFundSectionOpenEdit, setIsFundSectionOpenEdit] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>(
-    searchParams.get("category") || ""
+    searchParams.get('category') || ''
   );
   const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>(
-    searchParams.get("paymentMethod") || ""
+    searchParams.get('paymentMethod') || ''
   );
   const [creditCardFilter, setCreditCardFilter] = useState<string>(
-    searchParams.get("creditCard") || ""
+    searchParams.get('creditCard') || ''
   );
 
   // Fund filter state - mandatory for expenses
   const [fundFilter, setFundFilter] = useState<Fund | null>(null);
 
-  const [categorySearch, setCategorySearch] = useState("");
+  const [categorySearch, setCategorySearch] = useState('');
 
   // State for dynamic fund filtering (for edit form only)
   const [availableFundsForEditExpense, setAvailableFundsForEditExpense] =
@@ -221,7 +221,7 @@ export function ExpensesView() {
     const current = new URLSearchParams(Array.from(searchParams.entries()));
 
     Object.entries(updates).forEach(([key, value]) => {
-      if (value && value !== "" && value !== "all") {
+      if (value && value !== '' && value !== 'all') {
         current.set(key, value);
       } else {
         current.delete(key);
@@ -229,7 +229,7 @@ export function ExpensesView() {
     });
 
     const search = current.toString();
-    const query = search ? `?${search}` : "";
+    const query = search ? `?${search}` : '';
     router.push(`${window.location.pathname}${query}`);
   };
 
@@ -245,13 +245,17 @@ export function ExpensesView() {
       const defaultFund = getDefaultFund();
       if (defaultFund) {
         setFundFilter(defaultFund);
-        console.log(`Expenses: Fund filter set to default fund: ${defaultFund.name}`);
+        console.log(
+          `Expenses: Fund filter set to default fund: ${defaultFund.name}`
+        );
       } else {
         // Fallback to "Disponible" fund if no default is configured
-        const disponibleFund = funds.find((fund) => fund.name === "Disponible");
+        const disponibleFund = funds.find((fund) => fund.name === 'Disponible');
         if (disponibleFund) {
           setFundFilter(disponibleFund);
-          console.log(`Expenses: Fund filter set to fallback 'Disponible' fund`);
+          console.log(
+            `Expenses: Fund filter set to fallback 'Disponible' fund`
+          );
         }
       }
     }
@@ -262,13 +266,13 @@ export function ExpensesView() {
     const fetchCreditCards = async () => {
       setCreditCardsLoading(true);
       try {
-        const response = await fetch("/api/credit-cards");
+        const response = await fetch('/api/credit-cards');
         if (response.ok) {
           const data = await response.json();
           setCreditCards(data.credit_cards || []);
         }
       } catch (error) {
-        console.error("Error fetching credit cards for filter:", error);
+        console.error('Error fetching credit cards for filter:', error);
         setCreditCards([]);
       } finally {
         setCreditCardsLoading(false);
@@ -340,10 +344,10 @@ export function ExpensesView() {
       !editExpenseSourceFund
     ) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
-          "Los campos obligatorios no pueden estar vacíos. Debe seleccionar un fondo origen.",
-        variant: "destructive",
+          'Los campos obligatorios no pueden estar vacíos. Debe seleccionar un fondo origen.',
+        variant: 'destructive',
       });
       return;
     }
@@ -351,9 +355,9 @@ export function ExpensesView() {
     const amount = Number.parseFloat(editExpense.amount);
     if (isNaN(amount) || amount <= 0) {
       toast({
-        title: "Error",
-        description: "El monto debe ser un número positivo",
-        variant: "destructive",
+        title: 'Error',
+        description: 'El monto debe ser un número positivo',
+        variant: 'destructive',
       });
       return;
     }
@@ -364,9 +368,9 @@ export function ExpensesView() {
       editExpenseSourceFund.id === editExpenseDestinationFund.id
     ) {
       toast({
-        title: "Error",
-        description: "El fondo origen y destino no pueden ser el mismo",
-        variant: "destructive",
+        title: 'Error',
+        description: 'El fondo origen y destino no pueden ser el mismo',
+        variant: 'destructive',
       });
       return;
     }
@@ -395,8 +399,8 @@ export function ExpensesView() {
     setIsEditOpen(false);
 
     toast({
-      title: "Gasto actualizado",
-      description: "El gasto ha sido actualizado exitosamente",
+      title: 'Gasto actualizado',
+      description: 'El gasto ha sido actualizado exitosamente',
     });
   };
 
@@ -407,8 +411,8 @@ export function ExpensesView() {
       setIsDeleteOpen(false);
 
       toast({
-        title: "Gasto eliminado",
-        description: "El gasto ha sido eliminado exitosamente",
+        title: 'Gasto eliminado',
+        description: 'El gasto ha sido eliminado exitosamente',
       });
     }
   };
@@ -427,21 +431,21 @@ export function ExpensesView() {
       : true;
     // Filter by category
     const categoryMatch =
-      categoryFilter === "all" || !categoryFilter
+      categoryFilter === 'all' || !categoryFilter
         ? true
         : expense.category_id === categoryFilter;
     // Filter by payment method
     const paymentMethodMatch =
-      paymentMethodFilter === "all" || !paymentMethodFilter
+      paymentMethodFilter === 'all' || !paymentMethodFilter
         ? true
         : expense.payment_method === paymentMethodFilter;
     // Filter by credit card
     const creditCardMatch =
-      creditCardFilter === "all" || !creditCardFilter
+      creditCardFilter === 'all' || !creditCardFilter
         ? true
-        : creditCardFilter === "none"
-        ? !expense.credit_card_id
-        : expense.credit_card_id === creditCardFilter;
+        : creditCardFilter === 'none'
+          ? !expense.credit_card_id
+          : expense.credit_card_id === creditCardFilter;
     // Filter by fund - only show expenses from categories that belong to the selected fund
     const fundMatch = !fundFilter
       ? true
@@ -476,22 +480,26 @@ export function ExpensesView() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Gastos</h1>
-          <p className="text-muted-foreground mt-1">
-            {filteredExpenses ? filteredExpenses.length : 0}{" "}
+          <p className="mt-1 text-muted-foreground">
+            {filteredExpenses ? filteredExpenses.length : 0}{' '}
             {filteredExpenses && filteredExpenses.length === 1
-              ? "registro"
-              : "registros"}
-            {(categoryFilter !== "all" && categoryFilter) ||
-            (paymentMethodFilter !== "all" && paymentMethodFilter) ||
-            (creditCardFilter !== "all" && creditCardFilter)
-              ? " con los filtros aplicados"
-              : ""}
+              ? 'registro'
+              : 'registros'}
+            {(categoryFilter !== 'all' && categoryFilter) ||
+            (paymentMethodFilter !== 'all' && paymentMethodFilter) ||
+            (creditCardFilter !== 'all' && creditCardFilter)
+              ? ' con los filtros aplicados'
+              : ''}
           </p>
         </div>
         <div className="flex gap-2">
           <ExportExpensesButton />
           <ExportExpensesExcelButton />
-          <Button componentId="expenses-import-btn" variant="outline" onClick={() => setIsImportOpen(true)}>
+          <Button
+            componentId="expenses-import-btn"
+            variant="outline"
+            onClick={() => setIsImportOpen(true)}
+          >
             <FileUp className="mr-2 h-4 w-4" />
             Importar CSV
           </Button>
@@ -525,8 +533,8 @@ export function ExpensesView() {
           <div className="flex items-center gap-4">
             <Label htmlFor="fund-filter">Fondo:</Label>
             {!dataLoaded ? (
-              <div className="flex items-center gap-2 p-2 rounded-md bg-blue-50 border border-blue-200">
-                <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 p-2">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
                 <p className="text-sm text-blue-700">
                   Cargando fondos disponibles...
                 </p>
@@ -542,8 +550,8 @@ export function ExpensesView() {
                   required
                 />
                 {!fundFilter && (
-                  <div className="flex items-center gap-2 p-2 rounded-md bg-destructive/10 border border-destructive/20">
-                    <AlertTriangle className="w-4 h-4 text-destructive" />
+                  <div className="flex items-center gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-2">
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
                     <p className="text-sm text-destructive">
                       Debe seleccionar un fondo para registrar gastos
                     </p>
@@ -561,7 +569,7 @@ export function ExpensesView() {
           <CardDescription>
             {activePeriod
               ? `Gastos del periodo: ${activePeriod.name}`
-              : "Historial de todos los gastos registrados"}
+              : 'Historial de todos los gastos registrados'}
           </CardDescription>
           <div className="mt-4 space-y-4">
             <div>
@@ -636,8 +644,8 @@ export function ExpensesView() {
                     .sort((a, b) => a.bank_name.localeCompare(b.bank_name))
                     .map((creditCard) => (
                       <SelectItem key={creditCard.id} value={creditCard.id}>
-                        {creditCard.bank_name} -{" "}
-                        {CREDIT_CARD_FRANCHISE_LABELS[creditCard.franchise]}{" "}
+                        {creditCard.bank_name} -{' '}
+                        {CREDIT_CARD_FRANCHISE_LABELS[creditCard.franchise]}{' '}
                         ****{creditCard.last_four_digits}
                       </SelectItem>
                     ))}
@@ -668,14 +676,14 @@ export function ExpensesView() {
                   <TableRow key={expense.id}>
                     <TableCell>
                       {/* Forzar visualización correcta de fechas sin desplazamiento de zona horaria */}
-                      {expense.date && typeof expense.date === "string"
+                      {expense.date && typeof expense.date === 'string'
                         ? // Si es string, usar método manual para evitar conversiones automáticas de zona horaria
                           formatDate(
-                            new Date(expense.date.split("T")[0] + "T12:00:00Z")
+                            new Date(expense.date.split('T')[0] + 'T12:00:00Z')
                           )
                         : formatDate(new Date(expense.date))}
                     </TableCell>
-                    <TableCell>{category?.name || "Desconocida"}</TableCell>
+                    <TableCell>{category?.name || 'Desconocida'}</TableCell>
                     <TableCell>
                       {expense.description}
                       {expense.event && (
@@ -685,9 +693,9 @@ export function ExpensesView() {
                       )}
                     </TableCell>
                     <TableCell>
-                      {expense.payment_method === "credit" && "Crédito"}
-                      {expense.payment_method === "debit" && "Débito"}
-                      {expense.payment_method === "cash" && "Efectivo"}
+                      {expense.payment_method === 'credit' && 'Crédito'}
+                      {expense.payment_method === 'debit' && 'Débito'}
+                      {expense.payment_method === 'cash' && 'Efectivo'}
                     </TableCell>
                     <TableCell>
                       {expense.credit_card_info ? (
@@ -695,8 +703,8 @@ export function ExpensesView() {
                           <span
                             className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
                               expense.credit_card_info.is_active
-                                ? "bg-purple-50 text-purple-700 ring-purple-700/10"
-                                : "bg-gray-50 text-gray-600 ring-gray-600/10"
+                                ? 'bg-purple-50 text-purple-700 ring-purple-700/10'
+                                : 'bg-gray-50 text-gray-600 ring-gray-600/10'
                             }`}
                           >
                             {expense.credit_card_info.bank_name} ****
@@ -709,7 +717,7 @@ export function ExpensesView() {
                           )}
                         </div>
                       ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
+                        <span className="text-sm text-muted-foreground">-</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -742,7 +750,7 @@ export function ExpensesView() {
                             )}
                         </div>
                       ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
+                        <span className="text-sm text-muted-foreground">-</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -769,7 +777,7 @@ export function ExpensesView() {
                             )}
                         </div>
                       ) : (
-                        <span className="text-muted-foreground text-sm">-</span>
+                        <span className="text-sm text-muted-foreground">-</span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
@@ -784,7 +792,7 @@ export function ExpensesView() {
                             id: expense.id,
                             categoryId: expense.category_id,
                             date: new Date(expense.date),
-                            event: expense.event || "",
+                            event: expense.event || '',
                             paymentMethod: expense.payment_method,
                             description: expense.description,
                             amount: expense.amount.toString(),
@@ -816,9 +824,10 @@ export function ExpensesView() {
                                 .franchise as any,
                               last_four_digits:
                                 expense.credit_card_info.last_four_digits,
-                              is_active: expense.credit_card_info.is_active,
-                              created_at: "",
-                              updated_at: "",
+                              is_active:
+                                expense.credit_card_info.is_active ?? true,
+                              created_at: '',
+                              updated_at: '',
                             };
                             setEditExpenseCreditCard(creditCard);
                           } else {
@@ -848,13 +857,13 @@ export function ExpensesView() {
                 <TableRow>
                   <TableCell
                     colSpan={9}
-                    className="text-center py-4 text-muted-foreground"
+                    className="py-4 text-center text-muted-foreground"
                   >
                     {!dataLoaded
-                      ? "Cargando gastos..."
+                      ? 'Cargando gastos...'
                       : !fundFilter
-                      ? "Selecciona un fondo para ver los gastos disponibles."
-                      : `No hay gastos registrados para el fondo "${fundFilter.name}". Agrega un nuevo gasto para comenzar.`}
+                        ? 'Selecciona un fondo para ver los gastos disponibles.'
+                        : `No hay gastos registrados para el fondo "${fundFilter.name}". Agrega un nuevo gasto para comenzar.`}
                   </TableCell>
                 </TableRow>
               )}
@@ -888,7 +897,7 @@ export function ExpensesView() {
             <div className="grid gap-2">
               <Label htmlFor="edit-category">Categoría</Label>
               <Select
-                value={editExpense?.categoryId || ""}
+                value={editExpense?.categoryId || ''}
                 onValueChange={(value) => {
                   setEditExpense((prev) =>
                     prev ? { ...prev, categoryId: value } : null
@@ -925,12 +934,12 @@ export function ExpensesView() {
               </Select>
             </div>
             {/* Collapsible Fund Configuration Section with Orange Border */}
-            <div className="border border-orange-200 bg-orange-50 dark:border-orange-800 dark:bg-orange-950 rounded-lg p-3">
+            <div className="rounded-lg border border-orange-200 bg-orange-50 p-3 dark:border-orange-800 dark:bg-orange-950">
               <Collapsible
                 open={isFundSectionOpenEdit}
                 onOpenChange={setIsFundSectionOpenEdit}
               >
-                <CollapsibleTrigger className="flex items-center justify-between w-full text-sm font-medium text-orange-800 dark:text-orange-200 hover:text-orange-900 dark:hover:text-orange-100 transition-colors">
+                <CollapsibleTrigger className="flex w-full items-center justify-between text-sm font-medium text-orange-800 transition-colors hover:text-orange-900 dark:text-orange-200 dark:hover:text-orange-100">
                   <div className="flex items-center gap-2">
                     <Settings className="h-4 w-4" />
                     <span>Configuración de Fondos</span>
@@ -941,7 +950,7 @@ export function ExpensesView() {
                     <ChevronDown className="h-4 w-4" />
                   )}
                 </CollapsibleTrigger>
-                <CollapsibleContent className="pt-3 space-y-3">
+                <CollapsibleContent className="space-y-3 pt-3">
                   {editExpense?.categoryId && (
                     <FundSelectionConstraintIndicator
                       categoryId={editExpense.categoryId}
@@ -990,10 +999,10 @@ export function ExpensesView() {
                 <PopoverTrigger asChild>
                   <Button
                     id="edit-date"
-                    variant={"outline"}
+                    variant={'outline'}
                     className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !editExpense?.date && "text-muted-foreground"
+                      'w-full justify-start text-left font-normal',
+                      !editExpense?.date && 'text-muted-foreground'
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
@@ -1022,7 +1031,7 @@ export function ExpensesView() {
               <Label htmlFor="edit-event">Evento (opcional)</Label>
               <Input
                 id="edit-event"
-                value={editExpense?.event || ""}
+                value={editExpense?.event || ''}
                 onChange={(e) =>
                   setEditExpense((prev) =>
                     prev ? { ...prev, event: e.target.value } : null
@@ -1033,7 +1042,7 @@ export function ExpensesView() {
             <div className="grid gap-2">
               <Label htmlFor="edit-payment-method">Medio de Pago</Label>
               <RadioGroup
-                value={editExpense?.paymentMethod || "credit"}
+                value={editExpense?.paymentMethod || 'credit'}
                 onValueChange={(value) =>
                   setEditExpense((prev) =>
                     prev
@@ -1061,7 +1070,7 @@ export function ExpensesView() {
               <Label htmlFor="edit-description">Descripción</Label>
               <Input
                 id="edit-description"
-                value={editExpense?.description || ""}
+                value={editExpense?.description || ''}
                 onChange={(e) =>
                   setEditExpense((prev) =>
                     prev ? { ...prev, description: e.target.value } : null
@@ -1076,7 +1085,7 @@ export function ExpensesView() {
                 type="number"
                 min="0"
                 step="0.01"
-                value={editExpense?.amount || ""}
+                value={editExpense?.amount || ''}
                 onChange={(e) =>
                   setEditExpense((prev) =>
                     prev ? { ...prev, amount: e.target.value } : null

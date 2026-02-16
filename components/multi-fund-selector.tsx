@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Check, ChevronsUpDown, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { Check, ChevronsUpDown, X } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -10,16 +10,16 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from '@/components/ui/command';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
-import { useBudget } from "@/context/budget-context";
-import { Fund } from "@/types/funds";
+} from '@/components/ui/popover';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
+import { useBudget } from '@/context/budget-context';
+import { Fund } from '@/types/funds';
 
 interface MultiFundSelectorProps {
   selectedFunds: Fund[];
@@ -35,14 +35,14 @@ export function MultiFundSelector({
   selectedFunds,
   onFundsChange,
   availableFunds,
-  placeholder = "Seleccionar fondos...",
+  placeholder = 'Seleccionar fondos...',
   className,
   disabled = false,
   maxSelection,
 }: MultiFundSelectorProps) {
   const { funds: contextFunds, isLoading, error } = useBudget();
   const [open, setOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue, setSearchValue] = useState('');
 
   // Use provided availableFunds or fall back to context funds
   const funds = availableFunds || contextFunds || [];
@@ -88,7 +88,7 @@ export function MultiFundSelector({
 
   if (isLoading) {
     return (
-      <div className={cn("space-y-2", className)}>
+      <div className={cn('space-y-2', className)}>
         <Button
           variant="outline"
           role="combobox"
@@ -104,7 +104,7 @@ export function MultiFundSelector({
 
   if (error) {
     return (
-      <div className={cn("space-y-2", className)}>
+      <div className={cn('space-y-2', className)}>
         <Button
           variant="outline"
           role="combobox"
@@ -120,7 +120,7 @@ export function MultiFundSelector({
 
   if (!funds || funds.length === 0) {
     return (
-      <div className={cn("space-y-2", className)}>
+      <div className={cn('space-y-2', className)}>
         <Button
           variant="outline"
           role="combobox"
@@ -135,7 +135,7 @@ export function MultiFundSelector({
   }
 
   return (
-    <div className={cn("space-y-2", className)}>
+    <div className={cn('space-y-2', className)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -161,7 +161,7 @@ export function MultiFundSelector({
               <CommandGroup>
                 {filteredFunds
                   .sort((a, b) =>
-                    a.name.localeCompare(b.name, "es", { sensitivity: "base" })
+                    a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
                   )
                   .map((fund) => {
                     const isSelected = selectedFunds.some(
@@ -175,19 +175,19 @@ export function MultiFundSelector({
                         value={fund.id}
                         onSelect={() => !isDisabled && handleSelect(fund)}
                         className={cn(
-                          isDisabled && "opacity-50 cursor-not-allowed"
+                          isDisabled && 'cursor-not-allowed opacity-50'
                         )}
                       >
                         <Check
                           className={cn(
-                            "mr-2 h-4 w-4",
-                            isSelected ? "opacity-100" : "opacity-0"
+                            'mr-2 h-4 w-4',
+                            isSelected ? 'opacity-100' : 'opacity-0'
                           )}
                         />
-                        <div className="flex flex-col flex-1">
+                        <div className="flex flex-1 flex-col">
                           <span
                             className={cn(
-                              isDisabled && "text-muted-foreground"
+                              isDisabled && 'text-muted-foreground'
                             )}
                           >
                             {fund.name}
@@ -199,7 +199,7 @@ export function MultiFundSelector({
                           )}
                         </div>
                         {isDisabled && maxSelection && (
-                          <span className="text-xs text-muted-foreground ml-2">
+                          <span className="ml-2 text-xs text-muted-foreground">
                             Máximo {maxSelection}
                           </span>
                         )}
@@ -221,14 +221,14 @@ export function MultiFundSelector({
               variant="secondary"
               className="flex items-center gap-1 pr-1"
             >
-              <span className="truncate max-w-[120px]" title={fund.name}>
+              <span className="max-w-[120px] truncate" title={fund.name}>
                 {fund.name}
               </span>
               <button
                 type="button"
                 onClick={() => handleRemoveFund(fund.id)}
                 disabled={disabled}
-                className="ml-1 rounded-full hover:bg-secondary-foreground/20 p-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="ml-1 rounded-full p-0.5 hover:bg-secondary-foreground/20 disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label={`Remover ${fund.name}`}
               >
                 <X className="h-3 w-3" />
@@ -247,13 +247,13 @@ export function MultiFundSelector({
           </div>
           <div className="flex items-center gap-1">
             {selectedFunds.length === 1 && (
-              <span className="text-green-600 text-xs">✓ Específico</span>
+              <span className="text-xs text-green-600">✓ Específico</span>
             )}
             {selectedFunds.length > 1 && (
-              <span className="text-blue-600 text-xs">⚡ Múltiple</span>
+              <span className="text-xs text-blue-600">⚡ Múltiple</span>
             )}
             {selectedFunds.length === 0 && (
-              <span className="text-amber-600 text-xs">⚠ Sin restricción</span>
+              <span className="text-xs text-amber-600">⚠ Sin restricción</span>
             )}
           </div>
         </div>
@@ -261,7 +261,7 @@ export function MultiFundSelector({
 
       {/* Help text for empty selection */}
       {selectedFunds.length === 0 && (
-        <div className="text-xs text-muted-foreground flex items-center gap-1">
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
           <span>💡 Sin fondos seleccionados = acepta cualquier fondo</span>
         </div>
       )}
@@ -287,7 +287,7 @@ export function validateFundSelection(
     errors.push(
       `Los siguientes fondos no están disponibles: ${invalidFunds
         .map((f) => f.name)
-        .join(", ")}`
+        .join(', ')}`
     );
   }
 
@@ -305,7 +305,7 @@ export function validateFundSelection(
 // Utility function to get fund selection summary
 export function getFundSelectionSummary(selectedFunds: Fund[]): string {
   if (selectedFunds.length === 0) {
-    return "Ningún fondo seleccionado";
+    return 'Ningún fondo seleccionado';
   }
 
   if (selectedFunds.length === 1) {
@@ -313,13 +313,13 @@ export function getFundSelectionSummary(selectedFunds: Fund[]): string {
   }
 
   if (selectedFunds.length <= 3) {
-    return selectedFunds.map((f) => f.name).join(", ");
+    return selectedFunds.map((f) => f.name).join(', ');
   }
 
   return `${selectedFunds
     .slice(0, 2)
     .map((f) => f.name)
-    .join(", ")} y ${selectedFunds.length - 2} más`;
+    .join(', ')} y ${selectedFunds.length - 2} más`;
 }
 
 // Hook for managing multi-fund selection state

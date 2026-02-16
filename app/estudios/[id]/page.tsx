@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { toast } from "@/components/ui/use-toast";
+import { useState, useEffect } from 'react';
+import { useParams, useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
+import { toast } from '@/components/ui/use-toast';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -18,14 +18,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -33,18 +33,18 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { PaymentMethodSelector } from "@/components/payment-method-selector";
-import { PaymentMethodBadges } from "@/components/payment-method-badges";
-import { PaymentMethodTableSelector } from "@/components/payment-method-table-selector";
-import { PaymentMethodErrorBoundary } from "@/components/payment-method-error-boundary";
-import { PaymentMethodErrorHandler } from "@/components/payment-method-error-handler";
+} from '@/components/ui/breadcrumb';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { PaymentMethodSelector } from '@/components/payment-method-selector';
+import { PaymentMethodBadges } from '@/components/payment-method-badges';
+import { PaymentMethodTableSelector } from '@/components/payment-method-table-selector';
+import { PaymentMethodErrorBoundary } from '@/components/payment-method-error-boundary';
+import { PaymentMethodErrorHandler } from '@/components/payment-method-error-handler';
 import {
   usePaymentMethodValidation,
   usePaymentMethodApi,
-} from "@/hooks/use-payment-method-validation";
+} from '@/hooks/use-payment-method-validation';
 import {
   BookOpen,
   PlusCircle,
@@ -57,13 +57,13 @@ import {
   Check,
   X,
   Save,
-} from "lucide-react";
+} from 'lucide-react';
 
 type Grouper = {
   id: number;
   name: string;
   is_assigned?: boolean;
-  percentage?: number;
+  percentage?: number | null;
   payment_methods?: string[] | null;
 };
 
@@ -86,21 +86,21 @@ function PercentageInput({
   onUpdate,
 }: PercentageInputProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const [value, setValue] = useState(grouper.percentage?.toString() || "");
+  const [value, setValue] = useState(grouper.percentage?.toString() || '');
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSave = async () => {
     setIsLoading(true);
     try {
-      const numValue = value.trim() === "" ? null : parseFloat(value);
+      const numValue = value.trim() === '' ? null : parseFloat(value);
       if (
         numValue !== null &&
         (isNaN(numValue) || numValue < 0 || numValue > 100)
       ) {
         toast({
-          title: "Error",
-          description: "El porcentaje debe ser un número entre 0 y 100",
-          variant: "destructive",
+          title: 'Error',
+          description: 'El porcentaje debe ser un número entre 0 y 100',
+          variant: 'destructive',
         });
         return;
       }
@@ -108,14 +108,14 @@ function PercentageInput({
       await onUpdate(grouper.id, numValue);
       setIsEditing(false);
     } catch (error) {
-      console.error("Error updating percentage:", error);
+      console.error('Error updating percentage:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCancel = () => {
-    setValue(grouper.percentage?.toString() || "");
+    setValue(grouper.percentage?.toString() || '');
     setIsEditing(false);
   };
 
@@ -158,7 +158,7 @@ function PercentageInput({
       <span className="min-w-12">
         {grouper.percentage !== null && grouper.percentage !== undefined
           ? `${grouper.percentage}%`
-          : "-"}
+          : '-'}
       </span>
       <Button size="sm" variant="ghost" onClick={() => setIsEditing(true)}>
         <Edit3 className="h-3 w-3" />
@@ -203,10 +203,10 @@ export default function EstudioGroupersPage() {
     retry,
   } = usePaymentMethodApi({
     onSuccess: (data) => {
-      console.log("Payment method operation successful:", data);
+      console.log('Payment method operation successful:', data);
     },
     onError: (error) => {
-      console.error("Payment method API error:", error);
+      console.error('Payment method API error:', error);
     },
   });
 
@@ -218,11 +218,11 @@ export default function EstudioGroupersPage() {
   const fetchData = async (isRetry = false) => {
     if (isNaN(estudioId)) {
       toast({
-        title: "Error",
-        description: "ID de estudio inválido",
-        variant: "destructive",
+        title: 'Error',
+        description: 'ID de estudio inválido',
+        variant: 'destructive',
       });
-      router.push("/estudios");
+      router.push('/estudios');
       return;
     }
 
@@ -237,11 +237,11 @@ export default function EstudioGroupersPage() {
       if (!estudioResponse.ok) {
         if (estudioResponse.status === 404) {
           toast({
-            title: "Estudio no encontrado",
-            description: "El estudio solicitado no existe o ha sido eliminado",
-            variant: "destructive",
+            title: 'Estudio no encontrado',
+            description: 'El estudio solicitado no existe o ha sido eliminado',
+            variant: 'destructive',
           });
-          router.push("/estudios");
+          router.push('/estudios');
           return;
         }
         const error = await estudioResponse.json().catch(() => ({}));
@@ -283,21 +283,21 @@ export default function EstudioGroupersPage() {
       setFetchError(null);
       setRetryCount(0);
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error('Error fetching data:', error);
       const errorMessage =
         error instanceof Error
-          ? error.message.includes("fetch")
-            ? "Error de conexión. Verifique su conexión a internet."
+          ? error.message.includes('fetch')
+            ? 'Error de conexión. Verifique su conexión a internet.'
             : error.message
-          : "Ocurrió un error desconocido";
+          : 'Ocurrió un error desconocido';
 
       setFetchError(errorMessage);
 
       if (!isRetry) {
         toast({
-          title: "Error al cargar datos",
+          title: 'Error al cargar datos',
           description: errorMessage,
-          variant: "destructive",
+          variant: 'destructive',
         });
       }
     } finally {
@@ -309,10 +309,10 @@ export default function EstudioGroupersPage() {
   const retryFetchData = async () => {
     if (retryCount >= maxRetries) {
       toast({
-        title: "Error persistente",
+        title: 'Error persistente',
         description:
-          "Se alcanzó el máximo número de reintentos. Recargue la página.",
-        variant: "destructive",
+          'Se alcanzó el máximo número de reintentos. Recargue la página.',
+        variant: 'destructive',
       });
       return;
     }
@@ -321,7 +321,7 @@ export default function EstudioGroupersPage() {
     const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff
 
     toast({
-      title: "Reintentando...",
+      title: 'Reintentando...',
       description: `Intento ${retryCount + 1} de ${maxRetries}`,
     });
 
@@ -340,9 +340,9 @@ export default function EstudioGroupersPage() {
   const handleAddGroupers = async () => {
     if (selectedGroupersToAdd.length === 0) {
       toast({
-        title: "Selección requerida",
-        description: "Debe seleccionar al menos un agrupador",
-        variant: "destructive",
+        title: 'Selección requerida',
+        description: 'Debe seleccionar al menos un agrupador',
+        variant: 'destructive',
       });
       return;
     }
@@ -351,8 +351,8 @@ export default function EstudioGroupersPage() {
       setIsAddingGroupers(true);
 
       const response = await fetch(`/api/estudios/${estudioId}/groupers`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ grouperIds: selectedGroupersToAdd }),
       });
 
@@ -397,11 +397,11 @@ export default function EstudioGroupersPage() {
               : `Se agregaron ${result.added} agrupadores al estudio.`;
 
           toast({
-            title: "Agrupadores agregados",
+            title: 'Agrupadores agregados',
             description: message,
           });
         } else {
-          throw new Error("Error al actualizar la lista de agrupadores");
+          throw new Error('Error al actualizar la lista de agrupadores');
         }
       } else {
         const error = await response.json().catch(() => ({}));
@@ -409,24 +409,24 @@ export default function EstudioGroupersPage() {
           error.error || `Error ${response.status}: ${response.statusText}`;
 
         toast({
-          title: "Error al agregar agrupadores",
+          title: 'Error al agregar agrupadores',
           description: errorMessage,
-          variant: "destructive",
+          variant: 'destructive',
         });
       }
     } catch (error) {
-      console.error("Error adding groupers:", error);
+      console.error('Error adding groupers:', error);
       const errorMessage =
         error instanceof Error
-          ? error.message.includes("fetch")
-            ? "Error de conexión. Verifique su conexión a internet."
+          ? error.message.includes('fetch')
+            ? 'Error de conexión. Verifique su conexión a internet.'
             : error.message
-          : "No se pudieron agregar los agrupadores";
+          : 'No se pudieron agregar los agrupadores';
 
       toast({
-        title: "Error al agregar agrupadores",
+        title: 'Error al agregar agrupadores',
         description: errorMessage,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsAddingGroupers(false);
@@ -444,7 +444,7 @@ export default function EstudioGroupersPage() {
 
       const response = await fetch(
         `/api/estudios/${estudioId}/groupers/${grouperToRemove.id}`,
-        { method: "DELETE" }
+        { method: 'DELETE' }
       );
 
       if (response.ok) {
@@ -481,13 +481,13 @@ export default function EstudioGroupersPage() {
           setGrouperToRemove(null);
 
           toast({
-            title: "Agrupador removido",
+            title: 'Agrupador removido',
             description: `El agrupador "${
               result.removedGrouper?.name || grouperToRemove.name
             }" ha sido removido del estudio.`,
           });
         } else {
-          throw new Error("Error al actualizar la lista de agrupadores");
+          throw new Error('Error al actualizar la lista de agrupadores');
         }
       } else {
         const error = await response.json().catch(() => ({}));
@@ -495,24 +495,24 @@ export default function EstudioGroupersPage() {
           error.error || `Error ${response.status}: ${response.statusText}`;
 
         toast({
-          title: "Error al remover agrupador",
+          title: 'Error al remover agrupador',
           description: errorMessage,
-          variant: "destructive",
+          variant: 'destructive',
         });
       }
     } catch (error) {
-      console.error("Error removing grouper:", error);
+      console.error('Error removing grouper:', error);
       const errorMessage =
         error instanceof Error
-          ? error.message.includes("fetch")
-            ? "Error de conexión. Verifique su conexión a internet."
+          ? error.message.includes('fetch')
+            ? 'Error de conexión. Verifique su conexión a internet.'
             : error.message
-          : "No se pudo remover el agrupador";
+          : 'No se pudo remover el agrupador';
 
       toast({
-        title: "Error al remover agrupador",
+        title: 'Error al remover agrupador',
         description: errorMessage,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsRemovingGrouper(false);
@@ -544,11 +544,11 @@ export default function EstudioGroupersPage() {
         return updated;
       });
     } catch (error) {
-      console.error("Error updating payment methods:", error);
+      console.error('Error updating payment methods:', error);
       toast({
-        title: "Error",
-        description: "No se pudieron actualizar los métodos de pago",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudieron actualizar los métodos de pago',
+        variant: 'destructive',
       });
     }
   };
@@ -579,9 +579,9 @@ export default function EstudioGroupersPage() {
     // Check for validation errors before saving
     if (hasValidationErrors) {
       toast({
-        title: "Errores de validación",
-        description: "Corrige los errores de validación antes de guardar.",
-        variant: "destructive",
+        title: 'Errores de validación',
+        description: 'Corrige los errores de validación antes de guardar.',
+        variant: 'destructive',
       });
       return;
     }
@@ -606,8 +606,8 @@ export default function EstudioGroupersPage() {
         if (methodsChanged) {
           const result = await handleApiCall(async () => {
             return fetch(`/api/estudios/${estudioId}/groupers/${grouper.id}`, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 percentage: grouper.percentage,
                 payment_methods:
@@ -658,25 +658,25 @@ export default function EstudioGroupersPage() {
         setPaymentMethodValidationErrors({}); // Clear validation errors
 
         toast({
-          title: "Métodos de pago guardados",
+          title: 'Métodos de pago guardados',
           description: `Se actualizaron los métodos de pago para ${successCount} agrupadores.`,
         });
       }
 
       if (errorCount > 0) {
         toast({
-          title: "Algunos cambios no se pudieron guardar",
-          description: `Error en agrupadores: ${failedGroupers.join(", ")}`,
-          variant: "destructive",
+          title: 'Algunos cambios no se pudieron guardar',
+          description: `Error en agrupadores: ${failedGroupers.join(', ')}`,
+          variant: 'destructive',
         });
       }
     } catch (error) {
-      console.error("Error saving payment methods:", error);
+      console.error('Error saving payment methods:', error);
       toast({
-        title: "Error al guardar",
+        title: 'Error al guardar',
         description:
-          "No se pudieron guardar los métodos de pago. Intenta nuevamente.",
-        variant: "destructive",
+          'No se pudieron guardar los métodos de pago. Intenta nuevamente.',
+        variant: 'destructive',
       });
     } finally {
       setIsSavingPaymentMethods(false);
@@ -693,8 +693,8 @@ export default function EstudioGroupersPage() {
       const response = await fetch(
         `/api/estudios/${estudioId}/groupers/${grouperId}`,
         {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             percentage,
             payment_methods:
@@ -721,7 +721,7 @@ export default function EstudioGroupersPage() {
         );
 
         toast({
-          title: "Porcentaje actualizado",
+          title: 'Porcentaje actualizado',
           description: result.message,
         });
       } else {
@@ -730,24 +730,24 @@ export default function EstudioGroupersPage() {
           error.error || `Error ${response.status}: ${response.statusText}`;
 
         toast({
-          title: "Error al actualizar porcentaje",
+          title: 'Error al actualizar porcentaje',
           description: errorMessage,
-          variant: "destructive",
+          variant: 'destructive',
         });
       }
     } catch (error) {
-      console.error("Error updating percentage:", error);
+      console.error('Error updating percentage:', error);
       const errorMessage =
         error instanceof Error
-          ? error.message.includes("fetch")
-            ? "Error de conexión. Verifique su conexión a internet."
+          ? error.message.includes('fetch')
+            ? 'Error de conexión. Verifique su conexión a internet.'
             : error.message
-          : "No se pudo actualizar el porcentaje";
+          : 'No se pudo actualizar el porcentaje';
 
       toast({
-        title: "Error al actualizar porcentaje",
+        title: 'Error al actualizar porcentaje',
         description: errorMessage,
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
   };
@@ -755,9 +755,9 @@ export default function EstudioGroupersPage() {
   if (isLoading) {
     return (
       <div className="container mx-auto py-6">
-        <div className="text-center py-8">
+        <div className="py-8 text-center">
           <div className="flex items-center justify-center gap-2">
-            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+            <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary"></div>
             <span>Cargando datos del estudio...</span>
           </div>
         </div>
@@ -768,12 +768,12 @@ export default function EstudioGroupersPage() {
   if (fetchError) {
     return (
       <div className="container mx-auto py-6">
-        <div className="text-center py-8">
+        <div className="py-8 text-center">
           <div className="flex flex-col items-center gap-4">
             <div className="text-destructive">
-              <AlertCircle className="h-12 w-12 mx-auto mb-2" />
+              <AlertCircle className="mx-auto mb-2 h-12 w-12" />
               <p className="font-medium">Error al cargar datos</p>
-              <p className="text-sm text-muted-foreground mt-1">{fetchError}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{fetchError}</p>
             </div>
             <div className="flex gap-2">
               <Button
@@ -781,13 +781,13 @@ export default function EstudioGroupersPage() {
                 variant="outline"
                 disabled={retryCount >= maxRetries}
               >
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="mr-2 h-4 w-4" />
                 {retryCount >= maxRetries
-                  ? "Máximo de reintentos alcanzado"
-                  : "Reintentar"}
+                  ? 'Máximo de reintentos alcanzado'
+                  : 'Reintentar'}
               </Button>
               <Button
-                onClick={() => router.push("/estudios")}
+                onClick={() => router.push('/estudios')}
                 variant="default"
               >
                 Volver a estudios
@@ -810,13 +810,13 @@ export default function EstudioGroupersPage() {
   if (!estudioData) {
     return (
       <div className="container mx-auto py-6">
-        <div className="text-center py-8">
-          <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="text-lg font-medium mb-2">Estudio no encontrado</h3>
-          <p className="text-muted-foreground mb-4">
+        <div className="py-8 text-center">
+          <BookOpen className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+          <h3 className="mb-2 text-lg font-medium">Estudio no encontrado</h3>
+          <p className="mb-4 text-muted-foreground">
             El estudio solicitado no existe o ha sido eliminado.
           </p>
-          <Button onClick={() => router.push("/estudios")}>
+          <Button onClick={() => router.push('/estudios')}>
             Volver a estudios
           </Button>
         </div>
@@ -840,14 +840,14 @@ export default function EstudioGroupersPage() {
       </Breadcrumb>
 
       {/* Header */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => router.push("/estudios")}
+            onClick={() => router.push('/estudios')}
           >
-            <ArrowLeft className="h-4 w-4 mr-2" />
+            <ArrowLeft className="mr-2 h-4 w-4" />
             Volver
           </Button>
           <BookOpen className="h-6 w-6" />
@@ -862,11 +862,11 @@ export default function EstudioGroupersPage() {
               disabled={
                 isSavingPaymentMethods || isApiLoading || hasValidationErrors
               }
-              variant={hasValidationErrors ? "secondary" : "default"}
+              variant={hasValidationErrors ? 'secondary' : 'default'}
             >
               {isSavingPaymentMethods || isApiLoading ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
                   Guardando...
                 </>
               ) : hasValidationErrors ? (
@@ -950,7 +950,7 @@ export default function EstudioGroupersPage() {
         </CardHeader>
         <CardContent>
           {estudioData.assignedGroupers.length === 0 ? (
-            <div className="text-center py-4">
+            <div className="py-4 text-center">
               No hay agrupadores asignados a este estudio.
             </div>
           ) : (
@@ -996,7 +996,7 @@ export default function EstudioGroupersPage() {
                           }
                           validationError={paymentMethodValidationErrors[
                             grouper.id
-                          ]?.join(", ")}
+                          ]?.join(', ')}
                           onValidationChange={(isValid, errors) =>
                             handlePaymentMethodValidation(
                               grouper.id,
@@ -1041,11 +1041,11 @@ export default function EstudioGroupersPage() {
           </DialogHeader>
           <div className="py-4">
             {estudioData.availableGroupers.length === 0 ? (
-              <div className="text-center py-4">
+              <div className="py-4 text-center">
                 No hay agrupadores disponibles para agregar.
               </div>
             ) : (
-              <div className="space-y-2 max-h-96 overflow-y-auto">
+              <div className="max-h-96 space-y-2 overflow-y-auto">
                 {estudioData.availableGroupers.map((grouper) => (
                   <div key={grouper.id} className="flex items-center space-x-2">
                     <Checkbox
@@ -1076,7 +1076,7 @@ export default function EstudioGroupersPage() {
             >
               {isAddingGroupers ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
                   Agregando...
                 </>
               ) : (
@@ -1111,11 +1111,11 @@ export default function EstudioGroupersPage() {
             >
               {isRemovingGrouper ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
                   Removiendo...
                 </>
               ) : (
-                "Remover"
+                'Remover'
               )}
             </Button>
           </DialogFooter>

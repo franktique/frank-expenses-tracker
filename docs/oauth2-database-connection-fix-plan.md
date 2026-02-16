@@ -32,36 +32,30 @@ The error "Database connection string is not defined" suggests that when the Nex
 ### Task List
 
 - [ ] **Task 1:** Verify Next.js Runtime Configuration
-
   - Check if NextAuth route is using Edge Runtime
   - Document current runtime configuration
   - Identify if runtime needs to be explicitly set to nodejs
 
 - [ ] **Task 2:** Add Runtime Configuration to NextAuth Route
-
   - Add `export const runtime = 'nodejs'` to ensure Node.js runtime
   - Test if this resolves the environment variable access issue
 
 - [ ] **Task 3:** Investigate Environment Variable Loading
-
   - Check if other environment variables (NEXTAUTH_SECRET, GOOGLE_CLIENT_ID) are accessible
   - Add debug logging to track environment variable availability
   - Verify Next.js environment variable loading order
 
 - [ ] **Task 4:** Update Database Client Initialization (if needed)
-
   - Consider lazy initialization pattern instead of module-level initialization
   - Implement connection pooling if not already present
   - Add fallback mechanisms for environment variable loading
 
 - [ ] **Task 5:** Add Error Handling and Logging
-
   - Enhance error messages to include more context
   - Add startup checks for required environment variables
   - Log environment variable availability at OAuth callback execution
 
 - [ ] **Task 6:** Test OAuth Flow End-to-End
-
   - Test Google OAuth login
   - Verify database connection is established
   - Confirm user creation/retrieval works correctly
@@ -77,13 +71,11 @@ The error "Database connection string is not defined" suggests that when the Nex
 ### Files to Modify
 
 1. **`app/api/auth/[...nextauth]/route.ts`**
-
    - Add runtime configuration
    - Add environment variable validation
    - Enhance error logging
 
 2. **`lib/db.ts`**
-
    - Consider lazy initialization
    - Add better error context
    - Improve environment variable checking
@@ -98,7 +90,7 @@ The error "Database connection string is not defined" suggests that when the Nex
 
 ```typescript
 // app/api/auth/[...nextauth]/route.ts
-export const runtime = "nodejs"; // Add this line at the top
+export const runtime = 'nodejs'; // Add this line at the top
 
 const { handlers, auth, signIn, signOut } = NextAuth({
   // ... rest of config
@@ -127,22 +119,20 @@ export function getSql() {
 // At the top of the file, before NextAuth initialization
 if (!process.env.DATABASE_URL_NEW) {
   console.error(
-    "DATABASE_URL_NEW is not defined. Available env vars:",
-    Object.keys(process.env).filter((k) => k.includes("DATABASE"))
+    'DATABASE_URL_NEW is not defined. Available env vars:',
+    Object.keys(process.env).filter((k) => k.includes('DATABASE'))
   );
-  throw new Error("DATABASE_URL_NEW environment variable is required");
+  throw new Error('DATABASE_URL_NEW environment variable is required');
 }
 ```
 
 ### Testing Strategy
 
 1. **Unit Tests**
-
    - Test database connection with and without environment variables
    - Test error handling in getOrCreateGoogleUser
 
 2. **Integration Tests**
-
    - Test complete OAuth flow
    - Test user creation on first login
    - Test user retrieval on subsequent logins

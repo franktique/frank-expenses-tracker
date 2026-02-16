@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   AlertCircle,
   RefreshCw,
@@ -15,8 +15,8 @@ import {
   Home,
   Database,
   Zap,
-} from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+} from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 // Fallback for when simulation data is missing or loading fails
 export function SimulationDataFallback({
@@ -35,7 +35,7 @@ export function SimulationDataFallback({
   showCreateOption?: boolean;
 }) {
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="mx-auto w-full max-w-2xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-muted-foreground">
           <Database className="h-5 w-5" />
@@ -43,17 +43,17 @@ export function SimulationDataFallback({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="text-center py-8">
-          <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+        <div className="py-8 text-center">
+          <AlertCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
           <div className="space-y-2">
             <h3 className="text-lg font-semibold">
               {simulationId
                 ? `Simulación #${simulationId} no encontrada`
-                : "No se pudieron cargar los datos"}
+                : 'No se pudieron cargar los datos'}
             </h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            <p className="mx-auto max-w-md text-sm text-muted-foreground">
               {error ||
-                "Los datos de la simulación no están disponibles en este momento."}
+                'Los datos de la simulación no están disponibles en este momento.'}
             </p>
           </div>
         </div>
@@ -67,9 +67,9 @@ export function SimulationDataFallback({
               className="flex items-center gap-2"
             >
               <RefreshCw
-                className={`h-4 w-4 ${isRetrying ? "animate-spin" : ""}`}
+                className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`}
               />
-              {isRetrying ? "Reintentando..." : "Reintentar"}
+              {isRetrying ? 'Reintentando...' : 'Reintentar'}
             </Button>
           )}
 
@@ -82,7 +82,7 @@ export function SimulationDataFallback({
 
           <Button
             variant="outline"
-            onClick={() => (window.location.href = "/simular")}
+            onClick={() => (window.location.href = '/simular')}
             className="flex items-center gap-2"
           >
             <Home className="h-4 w-4" />
@@ -113,28 +113,28 @@ export function SimulationAnalyticsFallback({
   hasNoBudgets?: boolean;
 }) {
   const title = hasNoBudgets
-    ? "Sin presupuestos configurados"
-    : "Datos de análisis no disponibles";
+    ? 'Sin presupuestos configurados'
+    : 'Datos de análisis no disponibles';
 
   const description = hasNoBudgets
-    ? "Esta simulación no tiene presupuestos configurados. Configure los presupuestos para ver el análisis."
+    ? 'Esta simulación no tiene presupuestos configurados. Configure los presupuestos para ver el análisis.'
     : error ||
-      "No se pudieron cargar los datos de análisis para esta simulación.";
+      'No se pudieron cargar los datos de análisis para esta simulación.';
 
   const icon = hasNoBudgets ? (
-    <Calculator className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+    <Calculator className="mx-auto mb-4 h-12 w-12 text-amber-500" />
   ) : (
-    <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+    <BarChart3 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
   );
 
   return (
     <Card className="w-full">
       <CardContent className="py-12">
-        <div className="text-center space-y-4">
+        <div className="space-y-4 text-center">
           {icon}
           <div className="space-y-2">
             <h3 className="text-lg font-semibold">{title}</h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            <p className="mx-auto max-w-md text-sm text-muted-foreground">
               {description}
               {simulationName && ` (${simulationName})`}
             </p>
@@ -159,9 +159,9 @@ export function SimulationAnalyticsFallback({
                 className="flex items-center gap-2"
               >
                 <RefreshCw
-                  className={`h-4 w-4 ${isRetrying ? "animate-spin" : ""}`}
+                  className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`}
                 />
-                {isRetrying ? "Reintentando..." : "Reintentar"}
+                {isRetrying ? 'Reintentando...' : 'Reintentar'}
               </Button>
             )}
 
@@ -196,8 +196,8 @@ export function EmptySimulationListFallback({
         <CardTitle>No hay simulaciones</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="text-center py-8 space-y-4">
-          <div className="mx-auto h-12 w-12 rounded-full bg-muted flex items-center justify-center mb-4">
+        <div className="space-y-4 py-8 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
             <PlusCircle className="h-6 w-6 text-muted-foreground" />
           </div>
           <div className="space-y-2">
@@ -221,7 +221,7 @@ export function EmptySimulationListFallback({
               ) : (
                 <PlusCircle className="h-4 w-4" />
               )}
-              {isLoading ? "Creando..." : "Crear Primera Simulación"}
+              {isLoading ? 'Creando...' : 'Crear Primera Simulación'}
             </Button>
           )}
         </div>
@@ -243,13 +243,13 @@ export function MissingCategoriesFallback({
   return (
     <Card className="w-full">
       <CardContent className="py-12">
-        <div className="text-center space-y-4">
-          <AlertCircle className="h-12 w-12 text-amber-500 mx-auto mb-4" />
+        <div className="space-y-4 text-center">
+          <AlertCircle className="mx-auto mb-4 h-12 w-12 text-amber-500" />
           <div className="space-y-2">
             <h3 className="text-lg font-semibold">
               No hay categorías disponibles
             </h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
+            <p className="mx-auto max-w-md text-sm text-muted-foreground">
               Para configurar presupuestos de simulación, primero debe crear
               categorías en el sistema.
             </p>
@@ -274,9 +274,9 @@ export function MissingCategoriesFallback({
                 className="flex items-center gap-2"
               >
                 <RefreshCw
-                  className={`h-4 w-4 ${isRetrying ? "animate-spin" : ""}`}
+                  className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`}
                 />
-                {isRetrying ? "Verificando..." : "Verificar Nuevamente"}
+                {isRetrying ? 'Verificando...' : 'Verificar Nuevamente'}
               </Button>
             )}
           </div>
@@ -294,11 +294,11 @@ export function SimulationSummaryFallback({
   showPlaceholder?: boolean;
   isLoading?: boolean;
 }) {
-  const placeholderValue = showPlaceholder ? formatCurrency(0) : "---";
+  const placeholderValue = showPlaceholder ? formatCurrency(0) : '---';
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-      <Card className={isLoading ? "animate-pulse" : ""}>
+    <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <Card className={isLoading ? 'animate-pulse' : ''}>
         <CardContent className="p-4">
           <div className="flex items-center gap-2">
             <Calculator className="h-4 w-4 text-muted-foreground" />
@@ -306,13 +306,13 @@ export function SimulationSummaryFallback({
               Total Simulación
             </span>
           </div>
-          <p className="text-2xl font-bold text-muted-foreground mt-1">
+          <p className="mt-1 text-2xl font-bold text-muted-foreground">
             {placeholderValue}
           </p>
         </CardContent>
       </Card>
 
-      <Card className={isLoading ? "animate-pulse" : ""}>
+      <Card className={isLoading ? 'animate-pulse' : ''}>
         <CardContent className="p-4">
           <div className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4 text-muted-foreground" />
@@ -320,13 +320,13 @@ export function SimulationSummaryFallback({
               Promedio Histórico
             </span>
           </div>
-          <p className="text-2xl font-bold text-muted-foreground mt-1">
+          <p className="mt-1 text-2xl font-bold text-muted-foreground">
             {placeholderValue}
           </p>
         </CardContent>
       </Card>
 
-      <Card className={isLoading ? "animate-pulse" : ""}>
+      <Card className={isLoading ? 'animate-pulse' : ''}>
         <CardContent className="p-4">
           <div className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
@@ -334,13 +334,13 @@ export function SimulationSummaryFallback({
               Variación Total
             </span>
           </div>
-          <p className="text-2xl font-bold text-muted-foreground mt-1">
-            {showPlaceholder ? "0.0%" : "---"}
+          <p className="mt-1 text-2xl font-bold text-muted-foreground">
+            {showPlaceholder ? '0.0%' : '---'}
           </p>
         </CardContent>
       </Card>
 
-      <Card className={isLoading ? "animate-pulse" : ""}>
+      <Card className={isLoading ? 'animate-pulse' : ''}>
         <CardContent className="p-4">
           <div className="flex items-center gap-2">
             <Zap className="h-4 w-4 text-muted-foreground" />
@@ -348,8 +348,8 @@ export function SimulationSummaryFallback({
               Variaciones Significativas
             </span>
           </div>
-          <p className="text-2xl font-bold text-muted-foreground mt-1">
-            {showPlaceholder ? "0" : "---"}
+          <p className="mt-1 text-2xl font-bold text-muted-foreground">
+            {showPlaceholder ? '0' : '---'}
           </p>
           <p className="text-xs text-muted-foreground">de 0 agrupadores</p>
         </CardContent>
@@ -360,11 +360,11 @@ export function SimulationSummaryFallback({
 
 // Fallback for chart components when data is missing
 export function ChartDataFallback({
-  title = "Gráfico no disponible",
+  title = 'Gráfico no disponible',
   description,
   onRetry,
   isRetrying = false,
-  height = "400px",
+  height = '400px',
 }: {
   title?: string;
   description?: string;
@@ -382,17 +382,17 @@ export function ChartDataFallback({
       </CardHeader>
       <CardContent>
         <div
-          className="flex items-center justify-center border-2 border-dashed border-muted rounded-lg"
+          className="flex items-center justify-center rounded-lg border-2 border-dashed border-muted"
           style={{ height }}
         >
-          <div className="text-center space-y-4">
-            <BarChart3 className="h-12 w-12 text-muted-foreground mx-auto" />
+          <div className="space-y-4 text-center">
+            <BarChart3 className="mx-auto h-12 w-12 text-muted-foreground" />
             <div className="space-y-2">
               <p className="text-sm font-medium text-muted-foreground">
                 Datos no disponibles
               </p>
               {description && (
-                <p className="text-xs text-muted-foreground max-w-sm">
+                <p className="max-w-sm text-xs text-muted-foreground">
                   {description}
                 </p>
               )}
@@ -406,9 +406,9 @@ export function ChartDataFallback({
                 className="flex items-center gap-2"
               >
                 <RefreshCw
-                  className={`h-4 w-4 ${isRetrying ? "animate-spin" : ""}`}
+                  className={`h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`}
                 />
-                {isRetrying ? "Cargando..." : "Reintentar"}
+                {isRetrying ? 'Cargando...' : 'Reintentar'}
               </Button>
             )}
           </div>
@@ -420,23 +420,23 @@ export function ChartDataFallback({
 
 // Generic loading skeleton for simulation components
 export function SimulationLoadingSkeleton({
-  type = "card",
+  type = 'card',
   count = 1,
 }: {
-  type?: "card" | "table" | "chart" | "summary";
+  type?: 'card' | 'table' | 'chart' | 'summary';
   count?: number;
 }) {
-  if (type === "summary") {
+  if (type === 'summary') {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
           <Card key={i} className="animate-pulse">
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <div className="h-4 w-4 bg-muted rounded" />
-                <div className="h-4 w-20 bg-muted rounded" />
+              <div className="mb-2 flex items-center gap-2">
+                <div className="h-4 w-4 rounded bg-muted" />
+                <div className="h-4 w-20 rounded bg-muted" />
               </div>
-              <div className="h-8 w-24 bg-muted rounded" />
+              <div className="h-8 w-24 rounded bg-muted" />
             </CardContent>
           </Card>
         ))}
@@ -444,34 +444,34 @@ export function SimulationLoadingSkeleton({
     );
   }
 
-  if (type === "chart") {
+  if (type === 'chart') {
     return (
       <Card className="animate-pulse">
         <CardHeader>
-          <div className="h-6 w-48 bg-muted rounded" />
-          <div className="h-4 w-64 bg-muted rounded" />
+          <div className="h-6 w-48 rounded bg-muted" />
+          <div className="h-4 w-64 rounded bg-muted" />
         </CardHeader>
         <CardContent>
-          <div className="h-80 bg-muted rounded" />
+          <div className="h-80 rounded bg-muted" />
         </CardContent>
       </Card>
     );
   }
 
-  if (type === "table") {
+  if (type === 'table') {
     return (
       <Card className="animate-pulse">
         <CardHeader>
-          <div className="h-6 w-48 bg-muted rounded" />
+          <div className="h-6 w-48 rounded bg-muted" />
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
             {Array.from({ length: count }).map((_, i) => (
               <div key={i} className="flex items-center space-x-4">
-                <div className="h-4 w-32 bg-muted rounded" />
-                <div className="h-4 w-20 bg-muted rounded" />
-                <div className="h-4 w-20 bg-muted rounded" />
-                <div className="h-4 w-24 bg-muted rounded" />
+                <div className="h-4 w-32 rounded bg-muted" />
+                <div className="h-4 w-20 rounded bg-muted" />
+                <div className="h-4 w-20 rounded bg-muted" />
+                <div className="h-4 w-24 rounded bg-muted" />
               </div>
             ))}
           </div>
@@ -486,14 +486,14 @@ export function SimulationLoadingSkeleton({
       {Array.from({ length: count }).map((_, i) => (
         <Card key={i} className="animate-pulse">
           <CardHeader>
-            <div className="h-6 w-48 bg-muted rounded" />
-            <div className="h-4 w-64 bg-muted rounded" />
+            <div className="h-6 w-48 rounded bg-muted" />
+            <div className="h-4 w-64 rounded bg-muted" />
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <div className="h-4 w-full bg-muted rounded" />
-              <div className="h-4 w-3/4 bg-muted rounded" />
-              <div className="h-4 w-1/2 bg-muted rounded" />
+              <div className="h-4 w-full rounded bg-muted" />
+              <div className="h-4 w-3/4 rounded bg-muted" />
+              <div className="h-4 w-1/2 rounded bg-muted" />
             </div>
           </CardContent>
         </Card>
@@ -507,26 +507,26 @@ export function DataConsistencyAlert({
   issues,
   onResolve,
   onIgnore,
-  severity = "warning",
+  severity = 'warning',
 }: {
   issues: string[];
   onResolve?: () => void;
   onIgnore?: () => void;
-  severity?: "warning" | "error";
+  severity?: 'warning' | 'error';
 }) {
   if (issues.length === 0) return null;
 
   return (
-    <Alert variant={severity === "error" ? "destructive" : "default"}>
+    <Alert variant={severity === 'error' ? 'destructive' : 'default'}>
       <AlertCircle className="h-4 w-4" />
       <AlertDescription>
         <div className="space-y-2">
           <p className="font-medium">
-            {severity === "error"
-              ? "Errores de consistencia detectados:"
-              : "Advertencias de consistencia:"}
+            {severity === 'error'
+              ? 'Errores de consistencia detectados:'
+              : 'Advertencias de consistencia:'}
           </p>
-          <ul className="list-disc list-inside text-sm space-y-1">
+          <ul className="list-inside list-disc space-y-1 text-sm">
             {issues.map((issue, index) => (
               <li key={index}>{issue}</li>
             ))}

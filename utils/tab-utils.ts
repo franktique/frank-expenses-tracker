@@ -173,15 +173,17 @@ export const getTabTitle = (path: string): string => {
 
   // Fallback: generate title from path
   const segments = path.split('/').filter(Boolean);
-  return segments
-    .map(segment => {
-      // Convert kebab-case to Title Case
-      return segment
-        .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ');
-    })
-    .join(' / ') || 'Untitled';
+  return (
+    segments
+      .map((segment) => {
+        // Convert kebab-case to Title Case
+        return segment
+          .split('-')
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' ');
+      })
+      .join(' / ') || 'Untitled'
+  );
 };
 
 // Get tab icon from path

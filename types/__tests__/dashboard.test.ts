@@ -5,12 +5,12 @@ import {
   calculateBudgetTotals,
   verifyBudgetTotals,
   hasSplitBudgetFields,
-} from "../dashboard";
+} from '../dashboard';
 
-describe("Dashboard Types", () => {
+describe('Dashboard Types', () => {
   const mockBudgetSummaryItem: BudgetSummaryItem = {
-    category_id: "1",
-    category_name: "Test Category",
+    category_id: '1',
+    category_name: 'Test Category',
     credit_budget: 100,
     cash_debit_budget: 200,
     expected_amount: 300,
@@ -23,28 +23,28 @@ describe("Dashboard Types", () => {
 
   const mockDashboardData: DashboardData = {
     activePeriod: {
-      id: "1",
-      name: "Test Period",
+      id: '1',
+      name: 'Test Period',
     },
     totalIncome: 1000,
     totalExpenses: 500,
     budgetSummary: [mockBudgetSummaryItem],
   };
 
-  test("BudgetSummaryItem type should have all required fields", () => {
-    expect(mockBudgetSummaryItem.category_id).toBe("1");
+  test('BudgetSummaryItem type should have all required fields', () => {
+    expect(mockBudgetSummaryItem.category_id).toBe('1');
     expect(mockBudgetSummaryItem.credit_budget).toBe(100);
     expect(mockBudgetSummaryItem.cash_debit_budget).toBe(200);
     expect(mockBudgetSummaryItem.expected_amount).toBe(300);
   });
 
-  test("DashboardData type should have all required fields", () => {
-    expect(mockDashboardData.activePeriod?.id).toBe("1");
+  test('DashboardData type should have all required fields', () => {
+    expect(mockDashboardData.activePeriod?.id).toBe('1');
     expect(mockDashboardData.totalIncome).toBe(1000);
     expect(mockDashboardData.budgetSummary).toHaveLength(1);
   });
 
-  test("calculateBudgetTotals should calculate correct totals", () => {
+  test('calculateBudgetTotals should calculate correct totals', () => {
     const totals = calculateBudgetTotals([mockBudgetSummaryItem]);
 
     expect(totals.totalCreditBudget).toBe(100);
@@ -57,14 +57,14 @@ describe("Dashboard Types", () => {
     expect(totals.totalRemaining).toBe(50);
   });
 
-  test("verifyBudgetTotals should validate budget consistency", () => {
+  test('verifyBudgetTotals should validate budget consistency', () => {
     const result = verifyBudgetTotals([mockBudgetSummaryItem]);
 
     expect(result.isValid).toBe(true);
     expect(result.discrepancies).toHaveLength(0);
   });
 
-  test("verifyBudgetTotals should detect discrepancies", () => {
+  test('verifyBudgetTotals should detect discrepancies', () => {
     const invalidItem: BudgetSummaryItem = {
       ...mockBudgetSummaryItem,
       credit_budget: 100,
@@ -79,14 +79,14 @@ describe("Dashboard Types", () => {
     expect(result.discrepancies[0].difference).toBe(-50); // 250 - 300 = -50
   });
 
-  test("hasSplitBudgetFields should validate object structure", () => {
+  test('hasSplitBudgetFields should validate object structure', () => {
     expect(hasSplitBudgetFields(mockBudgetSummaryItem)).toBe(true);
     expect(hasSplitBudgetFields({})).toBe(false);
     expect(hasSplitBudgetFields(null)).toBe(false);
-    expect(hasSplitBudgetFields({ credit_budget: "invalid" })).toBe(false);
+    expect(hasSplitBudgetFields({ credit_budget: 'invalid' })).toBe(false);
   });
 
-  test("calculateBudgetTotals should handle empty array", () => {
+  test('calculateBudgetTotals should handle empty array', () => {
     const totals = calculateBudgetTotals([]);
 
     expect(totals.totalCreditBudget).toBe(0);
@@ -94,10 +94,10 @@ describe("Dashboard Types", () => {
     expect(totals.totalExpectedAmount).toBe(0);
   });
 
-  test("calculateBudgetTotals should handle multiple items", () => {
+  test('calculateBudgetTotals should handle multiple items', () => {
     const item2: BudgetSummaryItem = {
-      category_id: "2",
-      category_name: "Test Category 2",
+      category_id: '2',
+      category_name: 'Test Category 2',
       credit_budget: 50,
       cash_debit_budget: 75,
       expected_amount: 125,

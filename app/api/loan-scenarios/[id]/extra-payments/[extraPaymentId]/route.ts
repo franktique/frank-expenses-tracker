@@ -1,9 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   UpdateExtraPaymentSchema,
   LOAN_ERROR_MESSAGES,
-} from "@/types/loan-simulator";
+} from '@/types/loan-simulator';
 
 /**
  * GET /api/loan-scenarios/[id]/extra-payments/[extraPaymentId]
@@ -27,8 +27,8 @@ export async function GET(
     if (!uuidRegex.test(id) || !uuidRegex.test(extraPaymentId)) {
       return NextResponse.json(
         {
-          error: "ID inválido",
-          code: "INVALID_ID",
+          error: 'ID inválido',
+          code: 'INVALID_ID',
         },
         { status: 400 }
       );
@@ -52,7 +52,7 @@ export async function GET(
       return NextResponse.json(
         {
           error: LOAN_ERROR_MESSAGES.EXTRA_PAYMENT_NOT_FOUND,
-          code: "EXTRA_PAYMENT_NOT_FOUND",
+          code: 'EXTRA_PAYMENT_NOT_FOUND',
         },
         { status: 404 }
       );
@@ -60,14 +60,14 @@ export async function GET(
 
     return NextResponse.json(extraPayment);
   } catch (error) {
-    console.error("Error fetching extra payment:", error);
+    console.error('Error fetching extra payment:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -77,8 +77,8 @@ export async function GET(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al cargar el pago extra",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al cargar el pago extra',
+        code: 'INTERNAL_SERVER_ERROR',
       },
       { status: 500 }
     );
@@ -114,8 +114,8 @@ export async function PATCH(
     if (!uuidRegex.test(id) || !uuidRegex.test(extraPaymentId)) {
       return NextResponse.json(
         {
-          error: "ID inválido",
-          code: "INVALID_ID",
+          error: 'ID inválido',
+          code: 'INVALID_ID',
         },
         { status: 400 }
       );
@@ -128,7 +128,7 @@ export async function PATCH(
     if (!validation.success) {
       return NextResponse.json(
         {
-          error: "Datos inválidos",
+          error: 'Datos inválidos',
           details: validation.error.errors,
         },
         { status: 400 }
@@ -146,7 +146,7 @@ export async function PATCH(
       return NextResponse.json(
         {
           error: LOAN_ERROR_MESSAGES.EXTRA_PAYMENT_NOT_FOUND,
-          code: "EXTRA_PAYMENT_NOT_FOUND",
+          code: 'EXTRA_PAYMENT_NOT_FOUND',
         },
         { status: 404 }
       );
@@ -155,7 +155,10 @@ export async function PATCH(
     const { paymentNumber, amount, description } = validation.data;
 
     // Check if updating payment number would cause a conflict
-    if (paymentNumber !== undefined && paymentNumber !== existing.payment_number) {
+    if (
+      paymentNumber !== undefined &&
+      paymentNumber !== existing.payment_number
+    ) {
       const [conflict] = await sql`
         SELECT id FROM loan_extra_payments
         WHERE loan_scenario_id = ${id}
@@ -166,8 +169,8 @@ export async function PATCH(
       if (conflict) {
         return NextResponse.json(
           {
-            error: "Ya existe un pago extra para este número de pago",
-            code: "DUPLICATE_EXTRA_PAYMENT",
+            error: 'Ya existe un pago extra para este número de pago',
+            code: 'DUPLICATE_EXTRA_PAYMENT',
             existing: { id: conflict.id },
           },
           { status: 409 }
@@ -183,7 +186,7 @@ export async function PATCH(
         return NextResponse.json(
           {
             error: `El número de pago no puede exceder el plazo del préstamo (${scenario.term_months} meses)`,
-            code: "INVALID_PAYMENT_NUMBER",
+            code: 'INVALID_PAYMENT_NUMBER',
           },
           { status: 400 }
         );
@@ -210,8 +213,8 @@ export async function PATCH(
     if (updateFields.length === 0) {
       return NextResponse.json(
         {
-          error: "No se proporcionaron campos para actualizar",
-          code: "NO_UPDATE_FIELDS",
+          error: 'No se proporcionaron campos para actualizar',
+          code: 'NO_UPDATE_FIELDS',
         },
         { status: 400 }
       );
@@ -221,25 +224,25 @@ export async function PATCH(
 
     const query = `
       UPDATE loan_extra_payments
-      SET ${updateFields.join(", ")}
+      SET ${updateFields.join(', ')}
       WHERE id = $${updateValues.length}
       RETURNING *
     `;
 
     // Use sql.query for dynamic SQL with placeholders
-    const { sql: sqlClient } = await import("@/lib/db");
+    const { sql: sqlClient } = await import('@/lib/db');
     const [updated] = await sqlClient.query(query, updateValues);
 
     return NextResponse.json(updated);
   } catch (error) {
-    console.error("Error updating extra payment:", error);
+    console.error('Error updating extra payment:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -249,8 +252,8 @@ export async function PATCH(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al actualizar el pago extra",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al actualizar el pago extra',
+        code: 'INTERNAL_SERVER_ERROR',
       },
       { status: 500 }
     );
@@ -279,8 +282,8 @@ export async function DELETE(
     if (!uuidRegex.test(id) || !uuidRegex.test(extraPaymentId)) {
       return NextResponse.json(
         {
-          error: "ID inválido",
-          code: "INVALID_ID",
+          error: 'ID inválido',
+          code: 'INVALID_ID',
         },
         { status: 400 }
       );
@@ -297,7 +300,7 @@ export async function DELETE(
       return NextResponse.json(
         {
           error: LOAN_ERROR_MESSAGES.EXTRA_PAYMENT_NOT_FOUND,
-          code: "EXTRA_PAYMENT_NOT_FOUND",
+          code: 'EXTRA_PAYMENT_NOT_FOUND',
         },
         { status: 404 }
       );
@@ -311,7 +314,7 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: "Pago extra eliminado exitosamente",
+      message: 'Pago extra eliminado exitosamente',
       deleted: {
         id: extraPaymentId,
         paymentNumber: existing.payment_number,
@@ -319,14 +322,14 @@ export async function DELETE(
       },
     });
   } catch (error) {
-    console.error("Error deleting extra payment:", error);
+    console.error('Error deleting extra payment:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -336,8 +339,8 @@ export async function DELETE(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al eliminar el pago extra",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al eliminar el pago extra',
+        code: 'INTERNAL_SERVER_ERROR',
       },
       { status: 500 }
     );

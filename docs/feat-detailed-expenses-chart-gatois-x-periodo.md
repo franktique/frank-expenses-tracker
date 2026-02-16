@@ -8,14 +8,17 @@
 
 Add click-to-show-details functionality to the "Gastos por Periodo" bar chart. When a user clicks on a bar representing a period, a table should appear below the chart showing the detailed expenses for that period, ordered by date.
 /get
+
 ## Current State
 
 The current implementation (`/app/dashboard/period-bars/page.tsx`) displays:
+
 - A category selector dropdown
 - A bar chart showing total expenses per period for the selected category
 - Hover tooltip with currency-formatted totals
 
 **Missing Features:**
+
 - No click handlers on bars
 - No detail table for individual expenses
 - No visual feedback for selected bar
@@ -98,16 +101,23 @@ const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
 const filteredExpenses = useMemo(() => {
   if (!selectedPeriodId || !selectedCategoryId) return [];
   return expenses
-    .filter(e => e.period_id === selectedPeriodId && e.category_id === selectedCategoryId)
+    .filter(
+      (e) =>
+        e.period_id === selectedPeriodId && e.category_id === selectedCategoryId
+    )
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }, [expenses, selectedPeriodId, selectedCategoryId]);
 
 // Click handler
 const handleBarClick = (data: any) => {
   if (data?.activePayload?.[0]) {
-    const clickedPeriod = periods.find(p => p.name === data.activePayload[0].payload.period);
+    const clickedPeriod = periods.find(
+      (p) => p.name === data.activePayload[0].payload.period
+    );
     if (clickedPeriod) {
-      setSelectedPeriodId(prev => prev === clickedPeriod.id ? null : clickedPeriod.id);
+      setSelectedPeriodId((prev) =>
+        prev === clickedPeriod.id ? null : clickedPeriod.id
+      );
     }
   }
 };

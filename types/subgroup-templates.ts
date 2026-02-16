@@ -71,7 +71,7 @@ export type UpdateTemplateRequest = {
  */
 export type ApplyTemplateRequest = {
   templateId: string;
-  mode?: "replace"; // Currently only replace mode supported
+  mode?: 'replace'; // Currently only replace mode supported
 };
 
 /**
@@ -170,6 +170,6 @@ export type RefreshTemplateResponse = {
 export type CategoryMatchResult = {
   templateCategoryId: string | number;
   matchedCategoryId: string | number | null; // null if no match found
-  matchType: "exact" | "name" | "none"; // How the category was matched
+  matchType: 'exact' | 'name' | 'none'; // How the category was matched
   templateCategoryName?: string; // Category name from template (for reference)
 };

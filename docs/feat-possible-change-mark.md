@@ -16,12 +16,12 @@ Add a checkbox to each category row in the simulation budget detail table to vis
 
 ## Files
 
-| File | Change |
-|------|--------|
-| `app/api/migrate-needs-adjustment/route.ts` | New - Migration endpoint |
-| `lib/simulation-validation.ts` | Add `needs_adjustment` to schema |
-| `app/api/simulations/[id]/budgets/route.ts` | Add column to UPSERT |
-| `components/simulation-budget-form.tsx` | Checkbox, highlight, state |
+| File                                        | Change                           |
+| ------------------------------------------- | -------------------------------- |
+| `app/api/migrate-needs-adjustment/route.ts` | New - Migration endpoint         |
+| `lib/simulation-validation.ts`              | Add `needs_adjustment` to schema |
+| `app/api/simulations/[id]/budgets/route.ts` | Add column to UPSERT             |
+| `components/simulation-budget-form.tsx`     | Checkbox, highlight, state       |
 
 ## Verification
 

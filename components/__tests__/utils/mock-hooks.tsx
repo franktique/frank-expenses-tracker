@@ -1,6 +1,6 @@
 export const mockUseToast = () => {
   const toastFn = jest.fn();
-  
+
   return {
     toast: toastFn,
     dismiss: jest.fn(),
@@ -27,25 +27,27 @@ export const mockUseMobile = (isMobile = false) => ({
 // Setup common mocks for all tests
 export const setupCommonMocks = () => {
   // Mock useToast
-  jest.mock("@/components/ui/use-toast", () => ({
+  jest.mock('@/components/ui/use-toast', () => ({
     useToast: mockUseToast,
   }));
 
   // Mock Next.js router
-  jest.mock("next/navigation", () => ({
+  jest.mock('next/navigation', () => ({
     useRouter: mockUseRouter,
-    usePathname: () => "/test",
+    usePathname: () => '/test',
     useSearchParams: () => new URLSearchParams(),
   }));
 
   // Mock mobile hook
-  jest.mock("@/hooks/use-mobile", () => ({
+  jest.mock('@/hooks/use-mobile', () => ({
     useMobile: mockUseMobile,
   }));
 
   // Mock Recharts for performance
-  jest.mock("recharts", () => ({
-    BarChart: ({ children }: any) => <div data-testid="bar-chart">{children}</div>,
+  jest.mock('recharts', () => ({
+    BarChart: ({ children }: any) => (
+      <div data-testid="bar-chart">{children}</div>
+    ),
     Bar: () => <div data-testid="bar" />,
     XAxis: () => <div data-testid="x-axis" />,
     YAxis: () => <div data-testid="y-axis" />,
@@ -55,9 +57,13 @@ export const setupCommonMocks = () => {
     ResponsiveContainer: ({ children }: any) => (
       <div data-testid="responsive-container">{children}</div>
     ),
-    LineChart: ({ children }: any) => <div data-testid="line-chart">{children}</div>,
+    LineChart: ({ children }: any) => (
+      <div data-testid="line-chart">{children}</div>
+    ),
     Line: () => <div data-testid="line" />,
-    PieChart: ({ children }: any) => <div data-testid="pie-chart">{children}</div>,
+    PieChart: ({ children }: any) => (
+      <div data-testid="pie-chart">{children}</div>
+    ),
     Pie: () => <div data-testid="pie" />,
     Cell: () => <div data-testid="cell" />,
   }));

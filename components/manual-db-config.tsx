@@ -1,18 +1,18 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { AlertCircle, Database, ExternalLink, RefreshCw } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
-import { useBudget } from "@/context/budget-context";
+import { useState } from 'react';
+import { AlertCircle, Database, ExternalLink, RefreshCw } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/components/ui/use-toast';
+import { useBudget } from '@/context/budget-context';
 
 export function ManualDbConfig() {
   const { refreshData } = useBudget();
   const { toast } = useToast();
-  const [connectionString, setConnectionString] = useState("");
+  const [connectionString, setConnectionString] = useState('');
   const [isConfiguring, setIsConfiguring] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
   const [showConnectionString, setShowConnectionString] = useState(false);
@@ -21,9 +21,9 @@ export function ManualDbConfig() {
   const handleReconfigureDb = async () => {
     if (!connectionString.trim()) {
       toast({
-        title: "Error",
-        description: "La cadena de conexión no puede estar vacía",
-        variant: "destructive",
+        title: 'Error',
+        description: 'La cadena de conexión no puede estar vacía',
+        variant: 'destructive',
       });
       return;
     }
@@ -33,10 +33,10 @@ export function ManualDbConfig() {
     setIsRateLimited(false);
 
     try {
-      const response = await fetch("/api/reconfigure-db", {
-        method: "POST",
+      const response = await fetch('/api/reconfigure-db', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ connectionString }),
       });
@@ -46,26 +46,26 @@ export function ManualDbConfig() {
       if (!response.ok || !data.success) {
         // Check if it's a rate limit error
         if (
-          data.error?.includes("rate limit") ||
-          data.error?.includes("exceeded the rate limit") ||
-          data.message?.includes("rate limit") ||
-          data.message?.includes("exceeded the rate limit")
+          data.error?.includes('rate limit') ||
+          data.error?.includes('exceeded the rate limit') ||
+          data.message?.includes('rate limit') ||
+          data.message?.includes('exceeded the rate limit')
         ) {
           setIsRateLimited(true);
           throw new Error(
-            "Has excedido el límite de solicitudes a Neon. Por favor, espera unos minutos e intenta nuevamente."
+            'Has excedido el límite de solicitudes a Neon. Por favor, espera unos minutos e intenta nuevamente.'
           );
         }
 
         throw new Error(
-          data.error || data.message || "Error al reconfigurar la base de datos"
+          data.error || data.message || 'Error al reconfigurar la base de datos'
         );
       }
 
       toast({
-        title: "Conexión configurada",
+        title: 'Conexión configurada',
         description:
-          "La conexión a la base de datos ha sido configurada exitosamente.",
+          'La conexión a la base de datos ha sido configurada exitosamente.',
       });
 
       // Refresh data to use the new connection
@@ -73,11 +73,11 @@ export function ManualDbConfig() {
     } catch (error) {
       setConfigError((error as Error).message);
       toast({
-        title: "Error",
+        title: 'Error',
         description: `Error al configurar la conexión: ${
           (error as Error).message
         }`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsConfiguring(false);
@@ -91,7 +91,7 @@ export function ManualDbConfig() {
         <div className="flex items-center space-x-2">
           <Input
             id="connection-string"
-            type={showConnectionString ? "text" : "password"}
+            type={showConnectionString ? 'text' : 'password'}
             value={connectionString}
             onChange={(e) => setConnectionString(e.target.value)}
             placeholder="postgres://username:password@hostname/database"
@@ -103,7 +103,7 @@ export function ManualDbConfig() {
             size="sm"
             onClick={() => setShowConnectionString(!showConnectionString)}
           >
-            {showConnectionString ? "Ocultar" : "Mostrar"}
+            {showConnectionString ? 'Ocultar' : 'Mostrar'}
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
@@ -115,7 +115,7 @@ export function ManualDbConfig() {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error al configurar la conexión</AlertTitle>
-          <AlertDescription className="break-all whitespace-pre-wrap">
+          <AlertDescription className="whitespace-pre-wrap break-all">
             {configError}
           </AlertDescription>
         </Alert>
@@ -124,7 +124,7 @@ export function ManualDbConfig() {
       {isRateLimited && (
         <Alert
           variant="warning"
-          className="bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-900 dark:text-yellow-200"
+          className="border-yellow-200 bg-yellow-50 text-yellow-800 dark:border-yellow-900 dark:bg-yellow-900/20 dark:text-yellow-200"
         >
           <RefreshCw className="h-4 w-4" />
           <AlertTitle>Límite de tasa excedido</AlertTitle>
@@ -134,7 +134,7 @@ export function ManualDbConfig() {
               plan gratuito.
             </p>
             <p className="mt-2">Recomendaciones:</p>
-            <ul className="list-disc pl-5 mt-1 space-y-1">
+            <ul className="mt-1 list-disc space-y-1 pl-5">
               <li>Espera unos minutos antes de intentar nuevamente</li>
               <li>Reduce la frecuencia de solicitudes</li>
               <li>
@@ -152,7 +152,7 @@ export function ManualDbConfig() {
           disabled={isConfiguring || !connectionString.trim()}
         >
           <Database className="mr-2 h-4 w-4" />
-          {isConfiguring ? "Configurando..." : "Configurar Conexión"}
+          {isConfiguring ? 'Configurando...' : 'Configurar Conexión'}
         </Button>
         <Button variant="outline" className="w-full" asChild>
           <a
@@ -173,10 +173,10 @@ export function ManualDbConfig() {
           <p className="text-sm">
             La cadena de conexión debe tener el siguiente formato:
           </p>
-          <code className="text-xs bg-muted p-1 rounded block mt-1">
+          <code className="mt-1 block rounded bg-muted p-1 text-xs">
             postgres://username:password@hostname/database
           </code>
-          <p className="text-sm mt-2">
+          <p className="mt-2 text-sm">
             Puedes obtener esta cadena desde el panel de control de Neon, en la
             sección de conexiones.
           </p>

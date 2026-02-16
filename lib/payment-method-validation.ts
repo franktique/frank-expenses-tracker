@@ -3,18 +3,18 @@
  * Provides client-side validation for payment method selections
  */
 
-export type PaymentMethod = "cash" | "credit" | "debit";
+export type PaymentMethod = 'cash' | 'credit' | 'debit';
 
 export const VALID_PAYMENT_METHODS: PaymentMethod[] = [
-  "cash",
-  "credit",
-  "debit",
+  'cash',
+  'credit',
+  'debit',
 ];
 
 export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
-  cash: "Efectivo",
-  credit: "Crédito",
-  debit: "Débito",
+  cash: 'Efectivo',
+  credit: 'Crédito',
+  debit: 'Débito',
 };
 
 export interface PaymentMethodValidationResult {
@@ -38,7 +38,7 @@ export function validatePaymentMethods(
   // Allow null/undefined for "all methods"
   if (paymentMethods === null || paymentMethods === undefined) {
     result.warnings.push(
-      "No se han especificado métodos de pago. Se incluirán todos los métodos por defecto."
+      'No se han especificado métodos de pago. Se incluirán todos los métodos por defecto.'
     );
     return result;
   }
@@ -46,7 +46,7 @@ export function validatePaymentMethods(
   // Must be an array
   if (!Array.isArray(paymentMethods)) {
     result.isValid = false;
-    result.errors.push("Los métodos de pago deben ser un array.");
+    result.errors.push('Los métodos de pago deben ser un array.');
     return result;
   }
 
@@ -54,7 +54,7 @@ export function validatePaymentMethods(
   if (paymentMethods.length === 0) {
     result.isValid = false;
     result.errors.push(
-      "El array de métodos de pago no puede estar vacío. Use null para incluir todos los métodos."
+      'El array de métodos de pago no puede estar vacío. Use null para incluir todos los métodos.'
     );
     return result;
   }
@@ -68,8 +68,8 @@ export function validatePaymentMethods(
     result.isValid = false;
     result.errors.push(
       `Métodos de pago inválidos: ${invalidMethods.join(
-        ", "
-      )}. Valores válidos: ${VALID_PAYMENT_METHODS.join(", ")}`
+        ', '
+      )}. Valores válidos: ${VALID_PAYMENT_METHODS.join(', ')}`
     );
   }
 
@@ -77,7 +77,7 @@ export function validatePaymentMethods(
   const uniqueMethods = [...new Set(paymentMethods)];
   if (uniqueMethods.length !== paymentMethods.length) {
     result.isValid = false;
-    result.errors.push("No se permiten métodos de pago duplicados.");
+    result.errors.push('No se permiten métodos de pago duplicados.');
   }
 
   // Check if all methods are selected (suggest using null instead)
@@ -98,7 +98,7 @@ export function validatePaymentMethods(
  */
 export function validateSinglePaymentMethod(method: unknown): boolean {
   return (
-    typeof method === "string" &&
+    typeof method === 'string' &&
     VALID_PAYMENT_METHODS.includes(method as PaymentMethod)
   );
 }
@@ -134,12 +134,12 @@ export function formatPaymentMethodsForDisplay(
   paymentMethods: PaymentMethod[] | null
 ): string {
   if (!paymentMethods || paymentMethods.length === 0) {
-    return "Todos los métodos";
+    return 'Todos los métodos';
   }
 
   return paymentMethods
     .map((method) => PAYMENT_METHOD_LABELS[method])
-    .join(", ");
+    .join(', ');
 }
 
 /**

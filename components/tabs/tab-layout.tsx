@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
@@ -16,20 +16,16 @@ export function TabLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   // Don't show tabs on login page or when not authenticated
-  const isLoginPage = pathname === "/login";
+  const isLoginPage = pathname === '/login';
   const showTabs = isAuthenticated && !isLoginPage;
 
   return (
     <TabProvider>
       <div className="flex min-h-screen">
         {showTabs ? (
-          <TabLayoutWithTabs>
-            {children}
-          </TabLayoutWithTabs>
+          <TabLayoutWithTabs>{children}</TabLayoutWithTabs>
         ) : (
-          <div className="flex-1">
-            {children}
-          </div>
+          <div className="flex-1">{children}</div>
         )}
       </div>
     </TabProvider>
@@ -40,9 +36,7 @@ export function TabLayout({ children }: { children: React.ReactNode }) {
 function TabLayoutWithTabs({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <TabAwareLayout>
-        {children}
-      </TabAwareLayout>
+      <TabAwareLayout>{children}</TabAwareLayout>
     </>
   );
 }
@@ -53,7 +47,7 @@ function TabAwareLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
 
   // Don't show sidebar on login page
-  const isLoginPage = pathname === "/login";
+  const isLoginPage = pathname === '/login';
   const showSidebar = isAuthenticated && !isLoginPage;
 
   return (
@@ -62,17 +56,17 @@ function TabAwareLayout({ children }: { children: React.ReactNode }) {
       {showSidebar && <TabAwareSidebar />}
 
       {/* Main content area with tabs */}
-      <main className={cn(
-        "flex flex-col flex-1 min-h-0",
-        showSidebar ? "border-l" : ""
-      )}>
+      <main
+        className={cn(
+          'flex min-h-0 flex-1 flex-col',
+          showSidebar ? 'border-l' : ''
+        )}
+      >
         {/* Tab bar */}
         <TabBarContainer />
 
         {/* Content area */}
-        <div className="flex-1 overflow-hidden">
-          {children}
-        </div>
+        <div className="flex-1 overflow-hidden">{children}</div>
       </main>
     </div>
   );
@@ -92,11 +86,11 @@ function TabBarContainer() {
 
   const handleAddTab = () => {
     // Add a new tab with default route
-    addTab("/", "New Tab");
+    addTab('/', 'New Tab');
   };
 
   const handleTabPin = (tabId: string) => {
-    const tab = tabs.find(t => t.id === tabId);
+    const tab = tabs.find((t) => t.id === tabId);
     if (tab?.isPinned) {
       // This would need to be implemented in the context
       console.log('Unpin tab:', tabId);
@@ -122,7 +116,11 @@ function TabBarContainer() {
 }
 
 // Responsive tab layout for mobile
-export function ResponsiveTabLayout({ children }: { children: React.ReactNode }) {
+export function ResponsiveTabLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -139,9 +137,7 @@ export function ResponsiveTabLayout({ children }: { children: React.ReactNode })
     return (
       <TabProvider>
         <div className="flex min-h-screen">
-          <MobileTabLayout>
-            {children}
-          </MobileTabLayout>
+          <MobileTabLayout>{children}</MobileTabLayout>
         </div>
       </TabProvider>
     );
@@ -155,11 +151,11 @@ function MobileTabLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
 
-  const isLoginPage = pathname === "/login";
+  const isLoginPage = pathname === '/login';
   const showTabs = isAuthenticated && !isLoginPage;
 
   return (
-    <div className="flex flex-col min-h-screen w-full">
+    <div className="flex min-h-screen w-full flex-col">
       {/* Mobile sidebar (could be a drawer) */}
       {showTabs && <MobileSidebar />}
 
@@ -167,9 +163,7 @@ function MobileTabLayout({ children }: { children: React.ReactNode }) {
       {showTabs && <MobileTabBar />}
 
       {/* Content */}
-      <div className="flex-1 overflow-auto">
-        {children}
-      </div>
+      <div className="flex-1 overflow-auto">{children}</div>
     </div>
   );
 }
@@ -177,7 +171,7 @@ function MobileTabLayout({ children }: { children: React.ReactNode }) {
 // Mobile sidebar component
 function MobileSidebar() {
   return (
-    <div className="bg-card border-b p-4">
+    <div className="border-b bg-card p-4">
       <h2 className="text-lg font-semibold">Budget Tracker</h2>
       <p className="text-sm text-muted-foreground">Mobile navigation</p>
     </div>
@@ -192,17 +186,17 @@ function MobileTabBar() {
   const visibleTabs = tabs.slice(0, 3);
 
   return (
-    <div className="bg-background border-b px-2 py-1">
+    <div className="border-b bg-background px-2 py-1">
       <div className="flex items-center gap-1 overflow-x-auto">
         {visibleTabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => switchTab(tab.id)}
             className={cn(
-              "px-2 py-1 text-xs rounded-sm whitespace-nowrap transition-colors",
+              'whitespace-nowrap rounded-sm px-2 py-1 text-xs transition-colors',
               tab.id === activeTabId
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-accent"
+                ? 'bg-primary text-primary-foreground'
+                : 'bg-muted text-muted-foreground hover:bg-accent'
             )}
           >
             {tab.title}
@@ -216,8 +210,8 @@ function MobileTabBar() {
         )}
 
         <button
-          onClick={() => addTab("/", "New Tab")}
-          className="px-2 py-1 text-xs bg-muted rounded-sm hover:bg-accent transition-colors"
+          onClick={() => addTab('/', 'New Tab')}
+          className="rounded-sm bg-muted px-2 py-1 text-xs transition-colors hover:bg-accent"
         >
           +
         </button>
@@ -229,7 +223,7 @@ function MobileTabBar() {
 // Tab layout wrapper for specific pages
 export function TabLayoutWrapper({
   children,
-  showTabBar = true
+  showTabBar = true,
 }: {
   children: React.ReactNode;
   showTabBar?: boolean;
@@ -237,14 +231,14 @@ export function TabLayoutWrapper({
   const { tabs, activeTabId, switchTab, removeTab, addTab, pinTab } = useTabs();
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex h-full flex-col">
       {showTabBar && (
         <TabBar
           tabs={tabs}
           activeTabId={activeTabId}
           onTabClick={switchTab}
           onTabClose={removeTab}
-          onAddTab={addTab}
+          onAddTab={() => addTab('/')}
           onTabPin={pinTab}
         />
       )}

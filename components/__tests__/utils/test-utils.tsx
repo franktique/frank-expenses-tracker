@@ -1,6 +1,9 @@
-import React, { ReactElement } from "react";
-import { render, RenderOptions } from "@testing-library/react";
-import { getMockDataWithRelationships, ACTIVE_PERIOD } from "../fixtures/test-data";
+import React, { ReactElement } from 'react';
+import { render, RenderOptions } from '@testing-library/react';
+import {
+  getMockDataWithRelationships,
+  ACTIVE_PERIOD,
+} from '../fixtures/test-data';
 
 // Define the BudgetContextType based on the actual context
 export type BudgetContextType = {
@@ -24,18 +27,40 @@ export type BudgetContextType = {
   deleteCategory: (id: string) => Promise<void>;
   getCategoryFunds: (categoryId: string) => Promise<any[]>;
   updateCategoryFunds: (categoryId: string, fundIds: string[]) => Promise<void>;
-  deleteCategoryFundRelationship: (categoryId: string, fundId: string) => Promise<void>;
+  deleteCategoryFundRelationship: (
+    categoryId: string,
+    fundId: string
+  ) => Promise<void>;
   getAvailableFundsForCategory: (categoryId: string) => any[];
-  getDefaultFundForCategory: (categoryId: string, currentFilterFund?: any | null) => any | null;
+  getDefaultFundForCategory: (
+    categoryId: string,
+    currentFilterFund?: any | null
+  ) => any | null;
   refreshCategoryFundRelationships: () => Promise<void>;
-  batchUpdateCategoryFunds: (updates: Array<{ categoryId: string; fundIds: string[] }>) => Promise<void>;
+  batchUpdateCategoryFunds: (
+    updates: Array<{ categoryId: string; fundIds: string[] }>
+  ) => Promise<void>;
   addPeriod: (name: string, month: number, year: number) => Promise<void>;
-  updatePeriod: (id: string, name: string, month: number, year: number) => Promise<void>;
+  updatePeriod: (
+    id: string,
+    name: string,
+    month: number,
+    year: number
+  ) => Promise<void>;
   deletePeriod: (id: string) => Promise<void>;
   openPeriod: (id: string) => Promise<void>;
   closePeriod: (id: string) => Promise<void>;
-  addBudget: (categoryId: string, periodId: string, expectedAmount: number, paymentMethod: any) => Promise<void>;
-  updateBudget: (id: string, expectedAmount: number, paymentMethod?: any) => Promise<void>;
+  addBudget: (
+    categoryId: string,
+    periodId: string,
+    expectedAmount: number,
+    paymentMethod: any
+  ) => Promise<void>;
+  updateBudget: (
+    id: string,
+    expectedAmount: number,
+    paymentMethod?: any
+  ) => Promise<void>;
   deleteBudget: (id: string) => Promise<void>;
   addIncome: (...args: any[]) => Promise<void>;
   updateIncome: (...args: any[]) => Promise<void>;
@@ -63,26 +88,30 @@ export type BudgetContextType = {
 };
 
 // Create mock contexts
-const BudgetContext = React.createContext<BudgetContextType | undefined>(undefined);
+const BudgetContext = React.createContext<BudgetContextType | undefined>(
+  undefined
+);
 const AuthContext = React.createContext<any>(undefined);
 
 // Mock providers
-const MockBudgetProvider: React.FC<{ children: React.ReactNode; value: BudgetContextType }> = ({ children, value }) => (
-  <BudgetContext.Provider value={value}>
-    {children}
-  </BudgetContext.Provider>
+const MockBudgetProvider: React.FC<{
+  children: React.ReactNode;
+  value: BudgetContextType;
+}> = ({ children, value }) => (
+  <BudgetContext.Provider value={value}>{children}</BudgetContext.Provider>
 );
 
-const MockAuthProvider: React.FC<{ children: React.ReactNode; value: any }> = ({ children, value }) => (
-  <AuthContext.Provider value={value}>
-    {children}
-  </AuthContext.Provider>
-);
+const MockAuthProvider: React.FC<{ children: React.ReactNode; value: any }> = ({
+  children,
+  value,
+}) => <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 
 // Mock budget context values
-export const createMockBudgetContext = (overrides?: Partial<BudgetContextType>): BudgetContextType => {
+export const createMockBudgetContext = (
+  overrides?: Partial<BudgetContextType>
+): BudgetContextType => {
   const mockData = getMockDataWithRelationships();
-  
+
   return {
     // Data
     funds: mockData.funds,
@@ -91,22 +120,22 @@ export const createMockBudgetContext = (overrides?: Partial<BudgetContextType>):
     expenses: mockData.expenses,
     incomes: mockData.incomes,
     budgets: mockData.budgets,
-    
+
     // Active period and filtering
     activePeriod: ACTIVE_PERIOD,
     selectedFund: null,
     fundFilter: null,
-    
+
     // Loading states
     isLoading: false,
     error: null,
     isDbInitialized: true,
     dbConnectionError: false,
     connectionErrorDetails: null,
-    
+
     // Database operations
     setupDatabase: jest.fn(),
-    
+
     // Category operations
     addCategory: jest.fn(),
     updateCategory: jest.fn(),
@@ -118,35 +147,35 @@ export const createMockBudgetContext = (overrides?: Partial<BudgetContextType>):
     getDefaultFundForCategory: jest.fn(() => null),
     refreshCategoryFundRelationships: jest.fn(),
     batchUpdateCategoryFunds: jest.fn(),
-    
+
     // Period operations
     addPeriod: jest.fn(),
     updatePeriod: jest.fn(),
     deletePeriod: jest.fn(),
     openPeriod: jest.fn(),
     closePeriod: jest.fn(),
-    
+
     // Budget operations
     addBudget: jest.fn(),
     updateBudget: jest.fn(),
     deleteBudget: jest.fn(),
-    
+
     // Income operations
     addIncome: jest.fn(),
     updateIncome: jest.fn(),
     deleteIncome: jest.fn(),
-    
+
     // Expense operations
     addExpense: jest.fn(),
     updateExpense: jest.fn(),
     deleteExpense: jest.fn(),
-    
+
     // Fund operations
     addFund: jest.fn(),
     updateFund: jest.fn(),
     deleteFund: jest.fn(),
     recalculateFundBalance: jest.fn(),
-    
+
     // Fund filtering and selection
     setSelectedFund: jest.fn(),
     setFundFilter: jest.fn(),
@@ -154,18 +183,18 @@ export const createMockBudgetContext = (overrides?: Partial<BudgetContextType>):
     getFilteredIncomes: jest.fn(() => []),
     getFilteredExpenses: jest.fn(() => []),
     getDashboardData: jest.fn(),
-    
+
     // Helper functions
     getCategoryById: jest.fn(),
     getPeriodById: jest.fn(),
     getFundById: jest.fn(),
     getDefaultFund: jest.fn(),
-    
+
     // Data refresh
     refreshData: jest.fn(),
     refreshFunds: jest.fn(),
     validateActivePeriodCache: jest.fn(),
-    
+
     // Override with any custom values
     ...overrides,
   };
@@ -173,10 +202,10 @@ export const createMockBudgetContext = (overrides?: Partial<BudgetContextType>):
 
 // Mock auth context values
 export const createMockAuthContext = (overrides?: any) => ({
-  user: { 
-    id: "user-1", 
-    email: "test@example.com",
-    name: "Test User" 
+  user: {
+    id: 'user-1',
+    email: 'test@example.com',
+    name: 'Test User',
   },
   isAuthenticated: true,
   login: jest.fn(),
@@ -238,8 +267,10 @@ export const mockRouter = {
 
 // Chart component mocks for performance
 export const mockChartComponents = () => {
-  jest.mock("recharts", () => ({
-    BarChart: ({ children }: any) => <div data-testid="bar-chart">{children}</div>,
+  jest.mock('recharts', () => ({
+    BarChart: ({ children }: any) => (
+      <div data-testid="bar-chart">{children}</div>
+    ),
     Bar: () => <div data-testid="bar" />,
     XAxis: () => <div data-testid="x-axis" />,
     YAxis: () => <div data-testid="y-axis" />,
@@ -249,9 +280,13 @@ export const mockChartComponents = () => {
     ResponsiveContainer: ({ children }: any) => (
       <div data-testid="responsive-container">{children}</div>
     ),
-    LineChart: ({ children }: any) => <div data-testid="line-chart">{children}</div>,
+    LineChart: ({ children }: any) => (
+      <div data-testid="line-chart">{children}</div>
+    ),
     Line: () => <div data-testid="line" />,
-    PieChart: ({ children }: any) => <div data-testid="pie-chart">{children}</div>,
+    PieChart: ({ children }: any) => (
+      <div data-testid="pie-chart">{children}</div>
+    ),
     Pie: () => <div data-testid="pie" />,
     Cell: () => <div data-testid="cell" />,
   }));
@@ -259,16 +294,16 @@ export const mockChartComponents = () => {
 
 // Wait for async operations helper
 export const waitForAsyncOperations = () => {
-  return new Promise(resolve => setTimeout(resolve, 0));
+  return new Promise((resolve) => setTimeout(resolve, 0));
 };
 
 // Form helpers
 export const fillInput = async (input: HTMLElement, value: string) => {
-  const { fireEvent } = await import("@testing-library/react");
+  const { fireEvent } = await import('@testing-library/react');
   fireEvent.change(input, { target: { value } });
 };
 
 export const submitForm = async (form: HTMLElement) => {
-  const { fireEvent } = await import("@testing-library/react");
+  const { fireEvent } = await import('@testing-library/react');
   fireEvent.submit(form);
 };

@@ -1,6 +1,13 @@
-"use client";
+'use client';
 
-import React, { createContext, useContext, useReducer, useCallback, useEffect, useState } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useReducer,
+  useCallback,
+  useEffect,
+  useState,
+} from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Tab, TabsContextType, TabOptions, TabStorageData } from '@/types/tabs';
 import {
@@ -8,7 +15,7 @@ import {
   getTabTitle,
   getTabIcon,
   isRouteClosable,
-  validateTabData
+  validateTabData,
 } from '@/utils/tab-utils';
 
 // Tab state actions
@@ -16,7 +23,10 @@ type TabAction =
   | { type: 'ADD_TAB'; payload: { tab: Tab; makeActive?: boolean } }
   | { type: 'REMOVE_TAB'; payload: { tabId: string } }
   | { type: 'SWITCH_TAB'; payload: { tabId: string } }
-  | { type: 'UPDATE_TAB_STATE'; payload: { tabId: string; state: Partial<Tab['state']> } }
+  | {
+      type: 'UPDATE_TAB_STATE';
+      payload: { tabId: string; state: Partial<Tab['state']> };
+    }
   | { type: 'PIN_TAB'; payload: { tabId: string } }
   | { type: 'UNPIN_TAB'; payload: { tabId: string } }
   | { type: 'CLOSE_ALL_TABS' }
@@ -33,26 +43,26 @@ function tabReducer(tabs: Tab[], action: TabAction): Tab[] {
       const { tab, makeActive = true } = action.payload;
 
       // Check if tab with same path already exists
-      const existingTab = tabs.find(t => t.path === tab.path);
+      const existingTab = tabs.find((t) => t.path === tab.path);
       if (existingTab) {
         // Make existing tab active if requested
         if (makeActive) {
-          return tabs.map(t => ({
+          return tabs.map((t) => ({
             ...t,
             isActive: t.id === existingTab.id,
-            lastAccessed: t.id === existingTab.id ? new Date() : t.lastAccessed
+            lastAccessed: t.id === existingTab.id ? new Date() : t.lastAccessed,
           }));
         }
         return tabs;
       }
 
       // Add new tab and make it active
-      const updatedTabs = tabs.map(t => ({ ...t, isActive: false }));
+      const updatedTabs = tabs.map((t) => ({ ...t, isActive: false }));
       const newTab = {
         ...tab,
         isActive: makeActive,
         isClosable: tab.isClosable ?? isRouteClosable(tab.path),
-        lastAccessed: new Date()
+        lastAccessed: new Date(),
       };
 
       return [...updatedTabs, newTab];
@@ -60,7 +70,7 @@ function tabReducer(tabs: Tab[], action: TabAction): Tab[] {
 
     case 'REMOVE_TAB': {
       const { tabId } = action.payload;
-      const tabIndex = tabs.findIndex(t => t.id === tabId);
+      const tabIndex = tabs.findIndex((t) => t.id === tabId);
 
       if (tabIndex === -1) return tabs;
 
@@ -69,7 +79,7 @@ function tabReducer(tabs: Tab[], action: TabAction): Tab[] {
       // Don't remove if tab is pinned
       if (tabToRemove.isPinned) return tabs;
 
-      const newTabs = tabs.filter(t => t.id !== tabId);
+      const newTabs = tabs.filter((t) => t.id !== tabId);
 
       // If we removed the active tab, make another tab active
       if (tabToRemove.isActive && newTabs.length > 0) {
@@ -78,7 +88,7 @@ function tabReducer(tabs: Tab[], action: TabAction): Tab[] {
         newTabs[nextActiveIndex] = {
           ...newTabs[nextActiveIndex],
           isActive: true,
-          lastAccessed: new Date()
+          lastAccessed: new Date(),
         };
       }
 
@@ -88,23 +98,23 @@ function tabReducer(tabs: Tab[], action: TabAction): Tab[] {
     case 'SWITCH_TAB': {
       const { tabId } = action.payload;
 
-      return tabs.map(tab => ({
+      return tabs.map((tab) => ({
         ...tab,
         isActive: tab.id === tabId,
-        lastAccessed: tab.id === tabId ? new Date() : tab.lastAccessed
+        lastAccessed: tab.id === tabId ? new Date() : tab.lastAccessed,
       }));
     }
 
     case 'UPDATE_TAB_STATE': {
       const { tabId, state } = action.payload;
 
-      return tabs.map(tab =>
+      return tabs.map((tab) =>
         tab.id === tabId
           ? {
               ...tab,
               state: { ...tab.state, ...state },
               isModified: true,
-              lastAccessed: new Date()
+              lastAccessed: new Date(),
             }
           : tab
       );
@@ -113,17 +123,15 @@ function tabReducer(tabs: Tab[], action: TabAction): Tab[] {
     case 'PIN_TAB': {
       const { tabId } = action.payload;
 
-      return tabs.map(tab =>
-        tab.id === tabId
-          ? { ...tab, isPinned: true, isClosable: false }
-          : tab
+      return tabs.map((tab) =>
+        tab.id === tabId ? { ...tab, isPinned: true, isClosable: false } : tab
       );
     }
 
     case 'UNPIN_TAB': {
       const { tabId } = action.payload;
 
-      return tabs.map(tab =>
+      return tabs.map((tab) =>
         tab.id === tabId
           ? { ...tab, isPinned: false, isClosable: isRouteClosable(tab.path) }
           : tab
@@ -132,10 +140,12 @@ function tabReducer(tabs: Tab[], action: TabAction): Tab[] {
 
     case 'CLOSE_ALL_TABS': {
       // Keep only pinned tabs
-      return tabs.filter(tab => tab.isPinned).map(tab => ({
-        ...tab,
-        isActive: false
-      }));
+      return tabs
+        .filter((tab) => tab.isPinned)
+        .map((tab) => ({
+          ...tab,
+          isActive: false,
+        }));
     }
 
     case 'CLOSE_OTHER_TABS': {
@@ -143,17 +153,17 @@ function tabReducer(tabs: Tab[], action: TabAction): Tab[] {
 
       // Keep the specified tab and all pinned tabs
       return tabs
-        .filter(tab => tab.id === keepTabId || tab.isPinned)
-        .map(tab => ({
+        .filter((tab) => tab.id === keepTabId || tab.isPinned)
+        .map((tab) => ({
           ...tab,
-          isActive: tab.id === keepTabId
+          isActive: tab.id === keepTabId,
         }));
     }
 
     case 'DUPLICATE_TAB': {
       const { tabId, newTabId } = action.payload;
 
-      const originalTab = tabs.find(t => t.id === tabId);
+      const originalTab = tabs.find((t) => t.id === tabId);
       if (!originalTab) return tabs;
 
       const duplicatedTab: Tab = {
@@ -164,21 +174,19 @@ function tabReducer(tabs: Tab[], action: TabAction): Tab[] {
         isPinned: false,
         createdAt: new Date(),
         lastAccessed: new Date(),
-        isModified: false
+        isModified: false,
       };
 
       // Deactivate all tabs and add the duplicated one
-      const updatedTabs = tabs.map(t => ({ ...t, isActive: false }));
+      const updatedTabs = tabs.map((t) => ({ ...t, isActive: false }));
       return [...updatedTabs, duplicatedTab];
     }
 
     case 'UPDATE_TAB_ACCESS': {
       const { tabId } = action.payload;
 
-      return tabs.map(tab =>
-        tab.id === tabId
-          ? { ...tab, lastAccessed: new Date() }
-          : tab
+      return tabs.map((tab) =>
+        tab.id === tabId ? { ...tab, lastAccessed: new Date() } : tab
       );
     }
 
@@ -186,15 +194,15 @@ function tabReducer(tabs: Tab[], action: TabAction): Tab[] {
       const { tabs: loadedTabs, activeTabId } = action.payload;
 
       // Validate loaded tabs
-      const validTabs = loadedTabs.filter(validateTabData).map(tab => ({
+      const validTabs = loadedTabs.filter(validateTabData).map((tab) => ({
         ...tab,
         createdAt: new Date(tab.createdAt),
         lastAccessed: new Date(tab.lastAccessed),
-        isActive: tab.id === activeTabId
+        isActive: tab.id === activeTabId,
       }));
 
       // Ensure we have at least one active tab
-      if (validTabs.length > 0 && !validTabs.some(t => t.isActive)) {
+      if (validTabs.length > 0 && !validTabs.some((t) => t.isActive)) {
         validTabs[0].isActive = true;
       }
 
@@ -226,7 +234,7 @@ export function TabProvider({ children }: { children: React.ReactNode }) {
 
   // Get active tab ID from tabs
   const getActiveTabId = useCallback(() => {
-    const activeTab = tabs.find(tab => tab.isActive);
+    const activeTab = tabs.find((tab) => tab.isActive);
     return activeTab?.id || null;
   }, [tabs]);
 
@@ -248,7 +256,7 @@ export function TabProvider({ children }: { children: React.ReactNode }) {
       addTab(pathname);
     } else if (pathname) {
       // Check if current route exists in tabs
-      const existingTab = tabs.find(tab => tab.path === pathname);
+      const existingTab = tabs.find((tab) => tab.path === pathname);
       if (existingTab && existingTab.id !== activeTabId) {
         switchTab(existingTab.id);
       } else if (!existingTab) {
@@ -260,47 +268,50 @@ export function TabProvider({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   // Add tab function
-  const addTab = useCallback((
-    path: string,
-    title?: string,
-    state?: Tab['state'],
-    options: TabOptions = {}
-  ): string => {
-    // Don't allow tabs for login page
-    if (path === '/login') {
-      console.warn('Cannot create tab for login page');
-      return '';
-    }
+  const addTab = useCallback(
+    (
+      path: string,
+      title?: string,
+      state?: Tab['state'],
+      options: TabOptions = {}
+    ): string => {
+      // Don't allow tabs for login page
+      if (path === '/login') {
+        console.warn('Cannot create tab for login page');
+        return '';
+      }
 
-    console.log('addTab called with:', { path, title, options });
+      console.log('addTab called with:', { path, title, options });
 
-    const tabId = generateTabId();
-    const newTab: Tab = {
-      id: tabId,
-      title: title || getTabTitle(path),
-      path,
-      isActive: options.isActive ?? true,
-      isPinned: options.isPinned ?? false,
-      // Temporarily disable icons to avoid rendering issues
-      icon: null, // options.icon || getTabIcon(path),
-      state,
-      createdAt: new Date(),
-      lastAccessed: new Date(),
-      isClosable: options.isClosable ?? isRouteClosable(path),
-      routeParams: options.routeParams
-    };
+      const tabId = generateTabId();
+      const newTab: Tab = {
+        id: tabId,
+        title: title || getTabTitle(path),
+        path,
+        isActive: options.isActive ?? true,
+        isPinned: options.isPinned ?? false,
+        // Temporarily disable icons to avoid rendering issues
+        icon: undefined, // options.icon || getTabIcon(path),
+        state,
+        createdAt: new Date(),
+        lastAccessed: new Date(),
+        isClosable: options.isClosable ?? isRouteClosable(path),
+        routeParams: options.routeParams,
+      };
 
-    console.log('Creating new tab:', newTab);
-    dispatch({ type: 'ADD_TAB', payload: { tab: newTab, makeActive: true } });
+      console.log('Creating new tab:', newTab);
+      dispatch({ type: 'ADD_TAB', payload: { tab: newTab, makeActive: true } });
 
-    // Navigate to the new tab's path
-    if (router && path !== pathname) {
-      console.log('Navigating to:', path);
-      router.push(path);
-    }
+      // Navigate to the new tab's path
+      if (router && path !== pathname) {
+        console.log('Navigating to:', path);
+        router.push(path);
+      }
 
-    return tabId;
-  }, [router, pathname]);
+      return tabId;
+    },
+    [router, pathname]
+  );
 
   // Remove tab function
   const removeTab = useCallback((tabId: string) => {
@@ -308,22 +319,28 @@ export function TabProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Switch tab function
-  const switchTab = useCallback((tabId: string) => {
-    const tab = tabs.find(t => t.id === tabId);
-    if (tab) {
-      dispatch({ type: 'SWITCH_TAB', payload: { tabId } });
+  const switchTab = useCallback(
+    (tabId: string) => {
+      const tab = tabs.find((t) => t.id === tabId);
+      if (tab) {
+        dispatch({ type: 'SWITCH_TAB', payload: { tabId } });
 
-      // Navigate to the tab's path
-      if (router && tab.path !== pathname) {
-        router.push(tab.path);
+        // Navigate to the tab's path
+        if (router && tab.path !== pathname) {
+          router.push(tab.path);
+        }
       }
-    }
-  }, [tabs, router, pathname]);
+    },
+    [tabs, router, pathname]
+  );
 
   // Update tab state function
-  const updateTabState = useCallback((tabId: string, state: Partial<Tab['state']>) => {
-    dispatch({ type: 'UPDATE_TAB_STATE', payload: { tabId, state } });
-  }, []);
+  const updateTabState = useCallback(
+    (tabId: string, state: Partial<Tab['state']>) => {
+      dispatch({ type: 'UPDATE_TAB_STATE', payload: { tabId, state } });
+    },
+    []
+  );
 
   // Pin tab function
   const pinTab = useCallback((tabId: string) => {
@@ -353,13 +370,16 @@ export function TabProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Get tab by ID function
-  const getTabById = useCallback((tabId: string): Tab | undefined => {
-    return tabs.find(tab => tab.id === tabId);
-  }, [tabs]);
+  const getTabById = useCallback(
+    (tabId: string): Tab | undefined => {
+      return tabs.find((tab) => tab.id === tabId);
+    },
+    [tabs]
+  );
 
   // Get active tab function
   const getActiveTab = useCallback((): Tab | undefined => {
-    return tabs.find(tab => tab.isActive);
+    return tabs.find((tab) => tab.isActive);
   }, [tabs]);
 
   // Save tabs to localStorage
@@ -369,10 +389,10 @@ export function TabProvider({ children }: { children: React.ReactNode }) {
         tabs: tabs.map(({ createdAt, lastAccessed, ...tab }) => ({
           ...tab,
           createdAt: createdAt.toISOString(),
-          lastAccessed: lastAccessed.toISOString()
+          lastAccessed: lastAccessed.toISOString(),
         })),
         activeTabId: getActiveTabId(),
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       localStorage.setItem(TABS_STORAGE_KEY, JSON.stringify(tabData));
@@ -397,7 +417,14 @@ export function TabProvider({ children }: { children: React.ReactNode }) {
         if (isRecent) {
           dispatch({
             type: 'LOAD_TABS',
-            payload: { tabs: tabData.tabs, activeTabId: tabData.activeTabId }
+            payload: {
+              tabs: tabData.tabs.map((tab) => ({
+                ...tab,
+                createdAt: new Date(tab.createdAt || Date.now()),
+                lastAccessed: new Date(tab.lastAccessed || Date.now()),
+              })),
+              activeTabId: tabData.activeTabId,
+            },
           });
         }
       }
@@ -430,10 +457,10 @@ export function TabProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // Only run this once after tabs are loaded
     if (tabs.length > 0) {
-      const loginTabs = tabs.filter(tab => tab.path === '/login');
+      const loginTabs = tabs.filter((tab) => tab.path === '/login');
       if (loginTabs.length > 0) {
         console.log('Cleaning up login tabs:', loginTabs.length);
-        loginTabs.forEach(tab => {
+        loginTabs.forEach((tab) => {
           dispatch({ type: 'REMOVE_TAB', payload: { tabId: tab.id } });
         });
       }
@@ -466,13 +493,11 @@ export function TabProvider({ children }: { children: React.ReactNode }) {
     getActiveTab,
     saveTabs,
     loadTabs,
-    clearTabs
+    clearTabs,
   };
 
   return (
-    <TabsContext.Provider value={contextValue}>
-      {children}
-    </TabsContext.Provider>
+    <TabsContext.Provider value={contextValue}>{children}</TabsContext.Provider>
   );
 }
 

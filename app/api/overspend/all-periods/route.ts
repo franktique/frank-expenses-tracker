@@ -1,9 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import type {
   AllPeriodsOverspendResponse,
   CategoryOverspendRow,
-} from "@/types/funds";
+} from '@/types/funds';
 
 interface RowData {
   category_id: string;
@@ -20,22 +20,22 @@ interface RowData {
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const paymentMethodParam = searchParams.get("paymentMethod");
-    const excludedCategoriesParam = searchParams.get("excludedCategories");
+    const paymentMethodParam = searchParams.get('paymentMethod');
+    const excludedCategoriesParam = searchParams.get('excludedCategories');
 
     // Parse excluded categories
     const excludedCategories = excludedCategoriesParam
-      ? excludedCategoriesParam.split(",").filter((id) => id.length > 0)
+      ? excludedCategoriesParam.split(',').filter((id) => id.length > 0)
       : [];
 
     // Determine payment method filters
-    const CASH_METHODS = ["cash", "debit"];
-    const CREDIT_METHODS = ["credit"];
+    const CASH_METHODS = ['cash', 'debit'];
+    const CREDIT_METHODS = ['credit'];
     let methodFilter: string[];
 
-    if (paymentMethodParam === "cash") {
+    if (paymentMethodParam === 'cash') {
       methodFilter = CASH_METHODS;
-    } else if (paymentMethodParam === "credit") {
+    } else if (paymentMethodParam === 'credit') {
       methodFilter = CREDIT_METHODS;
     } else {
       methodFilter = [...CASH_METHODS, ...CREDIT_METHODS];
@@ -100,8 +100,9 @@ export async function GET(request: NextRequest) {
         mergedData[row.category_id] = {};
       }
       if (mergedData[row.category_id][row.period_id]) {
-        mergedData[row.category_id][row.period_id].total_spent =
-          parseFloat(row.total_spent.toString());
+        mergedData[row.category_id][row.period_id].total_spent = parseFloat(
+          row.total_spent.toString()
+        );
       } else {
         mergedData[row.category_id][row.period_id] = {
           ...row,
@@ -126,7 +127,7 @@ export async function GET(request: NextRequest) {
 
       const categoryEntry: CategoryOverspendRow = {
         categoryId,
-        categoryName: "",
+        categoryName: '',
         tipoGasto: undefined,
         periods: [],
         totalPlaneado: 0,
@@ -160,10 +161,7 @@ export async function GET(request: NextRequest) {
       });
 
       // Only include categories with overspend or budget
-      if (
-        categoryEntry.totalPlaneado > 0 ||
-        categoryEntry.totalOverspend > 0
-      ) {
+      if (categoryEntry.totalPlaneado > 0 || categoryEntry.totalOverspend > 0) {
         overspendByCategory.push(categoryEntry);
         totalPlaneadoGlobal += categoryEntry.totalPlaneado;
         totalActualGlobal += categoryEntry.totalActual;
@@ -172,18 +170,16 @@ export async function GET(request: NextRequest) {
     });
 
     // Calculate overspend by payment method
-    if (methodFilter.includes("cash") || methodFilter.includes("debit")) {
+    if (methodFilter.includes('cash') || methodFilter.includes('debit')) {
       overspendByPaymentMethod.cash = 0; // Placeholder - more detailed breakdown would need separate query
       overspendByPaymentMethod.debit = 0;
     }
-    if (methodFilter.includes("credit")) {
+    if (methodFilter.includes('credit')) {
       overspendByPaymentMethod.credit = 0;
     }
 
     // Sort by total overspend descending
-    overspendByCategory.sort(
-      (a, b) => b.totalOverspend - a.totalOverspend
-    );
+    overspendByCategory.sort((a, b) => b.totalOverspend - a.totalOverspend);
 
     const response: AllPeriodsOverspendResponse = {
       overspendByCategory,
@@ -197,7 +193,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("Error fetching all-periods overspend data:", error);
+    console.error('Error fetching all-periods overspend data:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

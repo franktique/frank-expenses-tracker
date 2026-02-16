@@ -20,6 +20,7 @@ Implement two filter mechanisms in the Simulation Budget Form (`/components/simu
 ## Requirements
 
 ### 1. Empty Values Checkbox Filter
+
 - **Location:** Above the budget table, before or alongside the dropdown filter
 - **Behavior:**
   - Checkbox labeled "Ocultar categorías sin presupuesto" (Hide categories without budget)
@@ -31,6 +32,7 @@ Implement two filter mechanisms in the Simulation Budget Form (`/components/simu
   - Should show how many categories are being hidden (optional indicator)
 
 ### 2. Category Exclusion Dropdown
+
 - **Location:** Next to the empty values checkbox
 - **Behavior:**
   - Multi-select dropdown displaying all categories alphabetically ordered
@@ -107,22 +109,26 @@ Implement two filter mechanisms in the Simulation Budget Form (`/components/simu
 ## Technical Considerations
 
 ### State Management
+
 - Empty values toggle: Local component state
 - Excluded categories: localStorage + component state
 - Both filters work independently but can be combined
 
 ### Performance
+
 - Filtering in `getSortedCategories` memoized selector (already optimized)
 - localStorage operations are synchronous but minimal impact
 - Dropdown render can be optimized if category list is large
 
 ### Edge Cases
+
 - All categories filtered/hidden → Show message "No hay categorías para mostrar"
 - localStorage corruption → Fallback to empty exclusion list
 - Category deleted → Automatically removed from exclusions
 - Zero values with filters → Properly hide/show as needed
 
 ### Compatibility
+
 - Existing drag-and-drop reordering should work with filtered categories
 - Existing sorting (tipo_gasto, category_name) should work with filters
 - Balance calculations: Clarify whether totals include filtered categories
@@ -132,9 +138,11 @@ Implement two filter mechanisms in the Simulation Budget Form (`/components/simu
 ## File Changes
 
 ### Primary File
+
 - `/components/simulation-budget-form.tsx` - Add filter state and logic
 
 ### Supporting Files (if needed)
+
 - Create filter UI component if filter controls become complex
 - Update tests if filter logic needs coverage
 

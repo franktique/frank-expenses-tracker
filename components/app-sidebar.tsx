@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   BarChart3,
@@ -20,10 +20,10 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeft,
-} from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+} from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
+import { useState } from 'react';
 
 import {
   Sidebar,
@@ -36,53 +36,52 @@ import {
   SidebarMenuSub,
   SidebarMenuSubItem,
   useSidebar,
-} from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/sidebar';
+import { Button } from '@/components/ui/button';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { LogoutButton } from "@/components/logout-button";
-import { useAuth } from "@/lib/auth-context";
-import { ThemeToggle } from "@/components/theme-toggle";
+} from '@/components/ui/collapsible';
+import { LogoutButton } from '@/components/logout-button';
+import { useAuth } from '@/lib/auth-context';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 export function AppSidebar() {
   const pathname = usePathname();
   const { isAuthenticated } = useAuth();
   const [overspendOpen, setOverspendOpen] = useState(false);
   const { toggleSidebar, state } = useSidebar();
-  const isCollapsed = state === "collapsed";
+  const isCollapsed = state === 'collapsed';
 
   const isActive = (path: string) => {
-    if (path === "/estudios") {
-      return pathname === "/estudios" || pathname.startsWith("/estudios/");
+    if (path === '/estudios') {
+      return pathname === '/estudios' || pathname.startsWith('/estudios/');
     }
-    if (path === "/simular") {
-      return pathname === "/simular" || pathname.startsWith("/simular/");
+    if (path === '/simular') {
+      return pathname === '/simular' || pathname.startsWith('/simular/');
     }
-    if (path === "/simular-prestamos") {
+    if (path === '/simular-prestamos') {
       return (
-        pathname === "/simular-prestamos" ||
-        pathname.startsWith("/simular-prestamos/")
+        pathname === '/simular-prestamos' ||
+        pathname.startsWith('/simular-prestamos/')
       );
     }
-    if (path === "/simular-inversiones") {
+    if (path === '/simular-inversiones') {
       return (
-        pathname === "/simular-inversiones" ||
-        pathname.startsWith("/simular-inversiones/")
+        pathname === '/simular-inversiones' ||
+        pathname.startsWith('/simular-inversiones/')
       );
     }
-    if (path === "/simular-tasas") {
+    if (path === '/simular-tasas') {
       return (
-        pathname === "/simular-tasas" ||
-        pathname.startsWith("/simular-tasas/")
+        pathname === '/simular-tasas' || pathname.startsWith('/simular-tasas/')
       );
     }
-    if (path === "/dashboard/overspend") {
+    if (path === '/dashboard/overspend') {
       return (
-        pathname === "/dashboard/overspend" ||
-        pathname.startsWith("/dashboard/overspend/")
+        pathname === '/dashboard/overspend' ||
+        pathname.startsWith('/dashboard/overspend/')
       );
     }
     return pathname === path;
@@ -94,11 +93,15 @@ export function AppSidebar() {
         <div className="flex items-center justify-between px-2 py-2">
           <div className="flex items-center gap-2 overflow-hidden">
             <DollarSign className="h-6 w-6 shrink-0" />
-            <span className={`text-lg font-semibold whitespace-nowrap transition-opacity duration-200 ${isCollapsed ? "opacity-0 w-0" : "opacity-100"}`}>
+            <span
+              className={`whitespace-nowrap text-lg font-semibold transition-opacity duration-200 ${isCollapsed ? 'w-0 opacity-0' : 'opacity-100'}`}
+            >
               Budget Tracker
             </span>
           </div>
-          <div className={`flex items-center gap-1 ${isCollapsed ? "hidden" : ""}`}>
+          <div
+            className={`flex items-center gap-1 ${isCollapsed ? 'hidden' : ''}`}
+          >
             <ThemeToggle />
             <Button
               variant="ghost"
@@ -129,7 +132,11 @@ export function AppSidebar() {
       <SidebarContent>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/")} tooltip="Dashboard">
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/')}
+              tooltip="Dashboard"
+            >
               <Link href="/">
                 <Home className="h-4 w-4" />
                 <span>Dashboard</span>
@@ -137,7 +144,11 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/categorias")} tooltip="Categorias">
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/categorias')}
+              tooltip="Categorias"
+            >
               <Link href="/categorias">
                 <PieChart className="h-4 w-4" />
                 <span>Categorias</span>
@@ -145,7 +156,11 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/periodos")} tooltip="Periodos">
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/periodos')}
+              tooltip="Periodos"
+            >
               <Link href="/periodos">
                 <CalendarRange className="h-4 w-4" />
                 <span>Periodos</span>
@@ -153,7 +168,11 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/presupuestos")} tooltip="Presupuestos">
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/presupuestos')}
+              tooltip="Presupuestos"
+            >
               <Link href="/presupuestos">
                 <Calculator className="h-4 w-4" />
                 <span>Presupuestos</span>
@@ -161,7 +180,11 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/ingresos")} tooltip="Ingresos">
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/ingresos')}
+              tooltip="Ingresos"
+            >
               <Link href="/ingresos">
                 <TrendingUp className="h-4 w-4" />
                 <span>Ingresos</span>
@@ -169,7 +192,11 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/gastos")} tooltip="Gastos">
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/gastos')}
+              tooltip="Gastos"
+            >
               <Link href="/gastos">
                 <Receipt className="h-4 w-4" />
                 <span>Gastos</span>
@@ -177,7 +204,11 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/tarjetas-credito")} tooltip="Tarjetas de Crédito">
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/tarjetas-credito')}
+              tooltip="Tarjetas de Crédito"
+            >
               <Link href="/tarjetas-credito">
                 <CreditCard className="h-4 w-4" />
                 <span>Tarjetas de Crédito</span>
@@ -185,7 +216,11 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/fondos")} tooltip="Fondos">
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/fondos')}
+              tooltip="Fondos"
+            >
               <Link href="/fondos">
                 <Wallet className="h-4 w-4" />
                 <span>Fondos</span>
@@ -193,7 +228,11 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/agrupadores")} tooltip="Agrupadores">
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/agrupadores')}
+              tooltip="Agrupadores"
+            >
               <Link href="/agrupadores">
                 <LayersIcon className="h-4 w-4" />
                 <span>Agrupadores</span>
@@ -201,7 +240,11 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/estudios")} tooltip="Estudios">
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/estudios')}
+              tooltip="Estudios"
+            >
               <Link href="/estudios">
                 <BookOpen className="h-4 w-4" />
                 <span>Estudios</span>
@@ -209,7 +252,11 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/simular")} tooltip="Simular">
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/simular')}
+              tooltip="Simular"
+            >
               <Link href="/simular">
                 <Zap className="h-4 w-4" />
                 <span>Simular</span>
@@ -219,7 +266,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={isActive("/simular-prestamos")}
+              isActive={isActive('/simular-prestamos')}
               tooltip="Simular Préstamos"
             >
               <Link href="/simular-prestamos">
@@ -231,7 +278,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={isActive("/simular-inversiones")}
+              isActive={isActive('/simular-inversiones')}
               tooltip="Simular Inversiones"
             >
               <Link href="/simular-inversiones">
@@ -243,7 +290,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={isActive("/simular-tasas")}
+              isActive={isActive('/simular-tasas')}
               tooltip="Simular Tasas"
             >
               <Link href="/simular-tasas">
@@ -255,7 +302,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={isActive("/dashboard/groupers")}
+              isActive={isActive('/dashboard/groupers')}
               tooltip="Dashboard Agrupadores"
             >
               <Link href="/dashboard/groupers">
@@ -265,7 +312,11 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/dashboard/fondos")} tooltip="Dashboard Fondos">
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/dashboard/fondos')}
+              tooltip="Dashboard Fondos"
+            >
               <Link href="/dashboard/fondos">
                 <BarChart3 className="h-4 w-4" />
                 <span>Dashboard Fondos</span>
@@ -275,7 +326,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={isActive("/dashboard/remainder")}
+              isActive={isActive('/dashboard/remainder')}
               tooltip="Dashboard Remanentes"
             >
               <Link href="/dashboard/remainder">
@@ -287,7 +338,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={isActive("/dashboard/category-bars")}
+              isActive={isActive('/dashboard/category-bars')}
               tooltip="Gastos por Fecha"
             >
               <Link href="/dashboard/category-bars">
@@ -299,7 +350,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={isActive("/dashboard/period-bars")}
+              isActive={isActive('/dashboard/period-bars')}
               tooltip="Gastos por Periodo"
             >
               <Link href="/dashboard/period-bars">
@@ -316,7 +367,7 @@ export function AppSidebar() {
             >
               <CollapsibleTrigger asChild>
                 <SidebarMenuButton
-                  isActive={isActive("/dashboard/overspend")}
+                  isActive={isActive('/dashboard/overspend')}
                   className="w-full"
                   tooltip="Overspend Actual"
                 >
@@ -324,7 +375,7 @@ export function AppSidebar() {
                   <span>Overspend Actual</span>
                   <ChevronRight
                     className={`ml-auto h-4 w-4 transition-transform ${
-                      overspendOpen ? "rotate-90" : ""
+                      overspendOpen ? 'rotate-90' : ''
                     }`}
                   />
                 </SidebarMenuButton>
@@ -334,7 +385,7 @@ export function AppSidebar() {
                   <SidebarMenuSubItem>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === "/dashboard/overspend"}
+                      isActive={pathname === '/dashboard/overspend'}
                     >
                       <Link href="/dashboard/overspend">
                         <span>Periodo Actual</span>
@@ -344,7 +395,7 @@ export function AppSidebar() {
                   <SidebarMenuSubItem>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === "/dashboard/overspend/all-periods"}
+                      isActive={pathname === '/dashboard/overspend/all-periods'}
                     >
                       <Link href="/dashboard/overspend/all-periods">
                         <span>Todos los Periodos</span>
@@ -358,7 +409,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={isActive("/dashboard/projected-execution")}
+              isActive={isActive('/dashboard/projected-execution')}
               tooltip="Ejecución Proyectada"
             >
               <Link href="/dashboard/projected-execution">
@@ -368,7 +419,11 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild isActive={isActive("/setup")} tooltip="Configuración">
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/setup')}
+              tooltip="Configuración"
+            >
               <Link href="/setup">
                 <Database className="h-4 w-4" />
                 <span>Configuración</span>
@@ -377,8 +432,10 @@ export function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
-      <SidebarFooter className={`border-t ${isCollapsed ? "p-2" : "p-4"}`}>
-        <div className={`flex flex-col gap-2 ${isCollapsed ? "items-center" : ""}`}>
+      <SidebarFooter className={`border-t ${isCollapsed ? 'p-2' : 'p-4'}`}>
+        <div
+          className={`flex flex-col gap-2 ${isCollapsed ? 'items-center' : ''}`}
+        >
           {isAuthenticated && <LogoutButton />}
           {!isCollapsed && (
             <div className="text-xs text-muted-foreground">

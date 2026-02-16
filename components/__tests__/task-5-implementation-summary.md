@@ -41,7 +41,6 @@
 ### New Components Created:
 
 1. **PaymentMethodTableSelector** (`components/payment-method-table-selector.tsx`)
-
    - Compact table-friendly version of payment method selector
    - Uses popover for space-efficient editing
    - Shows badges for current selection

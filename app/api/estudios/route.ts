@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET() {
   try {
@@ -12,7 +12,7 @@ export async function GET() {
     `;
     return NextResponse.json(estudios);
   } catch (error) {
-    console.error("Error fetching estudios:", error);
+    console.error('Error fetching estudios:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -24,9 +24,9 @@ export async function POST(request: NextRequest) {
   try {
     const { name } = await request.json();
 
-    if (!name || typeof name !== "string") {
+    if (!name || typeof name !== 'string') {
       return NextResponse.json(
-        { error: "El nombre del estudio es requerido" },
+        { error: 'El nombre del estudio es requerido' },
         { status: 400 }
       );
     }
@@ -36,14 +36,14 @@ export async function POST(request: NextRequest) {
 
     if (trimmedName.length === 0) {
       return NextResponse.json(
-        { error: "El nombre del estudio no puede estar vacío" },
+        { error: 'El nombre del estudio no puede estar vacío' },
         { status: 400 }
       );
     }
 
     if (trimmedName.length > 255) {
       return NextResponse.json(
-        { error: "El nombre del estudio no puede exceder 255 caracteres" },
+        { error: 'El nombre del estudio no puede exceder 255 caracteres' },
         { status: 400 }
       );
     }
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     if (existingEstudio.length > 0) {
       return NextResponse.json(
-        { error: "Ya existe un estudio con este nombre" },
+        { error: 'Ya existe un estudio con este nombre' },
         { status: 409 }
       );
     }
@@ -68,21 +68,21 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(newEstudio);
   } catch (error) {
-    console.error("Error creating estudio:", error);
+    console.error('Error creating estudio:', error);
 
     // Handle specific database errors
     if (error instanceof Error) {
-      if (error.message.includes("duplicate key")) {
+      if (error.message.includes('duplicate key')) {
         return NextResponse.json(
-          { error: "Ya existe un estudio con este nombre" },
+          { error: 'Ya existe un estudio con este nombre' },
           { status: 409 }
         );
       }
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
             error:
-              "Error de conexión con la base de datos. Intente nuevamente.",
+              'Error de conexión con la base de datos. Intente nuevamente.',
           },
           { status: 503 }
         );
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json(
-      { error: "Error interno del servidor. Intente nuevamente." },
+      { error: 'Error interno del servidor. Intente nuevamente.' },
       { status: 500 }
     );
   }

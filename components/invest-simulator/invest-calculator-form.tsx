@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { Minus, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Minus, Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   SUPPORTED_CURRENCIES,
   COMPOUNDING_FREQUENCIES,
   type CurrencyCode,
   type CompoundingFrequency,
-} from "@/types/invest-simulator";
+} from '@/types/invest-simulator';
 
 export interface InvestmentFormData {
   initialAmount: number;
@@ -32,8 +32,14 @@ interface InvestCalculatorFormProps {
   onChange: (data: InvestmentFormData) => void;
 }
 
-export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormProps) {
-  const handleChange = (field: keyof InvestmentFormData, value: number | string) => {
+export function InvestCalculatorForm({
+  data,
+  onChange,
+}: InvestCalculatorFormProps) {
+  const handleChange = (
+    field: keyof InvestmentFormData,
+    value: number | string
+  ) => {
     onChange({ ...data, [field]: value });
   };
 
@@ -44,19 +50,19 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
   };
 
   const formatCurrencyInput = (value: number): string => {
-    return new Intl.NumberFormat("es-CO", {
+    return new Intl.NumberFormat('es-CO', {
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
   };
 
   const parseCurrencyInput = (value: string): number => {
-    const cleaned = value.replace(/[^\d]/g, "");
+    const cleaned = value.replace(/[^\d]/g, '');
     return parseInt(cleaned) || 0;
   };
 
   return (
-    <div className="space-y-6 p-6 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
+    <div className="space-y-6 rounded-lg bg-purple-50 p-6 dark:bg-purple-950/20">
       <h3 className="text-lg font-medium text-purple-900 dark:text-purple-100">
         Configura tu inversión
       </h3>
@@ -74,9 +80,9 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
             type="text"
             value={formatCurrencyInput(data.initialAmount)}
             onChange={(e) =>
-              handleChange("initialAmount", parseCurrencyInput(e.target.value))
+              handleChange('initialAmount', parseCurrencyInput(e.target.value))
             }
-            className="text-2xl font-bold border-0 bg-transparent p-0 h-auto focus-visible:ring-0 text-purple-900 dark:text-purple-100"
+            className="h-auto border-0 bg-transparent p-0 text-2xl font-bold text-purple-900 focus-visible:ring-0 dark:text-purple-100"
           />
           <div className="flex gap-1">
             <Button
@@ -84,7 +90,7 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
               variant="default"
               size="icon"
               className="h-10 w-10 rounded-full bg-purple-600 hover:bg-purple-700"
-              onClick={() => incrementValue("initialAmount", -100000)}
+              onClick={() => incrementValue('initialAmount', -100000)}
             >
               <Minus className="h-4 w-4" />
             </Button>
@@ -93,7 +99,7 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
               variant="default"
               size="icon"
               className="h-10 w-10 rounded-full bg-purple-600 hover:bg-purple-700"
-              onClick={() => incrementValue("initialAmount", 100000)}
+              onClick={() => incrementValue('initialAmount', 100000)}
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -114,9 +120,12 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
             type="text"
             value={formatCurrencyInput(data.monthlyContribution)}
             onChange={(e) =>
-              handleChange("monthlyContribution", parseCurrencyInput(e.target.value))
+              handleChange(
+                'monthlyContribution',
+                parseCurrencyInput(e.target.value)
+              )
             }
-            className="text-2xl font-bold border-0 bg-transparent p-0 h-auto focus-visible:ring-0 text-purple-900 dark:text-purple-100"
+            className="h-auto border-0 bg-transparent p-0 text-2xl font-bold text-purple-900 focus-visible:ring-0 dark:text-purple-100"
           />
           <div className="flex gap-1">
             <Button
@@ -124,7 +133,7 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
               variant="default"
               size="icon"
               className="h-10 w-10 rounded-full bg-purple-600 hover:bg-purple-700"
-              onClick={() => incrementValue("monthlyContribution", -50000)}
+              onClick={() => incrementValue('monthlyContribution', -50000)}
             >
               <Minus className="h-4 w-4" />
             </Button>
@@ -133,7 +142,7 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
               variant="default"
               size="icon"
               className="h-10 w-10 rounded-full bg-purple-600 hover:bg-purple-700"
-              onClick={() => incrementValue("monthlyContribution", 50000)}
+              onClick={() => incrementValue('monthlyContribution', 50000)}
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -150,9 +159,9 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
             value={data.termMonths}
             onChange={(e) => {
               const value = parseInt(e.target.value) || 0;
-              handleChange("termMonths", Math.min(600, Math.max(0, value)));
+              handleChange('termMonths', Math.min(600, Math.max(0, value)));
             }}
-            className="text-2xl font-bold border-0 bg-transparent p-0 h-auto focus-visible:ring-0 w-20 text-purple-900 dark:text-purple-100"
+            className="h-auto w-20 border-0 bg-transparent p-0 text-2xl font-bold text-purple-900 focus-visible:ring-0 dark:text-purple-100"
           />
           <span className="text-2xl font-bold text-purple-900 dark:text-purple-100">
             meses
@@ -163,7 +172,7 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
               variant="default"
               size="icon"
               className="h-10 w-10 rounded-full bg-purple-600 hover:bg-purple-700"
-              onClick={() => incrementValue("termMonths", -1)}
+              onClick={() => incrementValue('termMonths', -1)}
             >
               <Minus className="h-4 w-4" />
             </Button>
@@ -172,7 +181,7 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
               variant="default"
               size="icon"
               className="h-10 w-10 rounded-full bg-purple-600 hover:bg-purple-700"
-              onClick={() => incrementValue("termMonths", 1)}
+              onClick={() => incrementValue('termMonths', 1)}
             >
               <Plus className="h-4 w-4" />
             </Button>
@@ -194,9 +203,9 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
             value={data.annualRate}
             onChange={(e) => {
               const value = parseFloat(e.target.value) || 0;
-              handleChange("annualRate", Math.min(100, Math.max(0, value)));
+              handleChange('annualRate', Math.min(100, Math.max(0, value)));
             }}
-            className="text-2xl font-bold border-0 bg-transparent p-0 h-auto focus-visible:ring-0 w-24 text-purple-900 dark:text-purple-100"
+            className="h-auto w-24 border-0 bg-transparent p-0 text-2xl font-bold text-purple-900 focus-visible:ring-0 dark:text-purple-100"
           />
           <span className="text-2xl font-bold text-purple-900 dark:text-purple-100">
             %
@@ -209,7 +218,7 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
               className="h-10 w-10 rounded-full bg-purple-600 hover:bg-purple-700"
               onClick={() => {
                 const newRate = Math.max(0, data.annualRate - 0.25);
-                handleChange("annualRate", Math.round(newRate * 100) / 100);
+                handleChange('annualRate', Math.round(newRate * 100) / 100);
               }}
             >
               <Minus className="h-4 w-4" />
@@ -221,7 +230,7 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
               className="h-10 w-10 rounded-full bg-purple-600 hover:bg-purple-700"
               onClick={() => {
                 const newRate = Math.min(100, data.annualRate + 0.25);
-                handleChange("annualRate", Math.round(newRate * 100) / 100);
+                handleChange('annualRate', Math.round(newRate * 100) / 100);
               }}
             >
               <Plus className="h-4 w-4" />
@@ -231,7 +240,7 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
       </div>
 
       {/* Opciones adicionales */}
-      <div className="grid grid-cols-2 gap-4 pt-4 border-t border-purple-200 dark:border-purple-800">
+      <div className="grid grid-cols-2 gap-4 border-t border-purple-200 pt-4 dark:border-purple-800">
         {/* Frecuencia de capitalización */}
         <div className="space-y-2">
           <Label className="text-sm text-muted-foreground">
@@ -240,7 +249,7 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
           <Select
             value={data.compoundingFrequency}
             onValueChange={(value: CompoundingFrequency) =>
-              handleChange("compoundingFrequency", value)
+              handleChange('compoundingFrequency', value)
             }
           >
             <SelectTrigger className="bg-white dark:bg-gray-900">
@@ -262,7 +271,7 @@ export function InvestCalculatorForm({ data, onChange }: InvestCalculatorFormPro
           <Select
             value={data.currency}
             onValueChange={(value: CurrencyCode) =>
-              handleChange("currency", value)
+              handleChange('currency', value)
             }
           >
             <SelectTrigger className="bg-white dark:bg-gray-900">

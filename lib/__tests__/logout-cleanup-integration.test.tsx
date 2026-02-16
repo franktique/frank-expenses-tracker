@@ -3,16 +3,16 @@
  * Tests the complete logout flow including session storage cleanup
  */
 
-import React from "react";
-import { render, screen, waitFor, act } from "@testing-library/react";
-import { AuthProvider, useAuth } from "../auth-context";
-import { ActivePeriodStorage } from "../active-period-storage";
-import { loadActivePeriod } from "../active-period-service";
-import { Period } from "../../types/funds";
+import React from 'react';
+import { render, screen, waitFor, act } from '@testing-library/react';
+import { AuthProvider, useAuth } from '../auth-context';
+import { ActivePeriodStorage } from '../active-period-storage';
+import { loadActivePeriod } from '../active-period-service';
+import { Period } from '../../types/funds';
 
 // Mock dependencies
-jest.mock("../active-period-storage");
-jest.mock("../active-period-service");
+jest.mock('../active-period-storage');
+jest.mock('../active-period-service');
 
 const mockActivePeriodStorage = ActivePeriodStorage as jest.Mocked<
   typeof ActivePeriodStorage
@@ -31,7 +31,7 @@ const mockLocalStorage = {
   setItem: jest.fn(),
   removeItem: jest.fn(),
 };
-Object.defineProperty(window, "localStorage", {
+Object.defineProperty(window, 'localStorage', {
   value: mockLocalStorage,
 });
 
@@ -41,38 +41,38 @@ function LogoutTestComponent() {
   return (
     <div>
       <div data-testid="authenticated">{auth.isAuthenticated.toString()}</div>
-      <div data-testid="active-period">{auth.activePeriod?.name || "null"}</div>
+      <div data-testid="active-period">{auth.activePeriod?.name || 'null'}</div>
       <div data-testid="loading-period">
         {auth.isLoadingActivePeriod.toString()}
       </div>
       <div data-testid="period-error">
-        {auth.activePeriodError?.message || "null"}
+        {auth.activePeriodError?.message || 'null'}
       </div>
-      <button onClick={() => auth.login("test-password")}>Login</button>
+      <button onClick={() => auth.login('test-password')}>Login</button>
       <button onClick={() => auth.logout()}>Logout</button>
     </div>
   );
 }
 
 const mockPeriod: Period = {
-  id: "test-period-id",
-  name: "Test Period",
+  id: 'test-period-id',
+  name: 'Test Period',
   month: 1,
   year: 2024,
   is_open: true,
   isOpen: true,
 };
 
-describe("Logout Cleanup Integration", () => {
+describe('Logout Cleanup Integration', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockLocalStorage.getItem.mockReturnValue(null);
   });
 
-  describe("Complete Logout Flow", () => {
-    it("should perform complete cleanup on logout", async () => {
+  describe('Complete Logout Flow', () => {
+    it('should perform complete cleanup on logout', async () => {
       // Setup: User is authenticated with active period
-      mockLocalStorage.getItem.mockReturnValue("true");
+      mockLocalStorage.getItem.mockReturnValue('true');
       mockActivePeriodStorage.loadActivePeriod.mockReturnValue(mockPeriod);
 
       render(
@@ -83,14 +83,14 @@ describe("Logout Cleanup Integration", () => {
 
       // Verify initial authenticated state with active period
       await waitFor(() => {
-        expect(screen.getByTestId("authenticated")).toHaveTextContent("true");
-        expect(screen.getByTestId("active-period")).toHaveTextContent(
-          "Test Period"
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('true');
+        expect(screen.getByTestId('active-period')).toHaveTextContent(
+          'Test Period'
         );
       });
 
       // Perform logout
-      const logoutButton = screen.getByText("Logout");
+      const logoutButton = screen.getByText('Logout');
 
       await act(async () => {
         logoutButton.click();
@@ -98,22 +98,22 @@ describe("Logout Cleanup Integration", () => {
 
       // Verify complete cleanup
       await waitFor(() => {
-        expect(screen.getByTestId("authenticated")).toHaveTextContent("false");
-        expect(screen.getByTestId("active-period")).toHaveTextContent("null");
-        expect(screen.getByTestId("loading-period")).toHaveTextContent("false");
-        expect(screen.getByTestId("period-error")).toHaveTextContent("null");
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('false');
+        expect(screen.getByTestId('active-period')).toHaveTextContent('null');
+        expect(screen.getByTestId('loading-period')).toHaveTextContent('false');
+        expect(screen.getByTestId('period-error')).toHaveTextContent('null');
       });
 
       // Verify localStorage cleanup
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith("auth");
+      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth');
 
       // Verify session storage cleanup
       expect(mockActivePeriodStorage.clearActivePeriod).toHaveBeenCalled();
     });
 
-    it("should handle logout with period error state", async () => {
+    it('should handle logout with period error state', async () => {
       // Setup: User is authenticated but has period error
-      mockLocalStorage.getItem.mockReturnValue("true");
+      mockLocalStorage.getItem.mockReturnValue('true');
       mockActivePeriodStorage.loadActivePeriod.mockReturnValue(null);
 
       render(
@@ -123,13 +123,13 @@ describe("Logout Cleanup Integration", () => {
       );
 
       // Trigger login with period loading error
-      const loginButton = screen.getByText("Login");
+      const loginButton = screen.getByText('Login');
       mockFetch.mockResolvedValueOnce({ ok: true } as Response);
       mockLoadActivePeriod.mockResolvedValueOnce({
         success: false,
         error: {
-          type: "network",
-          message: "Network error",
+          type: 'network',
+          message: 'Network error',
           retryable: true,
           timestamp: Date.now(),
         },
@@ -141,13 +141,13 @@ describe("Logout Cleanup Integration", () => {
 
       // Verify error state
       await waitFor(() => {
-        expect(screen.getByTestId("period-error")).toHaveTextContent(
-          "Network error"
+        expect(screen.getByTestId('period-error')).toHaveTextContent(
+          'Network error'
         );
       });
 
       // Perform logout
-      const logoutButton = screen.getByText("Logout");
+      const logoutButton = screen.getByText('Logout');
 
       await act(async () => {
         logoutButton.click();
@@ -155,26 +155,26 @@ describe("Logout Cleanup Integration", () => {
 
       // Verify error state is cleared
       await waitFor(() => {
-        expect(screen.getByTestId("authenticated")).toHaveTextContent("false");
-        expect(screen.getByTestId("period-error")).toHaveTextContent("null");
-        expect(screen.getByTestId("active-period")).toHaveTextContent("null");
-        expect(screen.getByTestId("loading-period")).toHaveTextContent("false");
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('false');
+        expect(screen.getByTestId('period-error')).toHaveTextContent('null');
+        expect(screen.getByTestId('active-period')).toHaveTextContent('null');
+        expect(screen.getByTestId('loading-period')).toHaveTextContent('false');
       });
 
       expect(mockActivePeriodStorage.clearActivePeriod).toHaveBeenCalled();
     });
 
-    it("should handle session storage errors gracefully during logout", async () => {
+    it('should handle session storage errors gracefully during logout', async () => {
       // Setup: User is authenticated
-      mockLocalStorage.getItem.mockReturnValue("true");
+      mockLocalStorage.getItem.mockReturnValue('true');
       mockActivePeriodStorage.loadActivePeriod.mockReturnValue(mockPeriod);
 
       // Mock session storage clear to throw error
       mockActivePeriodStorage.clearActivePeriod.mockImplementation(() => {
-        throw new Error("Storage clear failed");
+        throw new Error('Storage clear failed');
       });
 
-      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
       render(
         <AuthProvider>
@@ -183,11 +183,11 @@ describe("Logout Cleanup Integration", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId("authenticated")).toHaveTextContent("true");
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('true');
       });
 
       // Perform logout
-      const logoutButton = screen.getByText("Logout");
+      const logoutButton = screen.getByText('Logout');
 
       await act(async () => {
         logoutButton.click();
@@ -195,25 +195,25 @@ describe("Logout Cleanup Integration", () => {
 
       // Logout should still work even if storage clear fails
       await waitFor(() => {
-        expect(screen.getByTestId("authenticated")).toHaveTextContent("false");
-        expect(screen.getByTestId("active-period")).toHaveTextContent("null");
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('false');
+        expect(screen.getByTestId('active-period')).toHaveTextContent('null');
       });
 
       // Should log warning but not prevent logout
       expect(consoleSpy).toHaveBeenCalledWith(
-        "Failed to clear active period from session storage during logout:",
+        'Failed to clear active period from session storage during logout:',
         expect.any(Error)
       );
 
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith("auth");
+      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth');
       expect(mockActivePeriodStorage.clearActivePeriod).toHaveBeenCalled();
 
       consoleSpy.mockRestore();
     });
 
-    it("should clear all states even when logout is called multiple times", async () => {
+    it('should clear all states even when logout is called multiple times', async () => {
       // Setup: User is authenticated
-      mockLocalStorage.getItem.mockReturnValue("true");
+      mockLocalStorage.getItem.mockReturnValue('true');
       mockActivePeriodStorage.loadActivePeriod.mockReturnValue(mockPeriod);
 
       render(
@@ -223,10 +223,10 @@ describe("Logout Cleanup Integration", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByTestId("authenticated")).toHaveTextContent("true");
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('true');
       });
 
-      const logoutButton = screen.getByText("Logout");
+      const logoutButton = screen.getByText('Logout');
 
       // Call logout multiple times
       await act(async () => {
@@ -237,22 +237,22 @@ describe("Logout Cleanup Integration", () => {
 
       // Should still work correctly
       await waitFor(() => {
-        expect(screen.getByTestId("authenticated")).toHaveTextContent("false");
-        expect(screen.getByTestId("active-period")).toHaveTextContent("null");
-        expect(screen.getByTestId("loading-period")).toHaveTextContent("false");
-        expect(screen.getByTestId("period-error")).toHaveTextContent("null");
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('false');
+        expect(screen.getByTestId('active-period')).toHaveTextContent('null');
+        expect(screen.getByTestId('loading-period')).toHaveTextContent('false');
+        expect(screen.getByTestId('period-error')).toHaveTextContent('null');
       });
 
       // Should have been called at least once
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith("auth");
+      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('auth');
       expect(mockActivePeriodStorage.clearActivePeriod).toHaveBeenCalled();
     });
   });
 
-  describe("Logout Requirements Verification", () => {
-    it("should satisfy requirement 4.4: clear active period from session storage on logout", async () => {
+  describe('Logout Requirements Verification', () => {
+    it('should satisfy requirement 4.4: clear active period from session storage on logout', async () => {
       // This test specifically verifies requirement 4.4 from the spec
-      mockLocalStorage.getItem.mockReturnValue("true");
+      mockLocalStorage.getItem.mockReturnValue('true');
       mockActivePeriodStorage.loadActivePeriod.mockReturnValue(mockPeriod);
 
       render(
@@ -263,14 +263,14 @@ describe("Logout Cleanup Integration", () => {
 
       // Verify initial state
       await waitFor(() => {
-        expect(screen.getByTestId("authenticated")).toHaveTextContent("true");
-        expect(screen.getByTestId("active-period")).toHaveTextContent(
-          "Test Period"
+        expect(screen.getByTestId('authenticated')).toHaveTextContent('true');
+        expect(screen.getByTestId('active-period')).toHaveTextContent(
+          'Test Period'
         );
       });
 
       // Perform logout
-      const logoutButton = screen.getByText("Logout");
+      const logoutButton = screen.getByText('Logout');
       await act(async () => {
         logoutButton.click();
       });
@@ -281,9 +281,9 @@ describe("Logout Cleanup Integration", () => {
 
       // Verify all period-related state is reset
       await waitFor(() => {
-        expect(screen.getByTestId("active-period")).toHaveTextContent("null");
-        expect(screen.getByTestId("loading-period")).toHaveTextContent("false");
-        expect(screen.getByTestId("period-error")).toHaveTextContent("null");
+        expect(screen.getByTestId('active-period')).toHaveTextContent('null');
+        expect(screen.getByTestId('loading-period')).toHaveTextContent('false');
+        expect(screen.getByTestId('period-error')).toHaveTextContent('null');
       });
     });
   });

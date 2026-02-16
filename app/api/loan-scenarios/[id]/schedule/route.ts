@@ -1,10 +1,10 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { LOAN_ERROR_MESSAGES } from "@/types/loan-simulator";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { LOAN_ERROR_MESSAGES } from '@/types/loan-simulator';
 import {
   generateAmortizationSchedule,
   calculateExtraPaymentImpact,
-} from "@/lib/loan-calculations";
+} from '@/lib/loan-calculations';
 
 /**
  * GET /api/loan-scenarios/[id]/schedule
@@ -22,7 +22,7 @@ export async function GET(
     const { id } = await params;
     const { searchParams } = new URL(request.url);
     const includeExtraPayments =
-      searchParams.get("includeExtraPayments") !== "false";
+      searchParams.get('includeExtraPayments') !== 'false';
 
     // Validate UUID
     const uuidRegex =
@@ -30,8 +30,8 @@ export async function GET(
     if (!uuidRegex.test(id)) {
       return NextResponse.json(
         {
-          error: "ID de préstamo inválido",
-          code: "INVALID_ID",
+          error: 'ID de préstamo inválido',
+          code: 'INVALID_ID',
         },
         { status: 400 }
       );
@@ -57,7 +57,7 @@ export async function GET(
       return NextResponse.json(
         {
           error: LOAN_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "SCENARIO_NOT_FOUND",
+          code: 'SCENARIO_NOT_FOUND',
         },
         { status: 404 }
       );
@@ -89,6 +89,7 @@ export async function GET(
         interestRate: parseFloat(scenario.interestRate),
         termMonths: parseInt(scenario.termMonths),
         startDate: scenario.startDate,
+        currency: scenario.currency || 'USD',
         createdAt: scenario.createdAt,
         updatedAt: scenario.updatedAt,
       },
@@ -104,6 +105,7 @@ export async function GET(
         interestRate: parseFloat(scenario.interestRate),
         termMonths: parseInt(scenario.termMonths),
         startDate: scenario.startDate,
+        currency: scenario.currency || 'USD',
         createdAt: scenario.createdAt,
         updatedAt: scenario.updatedAt,
       },
@@ -120,14 +122,14 @@ export async function GET(
       interestSaved: impact.interestSaved,
     });
   } catch (error) {
-    console.error("Error generating payment schedule:", error);
+    console.error('Error generating payment schedule:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -137,8 +139,8 @@ export async function GET(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al generar el calendario de pagos",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al generar el calendario de pagos',
+        code: 'INTERNAL_SERVER_ERROR',
       },
       { status: 500 }
     );

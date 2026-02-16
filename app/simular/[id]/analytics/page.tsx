@@ -1,24 +1,24 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter, useParams } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/components/ui/use-toast";
-import { SimulationAnalyticsDashboard } from "@/components/simulation-analytics-dashboard";
-import { SimulationComparisonDashboard } from "@/components/simulation-comparison-dashboard";
-import { SimulationSummaryCards } from "@/components/simulation-summary-cards";
-import { SimulationBreadcrumb } from "@/components/simulation-breadcrumb";
-import { SimulationNavigation } from "@/components/simulation-navigation";
-import { SimulationQuickActions } from "@/components/simulation-quick-actions";
-import { useSimulationFilterSync } from "@/hooks/use-simulation-filter-sync";
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/components/ui/use-toast';
+import { SimulationAnalyticsDashboard } from '@/components/simulation-analytics-dashboard';
+import { SimulationComparisonDashboard } from '@/components/simulation-comparison-dashboard';
+import { SimulationSummaryCards } from '@/components/simulation-summary-cards';
+import { SimulationBreadcrumb } from '@/components/simulation-breadcrumb';
+import { SimulationNavigation } from '@/components/simulation-navigation';
+import { SimulationQuickActions } from '@/components/simulation-quick-actions';
+import { useSimulationFilterSync } from '@/hooks/use-simulation-filter-sync';
 import {
   ArrowLeft,
   BarChart3,
@@ -29,7 +29,7 @@ import {
   Copy,
   Zap,
   Clock,
-} from "lucide-react";
+} from 'lucide-react';
 
 // Types
 type Simulation = {
@@ -79,27 +79,36 @@ export default function SimulationAnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingMetrics, setIsLoadingMetrics] = useState(false);
   const [activeTab, setActiveTab] = useState<
-    "overview" | "comparison" | "periods" | "export"
-  >("overview");
+    'overview' | 'comparison' | 'periods' | 'export'
+  >('overview');
 
   // Filter state management - single instance for the entire page
   // Memoize hook options to prevent infinite re-initialization
-  const filterSyncOptions = useMemo(() => ({
-    simulationId: simulationId,
-    persistAcrossTabs: true,
-    persistAcrossNavigation: true,
-    enableStorageSync: true,
-    enableTabSync: true,
-  }), [simulationId]);
+  const filterSyncOptions = useMemo(
+    () => ({
+      simulationId: simulationId,
+      persistAcrossTabs: true,
+      persistAcrossNavigation: true,
+      enableStorageSync: true,
+      enableTabSync: true,
+    }),
+    [simulationId]
+  );
 
-  const filterSyncInitialState = useMemo(() => ({
-    selectedEstudio: null,
-    selectedGroupers: [],
-    selectedPaymentMethods: ["efectivo", "credito"],
-    comparisonPeriods: 3,
-  }), []);
+  const filterSyncInitialState = useMemo(
+    () => ({
+      selectedEstudio: null,
+      selectedGroupers: [],
+      selectedPaymentMethods: ['efectivo', 'credito'],
+      comparisonPeriods: 3,
+    }),
+    []
+  );
 
-  const filterSync = useSimulationFilterSync(filterSyncOptions, filterSyncInitialState);
+  const filterSync = useSimulationFilterSync(
+    filterSyncOptions,
+    filterSyncInitialState
+  );
 
   // Extract filter state and update functions for easier access
   const {
@@ -109,7 +118,12 @@ export default function SimulationAnalyticsPage() {
     comparisonPeriods,
   } = filterSync.filterState;
 
-  const { updateEstudio, updateGroupers, updatePaymentMethods, updateComparisonPeriods } = filterSync;
+  const {
+    updateEstudio,
+    updateGroupers,
+    updatePaymentMethods,
+    updateComparisonPeriods,
+  } = filterSync;
 
   // Filter data state
   const [allEstudios, setAllEstudios] = useState<EstudioData[]>([]);
@@ -119,34 +133,46 @@ export default function SimulationAnalyticsPage() {
 
   // Filter change handlers
   const handleFiltersChanged = useCallback((filters: any) => {
-    console.log("Simulation filters changed:", filters);
+    console.log('Simulation filters changed:', filters);
   }, []);
 
-  const handleEstudioChange = useCallback((estudioId: number | null) => {
-    updateEstudio(estudioId);
-    setAllGroupers([]); // Clear groupers to force reload
-  }, [updateEstudio]);
+  const handleEstudioChange = useCallback(
+    (estudioId: number | null) => {
+      updateEstudio(estudioId);
+      setAllGroupers([]); // Clear groupers to force reload
+    },
+    [updateEstudio]
+  );
 
-  const handleGrouperChange = useCallback((grouperIds: number[]) => {
-    updateGroupers(grouperIds);
-  }, [updateGroupers]);
+  const handleGrouperChange = useCallback(
+    (grouperIds: number[]) => {
+      updateGroupers(grouperIds);
+    },
+    [updateGroupers]
+  );
 
-  const handlePaymentMethodChange = useCallback((methods: string[]) => {
-    updatePaymentMethods(methods);
-  }, [updatePaymentMethods]);
+  const handlePaymentMethodChange = useCallback(
+    (methods: string[]) => {
+      updatePaymentMethods(methods);
+    },
+    [updatePaymentMethods]
+  );
 
-  const handleComparisonPeriodsChange = useCallback((periods: number) => {
-    updateComparisonPeriods(periods);
-  }, [updateComparisonPeriods]);
+  const handleComparisonPeriodsChange = useCallback(
+    (periods: number) => {
+      updateComparisonPeriods(periods);
+    },
+    [updateComparisonPeriods]
+  );
 
   // Fetch available estudios
   const fetchEstudios = useCallback(async () => {
     try {
       setIsLoadingFilters(true);
-      const response = await fetch("/api/estudios");
+      const response = await fetch('/api/estudios');
 
       if (!response.ok) {
-        throw new Error("Error al cargar estudios");
+        throw new Error('Error al cargar estudios');
       }
 
       const data = await response.json();
@@ -162,11 +188,11 @@ export default function SimulationAnalyticsPage() {
         setIsFilterInitialized(true);
       }
     } catch (error) {
-      console.error("Error fetching estudios:", error);
+      console.error('Error fetching estudios:', error);
       toast({
-        title: "Error",
-        description: "No se pudieron cargar los estudios",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudieron cargar los estudios',
+        variant: 'destructive',
       });
     } finally {
       setIsLoadingFilters(false);
@@ -181,7 +207,7 @@ export default function SimulationAnalyticsPage() {
       setIsLoadingFilters(true);
       const params = new URLSearchParams({
         periodId: activePeriod.id.toString(),
-        paymentMethod: "all",
+        paymentMethod: 'all',
         estudioId: selectedEstudio.toString(),
       });
 
@@ -190,7 +216,7 @@ export default function SimulationAnalyticsPage() {
       );
 
       if (!response.ok) {
-        throw new Error("Error al cargar agrupadores");
+        throw new Error('Error al cargar agrupadores');
       }
 
       const data = await response.json();
@@ -205,16 +231,22 @@ export default function SimulationAnalyticsPage() {
         updateGroupers(data.map((g: GrouperData) => g.grouper_id));
       }
     } catch (error) {
-      console.error("Error fetching groupers:", error);
+      console.error('Error fetching groupers:', error);
       toast({
-        title: "Error",
-        description: "No se pudieron cargar los agrupadores",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudieron cargar los agrupadores',
+        variant: 'destructive',
       });
     } finally {
       setIsLoadingFilters(false);
     }
-  }, [selectedEstudio, activePeriod, selectedGroupers.length, updateGroupers, toast]);
+  }, [
+    selectedEstudio,
+    activePeriod,
+    selectedGroupers.length,
+    updateGroupers,
+    toast,
+  ]);
 
   // Load simulation metrics - memoized to prevent infinite re-renders
   const loadSimulationMetrics = useCallback(async () => {
@@ -279,7 +311,7 @@ export default function SimulationAnalyticsPage() {
         });
       }
     } catch (error) {
-      console.error("Error loading simulation metrics:", error);
+      console.error('Error loading simulation metrics:', error);
     } finally {
       setIsLoadingMetrics(false);
     }
@@ -288,18 +320,18 @@ export default function SimulationAnalyticsPage() {
   // Load simulation and period data
   useEffect(() => {
     console.log(
-      "useEffect triggered for loading data, simulationId:",
+      'useEffect triggered for loading data, simulationId:',
       simulationId
     );
 
     const loadData = async () => {
       if (isNaN(simulationId)) {
         toast({
-          title: "Error",
-          description: "ID de simulación inválido",
-          variant: "destructive",
+          title: 'Error',
+          description: 'ID de simulación inválido',
+          variant: 'destructive',
         });
-        router.push("/simular");
+        router.push('/simular');
         return;
       }
 
@@ -312,21 +344,21 @@ export default function SimulationAnalyticsPage() {
         if (!simulationResponse.ok) {
           if (simulationResponse.status === 404) {
             toast({
-              title: "Simulación no encontrada",
-              description: "La simulación solicitada no existe",
-              variant: "destructive",
+              title: 'Simulación no encontrada',
+              description: 'La simulación solicitada no existe',
+              variant: 'destructive',
             });
-            router.push("/simular");
+            router.push('/simular');
             return;
           }
-          throw new Error("Error al cargar la simulación");
+          throw new Error('Error al cargar la simulación');
         }
 
         const simulationData = await simulationResponse.json();
         setSimulation(simulationData);
 
         // Load active period data
-        const periodsResponse = await fetch("/api/periods");
+        const periodsResponse = await fetch('/api/periods');
         if (periodsResponse.ok) {
           const periodsData = await periodsResponse.json();
           const active = periodsData.find(
@@ -334,15 +366,15 @@ export default function SimulationAnalyticsPage() {
           );
           setActivePeriod(active || null);
         } else {
-          console.error("Failed to load periods:", periodsResponse.status);
+          console.error('Failed to load periods:', periodsResponse.status);
         }
       } catch (error) {
         toast({
-          title: "Error",
-          description: (error as Error).message || "Error al cargar los datos",
-          variant: "destructive",
+          title: 'Error',
+          description: (error as Error).message || 'Error al cargar los datos',
+          variant: 'destructive',
         });
-        router.push("/simular");
+        router.push('/simular');
       } finally {
         setIsLoading(false);
       }
@@ -379,19 +411,22 @@ export default function SimulationAnalyticsPage() {
   }, [router, simulationId]);
 
   const handleNavigateToList = useCallback(() => {
-    router.push("/simular");
+    router.push('/simular');
   }, [router]);
 
-  const handleNavigateToAnalytics = useCallback((simulationId: number) => {
-    router.push(`/simular/${simulationId}/analytics`);
-  }, [router]);
+  const handleNavigateToAnalytics = useCallback(
+    (simulationId: number) => {
+      router.push(`/simular/${simulationId}/analytics`);
+    },
+    [router]
+  );
 
   const handleBackToSimulation = () => {
     router.push(`/simular/${simulationId}`);
   };
 
   const handleBackToList = () => {
-    router.push("/simular");
+    router.push('/simular');
   };
 
   // Handle export functionality - memoized to prevent infinite re-renders
@@ -401,13 +436,13 @@ export default function SimulationAnalyticsPage() {
         `/api/simulations/${simulationId}/analytics?export=true`
       );
       if (!response.ok) {
-        throw new Error("Error al exportar datos");
+        throw new Error('Error al exportar datos');
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.style.display = "none";
+      const a = document.createElement('a');
+      a.style.display = 'none';
       a.href = url;
       a.download = `simulacion-${simulationId}-analytics.csv`;
       document.body.appendChild(a);
@@ -416,14 +451,14 @@ export default function SimulationAnalyticsPage() {
       document.body.removeChild(a);
 
       toast({
-        title: "Exportación exitosa",
-        description: "Los datos de análisis se han descargado correctamente",
+        title: 'Exportación exitosa',
+        description: 'Los datos de análisis se han descargado correctamente',
       });
     } catch (error) {
       toast({
-        title: "Error de exportación",
-        description: "No se pudieron exportar los datos de análisis",
-        variant: "destructive",
+        title: 'Error de exportación',
+        description: 'No se pudieron exportar los datos de análisis',
+        variant: 'destructive',
       });
     }
   }, [simulationId, toast]);
@@ -433,10 +468,10 @@ export default function SimulationAnalyticsPage() {
     if (!simulation) return;
 
     try {
-      const response = await fetch("/api/simulations", {
-        method: "POST",
+      const response = await fetch('/api/simulations', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: `${simulation.name} (Copia)`,
@@ -446,13 +481,13 @@ export default function SimulationAnalyticsPage() {
       });
 
       if (!response.ok) {
-        throw new Error("Error al duplicar la simulación");
+        throw new Error('Error al duplicar la simulación');
       }
 
       const newSimulation = await response.json();
 
       toast({
-        title: "Simulación duplicada",
+        title: 'Simulación duplicada',
         description: `Se ha creado una copia de la simulación: ${newSimulation.name}`,
       });
 
@@ -460,16 +495,16 @@ export default function SimulationAnalyticsPage() {
       router.push(`/simular/${newSimulation.id}`);
     } catch (error) {
       toast({
-        title: "Error",
-        description: "No se pudo duplicar la simulación",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudo duplicar la simulación',
+        variant: 'destructive',
       });
     }
   }, [simulation, simulationId, router, toast]);
 
   if (isLoading) {
     return (
-      <div className="container mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <div className="flex items-center justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin" />
           <span className="ml-2">Cargando análisis de simulación...</span>
@@ -480,7 +515,7 @@ export default function SimulationAnalyticsPage() {
 
   if (!simulation) {
     return (
-      <div className="container mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8">
+      <div className="container mx-auto px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
         <Card>
           <CardHeader>
             <CardTitle>Simulación no encontrada</CardTitle>
@@ -500,7 +535,7 @@ export default function SimulationAnalyticsPage() {
   }
 
   return (
-    <div className="container mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8 space-y-6">
+    <div className="container mx-auto space-y-6 px-4 py-4 sm:px-6 sm:py-6 lg:px-8">
       {/* Enhanced Breadcrumb Navigation */}
       <SimulationBreadcrumb
         simulationId={simulation.id}
@@ -529,7 +564,7 @@ export default function SimulationAnalyticsPage() {
 
       {/* Header with navigation and actions */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-        <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-y-0 sm:space-x-4">
+        <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:space-x-4 sm:space-y-0">
           <Button
             variant="ghost"
             onClick={handleBackToSimulation}
@@ -539,12 +574,12 @@ export default function SimulationAnalyticsPage() {
             Configuración
           </Button>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold flex items-center gap-2">
+            <h1 className="flex items-center gap-2 text-xl font-bold sm:text-2xl">
               <BarChart3 className="h-6 w-6 text-blue-600" />
               Análisis: {simulation.name}
             </h1>
             {simulation.description && (
-              <p className="text-sm sm:text-base text-muted-foreground">
+              <p className="text-sm text-muted-foreground sm:text-base">
                 {simulation.description}
               </p>
             )}
@@ -552,7 +587,7 @@ export default function SimulationAnalyticsPage() {
         </div>
 
         {/* Quick actions */}
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row">
           <Button
             variant="outline"
             size="sm"
@@ -584,24 +619,24 @@ export default function SimulationAnalyticsPage() {
       </div>
 
       {/* Status indicator */}
-      <div className="flex items-center justify-between bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 p-4">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-blue-600" />
           <span className="font-medium text-blue-900">
             Estado de la simulación:
           </span>
           {simulation.budget_count > 0 ? (
-            <span className="text-green-600 font-medium">
+            <span className="font-medium text-green-600">
               {simulation.budget_count} categorías configuradas
             </span>
           ) : (
-            <span className="text-amber-600 font-medium">
+            <span className="font-medium text-amber-600">
               Sin presupuestos configurados
             </span>
           )}
         </div>
         {!activePeriod && (
-          <div className="text-amber-600 text-sm">
+          <div className="text-sm text-amber-600">
             ⚠️ No hay período activo para comparación
           </div>
         )}
@@ -665,11 +700,11 @@ export default function SimulationAnalyticsPage() {
                 };
 
                 const blob = new Blob([JSON.stringify(summaryData, null, 2)], {
-                  type: "application/json",
+                  type: 'application/json',
                 });
                 const url = window.URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.style.display = "none";
+                const a = document.createElement('a');
+                a.style.display = 'none';
                 a.href = url;
                 a.download = `simulation-${simulation.id}-summary.json`;
                 document.body.appendChild(a);
@@ -678,9 +713,9 @@ export default function SimulationAnalyticsPage() {
                 document.body.removeChild(a);
 
                 toast({
-                  title: "Resumen exportado",
+                  title: 'Resumen exportado',
                   description:
-                    "El resumen de la simulación se ha descargado correctamente",
+                    'El resumen de la simulación se ha descargado correctamente',
                 });
               }}
             />
@@ -694,25 +729,26 @@ export default function SimulationAnalyticsPage() {
                 Panel de Análisis - En Mantenimiento
               </CardTitle>
               <CardDescription>
-                Estamos optimizando la experiencia de análisis para mejorar el rendimiento.
+                Estamos optimizando la experiencia de análisis para mejorar el
+                rendimiento.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="text-center py-8">
+              <div className="py-8 text-center">
                 <div className="mb-6 flex justify-center">
                   <div className="rounded-full bg-blue-100 p-4">
                     <Settings className="h-12 w-12 text-blue-600" />
                   </div>
                 </div>
-                <h3 className="text-lg font-semibold mb-2">
+                <h3 className="mb-2 text-lg font-semibold">
                   Mejoras en Progreso
                 </h3>
-                <p className="text-muted-foreground mb-6 max-w-md mx-auto">
+                <p className="mx-auto mb-6 max-w-md text-muted-foreground">
                   El panel de análisis está temporalmente no disponible mientras
-                  optimizamos el rendimiento y corregimos problemas de visualización.
-                  Los datos de tu simulación están seguros.
+                  optimizamos el rendimiento y corregimos problemas de
+                  visualización. Los datos de tu simulación están seguros.
                 </p>
-                <div className="flex gap-3 justify-center">
+                <div className="flex justify-center gap-3">
                   <Button
                     variant="outline"
                     onClick={() => router.push(`/simular/${simulation.id}`)}
@@ -720,7 +756,7 @@ export default function SimulationAnalyticsPage() {
                     <ArrowLeft className="mr-2 h-4 w-4" />
                     Volver a Configuración
                   </Button>
-                  <Button onClick={() => router.push("/simular")}>
+                  <Button onClick={() => router.push('/simular')}>
                     <Zap className="mr-2 h-4 w-4" />
                     Ver Todas las Simulaciones
                   </Button>
@@ -728,38 +764,54 @@ export default function SimulationAnalyticsPage() {
               </div>
 
               {/* Feature Preview */}
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-                <h4 className="font-medium text-blue-900 mb-3 flex items-center gap-2">
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-6">
+                <h4 className="mb-3 flex items-center gap-2 font-medium text-blue-900">
                   <Clock className="h-4 w-4" />
                   Próximamente Disponible
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">
                   <div className="flex items-start gap-2">
-                    <TrendingUp className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <TrendingUp className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
                     <div>
-                      <span className="text-blue-600 font-medium block">Análisis Comparativo</span>
-                      <p className="text-blue-800">Comparación con datos históricos reales</p>
+                      <span className="block font-medium text-blue-600">
+                        Análisis Comparativo
+                      </span>
+                      <p className="text-blue-800">
+                        Comparación con datos históricos reales
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
-                    <BarChart3 className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <BarChart3 className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
                     <div>
-                      <span className="text-blue-600 font-medium block">Visualizaciones</span>
-                      <p className="text-blue-800">Gráficos interactivos de variaciones</p>
+                      <span className="block font-medium text-blue-600">
+                        Visualizaciones
+                      </span>
+                      <p className="text-blue-800">
+                        Gráficos interactivos de variaciones
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
-                    <Download className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <Download className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
                     <div>
-                      <span className="text-blue-600 font-medium block">Exportación</span>
-                      <p className="text-blue-800">Descarga de datos en múltiples formatos</p>
+                      <span className="block font-medium text-blue-600">
+                        Exportación
+                      </span>
+                      <p className="text-blue-800">
+                        Descarga de datos en múltiples formatos
+                      </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
-                    <Copy className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <Copy className="mt-0.5 h-4 w-4 flex-shrink-0 text-blue-600" />
                     <div>
-                      <span className="text-blue-600 font-medium block">Comparación Múltiple</span>
-                      <p className="text-blue-800">Compara varias simulaciones a la vez</p>
+                      <span className="block font-medium text-blue-600">
+                        Comparación Múltiple
+                      </span>
+                      <p className="text-blue-800">
+                        Compara varias simulaciones a la vez
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -767,26 +819,32 @@ export default function SimulationAnalyticsPage() {
 
               {/* Current Simulation Status */}
               {simulation && (
-                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                  <h4 className="font-medium text-green-900 mb-2 flex items-center gap-2">
+                <div className="rounded-lg border border-green-200 bg-green-50 p-4">
+                  <h4 className="mb-2 flex items-center gap-2 font-medium text-green-900">
                     <Zap className="h-4 w-4" />
                     Estado Actual de la Simulación
                   </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                  <div className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-3">
                     <div>
-                      <span className="text-green-600 font-medium">Nombre:</span>
+                      <span className="font-medium text-green-600">
+                        Nombre:
+                      </span>
                       <p className="text-green-800">{simulation.name}</p>
                     </div>
                     <div>
-                      <span className="text-green-600 font-medium">Categorías:</span>
+                      <span className="font-medium text-green-600">
+                        Categorías:
+                      </span>
                       <p className="text-green-800">
                         {simulation.budget_count > 0
                           ? `${simulation.budget_count} configuradas`
-                          : "Sin configurar"}
+                          : 'Sin configurar'}
                       </p>
                     </div>
                     <div>
-                      <span className="text-green-600 font-medium">Actualizado:</span>
+                      <span className="font-medium text-green-600">
+                        Actualizado:
+                      </span>
                       <p className="text-green-800">
                         {new Date(simulation.updated_at).toLocaleDateString()}
                       </p>
@@ -816,13 +874,14 @@ export default function SimulationAnalyticsPage() {
                 Análisis por Períodos - En Mantenimiento
               </CardTitle>
               <CardDescription>
-                El análisis de tendencias por períodos estará disponible próximamente.
+                El análisis de tendencias por períodos estará disponible
+                próximamente.
               </CardDescription>
             </CardHeader>
-            <CardContent className="text-center py-8">
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Esta funcionalidad está siendo optimizada para ofrecerte
-                mejores visualizaciones de tendencias a lo largo del tiempo.
+            <CardContent className="py-8 text-center">
+              <p className="mx-auto mb-6 max-w-md text-muted-foreground">
+                Esta funcionalidad está siendo optimizada para ofrecerte mejores
+                visualizaciones de tendencias a lo largo del tiempo.
               </p>
               <Button
                 variant="outline"
@@ -845,11 +904,11 @@ export default function SimulationAnalyticsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <Card>
                   <CardContent className="p-4">
-                    <h3 className="font-medium mb-2">Datos Completos (CSV)</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
+                    <h3 className="mb-2 font-medium">Datos Completos (CSV)</h3>
+                    <p className="mb-4 text-sm text-muted-foreground">
                       Incluye todos los datos de simulación y comparación
                       histórica
                     </p>
@@ -862,8 +921,8 @@ export default function SimulationAnalyticsPage() {
 
                 <Card>
                   <CardContent className="p-4">
-                    <h3 className="font-medium mb-2">Resumen Ejecutivo</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
+                    <h3 className="mb-2 font-medium">Resumen Ejecutivo</h3>
+                    <p className="mb-4 text-sm text-muted-foreground">
                       Métricas clave y variaciones significativas
                     </p>
                     <Button
@@ -880,12 +939,12 @@ export default function SimulationAnalyticsPage() {
                           const blob = new Blob(
                             [JSON.stringify(summaryData, null, 2)],
                             {
-                              type: "application/json",
+                              type: 'application/json',
                             }
                           );
                           const url = window.URL.createObjectURL(blob);
-                          const a = document.createElement("a");
-                          a.style.display = "none";
+                          const a = document.createElement('a');
+                          a.style.display = 'none';
                           a.href = url;
                           a.download = `simulation-${simulation.id}-summary.json`;
                           document.body.appendChild(a);
@@ -894,15 +953,15 @@ export default function SimulationAnalyticsPage() {
                           document.body.removeChild(a);
 
                           toast({
-                            title: "Resumen exportado",
+                            title: 'Resumen exportado',
                             description:
-                              "El resumen ejecutivo se ha descargado correctamente",
+                              'El resumen ejecutivo se ha descargado correctamente',
                           });
                         } else {
                           toast({
-                            title: "Error",
-                            description: "No hay datos de resumen disponibles",
-                            variant: "destructive",
+                            title: 'Error',
+                            description: 'No hay datos de resumen disponibles',
+                            variant: 'destructive',
                           });
                         }
                       }}
@@ -923,7 +982,7 @@ export default function SimulationAnalyticsPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                     <Button
                       variant="outline"
                       onClick={() => router.push(`/simular/${simulation.id}`)}
@@ -942,7 +1001,7 @@ export default function SimulationAnalyticsPage() {
                     </Button>
                     <Button
                       variant="outline"
-                      onClick={() => router.push("/simular")}
+                      onClick={() => router.push('/simular')}
                       className="flex items-center gap-2"
                     >
                       <ArrowLeft className="h-4 w-4" />
@@ -952,11 +1011,11 @@ export default function SimulationAnalyticsPage() {
                 </CardContent>
               </Card>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <h4 className="font-medium text-blue-900 mb-2">
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4">
+                <h4 className="mb-2 font-medium text-blue-900">
                   Información de Exportación
                 </h4>
-                <ul className="text-sm text-blue-800 space-y-1">
+                <ul className="space-y-1 text-sm text-blue-800">
                   <li>• Los datos incluyen filtros aplicados actualmente</li>
                   <li>
                     • La exportación respeta la configuración de períodos de

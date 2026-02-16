@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { ChevronDown, ChevronRight, CreditCard } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
+import { useState } from 'react';
+import { ChevronDown, ChevronRight, CreditCard } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
 
 interface SimulationPaymentMethodFilterProps {
   title: string;
@@ -19,8 +19,8 @@ interface SimulationPaymentMethodFilterProps {
 }
 
 const PAYMENT_METHODS = [
-  { value: "efectivo", label: "Efectivo", icon: "💵" },
-  { value: "credito", label: "Crédito", icon: "💳" },
+  { value: 'efectivo', label: 'Efectivo', icon: '💵' },
+  { value: 'credito', label: 'Crédito', icon: '💳' },
 ];
 
 export function SimulationPaymentMethodFilter({
@@ -55,11 +55,11 @@ export function SimulationPaymentMethodFilter({
     if (persistSelection && simulationContext) {
       try {
         sessionStorage.setItem(
-          "simulation-paymentMethods",
+          'simulation-paymentMethods',
           JSON.stringify(newMethods)
         );
       } catch (error) {
-        console.warn("Failed to persist payment method selection:", error);
+        console.warn('Failed to persist payment method selection:', error);
       }
     }
   };
@@ -71,11 +71,11 @@ export function SimulationPaymentMethodFilter({
     if (persistSelection && simulationContext) {
       try {
         sessionStorage.setItem(
-          "simulation-paymentMethods",
+          'simulation-paymentMethods',
           JSON.stringify(allMethods)
         );
       } catch (error) {
-        console.warn("Failed to persist payment method selection:", error);
+        console.warn('Failed to persist payment method selection:', error);
       }
     }
   };
@@ -87,11 +87,11 @@ export function SimulationPaymentMethodFilter({
       if (persistSelection) {
         try {
           sessionStorage.setItem(
-            "simulation-paymentMethods",
+            'simulation-paymentMethods',
             JSON.stringify([])
           );
         } catch (error) {
-          console.warn("Failed to persist payment method selection:", error);
+          console.warn('Failed to persist payment method selection:', error);
         }
       }
     } else {
@@ -106,10 +106,10 @@ export function SimulationPaymentMethodFilter({
   // Get selection summary for display
   const getSelectionSummary = () => {
     if (noneSelected) {
-      return simulationContext ? "Todos los métodos" : "Ninguno";
+      return simulationContext ? 'Todos los métodos' : 'Ninguno';
     }
     if (allSelected) {
-      return "Todos";
+      return 'Todos';
     }
     return `${selectedMethods.length}/${PAYMENT_METHODS.length}`;
   };
@@ -117,25 +117,25 @@ export function SimulationPaymentMethodFilter({
   return (
     <Card
       className={cn(
-        "w-full",
-        simulationContext && "border-blue-200 bg-blue-50/30"
+        'w-full',
+        simulationContext && 'border-blue-200 bg-blue-50/30'
       )}
     >
       <CardHeader
         className={cn(
-          "pb-3 cursor-pointer hover:bg-muted/50 transition-colors",
-          simulationContext && "hover:bg-blue-50"
+          'cursor-pointer pb-3 transition-colors hover:bg-muted/50',
+          simulationContext && 'hover:bg-blue-50'
         )}
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
-        <CardTitle className="text-sm font-medium flex items-center justify-between">
+        <CardTitle className="flex items-center justify-between text-sm font-medium">
           <div className="flex items-center gap-2">
             <CreditCard
-              className={cn("h-4 w-4", simulationContext && "text-blue-600")}
+              className={cn('h-4 w-4', simulationContext && 'text-blue-600')}
             />
             <span>{title}</span>
             {simulationContext && (
-              <span className="text-xs text-blue-600 bg-blue-100 px-2 py-0.5 rounded">
+              <span className="rounded bg-blue-100 px-2 py-0.5 text-xs text-blue-600">
                 Simulación
               </span>
             )}
@@ -143,8 +143,8 @@ export function SimulationPaymentMethodFilter({
           <div className="flex items-center gap-2">
             <span
               className={cn(
-                "text-xs text-muted-foreground",
-                simulationContext && "text-blue-600"
+                'text-xs text-muted-foreground',
+                simulationContext && 'text-blue-600'
               )}
             >
               {getSelectionSummary()}
@@ -161,7 +161,7 @@ export function SimulationPaymentMethodFilter({
         <CardContent className="space-y-3 pt-0">
           {/* Simulation context info */}
           {simulationContext && showBudgetInfo && (
-            <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded border border-blue-200">
+            <div className="rounded border border-blue-200 bg-blue-50 p-2 text-xs text-blue-600">
               <p className="font-medium">Filtro de simulación:</p>
               <p>
                 Selecciona los métodos de pago para incluir en el análisis de
@@ -179,8 +179,8 @@ export function SimulationPaymentMethodFilter({
               onClick={handleSelectAll}
               disabled={disabled || allSelected}
               className={cn(
-                "text-xs",
-                simulationContext && "border-blue-200 hover:bg-blue-50"
+                'text-xs',
+                simulationContext && 'border-blue-200 hover:bg-blue-50'
               )}
             >
               Todos
@@ -195,11 +195,11 @@ export function SimulationPaymentMethodFilter({
                 (!simulationContext && selectedMethods.length <= 1)
               }
               className={cn(
-                "text-xs",
-                simulationContext && "border-blue-200 hover:bg-blue-50"
+                'text-xs',
+                simulationContext && 'border-blue-200 hover:bg-blue-50'
               )}
             >
-              {simulationContext ? "Ninguno" : "Limpiar"}
+              {simulationContext ? 'Ninguno' : 'Limpiar'}
             </Button>
           </div>
 
@@ -219,18 +219,18 @@ export function SimulationPaymentMethodFilter({
                       handleMethodChange(method.value, checked as boolean)
                     }
                     disabled={disabled || isLastSelected}
-                    className={simulationContext ? "border-blue-300" : ""}
+                    className={simulationContext ? 'border-blue-300' : ''}
                   />
                   <Label
                     htmlFor={`${title}-${method.value}`}
                     className={cn(
-                      "text-sm flex items-center gap-2",
+                      'flex items-center gap-2 text-sm',
                       disabled || isLastSelected
-                        ? "text-muted-foreground"
-                        : "cursor-pointer",
+                        ? 'text-muted-foreground'
+                        : 'cursor-pointer',
                       simulationContext &&
                         isChecked &&
-                        "text-blue-700 font-medium"
+                        'font-medium text-blue-700'
                     )}
                   >
                     <span>{method.icon}</span>
@@ -244,12 +244,12 @@ export function SimulationPaymentMethodFilter({
           {/* Selection info */}
           <div
             className={cn(
-              "text-xs text-muted-foreground pt-2 border-t",
-              simulationContext && "text-blue-600 border-blue-200"
+              'border-t pt-2 text-xs text-muted-foreground',
+              simulationContext && 'border-blue-200 text-blue-600'
             )}
           >
             {noneSelected && simulationContext
-              ? "Se incluirán todos los métodos de pago en el análisis"
+              ? 'Se incluirán todos los métodos de pago en el análisis'
               : `${selectedMethods.length} de ${PAYMENT_METHODS.length} métodos seleccionados`}
           </div>
         </CardContent>

@@ -3,7 +3,7 @@
  * Handles cleanup, garbage collection hints, and memory pressure detection
  */
 
-import React from "react";
+import React from 'react';
 
 interface MemoryInfo {
   usedJSHeapSize: number;
@@ -39,7 +39,7 @@ class MemoryManager {
    * Get current memory information
    */
   getMemoryInfo(): MemoryInfo | null {
-    if ("memory" in performance && (performance as any).memory) {
+    if ('memory' in performance && (performance as any).memory) {
       return (performance as any).memory as MemoryInfo;
     }
     return null;
@@ -58,16 +58,16 @@ class MemoryManager {
   /**
    * Check if memory pressure exists
    */
-  checkMemoryPressure(): "normal" | "warning" | "critical" {
+  checkMemoryPressure(): 'normal' | 'warning' | 'critical' {
     const usage = this.getMemoryUsagePercentage();
 
     if (usage >= this.config.criticalThreshold) {
-      return "critical";
+      return 'critical';
     } else if (usage >= this.config.warningThreshold) {
-      return "warning";
+      return 'warning';
     }
 
-    return "normal";
+    return 'normal';
   }
 
   /**
@@ -89,13 +89,13 @@ class MemoryManager {
 
       // Handle pressure levels
       switch (pressure) {
-        case "warning":
+        case 'warning':
           console.warn(
             `Memory usage at ${this.getMemoryUsagePercentage().toFixed(1)}%`
           );
           this.config.onWarning?.();
           break;
-        case "critical":
+        case 'critical':
           console.error(
             `Critical memory usage at ${this.getMemoryUsagePercentage().toFixed(
               1
@@ -142,7 +142,7 @@ class MemoryManager {
     this.clearEventListeners();
     this.suggestGarbageCollection();
 
-    console.log("Emergency memory cleanup performed");
+    console.log('Emergency memory cleanup performed');
   }
 
   /**
@@ -150,12 +150,12 @@ class MemoryManager {
    */
   private clearImageCaches(): void {
     // Clear any cached images or blob URLs
-    if (typeof window !== "undefined") {
+    if (typeof window !== 'undefined') {
       // Clear any blob URLs that might be cached
       const images = document.querySelectorAll('img[src^="blob:"]');
       images.forEach((img) => {
         const src = (img as HTMLImageElement).src;
-        if (src.startsWith("blob:")) {
+        if (src.startsWith('blob:')) {
           URL.revokeObjectURL(src);
         }
       });
@@ -168,7 +168,7 @@ class MemoryManager {
   private clearEventListeners(): void {
     // This would be implemented based on specific application needs
     // For now, just log that we're attempting cleanup
-    console.log("Clearing unnecessary event listeners");
+    console.log('Clearing unnecessary event listeners');
   }
 
   /**
@@ -176,12 +176,12 @@ class MemoryManager {
    */
   private suggestGarbageCollection(): void {
     // In development or if gc is exposed
-    if (typeof window !== "undefined" && "gc" in window) {
+    if (typeof window !== 'undefined' && 'gc' in window) {
       try {
         (window as any).gc();
-        console.log("Manual garbage collection triggered");
+        console.log('Manual garbage collection triggered');
       } catch (error) {
-        console.warn("Manual garbage collection failed:", error);
+        console.warn('Manual garbage collection failed:', error);
       }
     }
   }
@@ -192,7 +192,7 @@ class MemoryManager {
   getMemoryStats(): {
     current: MemoryInfo | null;
     usagePercentage: number;
-    pressureLevel: "normal" | "warning" | "critical";
+    pressureLevel: 'normal' | 'warning' | 'critical';
     isMonitoring: boolean;
   } {
     return {
@@ -208,22 +208,22 @@ class MemoryManager {
 export const memoryManager = new MemoryManager({
   onWarning: () => {
     // Import and clear budget cache when memory warning occurs
-    import("./budget-data-cache").then(({ budgetDataCache }) => {
+    import('./budget-data-cache').then(({ budgetDataCache }) => {
       const stats = budgetDataCache.getStats();
       if (stats.size > 10) {
         // Clear half the cache
         for (let i = 0; i < Math.floor(stats.size / 2); i++) {
-          budgetDataCache["evictLRU"]?.();
+          budgetDataCache['evictLRU']?.();
         }
-        console.log("Budget cache partially cleared due to memory pressure");
+        console.log('Budget cache partially cleared due to memory pressure');
       }
     });
   },
   onCritical: () => {
     // Clear all caches when memory is critical
-    import("./budget-data-cache").then(({ budgetDataCache }) => {
+    import('./budget-data-cache').then(({ budgetDataCache }) => {
       budgetDataCache.clear();
-      console.log("All caches cleared due to critical memory pressure");
+      console.log('All caches cleared due to critical memory pressure');
     });
   },
 });
@@ -234,7 +234,7 @@ export const memoryManager = new MemoryManager({
 export function useMemoryManagement(
   options: {
     enableMonitoring?: boolean;
-    onMemoryPressure?: (level: "warning" | "critical") => void;
+    onMemoryPressure?: (level: 'warning' | 'critical') => void;
   } = {}
 ) {
   const { enableMonitoring = true, onMemoryPressure } = options;
@@ -250,7 +250,7 @@ export function useMemoryManagement(
     if (onMemoryPressure) {
       removeListener = memoryManager.addListener((memInfo) => {
         const pressure = memoryManager.checkMemoryPressure();
-        if (pressure !== "normal") {
+        if (pressure !== 'normal') {
           onMemoryPressure(pressure);
         }
       });
@@ -280,7 +280,7 @@ export function createCleanupFunction(
       try {
         task();
       } catch (error) {
-        console.warn("Cleanup task failed:", error);
+        console.warn('Cleanup task failed:', error);
       }
     });
   };
@@ -376,7 +376,7 @@ export const memoryEfficientUtils = {
     const {
       enableAggregation = true,
       aggregationThreshold = 0.01, // 1% of total
-      sortKey = "total_amount" as keyof T,
+      sortKey = 'total_amount' as keyof T,
       enableMemoryOptimization = true,
     } = options;
 
@@ -401,8 +401,8 @@ export const memoryEfficientUtils = {
 
     // Sort by the specified key (default: total_amount) with memory-efficient approach
     const sorted = [...data].sort((a, b) => {
-      const aVal = typeof a[sortKey] === "number" ? (a[sortKey] as number) : 0;
-      const bVal = typeof b[sortKey] === "number" ? (b[sortKey] as number) : 0;
+      const aVal = typeof a[sortKey] === 'number' ? (a[sortKey] as number) : 0;
+      const bVal = typeof b[sortKey] === 'number' ? (b[sortKey] as number) : 0;
       return bVal - aVal;
     });
 
@@ -470,17 +470,17 @@ export const memoryEfficientUtils = {
         if (topItems.length === maxItems) {
           topItems.sort((a, b) => {
             const aVal =
-              typeof a[sortKey] === "number" ? (a[sortKey] as number) : 0;
+              typeof a[sortKey] === 'number' ? (a[sortKey] as number) : 0;
             const bVal =
-              typeof b[sortKey] === "number" ? (b[sortKey] as number) : 0;
+              typeof b[sortKey] === 'number' ? (b[sortKey] as number) : 0;
             return aVal - bVal; // Min heap (smallest first)
           });
         }
       } else {
         const itemVal =
-          typeof item[sortKey] === "number" ? (item[sortKey] as number) : 0;
+          typeof item[sortKey] === 'number' ? (item[sortKey] as number) : 0;
         const minVal =
-          typeof topItems[0][sortKey] === "number"
+          typeof topItems[0][sortKey] === 'number'
             ? (topItems[0][sortKey] as number)
             : 0;
 
@@ -495,11 +495,11 @@ export const memoryEfficientUtils = {
 
             if (leftChild < topItems.length) {
               const leftVal =
-                typeof topItems[leftChild][sortKey] === "number"
+                typeof topItems[leftChild][sortKey] === 'number'
                   ? (topItems[leftChild][sortKey] as number)
                   : 0;
               const smallestVal =
-                typeof topItems[smallest][sortKey] === "number"
+                typeof topItems[smallest][sortKey] === 'number'
                   ? (topItems[smallest][sortKey] as number)
                   : 0;
               if (leftVal < smallestVal) {
@@ -509,11 +509,11 @@ export const memoryEfficientUtils = {
 
             if (rightChild < topItems.length) {
               const rightVal =
-                typeof topItems[rightChild][sortKey] === "number"
+                typeof topItems[rightChild][sortKey] === 'number'
                   ? (topItems[rightChild][sortKey] as number)
                   : 0;
               const smallestVal =
-                typeof topItems[smallest][sortKey] === "number"
+                typeof topItems[smallest][sortKey] === 'number'
                   ? (topItems[smallest][sortKey] as number)
                   : 0;
               if (rightVal < smallestVal) {
@@ -537,8 +537,8 @@ export const memoryEfficientUtils = {
 
     // Sort final results in descending order
     topItems.sort((a, b) => {
-      const aVal = typeof a[sortKey] === "number" ? (a[sortKey] as number) : 0;
-      const bVal = typeof b[sortKey] === "number" ? (b[sortKey] as number) : 0;
+      const aVal = typeof a[sortKey] === 'number' ? (a[sortKey] as number) : 0;
+      const bVal = typeof b[sortKey] === 'number' ? (b[sortKey] as number) : 0;
       return bVal - aVal;
     });
 

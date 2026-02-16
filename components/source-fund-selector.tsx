@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   Check,
   ChevronsUpDown,
   AlertCircle,
   AlertTriangle,
   Loader2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -16,18 +16,18 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from '@/components/ui/command';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { cn } from "@/lib/utils";
-import { useBudget } from "@/context/budget-context";
-import { Fund } from "@/types/funds";
-import { SOURCE_FUND_VALIDATION_MESSAGES } from "@/lib/source-fund-validation";
-import { SourceFundErrorWrapper } from "@/components/source-fund-error-boundary";
+} from '@/components/ui/popover';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
+import { useBudget } from '@/context/budget-context';
+import { Fund } from '@/types/funds';
+import { SOURCE_FUND_VALIDATION_MESSAGES } from '@/lib/source-fund-validation';
+import { SourceFundErrorWrapper } from '@/components/source-fund-error-boundary';
 
 interface SourceFundSelectorProps {
   selectedCategoryId: string | null;
@@ -55,7 +55,7 @@ export function SourceFundSelector({
   selectedCategoryId,
   selectedSourceFund,
   onSourceFundChange,
-  placeholder = "Seleccionar fondo origen...",
+  placeholder = 'Seleccionar fondo origen...',
   className,
   disabled = false,
   currentFundFilter,
@@ -70,7 +70,7 @@ export function SourceFundSelector({
 }: SourceFundSelectorProps) {
   const { funds, isLoading, error: contextError } = useBudget();
   const [open, setOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue, setSearchValue] = useState('');
   const [categoryFunds, setCategoryFunds] = useState<Fund[]>([]);
   const [loadingCategoryFunds, setLoadingCategoryFunds] = useState(false);
   const [categoryFundsError, setCategoryFundsError] = useState<string | null>(
@@ -139,7 +139,7 @@ export function SourceFundSelector({
         // Add informational warnings
         const warnings: string[] = [];
         if (funds.length === 0) {
-          warnings.push("No hay fondos disponibles para esta categoría");
+          warnings.push('No hay fondos disponibles para esta categoría');
         } else {
           warnings.push(`Esta categoría tiene fondos específicos asociados`);
         }
@@ -147,8 +147,8 @@ export function SourceFundSelector({
         setValidationWarnings(warnings);
         onValidationChange?.(funds.length > 0, [], warnings);
       } catch (err) {
-        console.error("Error fetching category funds:", err);
-        const errorMessage = "Error cargando fondos de la categoría";
+        console.error('Error fetching category funds:', err);
+        const errorMessage = 'Error cargando fondos de la categoría';
         setCategoryFundsError(errorMessage);
         setCategoryFunds([]);
         setValidationErrors([errorMessage]);
@@ -198,7 +198,7 @@ export function SourceFundSelector({
       !categoryFunds.some((fund) => fund.id === selectedSourceFund.id)
     ) {
       errors.push(
-        "El fondo origen seleccionado no está asociado con esta categoría"
+        'El fondo origen seleccionado no está asociado con esta categoría'
       );
     }
 
@@ -236,7 +236,7 @@ export function SourceFundSelector({
     const fund = categoryFunds.find((f) => f.id === fundId);
     onSourceFundChange(fund || null);
     setOpen(false);
-    setSearchValue("");
+    setSearchValue('');
   };
 
   const getDisplayValue = () => {
@@ -247,17 +247,17 @@ export function SourceFundSelector({
   };
 
   const getButtonVariant = () => {
-    if (error) return "destructive";
-    if (required && !selectedSourceFund) return "outline";
-    return "outline";
+    if (error) return 'destructive';
+    if (required && !selectedSourceFund) return 'outline';
+    return 'outline';
   };
 
   const getButtonClassName = () => {
-    let baseClass = "w-full justify-between";
+    let baseClass = 'w-full justify-between';
     if (error) {
-      baseClass += " border-destructive text-destructive";
+      baseClass += ' border-destructive text-destructive';
     } else if (required && !selectedSourceFund) {
-      baseClass += " border-amber-300 text-amber-700";
+      baseClass += ' border-amber-300 text-amber-700';
     }
     return cn(baseClass, className);
   };
@@ -278,7 +278,7 @@ export function SourceFundSelector({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
           {isValidating && (
-            <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
               <Loader2 className="h-3 w-3 animate-spin" />
               Validando selección...
             </div>
@@ -295,7 +295,7 @@ export function SourceFundSelector({
         <Button
           variant="outline"
           role="combobox"
-          className={cn("w-full justify-between text-destructive", className)}
+          className={cn('w-full justify-between text-destructive', className)}
           disabled
         >
           Error cargando fondos
@@ -321,7 +321,7 @@ export function SourceFundSelector({
           variant="outline"
           role="combobox"
           className={cn(
-            "w-full justify-between text-muted-foreground",
+            'w-full justify-between text-muted-foreground',
             className
           )}
           disabled
@@ -341,7 +341,7 @@ export function SourceFundSelector({
           variant="outline"
           role="combobox"
           className={cn(
-            "w-full justify-between text-muted-foreground",
+            'w-full justify-between text-muted-foreground',
             className
           )}
           disabled
@@ -392,8 +392,8 @@ export function SourceFundSelector({
                 <CommandGroup>
                   {filteredFunds
                     .sort((a, b) =>
-                      a.name.localeCompare(b.name, "es", {
-                        sensitivity: "base",
+                      a.name.localeCompare(b.name, 'es', {
+                        sensitivity: 'base',
                       })
                     )
                     .map((fund) => (
@@ -404,13 +404,13 @@ export function SourceFundSelector({
                       >
                         <Check
                           className={cn(
-                            "mr-2 h-4 w-4",
+                            'mr-2 h-4 w-4',
                             selectedSourceFund?.id === fund.id
-                              ? "opacity-100"
-                              : "opacity-0"
+                              ? 'opacity-100'
+                              : 'opacity-0'
                           )}
                         />
-                        <div className="flex flex-col flex-1">
+                        <div className="flex flex-1 flex-col">
                           <span>{fund.name}</span>
                           {fund.description && (
                             <span className="text-xs text-muted-foreground">
@@ -420,15 +420,15 @@ export function SourceFundSelector({
                           {showBalance && (
                             <span
                               className={cn(
-                                "text-xs",
+                                'text-xs',
                                 fund.current_balance <= 0
-                                  ? "text-destructive"
-                                  : "text-muted-foreground"
+                                  ? 'text-destructive'
+                                  : 'text-muted-foreground'
                               )}
                             >
                               Balance: ${fund.current_balance.toLocaleString()}
                               {amount && amount > fund.current_balance && (
-                                <span className="text-amber-600 ml-1">
+                                <span className="ml-1 text-amber-600">
                                   (Insuficiente)
                                 </span>
                               )}
@@ -436,7 +436,7 @@ export function SourceFundSelector({
                           )}
                         </div>
                         {currentFundFilter?.id === fund.id && (
-                          <span className="text-xs text-blue-600 ml-2">
+                          <span className="ml-2 text-xs text-blue-600">
                             Filtro actual
                           </span>
                         )}
@@ -455,7 +455,7 @@ export function SourceFundSelector({
             <AlertDescription>
               {error || validationErrors[0]}
               {validationErrors.length > 1 && (
-                <ul className="mt-1 list-disc list-inside">
+                <ul className="mt-1 list-inside list-disc">
                   {validationErrors.slice(1).map((err, index) => (
                     <li key={index} className="text-xs">
                       {err}
@@ -476,7 +476,7 @@ export function SourceFundSelector({
               <AlertDescription>
                 {validationWarnings[0]}
                 {validationWarnings.length > 1 && (
-                  <ul className="mt-1 list-disc list-inside">
+                  <ul className="mt-1 list-inside list-disc">
                     {validationWarnings.slice(1).map((warning, index) => (
                       <li key={index} className="text-xs">
                         {warning}
@@ -508,14 +508,14 @@ export function SourceFundSelector({
               <span>Fondo origen: {selectedSourceFund.name}</span>
               <span
                 className={cn(
-                  selectedSourceFund.current_balance <= 0 && "text-destructive"
+                  selectedSourceFund.current_balance <= 0 && 'text-destructive'
                 )}
               >
                 Balance: ${selectedSourceFund.current_balance.toLocaleString()}
               </span>
             </div>
             {amount && amount > selectedSourceFund.current_balance && (
-              <div className="text-amber-600 text-xs mt-1">
+              <div className="mt-1 text-xs text-amber-600">
                 ⚠️ El monto excede el balance disponible
               </div>
             )}
@@ -524,7 +524,7 @@ export function SourceFundSelector({
 
         {/* Auto-selection indicator */}
         {categoryFunds.length === 1 && selectedSourceFund && (
-          <div className="text-xs text-green-600 flex items-center gap-1">
+          <div className="flex items-center gap-1 text-xs text-green-600">
             <Check className="h-3 w-3" />
             Seleccionado automáticamente (único fondo disponible)
           </div>
@@ -534,7 +534,7 @@ export function SourceFundSelector({
         {currentFundFilter &&
           selectedSourceFund?.id === currentFundFilter.id &&
           categoryFunds.length > 1 && (
-            <div className="text-xs text-blue-600 flex items-center gap-1">
+            <div className="flex items-center gap-1 text-xs text-blue-600">
               <Check className="h-3 w-3" />
               Seleccionado por filtro actual
             </div>
@@ -560,7 +560,7 @@ export function validateSourceFund(
   if (required && !selectedSourceFund) {
     return {
       isValid: false,
-      error: "Debe seleccionar un fondo origen para el gasto",
+      error: 'Debe seleccionar un fondo origen para el gasto',
     };
   }
 
@@ -570,7 +570,7 @@ export function validateSourceFund(
   ) {
     return {
       isValid: false,
-      error: "El fondo origen seleccionado no está asociado con esta categoría",
+      error: 'El fondo origen seleccionado no está asociado con esta categoría',
     };
   }
 
@@ -604,7 +604,7 @@ export function useSourceFundSelection(
       try {
         const response = await fetch(`/api/categories/${categoryId}/funds`);
         if (!response.ok) {
-          throw new Error("Failed to fetch category funds");
+          throw new Error('Failed to fetch category funds');
         }
 
         const data = await response.json();
@@ -623,8 +623,8 @@ export function useSourceFundSelection(
           setSelectedSourceFund(null);
         }
       } catch (err) {
-        console.error("Error fetching category funds:", err);
-        setError("Error cargando fondos de la categoría");
+        console.error('Error fetching category funds:', err);
+        setError('Error cargando fondos de la categoría');
         setCategoryFunds([]);
         setSelectedSourceFund(null);
       } finally {

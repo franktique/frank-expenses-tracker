@@ -157,8 +157,8 @@ ORDER BY week_start, grouper_name
 
 ```typescript
 const [activeTab, setActiveTab] = useState<
-  "current" | "period-comparison" | "weekly-cumulative"
->("current");
+  'current' | 'period-comparison' | 'weekly-cumulative'
+>('current');
 const [periodComparisonData, setPeriodComparisonData] =
   useState<PeriodComparisonData>([]);
 const [weeklyCumulativeData, setWeeklyCumulativeData] =
@@ -323,7 +323,6 @@ type TransformedWeeklyData = {
 ### API Endpoint Testing
 
 1. **Period Comparison Endpoint**:
-
    - Test with different payment method filters
    - Verify data aggregation across multiple periods
    - Test with periods that have no expenses
@@ -338,13 +337,11 @@ type TransformedWeeklyData = {
 ### Frontend Component Testing
 
 1. **Tab Navigation**:
-
    - Test tab switching maintains filter state
    - Verify correct chart renders for each tab
    - Test loading states during tab switches
 
 2. **Chart Rendering**:
-
    - Test with various data scenarios (empty, single grouper, multiple groupers)
    - Verify tooltip functionality
    - Test responsive behavior

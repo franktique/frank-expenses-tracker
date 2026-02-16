@@ -22,6 +22,7 @@ Position: '137'
 ## Database Schema Context
 
 ### `budgets` table (for periods):
+
 - `id` UUID PRIMARY KEY
 - `category_id` UUID NOT NULL REFERENCES categories(id)
 - `period_id` UUID NOT NULL REFERENCES periods(id)
@@ -29,6 +30,7 @@ Position: '137'
 - **No `simulation_id` column**
 
 ### `simulation_budgets` table (for simulations):
+
 - `id` SERIAL PRIMARY KEY
 - `simulation_id` INTEGER NOT NULL REFERENCES simulations(id)
 - `category_id` UUID NOT NULL REFERENCES categories(id)
@@ -39,12 +41,14 @@ Position: '137'
 ## Implementation Plan
 
 ### Task 1: Fix the table reference in `applyTemplateToSimulation()`
+
 - [x] Update line 505 in `lib/subgroup-template-db-utils.ts`
 - [x] Change query from `FROM budgets` to `FROM simulation_budgets`
 - [x] Ensure the query correctly filters by `simulation_id`
 - [x] Verify the query returns category IDs that exist in the simulation
 
 ### Task 2: Test the fix
+
 - [x] Code fix deployed (dev server running on port 3000 with hot reload)
 - [ ] **Manual testing required**: Test applying template to simulation #22
 - [ ] Verify categories are correctly matched between template and simulation
@@ -52,6 +56,7 @@ Position: '137'
 - [ ] Check that category associations are applied correctly
 
 ### Task 3: Verify edge cases
+
 - [ ] Test with simulation that has no budgets/categories
 - [ ] Test with template that has categories not in simulation
 - [ ] Test with template that has multiple subgroups
@@ -60,6 +65,7 @@ Position: '137'
 ## Expected SQL Fix
 
 **Before (incorrect)**:
+
 ```sql
 SELECT id, name
 FROM categories
@@ -72,6 +78,7 @@ ORDER BY name ASC
 ```
 
 **After (correct)**:
+
 ```sql
 SELECT id, name
 FROM categories

@@ -3,14 +3,14 @@
  * POST: Refresh a template with data from a source simulation
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { getSubgroupsBySimulation } from "@/lib/subgroup-db-utils";
-import { getTemplateById } from "@/lib/subgroup-template-db-utils";
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { getSubgroupsBySimulation } from '@/lib/subgroup-db-utils';
+import { getTemplateById } from '@/lib/subgroup-template-db-utils';
 import type {
   RefreshTemplateRequest,
   RefreshTemplateResponse,
-} from "@/types/subgroup-templates";
+} from '@/types/subgroup-templates';
 
 /**
  * Helper to normalize SQL query results
@@ -43,7 +43,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid template ID format",
+          error: 'Invalid template ID format',
           statusCode: 400,
         },
         { status: 400 }
@@ -58,7 +58,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid request body",
+          error: 'Invalid request body',
           statusCode: 400,
         },
         { status: 400 }
@@ -68,12 +68,12 @@ export async function POST(
     // Validate request body
     if (
       !requestBody.sourceSimulationId ||
-      typeof requestBody.sourceSimulationId !== "number"
+      typeof requestBody.sourceSimulationId !== 'number'
     ) {
       return NextResponse.json(
         {
           success: false,
-          error: "sourceSimulationId is required and must be a number",
+          error: 'sourceSimulationId is required and must be a number',
           statusCode: 400,
         },
         { status: 400 }
@@ -86,7 +86,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Template not found",
+          error: 'Template not found',
           statusCode: 404,
         },
         { status: 404 }
@@ -102,7 +102,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Source simulation has no subgroups to copy from",
+          error: 'Source simulation has no subgroups to copy from',
           statusCode: 400,
         },
         { status: 400 }
@@ -122,7 +122,8 @@ export async function POST(
     for (let i = 0; i < sourceSubgroups.length; i++) {
       const sourceSubgroup = sourceSubgroups[i];
       const displayOrder =
-        sourceSubgroup.customOrder !== null && sourceSubgroup.customOrder !== undefined
+        sourceSubgroup.customOrder !== null &&
+        sourceSubgroup.customOrder !== undefined
           ? sourceSubgroup.customOrder
           : i;
 
@@ -199,9 +200,9 @@ export async function POST(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error refreshing template:", error);
+    console.error('Error refreshing template:', error);
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to refresh template";
+      error instanceof Error ? error.message : 'Failed to refresh template';
 
     return NextResponse.json(
       {

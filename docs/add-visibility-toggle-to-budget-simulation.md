@@ -7,6 +7,7 @@
 ## Overview
 
 Add a visibility toggle (eye icon) to the simulation budget form that allows users to:
+
 - Click an eye icon on subgroup headers, subgroup subtotal rows, or category rows
 - Toggle visibility state (open/closed eye)
 - Display hidden items with crossed-out text styling
@@ -16,6 +17,7 @@ Add a visibility toggle (eye icon) to the simulation budget form that allows use
 ## Requirements
 
 ### Functional Requirements
+
 1. **Visibility Icon Display**
    - Eye icon appears on:
      - Subgroup headers (SubgroupHeaderRow)
@@ -49,6 +51,7 @@ Add a visibility toggle (eye icon) to the simulation budget form that allows use
    - Collapsed subgroups don't show individual category visibility toggles
 
 ### Technical Requirements
+
 1. **No Database Persistence**
    - Visibility state is UI-only (localStorage only)
    - No API calls required for toggling visibility
@@ -68,6 +71,7 @@ Add a visibility toggle (eye icon) to the simulation budget form that allows use
 ## Implementation Plan
 
 ### Phase 1: Type Definitions & State Management
+
 - [ ] **Add visibility types to `/types/simulation.ts`**
   - `VisibilityState` type for tracking visible/hidden items
   - `VisibilityToggleItem` type for each toggleable row
@@ -79,6 +83,7 @@ Add a visibility toggle (eye icon) to the simulation budget form that allows use
   - Save visibility to localStorage on change
 
 ### Phase 2: UI Component Updates
+
 - [ ] **Update SubgroupHeaderRow component**
   - Import Eye/EyeOff icons from lucide-react
   - Add visibility toggle button next to expand/collapse button
@@ -97,6 +102,7 @@ Add a visibility toggle (eye icon) to the simulation budget form that allows use
   - Handle visibility toggle via parent form
 
 ### Phase 3: Calculation Logic Updates
+
 - [ ] **Create visibility-aware calculation utility** (`/lib/visibility-calculation-utils.ts`)
   - `filterByVisibility(items, visibilityState)` - filter items for calculations
   - `calculateSubgroupSubtotalsWithVisibility(subgroup, categories, visibilityState)` - update subgroup subtotal logic
@@ -108,6 +114,7 @@ Add a visibility toggle (eye icon) to the simulation budget form that allows use
   - Ensure calculations update when visibility state changes
 
 ### Phase 4: Styling & Visual Feedback
+
 - [ ] **Create visibility styling**
   - Add strikethrough text CSS class
   - Add opacity reduction for hidden items (optional)
@@ -120,6 +127,7 @@ Add a visibility toggle (eye icon) to the simulation budget form that allows use
   - Visual feedback when clicked
 
 ### Phase 5: Testing & Integration
+
 - [ ] **Test visibility toggle functionality**
   - Toggle visibility on subgroup header
   - Toggle visibility on subgroup subtotal
@@ -153,6 +161,7 @@ Add a visibility toggle (eye icon) to the simulation budget form that allows use
   - Works with export functionality
 
 ### Phase 6: Documentation & Cleanup
+
 - [ ] **Update CLAUDE.md** with visibility toggle usage
 - [ ] **Add code comments** for key functions
 - [ ] **Create user-facing documentation** (if needed)
@@ -161,11 +170,13 @@ Add a visibility toggle (eye icon) to the simulation budget form that allows use
 ## Files to Modify
 
 ### New Files to Create
+
 1. `/types/simulation.ts` - Add visibility types
 2. `/lib/visibility-calculation-utils.ts` - Visibility-aware calculations
 3. `/lib/visibility-storage-utils.ts` - localStorage helpers (optional)
 
 ### Files to Modify
+
 1. `/components/simulation-budget-form.tsx` - State management, UI integration
 2. `/components/subgroup-header-row.tsx` - Add visibility toggle button
 3. `/components/subgroup-subtotal-row.tsx` - Add visibility toggle button
@@ -175,12 +186,14 @@ Add a visibility toggle (eye icon) to the simulation budget form that allows use
 ## Icon & Styling Details
 
 ### Icons (from lucide-react)
+
 - Visible: `Eye` icon
 - Hidden: `EyeOff` icon
 - Size: h-4 w-4 (consistent with other icons)
 - Color: text-muted-foreground on default, hover color variation
 
 ### Styling
+
 - Strikethrough: CSS `line-through` or `text-decoration: line-through`
 - Opacity: Optional 50-60% opacity for hidden rows
 - Background: Optional subtle gray tint for hidden rows
@@ -251,11 +264,13 @@ Display with strikethrough styling
 ## Implementation Summary
 
 ### Phase 1: Complete ✓
+
 - [x] Added `VisibilityState` and `VisibilityToggleItem` types to `/types/simulation.ts`
 - [x] Added visibility state management to SimulationBudgetForm component
 - [x] Implemented localStorage load/save hooks for persistence
 
 ### Phase 2: Complete ✓
+
 - [x] Updated SubgroupHeaderRow with visibility toggle button
   - Eye/EyeOff icons with purple hover state
   - Smooth opacity transition on hover
@@ -267,6 +282,7 @@ Display with strikethrough styling
   - Strikethrough and opacity 60% when hidden
 
 ### Phase 3: Complete ✓
+
 - [x] Created `/lib/visibility-calculation-utils.ts` with utility functions
   - `isItemVisible()` - Default visibility check
   - `isSubgroupVisible()` - Subgroup-specific check
@@ -285,17 +301,20 @@ Display with strikethrough styling
   - Maintains backward compatibility
 
 ### Phase 4: Complete ✓
+
 - [x] Added strikethrough styling via `line-through` CSS class
 - [x] Added opacity reduction (60%) for visual de-emphasis
 - [x] Applied purple hover colors to visibility toggle buttons
 - [x] Ensured proper styling in both light and dark themes
 
 ### Phase 5: Complete ✓ (Skipped manual testing per user request)
+
 - [x] Build successfully compiled with no TypeScript errors
 - [x] All components integrate properly
 - [x] Memoization prevents unnecessary re-renders
 
 ### Phase 6: Complete ✓
+
 - [x] Updated CLAUDE.md with comprehensive documentation
   - Feature overview
   - State management details
@@ -307,9 +326,11 @@ Display with strikethrough styling
   - Known limitations
 
 ### Files Created
+
 1. `/lib/visibility-calculation-utils.ts` - Complete utility library for visibility operations
 
 ### Files Modified
+
 1. `/types/simulation.ts` - Added VisibilityState and VisibilityToggleItem types
 2. `/components/simulation-budget-form.tsx` - Full visibility integration
    - State management with localStorage persistence
@@ -322,6 +343,7 @@ Display with strikethrough styling
 6. `/CLAUDE.md` - Comprehensive documentation
 
 ### Key Features Implemented
+
 ✅ Eye icon toggle on subgroup headers (purple, hover reveal)
 ✅ Eye icon toggle on category rows (purple, hover reveal)
 ✅ Strikethrough + reduced opacity for hidden items

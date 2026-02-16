@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -8,14 +8,14 @@ import {
   ArrowUpDown,
   PieChart,
   Activity,
-} from "lucide-react";
+} from 'lucide-react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -23,9 +23,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
+} from '@/components/ui/table';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
 import {
   LineChart,
   Line,
@@ -38,15 +38,15 @@ import {
   Pie,
   Cell,
   Legend,
-} from "recharts";
-import { FundErrorDisplay } from "@/components/fund-error-display";
+} from 'recharts';
+import { FundErrorDisplay } from '@/components/fund-error-display';
 import {
   FundsDashboardEmptyState,
   FundsDashboardSkeleton,
   FundBalanceTrendsEmptyState,
   FundTransfersEmptyState,
   ChartLoadingSkeleton,
-} from "@/components/fund-empty-states";
+} from '@/components/fund-empty-states';
 
 interface FundDashboardData {
   funds: Array<{
@@ -82,7 +82,7 @@ interface Transfer {
   date: string;
   description: string;
   amount: number;
-  transfer_type: "incoming" | "outgoing" | "transfer";
+  transfer_type: 'incoming' | 'outgoing' | 'transfer';
   category_name: string;
   source_fund_name: string;
   destination_fund_name: string;
@@ -115,7 +115,7 @@ export function FundsDashboard() {
         setError(null);
 
         // Fetch main dashboard data
-        const dashboardResponse = await fetch("/api/dashboard/funds");
+        const dashboardResponse = await fetch('/api/dashboard/funds');
         if (!dashboardResponse.ok) {
           throw new Error(
             `Failed to fetch dashboard data: ${dashboardResponse.statusText}`
@@ -126,12 +126,12 @@ export function FundsDashboard() {
 
         // Fetch balance trends (last 30 days)
         const balanceResponse = await fetch(
-          "/api/dashboard/funds/balances?days=30"
+          '/api/dashboard/funds/balances?days=30'
         );
         if (!balanceResponse.ok) {
           // If balance trends fail, set empty data instead of throwing error
           console.warn(
-            "Failed to fetch balance trends:",
+            'Failed to fetch balance trends:',
             balanceResponse.statusText
           );
           setBalanceData([]);
@@ -142,12 +142,12 @@ export function FundsDashboard() {
 
         // Fetch recent transfers
         const transferResponse = await fetch(
-          "/api/dashboard/funds/transfers?limit=10"
+          '/api/dashboard/funds/transfers?limit=10'
         );
         if (!transferResponse.ok) {
           // If transfers fail, set empty data instead of throwing error
           console.warn(
-            "Failed to fetch transfers:",
+            'Failed to fetch transfers:',
             transferResponse.statusText
           );
           setTransferData({
@@ -159,7 +159,7 @@ export function FundsDashboard() {
           setTransferData(transfers);
         }
       } catch (err) {
-        console.error("Error fetching dashboard data:", err);
+        console.error('Error fetching dashboard data:', err);
         setError((err as Error).message);
       } finally {
         setIsLoading(false);
@@ -170,37 +170,37 @@ export function FundsDashboard() {
   }, []);
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-CO", {
-      month: "short",
-      day: "numeric",
+    return new Date(dateString).toLocaleDateString('es-CO', {
+      month: 'short',
+      day: 'numeric',
     });
   };
 
   const formatFullDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-CO");
+    return new Date(dateString).toLocaleDateString('es-CO');
   };
 
   // Colors for pie chart
   const COLORS = [
-    "#0088FE",
-    "#00C49F",
-    "#FFBB28",
-    "#FF8042",
-    "#8884D8",
-    "#82CA9D",
-    "#FFC658",
-    "#FF7C7C",
-    "#8DD1E1",
-    "#D084D0",
+    '#0088FE',
+    '#00C49F',
+    '#FFBB28',
+    '#FF8042',
+    '#8884D8',
+    '#82CA9D',
+    '#FFC658',
+    '#FF7C7C',
+    '#8DD1E1',
+    '#D084D0',
   ];
 
   if (isLoading) {
@@ -328,7 +328,7 @@ export function FundsDashboard() {
                     labelFormatter={(label) => formatFullDate(label)}
                     formatter={(value: number) => [
                       formatCurrency(value),
-                      "Balance",
+                      'Balance',
                     ]}
                   />
                   <Line
@@ -435,8 +435,8 @@ export function FundsDashboard() {
                       <span
                         className={
                           fund.current_balance >= 0
-                            ? "text-green-600"
-                            : "text-red-600"
+                            ? 'text-green-600'
+                            : 'text-red-600'
                         }
                       >
                         {formatCurrency(fund.current_balance)}
@@ -470,7 +470,7 @@ export function FundsDashboard() {
                 <TableRow>
                   <TableCell
                     colSpan={7}
-                    className="text-center py-8 text-muted-foreground"
+                    className="py-8 text-center text-muted-foreground"
                   >
                     No hay fondos disponibles
                   </TableCell>
@@ -515,18 +515,18 @@ export function FundsDashboard() {
                     <TableCell>
                       <Badge
                         variant={
-                          transfer.transfer_type === "incoming"
-                            ? "default"
-                            : transfer.transfer_type === "outgoing"
-                            ? "secondary"
-                            : "outline"
+                          transfer.transfer_type === 'incoming'
+                            ? 'default'
+                            : transfer.transfer_type === 'outgoing'
+                              ? 'secondary'
+                              : 'outline'
                         }
                       >
-                        {transfer.transfer_type === "incoming"
-                          ? "Entrada"
-                          : transfer.transfer_type === "outgoing"
-                          ? "Salida"
-                          : "Transferencia"}
+                        {transfer.transfer_type === 'incoming'
+                          ? 'Entrada'
+                          : transfer.transfer_type === 'outgoing'
+                            ? 'Salida'
+                            : 'Transferencia'}
                       </Badge>
                     </TableCell>
                   </TableRow>

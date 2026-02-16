@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { sql, testConnection } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql, testConnection } from '@/lib/db';
 
 /**
  * API endpoint to migrate the database schema for tipo_gasto feature
@@ -19,7 +19,7 @@ export async function GET() {
       return NextResponse.json(
         {
           success: false,
-          message: "Could not connect to the database: " + connectionTest.error,
+          message: 'Could not connect to the database: ' + connectionTest.error,
         },
         { status: 500 }
       );
@@ -35,14 +35,12 @@ export async function GET() {
     `;
 
     const columnExists =
-      columnCheckResult.length > 0
-        ? columnCheckResult[0].exists
-        : false;
+      columnCheckResult.length > 0 ? columnCheckResult[0].exists : false;
 
     if (columnExists) {
       return NextResponse.json({
         success: true,
-        message: "Column tipo_gasto already exists",
+        message: 'Column tipo_gasto already exists',
         skipped: true,
       });
     }
@@ -53,7 +51,9 @@ export async function GET() {
       ADD COLUMN tipo_gasto VARCHAR(2) DEFAULT 'F'
     `;
 
-    console.log("✓ Added tipo_gasto column to categories table with default value 'F' (Fijo)");
+    console.log(
+      "✓ Added tipo_gasto column to categories table with default value 'F' (Fijo)"
+    );
 
     // Update any NULL values to 'F' (Fijo) for backward compatibility
     await sql`
@@ -71,31 +71,31 @@ export async function GET() {
         ADD CONSTRAINT check_valid_tipo_gasto
         CHECK (tipo_gasto IN ('F', 'V', 'SF', 'E'))
       `;
-      console.log("✓ Added check constraint for tipo_gasto values");
+      console.log('✓ Added check constraint for tipo_gasto values');
     } catch (constraintError) {
-      console.warn("Warning: Could not add constraint:", constraintError);
+      console.warn('Warning: Could not add constraint:', constraintError);
       // Don't fail the migration if constraint creation fails
     }
 
     return NextResponse.json({
       success: true,
-      message: "Migration completed successfully",
+      message: 'Migration completed successfully',
       details: {
-        column_added: "tipo_gasto",
-        type: "VARCHAR(2)",
-        default: "F (Fijo)",
-        valid_values: ["F", "V", "SF", "E"],
+        column_added: 'tipo_gasto',
+        type: 'VARCHAR(2)',
+        default: 'F (Fijo)',
+        valid_values: ['F', 'V', 'SF', 'E'],
         description:
-          "F = Fijo (Fixed), V = Variable, SF = Semi Fijo (Semi-Fixed), E = Eventual",
+          'F = Fijo (Fixed), V = Variable, SF = Semi Fijo (Semi-Fixed), E = Eventual',
         note: "All existing categories have been set to 'F' (Fijo) as the default expense type",
       },
     });
   } catch (error) {
-    console.error("Migration failed:", error);
+    console.error('Migration failed:', error);
     return NextResponse.json(
       {
         success: false,
-        message: "Migration failed: " + (error as Error).message,
+        message: 'Migration failed: ' + (error as Error).message,
       },
       { status: 500 }
     );

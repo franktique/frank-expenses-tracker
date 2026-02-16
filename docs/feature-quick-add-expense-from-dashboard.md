@@ -17,7 +17,6 @@ As a user viewing the Budget Summary table on the Dashboard, I want to quickly a
 ### Relevant Files
 
 - **Dashboard View**: `/components/dashboard-view.tsx` (lines 550-770)
-
   - Contains the "Resumen de Presupuesto" table with category rows
   - Uses `budgetSummary` data which includes category information
 
@@ -30,7 +29,6 @@ As a user viewing the Budget Summary table on the Dashboard, I want to quickly a
 ### Key Components & State
 
 1. **Table Structure** (dashboard-view.tsx:571-644)
-
    - Each row represents a category with `item.category_id` and `item.category_name`
    - Currently only displays category information without any action buttons
 
@@ -218,14 +216,12 @@ components/
 ### Files Modified
 
 1. **`/components/expenses-view.tsx`**
-
    - Removed 250+ lines of duplicate form code
    - Now uses `ExpenseFormDialog` component
    - Maintained all existing functionality for edit/delete operations
    - Cleaner, more maintainable code
 
 2. **`/components/dashboard-view.tsx`**
-
    - Added PlusCircle icon to each category row
    - Icon appears on row hover with smooth transition
    - Integrated `ExpenseFormDialog` with pre-selected category

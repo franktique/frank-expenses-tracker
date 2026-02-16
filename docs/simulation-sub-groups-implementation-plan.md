@@ -7,6 +7,7 @@
 ## Overview
 
 Implement a sub-group management system for the simulation budget form that allows users to:
+
 1. Create custom sub-groups by selecting multiple categories
 2. Display sub-groups with collapsible headers showing partial subtotals
 3. Delete sub-groups directly from the header with one click
@@ -268,6 +269,7 @@ Table Layout:
 ## Technical Considerations
 
 ### Database Schema
+
 ```sql
 -- Main sub-groups table
 CREATE TABLE simulation_subgroups (
@@ -296,6 +298,7 @@ CREATE INDEX idx_subgroup_categories_category_id ON subgroup_categories(category
 ```
 
 ### API Response Schema
+
 ```typescript
 // GET /api/simulations/[id]/subgroups
 {
@@ -322,6 +325,7 @@ CREATE INDEX idx_subgroup_categories_category_id ON subgroup_categories(category
 ```
 
 ### State Management
+
 - Fetch sub-groups from database API on component mount via `GET /api/simulations/[id]/subgroups`
 - Store sub-groups in component state (`subgroups` array)
 - Maintain separate `expandedSubgroups` state for UI-only toggles (sessionStorage if persistence needed)
@@ -331,6 +335,7 @@ CREATE INDEX idx_subgroup_categories_category_id ON subgroup_categories(category
 - Handle API errors gracefully with error states and user feedback
 
 ### Component Structure
+
 ```
 SimulationBudgetForm
 ├── CreateSubgroupButton (toggle)
@@ -345,7 +350,9 @@ SimulationBudgetForm
 ## Interaction with Tipo Gasto Sort Functionality
 
 ### Current Behavior
+
 The existing `tipoGastoSortState` toggles between 3 states:
+
 - State 0: No sort (uses custom drag-drop order)
 - State 1: Fijo → Semi-Fijo → Variable → Eventual
 - State 2: Variable → Semi-Fijo → Fijo → Eventual
@@ -357,12 +364,14 @@ Within each tipo_gasto group, it respects the custom `categoryOrder` from drag-d
 **Design Decision**: Sub-groups should be treated as **indivisible units** in the sort order. This maintains logical grouping and prevents sub-groups from being scattered across the table.
 
 **Behavior**:
+
 1. **Sub-group integrity is maintained** - A sub-group is never broken apart by tipo_gasto sort
 2. **Sub-groups are sorted by their primary tipo_gasto** - Use the most common tipo_gasto value in the sub-group, or the first category's tipo_gasto as the tie-breaker
 3. **Categories within sub-groups maintain custom order** - The drag-drop reorder within a sub-group is preserved
 4. **Uncategorized categories follow the sort rules** - They can be sorted by tipo_gasto along with sub-group ordering
 
 **Example**:
+
 ```
 Original Order (no sort):
 - Subgroup "Servicios" [F, F, V]  (mixed: 2 Fijo, 1 Variable)
@@ -383,6 +392,7 @@ With Tipo Gasto Sort State 2 (Variable first):
 ### Implementation Notes for Phase 4.3
 
 When implementing the sort with sub-groups:
+
 1. Calculate a "primary tipo_gasto" for each sub-group:
    - Count tipo_gasto occurrences in the sub-group
    - Use the most frequent tipo_gasto as primary
@@ -415,6 +425,7 @@ type TableItem = {
 ```
 
 The rendering algorithm:
+
 1. Fetch all sub-groups with their categories and display_order
 2. Fetch all categories and determine which are uncategorized
 3. Merge: create TableItem[] combining sub-groups (with header + categories + subtotal rows) and uncategorized categories
@@ -443,12 +454,14 @@ Once the database schema is created, a migration endpoint should be added:
 ## Important Implementation Notes
 
 ### Database Cascade Behavior
+
 - When a simulation is deleted: all associated sub-groups are automatically deleted (ON DELETE CASCADE)
 - When a sub-group is deleted: all category associations are automatically removed (ON DELETE CASCADE)
 - Category deletions do NOT affect sub-groups (they become invalid but sub-group persists)
 - Consider adding validation to prevent orphaned sub-groups
 
 ### Sub-Group and Category Ordering
+
 - `simulation_subgroups.display_order` tracks order of sub-groups within a simulation
 - `subgroup_categories.order_within_subgroup` tracks category order within each sub-group
 - Uncategorized categories (not in any sub-group) are inserted into the display order based on user's drag-drop interactions
@@ -460,12 +473,14 @@ Once the database schema is created, a migration endpoint should be added:
 - Custom display_order overrides tipo_gasto sort when `tipoGastoSortState === 0` (no sort)
 
 ### Terminology Notes
+
 - "Estado" (State) in Spanish code = tipoGastoSortState (0, 1, or 2)
 - State 0 = Estado 0 = No tipo_gasto sort (uses custom drag-drop order)
 - State 1 = Estado 1 = Fijo → Semi-Fijo → Variable → Eventual
 - State 2 = Estado 2 = Variable → Semi-Fijo → Fijo → Eventual
 
 ### Validation Requirements
+
 - Sub-group name must be non-empty and unique per simulation
 - Cannot create sub-group with empty categoryIds array
 - Cannot add duplicate category IDs to same sub-group
@@ -473,7 +488,9 @@ Once the database schema is created, a migration endpoint should be added:
 - Maximum sub-group name length: 255 characters (database constraint)
 
 ### API Error Responses
+
 All endpoints should return consistent error format:
+
 ```json
 {
   "success": false,
@@ -483,6 +500,7 @@ All endpoints should return consistent error format:
 ```
 
 Common error codes:
+
 - `400 Bad Request` - Validation errors, missing fields
 - `404 Not Found` - Simulation or sub-group doesn't exist
 - `409 Conflict` - Duplicate sub-group name
@@ -504,12 +522,14 @@ Common error codes:
 ## Files to Modify/Create
 
 ### Modify
+
 - `/components/simulation-budget-form.tsx` - Main component updates
 - `/lib/utils.ts` - Add sub-group utility functions if needed
 - `/types/funds.ts` - Update SimulationBudget type if necessary
 - `CLAUDE.md` - Add feature documentation
 
 ### Create - Backend
+
 - `/app/api/simulations/[id]/subgroups/route.ts` - GET/POST endpoints
 - `/app/api/simulations/[id]/subgroups/[subgroupId]/route.ts` - PATCH/DELETE endpoints
 - `/scripts/migrate-simulation-subgroups.ts` - Database migration script
@@ -517,11 +537,13 @@ Common error codes:
 - `/lib/subgroup-db-utils.ts` - Database query utilities (fetch, create, update, delete)
 
 ### Create - Frontend
+
 - `/components/subgroup-header-row.tsx` - Sub-group header with subtotals and delete button
 - `/components/subgroup-name-dialog.tsx` - Name input modal
 - `/lib/subgroup-calculations.ts` - Subtotal calculation utilities
 
 ### Create - Testing
+
 - `/__tests__/components/simulation-budget-form.subgroups.test.tsx` - Component tests
 - `/__tests__/api/simulations-subgroups.test.ts` - API endpoint tests
 - `/__tests__/lib/subgroup-calculations.test.ts` - Calculation utility tests

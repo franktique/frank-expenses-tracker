@@ -1,80 +1,77 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // Zod schemas for simulation data validation
 export const SimulationNameSchema = z
   .string()
   .trim()
-  .min(2, "El nombre debe tener al menos 2 caracteres")
-  .max(255, "El nombre no puede exceder 255 caracteres")
+  .min(2, 'El nombre debe tener al menos 2 caracteres')
+  .max(255, 'El nombre no puede exceder 255 caracteres')
   .refine(
     (name) => !/[<>:"\/\\|?*\x00-\x1f]/.test(name),
-    "El nombre contiene caracteres no válidos"
+    'El nombre contiene caracteres no válidos'
   );
 
 export const SimulationDescriptionSchema = z
   .string()
-  .max(1000, "La descripción no puede exceder 1000 caracteres")
+  .max(1000, 'La descripción no puede exceder 1000 caracteres')
   .optional()
   .nullable();
 
 export const SimulationBudgetAmountSchema = z
   .number()
-  .min(0, "El monto debe ser positivo")
-  .max(999999999.99, "El monto es demasiado grande")
+  .min(0, 'El monto debe ser positivo')
+  .max(999999999.99, 'El monto es demasiado grande')
   .refine(
     (amount) => Number.isFinite(amount),
-    "El monto debe ser un número válido"
+    'El monto debe ser un número válido'
   );
 
-export const SimulationBudgetSchema = z.object({
-  category_id: z.union(
-    [
-      z
-        .number()
-        .int("El ID de categoría debe ser un número entero")
-        .positive("El ID de categoría debe ser positivo"),
-      z
-        .string()
-        .uuid("El ID de categoría debe ser un UUID válido")
-        .min(1, "El ID de categoría no puede estar vacío"),
-    ],
-    {
-      errorMap: () => ({
-        message:
-          "El ID de categoría debe ser un número entero positivo o un UUID válido",
-      }),
-    }
-  ),
-  efectivo_amount: SimulationBudgetAmountSchema,
-  credito_amount: SimulationBudgetAmountSchema,
-  ahorro_efectivo_amount: SimulationBudgetAmountSchema.optional().default(0),
-  ahorro_credito_amount: SimulationBudgetAmountSchema.optional().default(0),
-  // Legacy field - keep for backward compatibility
-  expected_savings: SimulationBudgetAmountSchema.optional().default(0),
-  // Needs adjustment flag for UI highlighting
-  needs_adjustment: z.boolean().optional().default(false),
-}).refine(
-  (data) => data.ahorro_efectivo_amount <= data.efectivo_amount,
-  {
-    message: "El ahorro efectivo no puede ser mayor al presupuesto en efectivo",
-    path: ["ahorro_efectivo_amount"],
-  }
-).refine(
-  (data) => data.ahorro_credito_amount <= data.credito_amount,
-  {
-    message: "El ahorro crédito no puede ser mayor al presupuesto en crédito",
-    path: ["ahorro_credito_amount"],
-  }
-);
+export const SimulationBudgetSchema = z
+  .object({
+    category_id: z.union(
+      [
+        z
+          .number()
+          .int('El ID de categoría debe ser un número entero')
+          .positive('El ID de categoría debe ser positivo'),
+        z
+          .string()
+          .uuid('El ID de categoría debe ser un UUID válido')
+          .min(1, 'El ID de categoría no puede estar vacío'),
+      ],
+      {
+        errorMap: () => ({
+          message:
+            'El ID de categoría debe ser un número entero positivo o un UUID válido',
+        }),
+      }
+    ),
+    efectivo_amount: SimulationBudgetAmountSchema,
+    credito_amount: SimulationBudgetAmountSchema,
+    ahorro_efectivo_amount: SimulationBudgetAmountSchema.optional().default(0),
+    ahorro_credito_amount: SimulationBudgetAmountSchema.optional().default(0),
+    // Legacy field - keep for backward compatibility
+    expected_savings: SimulationBudgetAmountSchema.optional().default(0),
+    // Needs adjustment flag for UI highlighting
+    needs_adjustment: z.boolean().optional().default(false),
+  })
+  .refine((data) => data.ahorro_efectivo_amount <= data.efectivo_amount, {
+    message: 'El ahorro efectivo no puede ser mayor al presupuesto en efectivo',
+    path: ['ahorro_efectivo_amount'],
+  })
+  .refine((data) => data.ahorro_credito_amount <= data.credito_amount, {
+    message: 'El ahorro crédito no puede ser mayor al presupuesto en crédito',
+    path: ['ahorro_credito_amount'],
+  });
 
 export const SimulationBudgetsArraySchema = z
   .array(SimulationBudgetSchema)
-  .min(1, "Debe incluir al menos un presupuesto")
+  .min(1, 'Debe incluir al menos un presupuesto')
   .refine((budgets) => {
     const categoryIds = budgets.map((b) => b.category_id);
     const uniqueIds = new Set(categoryIds);
     return uniqueIds.size === categoryIds.length;
-  }, "No puede haber categorías duplicadas");
+  }, 'No puede haber categorías duplicadas');
 
 export const CreateSimulationSchema = z.object({
   name: SimulationNameSchema,
@@ -132,7 +129,7 @@ export function validateSimulationName(name: string): ValidationResult<string> {
       return {
         success: false,
         errors: error.errors.map((err) => ({
-          field: "name",
+          field: 'name',
           message: err.message,
           code: err.code,
         })),
@@ -140,7 +137,7 @@ export function validateSimulationName(name: string): ValidationResult<string> {
     }
     return {
       success: false,
-      errors: [{ field: "name", message: "Error de validación desconocido" }],
+      errors: [{ field: 'name', message: 'Error de validación desconocido' }],
     };
   }
 }
@@ -160,7 +157,7 @@ export function validateSimulationDescription(
       return {
         success: false,
         errors: error.errors.map((err) => ({
-          field: "description",
+          field: 'description',
           message: err.message,
           code: err.code,
         })),
@@ -169,7 +166,7 @@ export function validateSimulationDescription(
     return {
       success: false,
       errors: [
-        { field: "description", message: "Error de validación desconocido" },
+        { field: 'description', message: 'Error de validación desconocido' },
       ],
     };
   }
@@ -190,7 +187,7 @@ export function validateSimulationBudget(
       return {
         success: false,
         errors: error.errors.map((err) => ({
-          field: err.path.join("."),
+          field: err.path.join('.'),
           message: err.message,
           code: err.code,
         })),
@@ -198,7 +195,7 @@ export function validateSimulationBudget(
     }
     return {
       success: false,
-      errors: [{ field: "budget", message: "Error de validación desconocido" }],
+      errors: [{ field: 'budget', message: 'Error de validación desconocido' }],
     };
   }
 }
@@ -218,7 +215,7 @@ export function validateSimulationBudgets(
       return {
         success: false,
         errors: error.errors.map((err) => ({
-          field: err.path.join("."),
+          field: err.path.join('.'),
           message: err.message,
           code: err.code,
         })),
@@ -227,7 +224,7 @@ export function validateSimulationBudgets(
     return {
       success: false,
       errors: [
-        { field: "budgets", message: "Error de validación desconocido" },
+        { field: 'budgets', message: 'Error de validación desconocido' },
       ],
     };
   }
@@ -248,7 +245,7 @@ export function validateCreateSimulation(
       return {
         success: false,
         errors: error.errors.map((err) => ({
-          field: err.path.join("."),
+          field: err.path.join('.'),
           message: err.message,
           code: err.code,
         })),
@@ -257,7 +254,7 @@ export function validateCreateSimulation(
     return {
       success: false,
       errors: [
-        { field: "simulation", message: "Error de validación desconocido" },
+        { field: 'simulation', message: 'Error de validación desconocido' },
       ],
     };
   }
@@ -278,7 +275,7 @@ export function validateUpdateSimulation(
       return {
         success: false,
         errors: error.errors.map((err) => ({
-          field: err.path.join("."),
+          field: err.path.join('.'),
           message: err.message,
           code: err.code,
         })),
@@ -287,7 +284,7 @@ export function validateUpdateSimulation(
     return {
       success: false,
       errors: [
-        { field: "simulation", message: "Error de validación desconocido" },
+        { field: 'simulation', message: 'Error de validación desconocido' },
       ],
     };
   }
@@ -305,23 +302,23 @@ export function checkSimulationDataConsistency(
 
   // Check if simulation exists and has required fields
   if (!simulation) {
-    errors.push("Datos de simulación faltantes");
+    errors.push('Datos de simulación faltantes');
     return { valid: false, warnings, errors, suggestions };
   }
 
   if (!simulation.id) {
-    errors.push("ID de simulación faltante");
+    errors.push('ID de simulación faltante');
   }
 
-  if (!simulation.name || simulation.name.trim() === "") {
-    errors.push("Nombre de simulación faltante");
+  if (!simulation.name || simulation.name.trim() === '') {
+    errors.push('Nombre de simulación faltante');
   }
 
   // Check categories consistency
   if (!categories || categories.length === 0) {
-    errors.push("No hay categorías disponibles para configurar presupuestos");
+    errors.push('No hay categorías disponibles para configurar presupuestos');
     suggestions.push(
-      "Cree categorías antes de configurar presupuestos de simulación"
+      'Cree categorías antes de configurar presupuestos de simulación'
     );
   }
 
@@ -337,11 +334,11 @@ export function checkSimulationDataConsistency(
     if (invalidCategoryIds.length > 0) {
       errors.push(
         `Presupuestos para categorías inexistentes: ${invalidCategoryIds.join(
-          ", "
+          ', '
         )}`
       );
       suggestions.push(
-        "Elimine los presupuestos para categorías que ya no existen"
+        'Elimine los presupuestos para categorías que ya no existen'
       );
     }
 
@@ -353,7 +350,7 @@ export function checkSimulationDataConsistency(
       errors.push(
         `Presupuestos duplicados para categorías: ${[
           ...new Set(duplicateIds),
-        ].join(", ")}`
+        ].join(', ')}`
       );
     }
 
@@ -366,7 +363,7 @@ export function checkSimulationDataConsistency(
         `${categoriesWithoutBudgets.length} categorías sin presupuesto configurado`
       );
       suggestions.push(
-        "Configure presupuestos para todas las categorías para un análisis completo"
+        'Configure presupuestos para todas las categorías para un análisis completo'
       );
     }
 
@@ -388,7 +385,7 @@ export function checkSimulationDataConsistency(
       warnings.push(
         `${largeBudgets.length} categorías con presupuestos muy altos (>$10M)`
       );
-      suggestions.push("Verifique que los montos sean correctos");
+      suggestions.push('Verifique que los montos sean correctos');
     }
   }
 
@@ -400,9 +397,9 @@ export function checkSimulationDataConsistency(
       (now.getTime() - createdDate.getTime()) / (1000 * 60 * 60 * 24);
 
     if (daysDiff > 365) {
-      warnings.push("Simulación creada hace más de un año");
+      warnings.push('Simulación creada hace más de un año');
       suggestions.push(
-        "Considere actualizar los presupuestos con datos más recientes"
+        'Considere actualizar los presupuestos con datos más recientes'
       );
     }
   }
@@ -425,16 +422,16 @@ export function validateBudgetAmountInput(
   numericValue?: number;
 } {
   // Handle null, undefined, or empty values
-  if (value === null || value === undefined || value === "") {
+  if (value === null || value === undefined || value === '') {
     return { isValid: true, numericValue: 0 };
   }
 
   // Convert to string if it's a number
   const stringValue =
-    typeof value === "number" ? value.toString() : String(value);
+    typeof value === 'number' ? value.toString() : String(value);
 
   // Handle "0" specifically
-  if (stringValue === "0") {
+  if (stringValue === '0') {
     return { isValid: true, numericValue: 0 };
   }
 
@@ -442,15 +439,15 @@ export function validateBudgetAmountInput(
   if (isTyping) {
     // Allow partial decimal inputs like "." or "0."
     if (
-      stringValue === "." ||
-      stringValue === "0." ||
-      stringValue.endsWith(".")
+      stringValue === '.' ||
+      stringValue === '0.' ||
+      stringValue.endsWith('.')
     ) {
       return { isValid: true, numericValue: 0 };
     }
 
     // Allow empty or partial inputs during typing
-    if (stringValue === "" || stringValue === "-") {
+    if (stringValue === '' || stringValue === '-') {
       return { isValid: true, numericValue: 0 };
     }
   }
@@ -463,22 +460,22 @@ export function validateBudgetAmountInput(
     if (isTyping) {
       return { isValid: true, numericValue: 0 };
     }
-    return { isValid: false, error: "Debe ser un número válido" };
+    return { isValid: false, error: 'Debe ser un número válido' };
   }
 
   if (numericValue < 0) {
-    return { isValid: false, error: "Debe ser un número positivo" };
+    return { isValid: false, error: 'Debe ser un número positivo' };
   }
 
   if (numericValue > 999999999.99) {
-    return { isValid: false, error: "El monto es demasiado grande" };
+    return { isValid: false, error: 'El monto es demasiado grande' };
   }
 
   // Check for too many decimal places (only when not typing)
   if (!isTyping) {
-    const decimalPlaces = (stringValue.split(".")[1] || "").length;
+    const decimalPlaces = (stringValue.split('.')[1] || '').length;
     if (decimalPlaces > 2) {
-      return { isValid: false, error: "Máximo 2 decimales permitidos" };
+      return { isValid: false, error: 'Máximo 2 decimales permitidos' };
     }
   }
 
@@ -504,7 +501,7 @@ export function validateBudgetFormData(formData: {
       ahorro_efectivo?: string;
       ahorro_credito?: string;
       expected_savings?: string;
-    }
+    };
   };
   totalErrors: number;
 } {
@@ -530,20 +527,20 @@ export function validateBudgetFormData(formData: {
     } = {};
 
     // Ensure data exists and has the expected structure
-    if (!data || typeof data !== "object") {
+    if (!data || typeof data !== 'object') {
       return;
     }
 
     // Validate efectivo amount
-    const efectivoAmount = data.efectivo_amount ?? "0";
+    const efectivoAmount = data.efectivo_amount ?? '0';
     const efectivoValidation = validateBudgetAmountInput(efectivoAmount);
     if (!efectivoValidation.isValid) {
       console.warn(
-        "Efectivo validation failed for category",
+        'Efectivo validation failed for category',
         categoryId,
-        "value:",
+        'value:',
         efectivoAmount,
-        "error:",
+        'error:',
         efectivoValidation.error
       );
       categoryErrors.efectivo = efectivoValidation.error;
@@ -551,15 +548,15 @@ export function validateBudgetFormData(formData: {
     }
 
     // Validate credito amount
-    const creditoAmount = data.credito_amount ?? "0";
+    const creditoAmount = data.credito_amount ?? '0';
     const creditoValidation = validateBudgetAmountInput(creditoAmount);
     if (!creditoValidation.isValid) {
       console.warn(
-        "Credito validation failed for category",
+        'Credito validation failed for category',
         categoryId,
-        "value:",
+        'value:',
         creditoAmount,
-        "error:",
+        'error:',
         creditoValidation.error
       );
       categoryErrors.credito = creditoValidation.error;
@@ -567,15 +564,15 @@ export function validateBudgetFormData(formData: {
     }
 
     // Validate ahorro_efectivo_amount
-    const ahorroEfectivo = data.ahorro_efectivo_amount ?? "0";
+    const ahorroEfectivo = data.ahorro_efectivo_amount ?? '0';
     const ahorroEfectivoValidation = validateBudgetAmountInput(ahorroEfectivo);
     if (!ahorroEfectivoValidation.isValid) {
       console.warn(
-        "Ahorro efectivo validation failed for category",
+        'Ahorro efectivo validation failed for category',
         categoryId,
-        "value:",
+        'value:',
         ahorroEfectivo,
-        "error:",
+        'error:',
         ahorroEfectivoValidation.error
       );
       categoryErrors.ahorro_efectivo = ahorroEfectivoValidation.error;
@@ -585,23 +582,25 @@ export function validateBudgetFormData(formData: {
       efectivoValidation.numericValue !== undefined
     ) {
       // Cross-field validation: ahorro_efectivo <= efectivo_amount
-      if (ahorroEfectivoValidation.numericValue > efectivoValidation.numericValue) {
+      if (
+        ahorroEfectivoValidation.numericValue > efectivoValidation.numericValue
+      ) {
         categoryErrors.ahorro_efectivo =
-          "El ahorro efectivo no puede ser mayor al presupuesto en efectivo";
+          'El ahorro efectivo no puede ser mayor al presupuesto en efectivo';
         totalErrors++;
       }
     }
 
     // Validate ahorro_credito_amount
-    const ahorroCredito = data.ahorro_credito_amount ?? "0";
+    const ahorroCredito = data.ahorro_credito_amount ?? '0';
     const ahorroCreditoValidation = validateBudgetAmountInput(ahorroCredito);
     if (!ahorroCreditoValidation.isValid) {
       console.warn(
-        "Ahorro credito validation failed for category",
+        'Ahorro credito validation failed for category',
         categoryId,
-        "value:",
+        'value:',
         ahorroCredito,
-        "error:",
+        'error:',
         ahorroCreditoValidation.error
       );
       categoryErrors.ahorro_credito = ahorroCreditoValidation.error;
@@ -611,9 +610,11 @@ export function validateBudgetFormData(formData: {
       creditoValidation.numericValue !== undefined
     ) {
       // Cross-field validation: ahorro_credito <= credito_amount
-      if (ahorroCreditoValidation.numericValue > creditoValidation.numericValue) {
+      if (
+        ahorroCreditoValidation.numericValue > creditoValidation.numericValue
+      ) {
         categoryErrors.ahorro_credito =
-          "El ahorro crédito no puede ser mayor al presupuesto en crédito";
+          'El ahorro crédito no puede ser mayor al presupuesto en crédito';
         totalErrors++;
       }
     }
@@ -704,32 +705,32 @@ export function checkDataLossRisks(
 export function getValidationFeedback(errors: ValidationError[]): {
   summary: string;
   details: string[];
-  severity: "error" | "warning";
+  severity: 'error' | 'warning';
 } {
   if (errors.length === 0) {
     return {
-      summary: "Todos los datos son válidos",
+      summary: 'Todos los datos son válidos',
       details: [],
-      severity: "warning",
+      severity: 'warning',
     };
   }
 
   const errorCount = errors.length;
   const summary =
     errorCount === 1
-      ? "Se encontró 1 error de validación"
+      ? 'Se encontró 1 error de validación'
       : `Se encontraron ${errorCount} errores de validación`;
 
   const details = errors.map((error) => {
-    if (error.field === "name") {
+    if (error.field === 'name') {
       return `Nombre: ${error.message}`;
-    } else if (error.field === "description") {
+    } else if (error.field === 'description') {
       return `Descripción: ${error.message}`;
-    } else if (error.field.includes("efectivo_amount")) {
+    } else if (error.field.includes('efectivo_amount')) {
       return `Efectivo: ${error.message}`;
-    } else if (error.field.includes("credito_amount")) {
+    } else if (error.field.includes('credito_amount')) {
       return `Crédito: ${error.message}`;
-    } else if (error.field.includes("category_id")) {
+    } else if (error.field.includes('category_id')) {
       return `Categoría: ${error.message}`;
     } else {
       return `${error.field}: ${error.message}`;
@@ -739,6 +740,6 @@ export function getValidationFeedback(errors: ValidationError[]): {
   return {
     summary,
     details,
-    severity: "error",
+    severity: 'error',
   };
 }

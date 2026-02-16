@@ -13,6 +13,6 @@ const nextConfig = {
   env: {
     TZ: 'America/Bogota',
   },
-}
+};
 
-export default nextConfig
+export default nextConfig;

@@ -1,7 +1,13 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Trash2, Upload, ChevronDown, ChevronUp, MessageSquare } from "lucide-react";
+import { useState } from 'react';
+import {
+  Trash2,
+  Upload,
+  ChevronDown,
+  ChevronUp,
+  MessageSquare,
+} from 'lucide-react';
 import {
   Table,
   TableBody,
@@ -9,9 +15,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,20 +27,27 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from '@/components/ui/collapsible';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import type { InvestmentScenario, CurrencyCode } from "@/types/invest-simulator";
-import { formatCurrency, formatPercentage, COMPOUNDING_FREQUENCIES } from "@/types/invest-simulator";
+} from '@/components/ui/tooltip';
+import type {
+  InvestmentScenario,
+  CurrencyCode,
+} from '@/types/invest-simulator';
+import {
+  formatCurrency,
+  formatPercentage,
+  COMPOUNDING_FREQUENCIES,
+} from '@/types/invest-simulator';
 
 interface InvestScenarioListProps {
   scenarios: (InvestmentScenario & { projectedFinalBalance?: number })[];
@@ -73,7 +86,10 @@ export function InvestScenarioList({
         <Collapsible open={isOpen} onOpenChange={setIsOpen}>
           <CardHeader className="pb-3">
             <CollapsibleTrigger asChild>
-              <Button variant="ghost" className="w-full justify-between p-0 h-auto hover:bg-transparent">
+              <Button
+                variant="ghost"
+                className="h-auto w-full justify-between p-0 hover:bg-transparent"
+              >
                 <CardTitle className="text-lg">
                   Simulaciones Guardadas ({scenarios.length})
                 </CardTitle>
@@ -95,12 +111,12 @@ export function InvestScenarioList({
               ) : scenarios.length === 0 ? (
                 <div className="py-8 text-center text-muted-foreground">
                   <p>No hay simulaciones guardadas</p>
-                  <p className="text-sm mt-1">
+                  <p className="mt-1 text-sm">
                     Configura una simulación y guárdala para verla aquí
                   </p>
                 </div>
               ) : (
-                <div className="rounded-md border overflow-x-auto">
+                <div className="overflow-x-auto rounded-md border">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -109,7 +125,9 @@ export function InvestScenarioList({
                         <TableHead className="text-right">Mensual</TableHead>
                         <TableHead className="text-right">Plazo</TableHead>
                         <TableHead className="text-right">Tasa</TableHead>
-                        <TableHead className="text-right">Capitalización</TableHead>
+                        <TableHead className="text-right">
+                          Capitalización
+                        </TableHead>
                         <TableHead className="text-right">Proyección</TableHead>
                         <TableHead className="w-[30px]"></TableHead>
                         <TableHead className="w-[100px]"></TableHead>
@@ -122,10 +140,16 @@ export function InvestScenarioList({
                             {scenario.name}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(scenario.initialAmount, scenario.currency)}
+                            {formatCurrency(
+                              scenario.initialAmount,
+                              scenario.currency
+                            )}
                           </TableCell>
                           <TableCell className="text-right">
-                            {formatCurrency(scenario.monthlyContribution, scenario.currency)}
+                            {formatCurrency(
+                              scenario.monthlyContribution,
+                              scenario.currency
+                            )}
                           </TableCell>
                           <TableCell className="text-right">
                             {scenario.termMonths} m
@@ -134,12 +158,19 @@ export function InvestScenarioList({
                             {formatPercentage(scenario.annualRate)}
                           </TableCell>
                           <TableCell className="text-right text-sm">
-                            {COMPOUNDING_FREQUENCIES[scenario.compoundingFrequency].label}
+                            {
+                              COMPOUNDING_FREQUENCIES[
+                                scenario.compoundingFrequency
+                              ].label
+                            }
                           </TableCell>
                           <TableCell className="text-right font-semibold text-purple-600 dark:text-purple-400">
                             {scenario.projectedFinalBalance
-                              ? formatCurrency(scenario.projectedFinalBalance, scenario.currency)
-                              : "—"}
+                              ? formatCurrency(
+                                  scenario.projectedFinalBalance,
+                                  scenario.currency
+                                )
+                              : '—'}
                           </TableCell>
                           <TableCell>
                             {scenario.notes && (
@@ -150,7 +181,10 @@ export function InvestScenarioList({
                                       <MessageSquare className="h-4 w-4 text-muted-foreground" />
                                     </div>
                                   </TooltipTrigger>
-                                  <TooltipContent side="left" className="max-w-xs">
+                                  <TooltipContent
+                                    side="left"
+                                    className="max-w-xs"
+                                  >
                                     <p className="whitespace-pre-wrap text-sm">
                                       {scenario.notes}
                                     </p>
@@ -201,19 +235,22 @@ export function InvestScenarioList({
               {scenarioToDelete && (
                 <>
                   ¿Estás seguro de que deseas eliminar la simulación &quot;
-                  {scenarioToDelete.name}&quot;? Esta acción no se puede deshacer.
+                  {scenarioToDelete.name}&quot;? Esta acción no se puede
+                  deshacer.
                 </>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>
+              Cancelar
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "Eliminando..." : "Eliminar"}
+              {isDeleting ? 'Eliminando...' : 'Eliminar'}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

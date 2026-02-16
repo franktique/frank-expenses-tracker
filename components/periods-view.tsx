@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { CalendarIcon, PlusCircle, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { useState, useEffect } from 'react';
+import { CalendarIcon, PlusCircle, RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -19,14 +19,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from '@/components/ui/popover';
 import {
   Table,
   TableBody,
@@ -34,10 +34,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
-import { useBudget } from "@/context/budget-context";
-import { cn, formatDate } from "@/lib/utils";
+} from '@/components/ui/table';
+import { useToast } from '@/components/ui/use-toast';
+import { useBudget } from '@/context/budget-context';
+import { cn, formatDate } from '@/lib/utils';
 
 export function PeriodsView() {
   const {
@@ -58,7 +58,7 @@ export function PeriodsView() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
-  const [newPeriodName, setNewPeriodName] = useState("");
+  const [newPeriodName, setNewPeriodName] = useState('');
   const [newPeriodDate, setNewPeriodDate] = useState<Date | undefined>(
     new Date()
   );
@@ -86,7 +86,7 @@ export function PeriodsView() {
 
   // Error recovery state
   const [lastFailedOperation, setLastFailedOperation] = useState<{
-    type: "activate" | "deactivate";
+    type: 'activate' | 'deactivate';
     periodId: string;
     periodName: string;
   } | null>(null);
@@ -99,7 +99,7 @@ export function PeriodsView() {
     return Promise.race([
       promise,
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Operation timed out")), timeoutMs)
+        setTimeout(() => reject(new Error('Operation timed out')), timeoutMs)
       ),
     ]);
   };
@@ -116,9 +116,9 @@ export function PeriodsView() {
   const handleAddPeriod = async () => {
     if (!newPeriodName.trim() || !newPeriodDate) {
       toast({
-        title: "Error",
-        description: "Todos los campos son obligatorios",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Todos los campos son obligatorios',
+        variant: 'destructive',
       });
       return;
     }
@@ -130,21 +130,21 @@ export function PeriodsView() {
         newPeriodDate.getFullYear()
       );
 
-      setNewPeriodName("");
+      setNewPeriodName('');
       setNewPeriodDate(new Date());
       setIsAddOpen(false);
 
       toast({
-        title: "Periodo agregado",
-        description: "El periodo ha sido agregado exitosamente",
+        title: 'Periodo agregado',
+        description: 'El periodo ha sido agregado exitosamente',
       });
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description: `No se pudo agregar el periodo: ${
           (error as Error).message
         }`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
   };
@@ -152,9 +152,9 @@ export function PeriodsView() {
   const handleEditPeriod = async () => {
     if (!editPeriod || !editPeriod.name.trim() || !editPeriod.date) {
       toast({
-        title: "Error",
-        description: "Todos los campos son obligatorios",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Todos los campos son obligatorios',
+        variant: 'destructive',
       });
       return;
     }
@@ -171,16 +171,16 @@ export function PeriodsView() {
       setIsEditOpen(false);
 
       toast({
-        title: "Periodo actualizado",
-        description: "El periodo ha sido actualizado exitosamente",
+        title: 'Periodo actualizado',
+        description: 'El periodo ha sido actualizado exitosamente',
       });
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description: `No se pudo actualizar el periodo: ${
           (error as Error).message
         }`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     }
   };
@@ -193,16 +193,16 @@ export function PeriodsView() {
         setIsDeleteOpen(false);
 
         toast({
-          title: "Periodo eliminado",
-          description: "El periodo ha sido eliminado exitosamente",
+          title: 'Periodo eliminado',
+          description: 'El periodo ha sido eliminado exitosamente',
         });
       } catch (error) {
         toast({
-          title: "Error",
+          title: 'Error',
           description: `No se pudo eliminar el periodo: ${
             (error as Error).message
           }`,
-          variant: "destructive",
+          variant: 'destructive',
         });
       }
     }
@@ -228,9 +228,9 @@ export function PeriodsView() {
     // Check for debounce
     if (isOperationDebounced()) {
       toast({
-        title: "Operación muy rápida",
-        description: "Espera un momento antes de realizar otra operación",
-        variant: "destructive",
+        title: 'Operación muy rápida',
+        description: 'Espera un momento antes de realizar otra operación',
+        variant: 'destructive',
       });
       return;
     }
@@ -244,32 +244,32 @@ export function PeriodsView() {
       setLastFailedOperation(null);
 
       toast({
-        title: "Periodo activado",
-        description: "El periodo ha sido establecido como activo exitosamente",
+        title: 'Periodo activado',
+        description: 'El periodo ha sido establecido como activo exitosamente',
       });
     } catch (error) {
       const err = error as any;
-      let title = "Error al activar periodo";
-      let description = err.message || "No se pudo activar el periodo";
+      let title = 'Error al activar periodo';
+      let description = err.message || 'No se pudo activar el periodo';
 
       // Handle specific error scenarios
-      if (err.message?.includes("fetch")) {
-        title = "Error de red";
+      if (err.message?.includes('fetch')) {
+        title = 'Error de red';
         description =
-          "No se pudo conectar al servidor. Verifica tu conexión a internet.";
-      } else if (err.message?.includes("timeout")) {
-        title = "Tiempo de espera agotado";
+          'No se pudo conectar al servidor. Verifica tu conexión a internet.';
+      } else if (err.message?.includes('timeout')) {
+        title = 'Tiempo de espera agotado';
         description =
-          "La operación tardó demasiado tiempo. Intenta nuevamente.";
-      } else if (err.message?.includes("not found")) {
-        title = "Periodo no encontrado";
-        description = "El periodo no existe o fue eliminado";
+          'La operación tardó demasiado tiempo. Intenta nuevamente.';
+      } else if (err.message?.includes('not found')) {
+        title = 'Periodo no encontrado';
+        description = 'El periodo no existe o fue eliminado';
       }
 
       toast({
         title,
         description,
-        variant: "destructive",
+        variant: 'destructive',
       });
 
       // Trigger data refresh on activation errors to ensure consistency
@@ -278,12 +278,12 @@ export function PeriodsView() {
       }, 1000);
 
       // For retryable errors, set the failed operation state
-      const retryableErrors = ["DATABASE_CONNECTION_ERROR", "DATABASE_TIMEOUT"];
-      if (err.message?.includes("fetch") || err.message?.includes("timeout")) {
+      const retryableErrors = ['DATABASE_CONNECTION_ERROR', 'DATABASE_TIMEOUT'];
+      if (err.message?.includes('fetch') || err.message?.includes('timeout')) {
         const period = periods.find((p) => p.id === id);
         if (period) {
           setLastFailedOperation({
-            type: "activate",
+            type: 'activate',
             periodId: id,
             periodName: period.name,
           });
@@ -313,7 +313,7 @@ export function PeriodsView() {
     const { type, periodId } = lastFailedOperation;
     setLastFailedOperation(null); // Clear the failed operation
 
-    if (type === "activate") {
+    if (type === 'activate') {
       await handleOpenPeriod(periodId);
     } else {
       await handleClosePeriod(periodId);
@@ -324,9 +324,9 @@ export function PeriodsView() {
     // Check for debounce
     if (isOperationDebounced()) {
       toast({
-        title: "Operación muy rápida",
-        description: "Espera un momento antes de realizar otra operación",
-        variant: "destructive",
+        title: 'Operación muy rápida',
+        description: 'Espera un momento antes de realizar otra operación',
+        variant: 'destructive',
       });
       return;
     }
@@ -340,89 +340,89 @@ export function PeriodsView() {
       setLastFailedOperation(null);
 
       toast({
-        title: "Periodo desactivado",
-        description: "El periodo ha sido desactivado exitosamente",
+        title: 'Periodo desactivado',
+        description: 'El periodo ha sido desactivado exitosamente',
       });
     } catch (error) {
       const err = error as any;
-      let title = "Error al desactivar periodo";
-      let description = err.message || "No se pudo desactivar el periodo";
+      let title = 'Error al desactivar periodo';
+      let description = err.message || 'No se pudo desactivar el periodo';
 
       // Handle specific error codes with appropriate messages and actions
       switch (err.code) {
-        case "PERIOD_NOT_FOUND":
-          title = "Periodo no encontrado";
+        case 'PERIOD_NOT_FOUND':
+          title = 'Periodo no encontrado';
           description =
-            "El periodo no existe o fue eliminado por otra operación";
+            'El periodo no existe o fue eliminado por otra operación';
           break;
-        case "PERIOD_ALREADY_INACTIVE":
-          title = "Periodo ya inactivo";
-          description = "El periodo ya está desactivado";
+        case 'PERIOD_ALREADY_INACTIVE':
+          title = 'Periodo ya inactivo';
+          description = 'El periodo ya está desactivado';
           break;
-        case "CONCURRENT_MODIFICATION":
-          title = "Conflicto de operaciones";
+        case 'CONCURRENT_MODIFICATION':
+          title = 'Conflicto de operaciones';
           description =
-            "El periodo fue modificado por otra operación. Los datos se están actualizando...";
+            'El periodo fue modificado por otra operación. Los datos se están actualizando...';
           break;
-        case "DATABASE_CONNECTION_ERROR":
-          title = "Error de conexión";
+        case 'DATABASE_CONNECTION_ERROR':
+          title = 'Error de conexión';
           description =
-            "No se pudo conectar a la base de datos. Verifica tu conexión e intenta nuevamente.";
+            'No se pudo conectar a la base de datos. Verifica tu conexión e intenta nuevamente.';
           break;
-        case "DATABASE_TIMEOUT":
-          title = "Tiempo de espera agotado";
+        case 'DATABASE_TIMEOUT':
+          title = 'Tiempo de espera agotado';
           description =
-            "La operación tardó demasiado tiempo. Intenta nuevamente.";
+            'La operación tardó demasiado tiempo. Intenta nuevamente.';
           break;
-        case "DATABASE_CONSTRAINT_ERROR":
-          title = "Error de integridad";
+        case 'DATABASE_CONSTRAINT_ERROR':
+          title = 'Error de integridad';
           description =
-            "Error de integridad de datos. Los datos se están actualizando...";
+            'Error de integridad de datos. Los datos se están actualizando...';
           break;
         default:
           // For network errors or other issues
-          if (err.message?.includes("fetch")) {
-            title = "Error de red";
+          if (err.message?.includes('fetch')) {
+            title = 'Error de red';
             description =
-              "No se pudo conectar al servidor. Verifica tu conexión a internet.";
-          } else if (err.message?.includes("timeout")) {
-            title = "Tiempo de espera agotado";
+              'No se pudo conectar al servidor. Verifica tu conexión a internet.';
+          } else if (err.message?.includes('timeout')) {
+            title = 'Tiempo de espera agotado';
             description =
-              "La operación tardó demasiado tiempo. Intenta nuevamente.";
+              'La operación tardó demasiado tiempo. Intenta nuevamente.';
           }
       }
 
       toast({
         title,
         description,
-        variant: "destructive",
+        variant: 'destructive',
       });
 
       // For certain errors, suggest refreshing data
       if (
-        ["CONCURRENT_MODIFICATION", "DATABASE_CONSTRAINT_ERROR"].includes(
+        ['CONCURRENT_MODIFICATION', 'DATABASE_CONSTRAINT_ERROR'].includes(
           err.code
         )
       ) {
         setTimeout(() => {
           toast({
-            title: "Datos actualizados",
-            description: "La información ha sido sincronizada con el servidor",
+            title: 'Datos actualizados',
+            description: 'La información ha sido sincronizada con el servidor',
           });
         }, 2000);
       }
 
       // For retryable errors, set the failed operation state
-      const retryableErrors = ["DATABASE_CONNECTION_ERROR", "DATABASE_TIMEOUT"];
+      const retryableErrors = ['DATABASE_CONNECTION_ERROR', 'DATABASE_TIMEOUT'];
       if (
         retryableErrors.includes(err.code) ||
-        err.message?.includes("fetch") ||
-        err.message?.includes("timeout")
+        err.message?.includes('fetch') ||
+        err.message?.includes('timeout')
       ) {
         const period = periods.find((p) => p.id === id);
         if (period) {
           setLastFailedOperation({
-            type: "deactivate",
+            type: 'deactivate',
             periodId: id,
             periodName: period.name,
           });
@@ -441,32 +441,32 @@ export function PeriodsView() {
 
       if (showSuccessToast) {
         toast({
-          title: "Datos actualizados",
-          description: "Los períodos han sido actualizados correctamente",
+          title: 'Datos actualizados',
+          description: 'Los períodos han sido actualizados correctamente',
         });
       }
     } catch (error) {
       const err = error as Error;
-      let title = "Error al actualizar";
-      let description = err.message || "No se pudieron actualizar los datos";
+      let title = 'Error al actualizar';
+      let description = err.message || 'No se pudieron actualizar los datos';
 
       // Handle specific refresh errors
-      if (err.message?.includes("fetch")) {
-        title = "Error de conexión";
+      if (err.message?.includes('fetch')) {
+        title = 'Error de conexión';
         description =
-          "No se pudo conectar al servidor para actualizar los datos";
-      } else if (err.message?.includes("timeout")) {
-        title = "Tiempo de espera agotado";
-        description = "La actualización tardó demasiado tiempo";
-      } else if (err.message?.includes("database")) {
-        title = "Error de base de datos";
-        description = "Problema al acceder a la base de datos";
+          'No se pudo conectar al servidor para actualizar los datos';
+      } else if (err.message?.includes('timeout')) {
+        title = 'Tiempo de espera agotado';
+        description = 'La actualización tardó demasiado tiempo';
+      } else if (err.message?.includes('database')) {
+        title = 'Error de base de datos';
+        description = 'Problema al acceder a la base de datos';
       }
 
       toast({
         title,
         description,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -486,13 +486,13 @@ export function PeriodsView() {
         <div className="flex space-x-2">
           <Button
             variant="outline"
-            onClick={handleRefresh}
+            onClick={() => handleRefresh()}
             disabled={isLoading}
           >
             <RefreshCw
-              className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+              className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
             />
-            {isLoading ? "Actualizando..." : "Actualizar"}
+            {isLoading ? 'Actualizando...' : 'Actualizar'}
           </Button>
 
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -525,17 +525,17 @@ export function PeriodsView() {
                     <PopoverTrigger asChild>
                       <Button
                         id="date"
-                        variant={"outline"}
+                        variant={'outline'}
                         className={cn(
-                          "w-full justify-start text-left font-normal",
-                          !newPeriodDate && "text-muted-foreground"
+                          'w-full justify-start text-left font-normal',
+                          !newPeriodDate && 'text-muted-foreground'
                         )}
                       >
                         <CalendarIcon className="mr-2 h-4 w-4" />
                         {newPeriodDate ? (
                           formatDate(newPeriodDate, {
-                            month: "long",
-                            year: "numeric",
+                            month: 'long',
+                            year: 'numeric',
                           })
                         ) : (
                           <span>Selecciona un mes</span>
@@ -573,10 +573,10 @@ export function PeriodsView() {
                 <RefreshCw className="h-4 w-4 text-orange-600" />
                 <div>
                   <p className="text-sm font-medium text-orange-800 dark:text-orange-200">
-                    Operación fallida:{" "}
-                    {lastFailedOperation.type === "activate"
-                      ? "Activar"
-                      : "Desactivar"}{" "}
+                    Operación fallida:{' '}
+                    {lastFailedOperation.type === 'activate'
+                      ? 'Activar'
+                      : 'Desactivar'}{' '}
                     "{lastFailedOperation.periodName}"
                   </p>
                   <p className="text-xs text-orange-600 dark:text-orange-400">
@@ -634,10 +634,10 @@ export function PeriodsView() {
                   <TableCell className="font-medium">{period.name}</TableCell>
                   <TableCell>
                     {new Date(period.year, period.month).toLocaleDateString(
-                      "es",
+                      'es',
                       {
-                        month: "long",
-                        year: "numeric",
+                        month: 'long',
+                        year: 'numeric',
                       }
                     )}
                   </TableCell>
@@ -666,8 +666,8 @@ export function PeriodsView() {
                         }
                       >
                         {isDeactivating === period.id
-                          ? "Desactivando..."
-                          : "Desactivar"}
+                          ? 'Desactivando...'
+                          : 'Desactivar'}
                       </Button>
                     ) : (
                       <Button
@@ -682,8 +682,8 @@ export function PeriodsView() {
                         }
                       >
                         {isActivating === period.id
-                          ? "Activando..."
-                          : "Activar"}
+                          ? 'Activando...'
+                          : 'Activar'}
                       </Button>
                     )}
                     <Button
@@ -731,7 +731,7 @@ export function PeriodsView() {
                 <TableRow>
                   <TableCell
                     colSpan={4}
-                    className="text-center py-4 text-muted-foreground"
+                    className="py-4 text-center text-muted-foreground"
                   >
                     No hay periodos. Agrega un nuevo periodo para comenzar.
                   </TableCell>
@@ -756,7 +756,7 @@ export function PeriodsView() {
               <Label htmlFor="edit-name">Nombre</Label>
               <Input
                 id="edit-name"
-                value={editPeriod?.name || ""}
+                value={editPeriod?.name || ''}
                 onChange={(e) =>
                   setEditPeriod((prev) =>
                     prev ? { ...prev, name: e.target.value } : null
@@ -770,17 +770,17 @@ export function PeriodsView() {
                 <PopoverTrigger asChild>
                   <Button
                     id="edit-date"
-                    variant={"outline"}
+                    variant={'outline'}
                     className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !editPeriod?.date && "text-muted-foreground"
+                      'w-full justify-start text-left font-normal',
+                      !editPeriod?.date && 'text-muted-foreground'
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
                     {editPeriod?.date ? (
                       formatDate(editPeriod.date, {
-                        month: "long",
-                        year: "numeric",
+                        month: 'long',
+                        year: 'numeric',
                       })
                     ) : (
                       <span>Selecciona un mes</span>

@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { testConnection } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { testConnection } from '@/lib/db';
 
 export async function GET() {
   try {
@@ -10,13 +10,13 @@ export async function GET() {
       return NextResponse.json(
         {
           success: false,
-          message: "Could not connect to the database: " + connectionTest.error,
+          message: 'Could not connect to the database: ' + connectionTest.error,
         },
         { status: 500 }
       );
     }
 
-    const { sql } = await import("@/lib/db");
+    const { sql } = await import('@/lib/db');
 
     // Check migration status
     const creditCardsTableExists = await sql`
@@ -46,10 +46,10 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       status,
-      message: "Migration status retrieved successfully",
+      message: 'Migration status retrieved successfully',
     });
   } catch (error) {
-    console.error("Error checking credit cards migration status:", error);
+    console.error('Error checking credit cards migration status:', error);
     return NextResponse.json(
       {
         success: false,
@@ -69,13 +69,13 @@ export async function POST() {
       return NextResponse.json(
         {
           success: false,
-          message: "Could not connect to the database: " + connectionTest.error,
+          message: 'Could not connect to the database: ' + connectionTest.error,
         },
         { status: 500 }
       );
     }
 
-    const { sql } = await import("@/lib/db");
+    const { sql } = await import('@/lib/db');
 
     // Begin transaction for atomic migration
     await sql`BEGIN`;
@@ -95,7 +95,7 @@ export async function POST() {
           UNIQUE(bank_name, franchise, last_four_digits)
         )
       `;
-      console.log("Created credit_cards table");
+      console.log('Created credit_cards table');
 
       // Step 2: Add credit_card_id column to expenses table (if it doesn't exist)
       const columnExists = await sql`
@@ -109,16 +109,16 @@ export async function POST() {
         await sql`
           ALTER TABLE expenses ADD COLUMN credit_card_id UUID REFERENCES credit_cards(id) ON DELETE SET NULL
         `;
-        console.log("Added credit_card_id column to expenses table");
+        console.log('Added credit_card_id column to expenses table');
       } else {
-        console.log("credit_card_id column already exists in expenses table");
+        console.log('credit_card_id column already exists in expenses table');
       }
 
       // Step 3: Create indexes for performance optimization
       await sql`CREATE INDEX IF NOT EXISTS idx_expenses_credit_card_id ON expenses(credit_card_id)`;
       await sql`CREATE INDEX IF NOT EXISTS idx_credit_cards_bank_franchise ON credit_cards(bank_name, franchise)`;
       await sql`CREATE INDEX IF NOT EXISTS idx_credit_cards_created_at ON credit_cards(created_at)`;
-      console.log("Created performance indexes");
+      console.log('Created performance indexes');
 
       // Step 4: Create function to update updated_at timestamp
       await sql`
@@ -139,7 +139,7 @@ export async function POST() {
           FOR EACH ROW
           EXECUTE FUNCTION update_credit_card_updated_at()
       `;
-      console.log("Created updated_at trigger for credit_cards table");
+      console.log('Created updated_at trigger for credit_cards table');
 
       // Step 6: Verify the migration
       const creditCardsCount =
@@ -152,7 +152,7 @@ export async function POST() {
 
       return NextResponse.json({
         success: true,
-        message: "Credit cards migration completed successfully",
+        message: 'Credit cards migration completed successfully',
         results: {
           credit_cards_count: creditCardsCount[0]?.count || 0,
           total_expenses: expensesCount[0]?.total_expenses || 0,
@@ -166,7 +166,7 @@ export async function POST() {
       throw error;
     }
   } catch (error) {
-    console.error("Error during credit cards migration:", error);
+    console.error('Error during credit cards migration:', error);
     return NextResponse.json(
       {
         success: false,
@@ -180,7 +180,7 @@ export async function POST() {
 // Rollback endpoint for migration
 export async function DELETE() {
   try {
-    const { sql } = await import("@/lib/db");
+    const { sql } = await import('@/lib/db');
 
     // First, test if we can connect to the database
     const connectionTest = await testConnection();
@@ -189,7 +189,7 @@ export async function DELETE() {
       return NextResponse.json(
         {
           success: false,
-          message: "Could not connect to the database: " + connectionTest.error,
+          message: 'Could not connect to the database: ' + connectionTest.error,
         },
         { status: 500 }
       );
@@ -202,13 +202,13 @@ export async function DELETE() {
       // Step 1: Drop trigger and function
       await sql`DROP TRIGGER IF EXISTS trigger_update_credit_card_updated_at ON credit_cards`;
       await sql`DROP FUNCTION IF EXISTS update_credit_card_updated_at()`;
-      console.log("Dropped trigger and function");
+      console.log('Dropped trigger and function');
 
       // Step 2: Drop indexes
       await sql`DROP INDEX IF EXISTS idx_expenses_credit_card_id`;
       await sql`DROP INDEX IF EXISTS idx_credit_cards_bank_franchise`;
       await sql`DROP INDEX IF EXISTS idx_credit_cards_created_at`;
-      console.log("Dropped indexes");
+      console.log('Dropped indexes');
 
       // Step 3: Remove credit_card_id column from expenses table
       const columnExists = await sql`
@@ -220,19 +220,19 @@ export async function DELETE() {
 
       if (columnExists[0]?.exists) {
         await sql`ALTER TABLE expenses DROP COLUMN credit_card_id`;
-        console.log("Removed credit_card_id column from expenses table");
+        console.log('Removed credit_card_id column from expenses table');
       }
 
       // Step 4: Drop credit_cards table
       await sql`DROP TABLE IF EXISTS credit_cards CASCADE`;
-      console.log("Dropped credit_cards table");
+      console.log('Dropped credit_cards table');
 
       // Commit transaction
       await sql`COMMIT`;
 
       return NextResponse.json({
         success: true,
-        message: "Credit cards migration rollback completed successfully",
+        message: 'Credit cards migration rollback completed successfully',
       });
     } catch (error) {
       // Rollback transaction on error
@@ -240,7 +240,7 @@ export async function DELETE() {
       throw error;
     }
   } catch (error) {
-    console.error("Error during credit cards migration rollback:", error);
+    console.error('Error during credit cards migration rollback:', error);
     return NextResponse.json(
       {
         success: false,

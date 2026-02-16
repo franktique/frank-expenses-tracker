@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -8,14 +8,14 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Loader2, DollarSign } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { formatCurrency } from "@/lib/loan-calculations";
-import type { CurrencyCode } from "@/types/loan-simulator";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Loader2, DollarSign } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { formatCurrency } from '@/lib/loan-calculations';
+import type { CurrencyCode } from '@/types/loan-simulator';
 
 interface ExtraPaymentDialogProps {
   open: boolean;
@@ -41,12 +41,12 @@ export function ExtraPaymentDialog({
   paymentDate,
   remainingBalance,
   isLoading = false,
-  currency = "USD",
+  currency = 'USD',
 }: ExtraPaymentDialogProps) {
   const { toast } = useToast();
 
-  const [amount, setAmount] = useState("");
-  const [description, setDescription] = useState("");
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async () => {
@@ -54,18 +54,18 @@ export function ExtraPaymentDialog({
 
     if (isNaN(amountValue) || amountValue <= 0) {
       toast({
-        title: "Error",
-        description: "El monto del pago extra debe ser positivo",
-        variant: "destructive",
+        title: 'Error',
+        description: 'El monto del pago extra debe ser positivo',
+        variant: 'destructive',
       });
       return;
     }
 
     if (remainingBalance && amountValue > remainingBalance) {
       toast({
-        title: "Error",
+        title: 'Error',
         description: `El monto no puede exceder el balance restante (${formatCurrency(remainingBalance, currency)})`,
-        variant: "destructive",
+        variant: 'destructive',
       });
       return;
     }
@@ -77,21 +77,21 @@ export function ExtraPaymentDialog({
         description: description.trim() || undefined,
       });
       // Reset form
-      setAmount("");
-      setDescription("");
+      setAmount('');
+      setDescription('');
       onOpenChange(false);
       toast({
-        title: "Éxito",
-        description: "Pago extra agregado correctamente",
+        title: 'Éxito',
+        description: 'Pago extra agregado correctamente',
       });
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
           error instanceof Error
             ? error.message
-            : "Error al agregar el pago extra",
-        variant: "destructive",
+            : 'Error al agregar el pago extra',
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -100,8 +100,8 @@ export function ExtraPaymentDialog({
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen && !isSubmitting) {
-      setAmount("");
-      setDescription("");
+      setAmount('');
+      setDescription('');
     }
     onOpenChange(newOpen);
   };
@@ -155,9 +155,9 @@ export function ExtraPaymentDialog({
           </div>
 
           {/* Info Box */}
-          <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg text-sm">
-            <p className="font-medium mb-1">¿Cómo funcionan los pagos extra?</p>
-            <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+          <div className="rounded-lg bg-blue-50 p-3 text-sm dark:bg-blue-950">
+            <p className="mb-1 font-medium">¿Cómo funcionan los pagos extra?</p>
+            <ul className="list-inside list-disc space-y-1 text-muted-foreground">
               <li>Se aplican directamente al capital</li>
               <li>Reducen el balance restante</li>
               <li>Aceluran el pago del préstamo</li>
@@ -184,7 +184,7 @@ export function ExtraPaymentDialog({
                 Guardando...
               </>
             ) : (
-              "Agregar Pago Extra"
+              'Agregar Pago Extra'
             )}
           </Button>
         </DialogFooter>

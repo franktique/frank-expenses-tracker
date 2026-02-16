@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useMemo } from "react";
-import { useBudget } from "@/context/budget-context";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useState, useMemo } from 'react';
+import { useBudget } from '@/context/budget-context';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectItem,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   ResponsiveContainer,
   BarChart,
@@ -18,13 +18,13 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-} from "recharts";
-import { format, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
+} from 'recharts';
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 export default function CategoryBarsDashboard() {
   const { categories, expenses, activePeriod } = useBudget();
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
 
   // Compute filtered and grouped data
   const data = useMemo(() => {
@@ -37,19 +37,19 @@ export default function CategoryBarsDashboard() {
     const grouped: Record<string, number> = {};
     filtered.forEach((e) => {
       // Always use YYYY-MM-DD for grouping
-      const dateKey = e.date.split("T")[0];
+      const dateKey = e.date.split('T')[0];
       grouped[dateKey] = (grouped[dateKey] || 0) + Number(e.amount);
     });
     // Convert to array and sort by date
     return Object.entries(grouped)
       .map(([date, total]) => ({
-        date: format(parseISO(date), "dd/MM/yyyy", { locale: es }),
+        date: format(parseISO(date), 'dd/MM/yyyy', { locale: es }),
         total,
       }))
       .sort((a, b) => {
         // Sort by date ascending
-        const [d1, m1, y1] = a.date.split("/").map(Number);
-        const [d2, m2, y2] = b.date.split("/").map(Number);
+        const [d1, m1, y1] = a.date.split('/').map(Number);
+        const [d2, m2, y2] = b.date.split('/').map(Number);
         return (
           new Date(y1, m1 - 1, d1).getTime() -
           new Date(y2, m2 - 1, d2).getTime()
@@ -73,7 +73,7 @@ export default function CategoryBarsDashboard() {
   }
 
   return (
-    <div className="max-w-full w-full mx-auto py-10 px-4">
+    <div className="mx-auto w-full max-w-full px-4 py-10">
       <Card>
         <CardHeader>
           <CardTitle>Gastos por Fecha (por Categoría)</CardTitle>
@@ -119,19 +119,19 @@ export default function CategoryBarsDashboard() {
                     content={({ active, payload, label }) => {
                       if (!active || !payload || !payload.length) return null;
                       return (
-                        <div className="rounded-md bg-white dark:bg-zinc-900 p-3 shadow-lg border border-gray-200 dark:border-zinc-800">
-                          <div className="font-medium text-gray-900 dark:text-gray-100 text-base mb-1">
+                        <div className="rounded-md border border-gray-200 bg-white p-3 shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
+                          <div className="mb-1 text-base font-medium text-gray-900 dark:text-gray-100">
                             {label}
                           </div>
                           <div className="text-gray-900 dark:text-gray-100">
                             {selectedCategory
                               ? selectedCategory.name
-                              : "Categoría"}
-                            :{" "}
-                            {payload[0].value.toLocaleString("es-CO", {
-                              style: "currency",
-                              currency: "COP",
-                            })}
+                              : 'Categoría'}
+                            :{' '}
+                            {payload[0]?.value?.toLocaleString('es-CO', {
+                              style: 'currency',
+                              currency: 'COP',
+                            }) ?? '0'}
                           </div>
                         </div>
                       );
@@ -141,7 +141,7 @@ export default function CategoryBarsDashboard() {
                     dataKey="total"
                     fill="#6366f1"
                     name={
-                      selectedCategory ? selectedCategory.name : "Categoría"
+                      selectedCategory ? selectedCategory.name : 'Categoría'
                     }
                   />
                 </BarChart>

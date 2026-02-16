@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Save } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { Save } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -11,10 +11,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 interface SaveRateDialogProps {
   onSave: (name: string, notes?: string) => Promise<void>;
@@ -25,8 +25,8 @@ interface SaveRateDialogProps {
 
 export function SaveRateDialog({
   onSave,
-  defaultName = "",
-  defaultNotes = "",
+  defaultName = '',
+  defaultNotes = '',
   isUpdate = false,
 }: SaveRateDialogProps) {
   const [open, setOpen] = useState(false);
@@ -49,12 +49,12 @@ export function SaveRateDialog({
     // Validate name
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError("El nombre es requerido");
+      setError('El nombre es requerido');
       return;
     }
 
     if (trimmedName.length > 255) {
-      setError("El nombre no puede exceder 255 caracteres");
+      setError('El nombre no puede exceder 255 caracteres');
       return;
     }
 
@@ -68,7 +68,7 @@ export function SaveRateDialog({
       setError(
         err instanceof Error
           ? err.message
-          : "Error al guardar. Intenta de nuevo."
+          : 'Error al guardar. Intenta de nuevo.'
       );
     } finally {
       setIsSaving(false);
@@ -79,19 +79,19 @@ export function SaveRateDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button className="bg-purple-600 hover:bg-purple-700">
-          <Save className="h-4 w-4 mr-2" />
-          {isUpdate ? "Actualizar" : "Guardar Simulación"}
+          <Save className="mr-2 h-4 w-4" />
+          {isUpdate ? 'Actualizar' : 'Guardar Simulación'}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {isUpdate ? "Actualizar Simulación" : "Guardar Simulación"}
+            {isUpdate ? 'Actualizar Simulación' : 'Guardar Simulación'}
           </DialogTitle>
           <DialogDescription>
             {isUpdate
-              ? "Actualiza los datos de esta simulación de tasas."
-              : "Dale un nombre a esta simulación para encontrarla fácilmente después."}
+              ? 'Actualiza los datos de esta simulación de tasas.'
+              : 'Dale un nombre a esta simulación para encontrarla fácilmente después.'}
           </DialogDescription>
         </DialogHeader>
 
@@ -106,7 +106,7 @@ export function SaveRateDialog({
                 setError(null);
               }}
               placeholder="Ej: Tasa CDT Bancolombia"
-              className={error ? "border-red-500" : ""}
+              className={error ? 'border-red-500' : ''}
               maxLength={255}
               autoFocus
             />
@@ -142,7 +142,7 @@ export function SaveRateDialog({
             disabled={isSaving || !name.trim()}
             className="bg-purple-600 hover:bg-purple-700"
           >
-            {isSaving ? "Guardando..." : isUpdate ? "Actualizar" : "Guardar"}
+            {isSaving ? 'Guardando...' : isUpdate ? 'Actualizar' : 'Guardar'}
           </Button>
         </DialogFooter>
       </DialogContent>

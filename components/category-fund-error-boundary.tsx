@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React, { Component, ReactNode } from "react";
-import { AlertTriangle, RefreshCw, Home } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import React, { Component, ReactNode } from 'react';
+import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -31,7 +31,7 @@ export class CategoryFundErrorBoundary extends Component<
       hasError: false,
       error: null,
       errorInfo: null,
-      errorId: "",
+      errorId: '',
     };
   }
 
@@ -53,7 +53,7 @@ export class CategoryFundErrorBoundary extends Component<
 
     // Log error for debugging
     console.error(
-      "CategoryFundErrorBoundary caught an error:",
+      'CategoryFundErrorBoundary caught an error:',
       error,
       errorInfo
     );
@@ -64,7 +64,7 @@ export class CategoryFundErrorBoundary extends Component<
       hasError: false,
       error: null,
       errorInfo: null,
-      errorId: "",
+      errorId: '',
     });
   };
 
@@ -81,7 +81,7 @@ export class CategoryFundErrorBoundary extends Component<
 
       // Default error UI
       return (
-        <Card className="w-full max-w-2xl mx-auto border-destructive/20 bg-destructive/5">
+        <Card className="mx-auto w-full max-w-2xl border-destructive/20 bg-destructive/5">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
               <AlertTriangle className="h-5 w-5" />
@@ -111,8 +111,8 @@ export class CategoryFundErrorBoundary extends Component<
                 <CardContent className="pt-4">
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium">Detalles del error:</h4>
-                    <div className="text-xs font-mono bg-muted p-2 rounded overflow-auto max-h-32">
-                      <div className="text-destructive font-semibold">
+                    <div className="max-h-32 overflow-auto rounded bg-muted p-2 font-mono text-xs">
+                      <div className="font-semibold text-destructive">
                         {this.state.error.name}: {this.state.error.message}
                       </div>
                       {this.state.error.stack && (
@@ -148,7 +148,7 @@ export class CategoryFundErrorBoundary extends Component<
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => (window.location.href = "/")}
+                onClick={() => (window.location.href = '/')}
                 className="flex items-center gap-2"
               >
                 <Home className="h-4 w-4" />
@@ -186,7 +186,7 @@ export function CategoryFundErrorWrapper({
   const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
     // You can integrate with error reporting services here
     // Example: Sentry, LogRocket, etc.
-    console.error("Category-Fund Error:", {
+    console.error('Category-Fund Error:', {
       error: error.message,
       stack: error.stack,
       componentStack: errorInfo.componentStack,
@@ -212,7 +212,7 @@ export function useCategoryFundErrorHandler() {
   const [error, setError] = React.useState<Error | null>(null);
 
   const handleAsyncError = (error: Error, context?: string) => {
-    console.error("Async Category-Fund Error:", {
+    console.error('Async Category-Fund Error:', {
       error: error.message,
       stack: error.stack,
       context,
@@ -256,16 +256,16 @@ export function CategoryFundErrorFallback({
   context?: string;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+    <div className="flex flex-col items-center justify-center space-y-4 p-8 text-center">
       <AlertTriangle className="h-12 w-12 text-destructive" />
       <div className="space-y-2">
         <h3 className="text-lg font-semibold">Error en categorías y fondos</h3>
-        <p className="text-sm text-muted-foreground max-w-md">
+        <p className="max-w-md text-sm text-muted-foreground">
           Ha ocurrido un error al procesar la operación de categorías y fondos.
           {context && ` (${context})`}
         </p>
         {error && (
-          <p className="text-xs text-destructive font-mono bg-destructive/10 p-2 rounded">
+          <p className="rounded bg-destructive/10 p-2 font-mono text-xs text-destructive">
             {error.message}
           </p>
         )}
@@ -273,7 +273,7 @@ export function CategoryFundErrorFallback({
       <div className="flex gap-2">
         {resetError && (
           <Button variant="outline" size="sm" onClick={resetError}>
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="mr-2 h-4 w-4" />
             Reintentar
           </Button>
         )}
@@ -282,7 +282,7 @@ export function CategoryFundErrorFallback({
           size="sm"
           onClick={() => window.location.reload()}
         >
-          <RefreshCw className="h-4 w-4 mr-2" />
+          <RefreshCw className="mr-2 h-4 w-4" />
           Recargar
         </Button>
       </div>

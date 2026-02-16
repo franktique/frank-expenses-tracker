@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { useState, useCallback, useRef } from "react";
-import { toast } from "@/components/ui/use-toast";
+import { useState, useCallback, useRef } from 'react';
+import { toast } from '@/components/ui/use-toast';
 import {
   SimulationApiError,
   fetchSimulationWithRetry,
   parseSimulationApiError,
   handleSimulationApiError,
   retrySimulationOperation,
-} from "@/lib/simulation-error-handling";
+} from '@/lib/simulation-error-handling';
 
 interface UseSimulationRetryOptions {
   maxRetries?: number;
@@ -97,9 +97,9 @@ export function useSimulationRetry(options: UseSimulationRetryOptions = {}) {
 
             if (showToasts && attempt < maxRetries) {
               toast({
-                title: "Reintentando operación",
+                title: 'Reintentando operación',
                 description: `Intento ${attempt} de ${maxRetries}...`,
-                variant: "default",
+                variant: 'default',
               });
             }
           },
@@ -150,7 +150,7 @@ export function useSimulationRetry(options: UseSimulationRetryOptions = {}) {
         // Handle unexpected errors
         const simulationError: SimulationApiError = {
           message: error instanceof Error ? error.message : String(error),
-          type: "unknown",
+          type: 'unknown',
           context,
           simulationId,
           retryable: false,
@@ -195,7 +195,7 @@ export function useSimulationRetry(options: UseSimulationRetryOptions = {}) {
                 if (onRetry) {
                   const simulationError: SimulationApiError = {
                     message: error.message,
-                    type: "network",
+                    type: 'network',
                     context,
                     simulationId,
                     retryable: true,
@@ -305,7 +305,7 @@ export function useSimulationDataFetch() {
       } catch (err) {
         const simulationError: SimulationApiError = {
           message: err instanceof Error ? err.message : String(err),
-          type: "unknown",
+          type: 'unknown',
           context,
           simulationId,
           retryable: false,
@@ -417,7 +417,7 @@ export function useSimulationOperations() {
       } catch (err) {
         const simulationError: SimulationApiError = {
           message: err instanceof Error ? err.message : String(err),
-          type: "unknown",
+          type: 'unknown',
           context,
           simulationId,
           retryable: false,

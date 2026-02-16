@@ -1,6 +1,6 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { UpdateFundSchema, FUND_ERROR_MESSAGES } from "@/types/funds";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { UpdateFundSchema, FUND_ERROR_MESSAGES } from '@/types/funds';
 
 export async function GET(
   request: NextRequest,
@@ -103,7 +103,7 @@ export async function GET(
       recent_transactions: recentTransactions,
     });
   } catch (error) {
-    console.error("Error fetching fund details:", error);
+    console.error('Error fetching fund details:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -123,7 +123,7 @@ export async function PUT(
     const validationResult = UpdateFundSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: validationResult.error.errors },
+        { error: 'Validation failed', details: validationResult.error.errors },
         { status: 400 }
       );
     }
@@ -235,14 +235,14 @@ export async function PUT(
       `;
     } else {
       return NextResponse.json(
-        { error: "No fields to update" },
+        { error: 'No fields to update' },
         { status: 400 }
       );
     }
 
     return NextResponse.json(updatedFund);
   } catch (error) {
-    console.error("Error updating fund:", error);
+    console.error('Error updating fund:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -320,9 +320,9 @@ export async function DELETE(
     // Delete the fund
     await sql`DELETE FROM funds WHERE id = ${id}`;
 
-    return NextResponse.json({ message: "Fund deleted successfully" });
+    return NextResponse.json({ message: 'Fund deleted successfully' });
   } catch (error) {
-    console.error("Error deleting fund:", error);
+    console.error('Error deleting fund:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

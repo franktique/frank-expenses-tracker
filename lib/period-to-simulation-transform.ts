@@ -94,21 +94,21 @@ export function validatePeriodHasData(periodData: PeriodData): {
   if (!hasIncomes && !hasBudgets) {
     return {
       valid: false,
-      message: "El período no contiene datos para copiar",
+      message: 'El período no contiene datos para copiar',
     };
   }
 
   if (!hasIncomes) {
     return {
       valid: true,
-      message: "Advertencia: El período no contiene ingresos",
+      message: 'Advertencia: El período no contiene ingresos',
     };
   }
 
   if (!hasBudgets) {
     return {
       valid: true,
-      message: "Advertencia: El período no contiene presupuestos",
+      message: 'Advertencia: El período no contiene presupuestos',
     };
   }
 
@@ -132,18 +132,18 @@ export function generateCopySummary(periodData: PeriodData): {
   total_budget: number;
 } {
   const monthNames = [
-    "Enero",
-    "Febrero",
-    "Marzo",
-    "Abril",
-    "Mayo",
-    "Junio",
-    "Julio",
-    "Agosto",
-    "Septiembre",
-    "Octubre",
-    "Noviembre",
-    "Diciembre",
+    'Enero',
+    'Febrero',
+    'Marzo',
+    'Abril',
+    'Mayo',
+    'Junio',
+    'Julio',
+    'Agosto',
+    'Septiembre',
+    'Octubre',
+    'Noviembre',
+    'Diciembre',
   ];
 
   return {
@@ -169,14 +169,14 @@ export function calculateDifference(
 ): {
   difference: number;
   percentage: number;
-  direction: "increase" | "decrease" | "none";
+  direction: 'increase' | 'decrease' | 'none';
 } {
   const difference = new_amount - current;
   const percentage = current === 0 ? 0 : (difference / current) * 100;
 
-  let direction: "increase" | "decrease" | "none" = "none";
-  if (difference > 0) direction = "increase";
-  else if (difference < 0) direction = "decrease";
+  let direction: 'increase' | 'decrease' | 'none' = 'none';
+  if (difference > 0) direction = 'increase';
+  else if (difference < 0) direction = 'decrease';
 
   return {
     difference,
@@ -192,9 +192,9 @@ export function calculateDifference(
  * @returns Formatted string
  */
 export function formatCurrencyDisplay(amount: number): string {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
   }).format(amount);
@@ -209,16 +209,16 @@ export function formatCurrencyDisplay(amount: number): string {
  */
 export function generateCopyMessage(
   summary: ReturnType<typeof generateCopySummary>,
-  mode: "merge" | "replace"
+  mode: 'merge' | 'replace'
 ): string {
-  const action = mode === "replace" ? "reemplazarán" : "agregarán a";
+  const action = mode === 'replace' ? 'reemplazarán' : 'agregarán a';
   const incomeText =
     summary.income_entries === 1
-      ? "1 entrada de ingreso"
+      ? '1 entrada de ingreso'
       : `${summary.income_entries} entradas de ingresos`;
   const budgetText =
     summary.budget_categories === 1
-      ? "1 categoría presupuestada"
+      ? '1 categoría presupuestada'
       : `${summary.budget_categories} categorías presupuestadas`;
 
   let message = `Se ${action} los datos existentes:\n\n`;
@@ -279,13 +279,13 @@ export function estimateImpact(
     total_income: number;
     total_budget: number;
   },
-  mode: "merge" | "replace"
+  mode: 'merge' | 'replace'
 ): {
   income_impact: ReturnType<typeof calculateDifference>;
   budget_impact: ReturnType<typeof calculateDifference>;
   will_replace: boolean;
 } {
-  const will_replace = mode === "replace";
+  const will_replace = mode === 'replace';
 
   const newIncomeTotal = will_replace
     ? periodTotals.total_income

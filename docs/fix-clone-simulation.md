@@ -7,11 +7,13 @@
 Currently, when saving a simulation's subgroups as a template using "Save as Template", only the subgroup names and display order are saved. The category relationships (which categories belong to each subgroup) are NOT saved in the template.
 
 When applying a template to a different simulation:
+
 1. The subgroups are created correctly with their names
 2. However, the subgroups are empty - no categories are assigned
 3. Users must manually add categories to each subgroup again
 
 **Expected Behavior:**
+
 - When saving as template, save both subgroup names AND their category IDs
 - When applying a template, automatically populate subgroups with matching categories from the target simulation
 - Provide a "Refresh Template" option to update category assignments for an already-applied template
@@ -19,6 +21,7 @@ When applying a template to a different simulation:
 ## Current Architecture Analysis
 
 ### Current Template Schema
+
 ```
 subgroup_templates
 ├── id (UUID)
@@ -36,6 +39,7 @@ template_subgroups
 ```
 
 ### Current Simulation Subgroups Schema
+
 ```
 simulation_subgroups
 ├── id (UUID)
@@ -55,6 +59,7 @@ subgroup_categories (junction table)
 ```
 
 ### Categories Table
+
 ```
 categories
 ├── id (UUID)
@@ -67,6 +72,7 @@ categories
 ### Phase 1: Database Schema Enhancement
 
 #### Task 1.1: Create template_subgroup_categories table
+
 - [ ] Create a new junction table `template_subgroup_categories` to store category relationships in templates
 - [ ] Schema:
   ```sql
@@ -81,17 +87,20 @@ categories
 - [ ] Add index on template_subgroup_id
 
 **Rationale:** Store category names instead of IDs because:
+
 1. Categories are user-specific (different users have different category IDs)
 2. Templates could be shared across simulations that might have different category IDs
 3. Matching by name allows flexible category assignment across simulations
 
 #### Task 1.2: Create migration endpoint
+
 - [ ] Create `/api/migrate-template-categories` endpoint
 - [ ] Add migration to create the new table with proper constraints
 
 ### Phase 2: Update Type Definitions
 
 #### Task 2.1: Update subgroup-templates.ts types
+
 - [ ] Add `TemplateSubgroupCategory` type:
   ```typescript
   export type TemplateSubgroupCategory = {
@@ -108,24 +117,28 @@ categories
 ### Phase 3: Update "Save as Template" Functionality
 
 #### Task 3.1: Update save-as-template API route
+
 - [ ] Modify `/api/simulations/[id]/save-as-template/route.ts`
 - [ ] Fetch subgroups WITH their category IDs using `getSubgroupsBySimulation()`
 - [ ] For each subgroup's category IDs, fetch category names from the database
 - [ ] Pass category names to `createTemplate()` function
 
 #### Task 3.2: Update createTemplate() function
+
 - [ ] Modify `lib/subgroup-template-db-utils.ts`
 - [ ] Accept `categoryNames` array in subgroup creation request
 - [ ] Insert category name records into `template_subgroup_categories` table
 - [ ] Return template with category names included
 
 #### Task 3.3: Update getTemplateById() function
+
 - [ ] Join with `template_subgroup_categories` to fetch category names
 - [ ] Return subgroups with their `categoryNames` arrays
 
 ### Phase 4: Update "Apply Template" Functionality
 
 #### Task 4.1: Update applyTemplateToSimulation() function
+
 - [ ] Modify `lib/subgroup-template-db-utils.ts`
 - [ ] Accept `simulationId` to fetch available categories for that simulation
 - [ ] For each template subgroup:
@@ -136,6 +149,7 @@ categories
 - [ ] Return count of subgroups created AND categories matched
 
 #### Task 4.2: Update apply-template API response
+
 - [ ] Modify `/api/simulations/[id]/apply-template/route.ts`
 - [ ] Include statistics: `{ subgroupsCreated, categoriesMatched, categoriesUnmatched }`
 - [ ] Return list of unmatched category names for user feedback
@@ -143,6 +157,7 @@ categories
 ### Phase 5: Add "Refresh Template" Functionality
 
 #### Task 5.1: Create refresh-template API endpoint
+
 - [ ] Create `/api/simulations/[id]/refresh-template/route.ts`
 - [ ] Handler logic:
   1. Get currently applied template for the simulation
@@ -155,6 +170,7 @@ categories
   5. Return statistics of changes made
 
 #### Task 5.2: Add RefreshTemplateRequest/Response types
+
 - [ ] Add types to `types/subgroup-templates.ts`:
   ```typescript
   export type RefreshTemplateResponse = {
@@ -171,11 +187,13 @@ categories
 ### Phase 6: Update UI Components
 
 #### Task 6.1: Update SaveAsTemplateDialog
+
 - [ ] Modify `/components/save-as-template-dialog.tsx`
 - [ ] Display count of categories that will be saved (not just subgroups)
 - [ ] Show preview: "3 subgroups with 15 total categories"
 
 #### Task 6.2: Update TemplateSelector (apply template)
+
 - [ ] Modify `/components/template-selector.tsx`
 - [ ] After applying template, show toast with results:
   - "Created 3 subgroups"
@@ -184,6 +202,7 @@ categories
 - [ ] Add visual indicator for unmatched categories
 
 #### Task 6.3: Add Refresh Template button
+
 - [ ] Add new "Refresh" button next to template selector when a template is applied
 - [ ] Button appears only when `currentTemplateId` is set
 - [ ] On click, call refresh-template API
@@ -191,6 +210,7 @@ categories
 - [ ] Display results in toast notification
 
 #### Task 6.4: Create RefreshTemplateDialog component
+
 - [ ] Create `/components/refresh-template-dialog.tsx`
 - [ ] Confirmation dialog explaining:
   - "This will update category assignments based on the template"
@@ -201,17 +221,20 @@ categories
 ### Phase 7: Integration in simulation-budget-form.tsx
 
 #### Task 7.1: Add refresh template state and handlers
+
 - [ ] Add state: `isRefreshingTemplate: boolean`
 - [ ] Add handler: `handleRefreshTemplate()`
 - [ ] Wire up RefreshTemplateDialog component
 
 #### Task 7.2: Update template application callback
+
 - [ ] Modify `handleTemplateApplied()` to refresh subgroups data
 - [ ] Show detailed results to user
 
 ### Phase 8: Testing and Documentation
 
 #### Task 8.1: Test scenarios
+
 - [ ] Test saving template with categories
 - [ ] Test applying template to simulation with matching categories
 - [ ] Test applying template to simulation with partial category matches
@@ -220,6 +243,7 @@ categories
 - [ ] Test edge cases (empty subgroups, duplicate category names)
 
 #### Task 8.2: Update CLAUDE.md documentation
+
 - [ ] Add section documenting template category relationships
 - [ ] Document the refresh template feature
 - [ ] Add API endpoint documentation
@@ -229,7 +253,9 @@ categories
 ## Technical Details
 
 ### Category Matching Algorithm
+
 When applying or refreshing a template:
+
 ```
 For each template_subgroup in template:
   For each category_name in template_subgroup.categoryNames:
@@ -246,6 +272,7 @@ For each template_subgroup in template:
 ### Database Queries
 
 #### Save template with categories
+
 ```sql
 -- After creating template_subgroup
 INSERT INTO template_subgroup_categories (template_subgroup_id, category_name, order_within_subgroup)
@@ -257,6 +284,7 @@ ORDER BY sc.order_within_subgroup;
 ```
 
 #### Get template with categories
+
 ```sql
 SELECT
   ts.id,
@@ -276,6 +304,7 @@ ORDER BY ts.display_order;
 ```
 
 #### Match categories when applying template
+
 ```sql
 -- Get simulation's available categories (not in any subgroup)
 SELECT c.id, c.name
@@ -326,13 +355,13 @@ WHERE NOT EXISTS (
 
 ## Estimated Effort
 
-| Phase | Description | Complexity |
-|-------|-------------|------------|
-| 1 | Database Schema | Low |
-| 2 | Type Definitions | Low |
-| 3 | Save as Template | Medium |
-| 4 | Apply Template | Medium |
-| 5 | Refresh Template | Medium |
-| 6 | UI Components | Medium |
-| 7 | Integration | Low |
-| 8 | Testing & Docs | Medium |
+| Phase | Description      | Complexity |
+| ----- | ---------------- | ---------- |
+| 1     | Database Schema  | Low        |
+| 2     | Type Definitions | Low        |
+| 3     | Save as Template | Medium     |
+| 4     | Apply Template   | Medium     |
+| 5     | Refresh Template | Medium     |
+| 6     | UI Components    | Medium     |
+| 7     | Integration      | Low        |
+| 8     | Testing & Docs   | Medium     |

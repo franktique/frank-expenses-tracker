@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useCallback } from "react";
+import { useState, useCallback } from 'react';
 import {
   categorizeError,
   fetchWithRetry,
   getErrorMessage,
   AppError,
-} from "@/lib/error-handling";
+} from '@/lib/error-handling';
 
 interface UseDataFetchingOptions {
   maxRetries?: number;
@@ -60,7 +60,7 @@ export function useDataFetching<T = any>(
         }
       } catch (err) {
         const categorizedError = categorizeError(err);
-        const errorMessage = getErrorMessage(categorizedError, "data fetching");
+        const errorMessage = getErrorMessage(categorizedError, 'data fetching');
 
         setError(errorMessage);
         setData(null);
@@ -69,7 +69,7 @@ export function useDataFetching<T = any>(
           onError(categorizedError);
         }
 
-        console.error("Data fetching error:", err);
+        console.error('Data fetching error:', err);
       } finally {
         setIsLoading(false);
       }
@@ -109,7 +109,7 @@ export function useGrouperDataFetching() {
     timeout: 15000, // Longer timeout for complex queries
     onError: (error) => {
       // Log specific grouper data errors
-      console.error("Grouper data fetch error:", error);
+      console.error('Grouper data fetch error:', error);
     },
   });
 }
@@ -123,7 +123,7 @@ export function useBudgetDataFetching() {
     timeout: 10000,
     onError: (error) => {
       // Budget errors are less critical, just log them
-      console.warn("Budget data fetch error:", error);
+      console.warn('Budget data fetch error:', error);
     },
   });
 }
@@ -136,7 +136,7 @@ export function useFilterDataFetching() {
     maxRetries: 3,
     timeout: 8000,
     onError: (error) => {
-      console.error("Filter data fetch error:", error);
+      console.error('Filter data fetch error:', error);
     },
   });
 }

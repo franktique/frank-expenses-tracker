@@ -3,9 +3,11 @@
 ## 1. Project Overview
 
 ### Project Type
+
 **Sophisticated Personal Finance Management Web Application** - A Next.js-based financial tracking system implementing advanced multi-fund accounting principles.
 
 ### Tech Stack Summary
+
 - **Frontend**: Next.js 15 (App Router), React 18, Tailwind CSS, Radix UI
 - **Backend**: Next.js API Routes with serverless architecture
 - **Database**: Neon PostgreSQL with connection pooling
@@ -16,7 +18,9 @@
 - **State Management**: React Context with specialized caches
 
 ### Architecture Pattern
+
 **Layered Architecture with Fund-Based Financial System**:
+
 - Presentation Layer (React components)
 - API Layer (Next.js routes)
 - Business Logic Layer (Context providers, validation)
@@ -24,6 +28,7 @@
 - Specialized Fund Management System (unique selling point)
 
 ### Language and Versions
+
 - **TypeScript 5**: Primary development language
 - **JavaScript ES6+**: Configuration and scripts
 - **SQL**: Database schemas and migrations
@@ -32,13 +37,16 @@
 ## 2. Detailed Directory Structure Analysis
 
 ### `/app` - Next.js App Router Structure
+
 **Purpose**: Main application pages and API endpoints using Next.js 13+ App Router
 **Key Patterns**:
+
 - **Pages**: Route-based React components (`/dashboard`, `/gastos`, `/fondos`)
 - **API Routes**: RESTful endpoints (`/api/expenses`, `/api/funds`, `/api/categories`)
 - **Nested Routing**: Dynamic routes with parameters (`[id]`, `[periodId]`)
 
 **Critical API Endpoints**:
+
 ```
 /api/funds/[id]/recalculate - Fund balance recalculation
 /api/expenses/validate-source-fund - Fund assignment validation
@@ -48,28 +56,35 @@
 ```
 
 ### `/components` - React Component Library
+
 **Purpose**: Reusable UI components organized by functionality
 **Structure**:
+
 - **`/ui`**: Base Radix UI components with consistent styling
 - **Feature Components**: Business logic components (`expenses-view.tsx`, `funds-view.tsx`)
 - **Error Boundaries**: Specialized error handling (`source-fund-error-boundary.tsx`)
 - **Selectors**: Complex input components (`multi-fund-selector.tsx`, `payment-method-selector.tsx`)
 
 **Key Component Patterns**:
+
 - Composition-based architecture
 - Error boundary isolation
 - Performance-optimized chart components
 - Context-aware state management
 
 ### `/context` - Global State Management
+
 **Purpose**: React Context providers for application-wide state
 **Key Files**:
+
 - `budget-context.tsx` - Main application state
 - `budget-context-provider.tsx` - Context provider wrapper
 
 ### `/lib` - Utility and Business Logic Layer
+
 **Purpose**: Core business logic, utilities, and specialized services
 **Critical Modules**:
+
 - `db.ts` - Database connection with retry logic
 - `category-fund-*.ts` - Fund relationship management
 - `source-fund-validation.ts` - Fund assignment validation
@@ -77,32 +92,40 @@
 - `*-error-handling.ts` - Specialized error handling
 
 ### `/types` - TypeScript Type Definitions
+
 **Purpose**: Comprehensive type system for the fund-based architecture
 **Key Files**:
+
 - `funds.ts` - Core financial entities (Fund, Category, Expense, Income)
 - `dashboard.ts` - Dashboard and analytics types
 - `estudios.ts` - Studies and grouper types
 - `credit-cards.ts` - Payment method types
 
 ### `/hooks` - Custom React Hooks
+
 **Purpose**: Reusable business logic and state management
 **Key Hooks**:
+
 - `use-source-fund-validation.ts` - Fund assignment validation
 - `use-payment-method-validation.ts` - Payment method handling
 - `use-dashboard-performance.ts` - Performance optimization
 
 ### `/scripts` - Database Management
+
 **Purpose**: SQL migrations and database maintenance scripts
 **Pattern**: Each migration has create/rollback/verify scripts
+
 ```
 create-*-migration.sql - Forward migration
-rollback-*-migration.sql - Rollback scripts  
+rollback-*-migration.sql - Rollback scripts
 verify-*-migration.sql - Validation queries
 ```
 
 ### `/.kiro` - Project Management and Specifications
+
 **Purpose**: Comprehensive project documentation and feature specifications
 **Structure**:
+
 - `/specs` - Detailed feature specifications with requirements/design/tasks
 - `/bug_spec` - Bug reports and fixes
 - `/steering` - High-level project direction
@@ -112,11 +135,13 @@ verify-*-migration.sql - Validation queries
 ### Core Application Files
 
 #### Main Entry Points
+
 - `app/layout.tsx` - Root application layout with providers
 - `app/page.tsx` - Homepage with dashboard redirect
 - `app/globals.css` - Global styles and CSS variables
 
 #### Routing and Navigation
+
 - `app/dashboard/page.tsx` - Main dashboard with fund filtering
 - `app/fondos/page.tsx` - Fund management interface
 - `app/gastos/page.tsx` - Expense tracking and categorization
@@ -124,6 +149,7 @@ verify-*-migration.sql - Validation queries
 - `app/categorias/page.tsx` - Category-fund relationship management
 
 #### Business Logic Components
+
 - `components/dashboard-view.tsx` - Main dashboard with analytics
 - `components/expenses-view.tsx` - Expense management with fund validation
 - `components/funds-view.tsx` - Fund balance and transaction management
@@ -132,29 +158,34 @@ verify-*-migration.sql - Validation queries
 ### Configuration Files
 
 #### Build and Development
+
 - `next.config.mjs` - Next.js configuration
 - `tailwind.config.ts` - Tailwind CSS customization with chart variables
 - `tsconfig.json` - TypeScript configuration with path mapping
 - `components.json` - Radix UI component configuration
 
 #### Testing Configuration
+
 - `jest.config.js` - Jest setup with Next.js integration
 - `jest.setup.js` - Testing environment configuration
 
 ### Data Layer
 
 #### Database Connection
+
 - `lib/db.ts` - Resilient PostgreSQL connection with retry logic
 - `lib/category-fund-cache.ts` - In-memory relationship caching
 - `lib/budget-data-cache.ts` - Dashboard data caching
 
 #### Migration System
+
 - `app/api/setup-db/route.ts` - Database initialization
 - `app/api/migrate-fondos/route.ts` - Fund system migration
 - `app/api/migrate-category-fund-relationships/route.ts` - Category-fund mapping
 - `app/api/migrate-expense-source-funds/route.ts` - Source fund tracking
 
 #### Data Models
+
 - `types/funds.ts` - Core financial entities with fund relationships
 - `types/dashboard.ts` - Analytics and reporting types
 - `types/estudios.ts` - Advanced analysis types
@@ -162,33 +193,39 @@ verify-*-migration.sql - Validation queries
 ### Frontend/UI
 
 #### Component System
+
 - `components/ui/` - 50+ Radix UI components with consistent styling
 - `components/chart.tsx` - Recharts wrapper with performance optimization
 - `components/dashboard-charts.tsx` - Specialized financial charts
 
 #### Styling System
+
 - `app/globals.css` - CSS custom properties and chart variables
 - `styles/globals.css` - Additional global styles
 - Tailwind classes throughout components
 
 #### State Management
+
 - `context/budget-context.tsx` - Main application state with fund filtering
 - `lib/active-period-storage.ts` - Session storage for UI state
 
 ### Testing
 
 #### Unit Tests
+
 - `components/__tests__/` - Component testing with React Testing Library
 - `lib/__tests__/` - Business logic unit tests
 - `hooks/__tests__/` - Custom hook testing
 - `types/__tests__/` - Type validation tests
 
 #### Integration Tests
+
 - API route testing in respective `__tests__/` directories
 - Database migration testing
 - End-to-end fund management testing
 
 #### Test Utilities
+
 - `components/__tests__/utils/test-utils.tsx` - Testing utilities
 - `components/__tests__/fixtures/test-data.ts` - Mock data
 - `jest.setup.js` - Global test configuration
@@ -196,11 +233,13 @@ verify-*-migration.sql - Validation queries
 ### Documentation
 
 #### Project Documentation
+
 - `README.md` - Comprehensive project overview
 - `CLAUDE.md` - AI assistant development guidelines
 - `docs/category-fund-backward-compatibility.md` - Migration documentation
 
 #### Component Documentation
+
 - `components/*-README.md` - Component usage guides
 - `.kiro/specs/` - Detailed feature specifications
 - Inline TypeScript documentation
@@ -208,6 +247,7 @@ verify-*-migration.sql - Validation queries
 ## 4. API Endpoints Analysis
 
 ### Fund Management APIs
+
 ```
 GET/POST /api/funds - Fund CRUD operations
 GET/PUT /api/funds/[id] - Individual fund management
@@ -215,6 +255,7 @@ POST /api/funds/[id]/recalculate - Balance recalculation
 ```
 
 ### Expense Management APIs
+
 ```
 GET/POST /api/expenses - Expense CRUD with fund validation
 POST /api/expenses/validate-source-fund - Fund assignment validation
@@ -222,6 +263,7 @@ GET /api/expenses/period/[periodId] - Period-based expense filtering
 ```
 
 ### Category-Fund Relationship APIs
+
 ```
 GET/POST /api/categories/[id]/funds - Category-fund associations
 PUT/DELETE /api/categories/[id]/funds/[fund_id] - Individual relationships
@@ -229,6 +271,7 @@ POST /api/categories/[id]/validate-fund - Relationship validation
 ```
 
 ### Dashboard and Analytics APIs
+
 ```
 GET /api/dashboard - Main dashboard data with fund filtering
 GET /api/dashboard/funds/balances - Fund balance summaries
@@ -237,6 +280,7 @@ GET /api/dashboard/charts - Chart data with performance optimization
 ```
 
 ### Migration and Setup APIs
+
 ```
 POST /api/setup-db - Database initialization
 POST /api/migrate-fondos - Fund system migration
@@ -245,11 +289,13 @@ POST /api/migrate-expense-source-funds - Source fund tracking migration
 ```
 
 ### Authentication Pattern
+
 - Simple authentication with session storage
 - Protected routes via `components/protected-route.tsx`
 - Context-based auth state management
 
 ### Request/Response Format
+
 - Consistent JSON API responses
 - Zod validation on inputs
 - Structured error responses with detailed messages
@@ -321,22 +367,27 @@ POST /api/migrate-expense-source-funds - Source fund tracking migration
 ### Key Design Patterns
 
 #### 1. Repository Pattern
+
 - Database operations abstracted through service layers
 - Consistent API patterns across entities
 
 #### 2. Context Provider Pattern
+
 - Global state management via React Context
 - Specialized contexts for different concerns
 
 #### 3. Error Boundary Pattern
+
 - Component-level error isolation
 - Specialized error boundaries for fund operations
 
 #### 4. Cache-Aside Pattern
+
 - In-memory caching for frequently accessed data
 - Manual cache invalidation on updates
 
 #### 5. Migration Pattern
+
 - Versioned database migrations
 - Forward/rollback/verify script pattern
 
@@ -350,6 +401,7 @@ Updates   Mgmt     Utils    Rules      Layer
 ```
 
 **Critical Dependencies**:
+
 - All components depend on BudgetContext for state
 - Fund-related components require source fund validation
 - Charts depend on performance monitoring hooks
@@ -358,6 +410,7 @@ Updates   Mgmt     Utils    Rules      Layer
 ## 6. Environment & Setup Analysis
 
 ### Required Environment Variables
+
 ```bash
 # Database Configuration
 DATABASE_URL=postgresql://username:password@host:port/database
@@ -365,12 +418,13 @@ DATABASE_URL=postgresql://username:password@host:port/database
 # Optional: Additional Neon-specific configs
 PGHOST=host
 PGDATABASE=database
-PGUSER=username  
+PGUSER=username
 PGPASSWORD=password
 PGPORT=5432
 ```
 
 ### Installation Process
+
 ```bash
 # 1. Clone repository
 git clone <repository-url>
@@ -389,11 +443,12 @@ npm run dev
 
 # 5. Run migrations
 # Navigate to /api/migrate-fondos
-# Navigate to /api/migrate-category-fund-relationships  
+# Navigate to /api/migrate-category-fund-relationships
 # Navigate to /api/migrate-expense-source-funds
 ```
 
 ### Development Workflow
+
 1. **Start Development**: `npm run dev` (localhost:3000)
 2. **Run Tests**: `npm run test` or `npm run test:watch`
 3. **Lint Code**: `npm run lint`
@@ -401,6 +456,7 @@ npm run dev
 5. **Database Operations**: Via API endpoints (not CLI)
 
 ### Production Deployment Strategy
+
 - **Platform**: Vercel (optimized for Next.js)
 - **Database**: Neon PostgreSQL (serverless)
 - **Build Process**: Next.js static optimization
@@ -409,11 +465,13 @@ npm run dev
 ## 7. Technology Stack Breakdown
 
 ### Runtime Environment
+
 - **Node.js 18+**: Server-side runtime
 - **Next.js 15**: Full-stack React framework with App Router
 - **React 18**: Frontend library with concurrent features
 
 ### Frontend Frameworks & Libraries
+
 - **Tailwind CSS 3.4**: Utility-first CSS framework
 - **Radix UI**: Headless UI primitives (50+ components)
 - **Recharts 2.15**: Chart library with React integration
@@ -421,23 +479,27 @@ npm run dev
 - **date-fns 3.0**: Date manipulation library
 
 ### Backend & Database
+
 - **@neondatabase/serverless**: PostgreSQL serverless driver
 - **Zod 3.24**: TypeScript-first schema validation
 - **Next.js API Routes**: Serverless API endpoints
 
 ### Development & Build Tools
+
 - **TypeScript 5**: Static type checking
 - **ESLint**: Code linting with Next.js config
 - **Tailwind CSS**: PostCSS plugin for styles
 - **Next.js Build System**: Webpack-based bundling
 
 ### Testing Framework
+
 - **Jest 30.0**: JavaScript testing framework
 - **React Testing Library 16.3**: React component testing
 - **@testing-library/user-event**: User interaction testing
 - **jest-environment-jsdom**: DOM testing environment
 
 ### Specialized Libraries
+
 - **XLSX 0.18**: Excel file generation and export
 - **Sonner 1.7**: Toast notifications
 - **Lucide React**: Icon library
@@ -446,6 +508,7 @@ npm run dev
 ## 8. Visual Architecture Diagram
 
 ### System Architecture Overview
+
 ```
                     ┌─────────────────────────────────────┐
                     │         Browser Client              │
@@ -493,6 +556,7 @@ npm run dev
 ```
 
 ### Fund-Based Data Flow Architecture
+
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │                     Fund Management System                      │
@@ -527,6 +591,7 @@ npm run dev
 ```
 
 ### Component Hierarchy Structure
+
 ```
 App Layout
 ├── AuthProvider
@@ -570,6 +635,7 @@ App Layout
 ### Code Quality Assessment
 
 #### Strengths
+
 1. **Sophisticated Architecture**: Advanced multi-fund accounting system with proper separation of concerns
 2. **Type Safety**: Comprehensive TypeScript implementation with Zod validation
 3. **Error Handling**: Multiple layers of error boundaries and validation
@@ -578,6 +644,7 @@ App Layout
 6. **Documentation**: Excellent inline documentation and project specifications
 
 #### Areas for Improvement
+
 1. **API Consistency**: Some endpoints use different response patterns
 2. **Migration System**: Database migrations via API routes could be moved to CLI tools
 3. **Component Size**: Some components (dashboard-view.tsx) are quite large
@@ -586,36 +653,40 @@ App Layout
 ### Potential Improvements
 
 #### 1. Architecture Enhancements
+
 ```typescript
 // Implement Repository Pattern for data access
 interface FundRepository {
-  findById(id: string): Promise<Fund>
-  updateBalance(id: string, amount: number): Promise<void>
-  calculateBalance(id: string): Promise<number>
+  findById(id: string): Promise<Fund>;
+  updateBalance(id: string, amount: number): Promise<void>;
+  calculateBalance(id: string): Promise<number>;
 }
 
 // Add Event Sourcing for fund balance changes
 interface FundEvent {
-  type: 'EXPENSE_ADDED' | 'INCOME_ADDED' | 'TRANSFER_MADE'
-  fundId: string
-  amount: number
-  timestamp: Date
+  type: 'EXPENSE_ADDED' | 'INCOME_ADDED' | 'TRANSFER_MADE';
+  fundId: string;
+  amount: number;
+  timestamp: Date;
 }
 ```
 
 #### 2. Performance Optimizations
+
 - Implement React Query/SWR for better data fetching
 - Add virtual scrolling for large expense lists
 - Implement service worker for offline support
 - Optimize bundle size with code splitting
 
 #### 3. Developer Experience
+
 - Add Storybook for component documentation
 - Implement conventional commits and automated changelog
 - Add pre-commit hooks for code quality
 - Create database seeding scripts for development
 
 #### 4. Feature Enhancements
+
 - Add real-time notifications for budget overruns
 - Implement advanced reporting with PDF export
 - Add mobile app using React Native
@@ -624,19 +695,22 @@ interface FundEvent {
 ### Security Considerations
 
 #### Current Security Measures
+
 1. **Input Validation**: Zod schemas validate all inputs
 2. **SQL Injection Prevention**: Parameterized queries throughout
 3. **Type Safety**: TypeScript prevents many runtime errors
 4. **Error Boundaries**: Prevent application crashes
 
 #### Recommended Security Improvements
+
 1. **Authentication Enhancement**:
+
    ```typescript
    // Add JWT-based authentication
    interface AuthToken {
-     userId: string
-     permissions: string[]
-     expiresAt: Date
+     userId: string;
+     permissions: string[];
+     expiresAt: Date;
    }
    ```
 
@@ -648,48 +722,55 @@ interface FundEvent {
 ### Performance Optimization Opportunities
 
 #### 1. Database Optimization
+
 - Add database indexes for frequently queried columns
 - Implement connection pooling optimization
 - Add query performance monitoring
 - Consider read replicas for analytics queries
 
 #### 2. Frontend Optimization
+
 - Implement React.memo for expensive components
 - Add image optimization for charts
 - Use React.lazy for code splitting
 - Implement skeleton loading states
 
 #### 3. Caching Strategy
+
 ```typescript
 // Implement Redis caching layer
 interface CacheService {
-  getFundBalance(fundId: string): Promise<number | null>
-  setFundBalance(fundId: string, balance: number): Promise<void>
-  invalidateFundCache(fundId: string): Promise<void>
+  getFundBalance(fundId: string): Promise<number | null>;
+  setFundBalance(fundId: string, balance: number): Promise<void>;
+  invalidateFundCache(fundId: string): Promise<void>;
 }
 ```
 
 ### Maintainability Suggestions
 
 #### 1. Code Organization
+
 - Split large components into smaller, focused components
 - Extract business logic into custom hooks
 - Create a dedicated API client layer
 - Implement consistent error handling patterns
 
 #### 2. Documentation
+
 - Add API documentation with OpenAPI/Swagger
 - Create architectural decision records (ADRs)
 - Document database schema relationships
 - Add troubleshooting guides
 
 #### 3. Testing Strategy
+
 - Add end-to-end tests with Playwright
 - Implement visual regression testing
 - Add performance testing for chart rendering
 - Create integration tests for fund calculations
 
 #### 4. Monitoring and Observability
+
 - Add application performance monitoring (APM)
 - Implement error tracking with Sentry
 - Add business metrics dashboards
@@ -698,18 +779,21 @@ interface CacheService {
 ### Technical Debt Assessment
 
 #### High Priority
+
 1. **Large Components**: Break down dashboard and form components
 2. **Migration System**: Move database migrations to proper CLI tools
 3. **Error Handling**: Standardize error response formats
 4. **Cache Management**: Implement automatic cache invalidation
 
 #### Medium Priority
+
 1. **API Consistency**: Standardize response patterns across endpoints
 2. **Component Props**: Reduce prop drilling in deeply nested components
 3. **Type Definitions**: Consolidate overlapping type definitions
 4. **Test Coverage**: Add missing test cases for edge scenarios
 
 #### Low Priority
+
 1. **Code Comments**: Add more detailed comments for complex algorithms
 2. **Bundle Optimization**: Further optimize build output
 3. **Accessibility**: Improve keyboard navigation and screen reader support

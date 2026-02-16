@@ -3,12 +3,12 @@
  * Handles database operations for simulation sub-groups
  */
 
-import { sql } from "@/lib/db";
+import { sql } from '@/lib/db';
 import type {
   Subgroup,
   CreateSubgroupRequest,
   UpdateSubgroupRequest,
-} from "@/types/simulation";
+} from '@/types/simulation';
 
 /**
  * Helper to normalize SQL query results
@@ -68,7 +68,8 @@ export async function getSubgroupsBySimulation(
       categoryIds: (row.categories as any[]).map((cat: any) => cat.categoryId),
       templateSubgroupId: row.templateSubgroupId,
       customOrder: row.customOrder,
-      customVisibility: row.customVisibility !== null ? row.customVisibility : true,
+      customVisibility:
+        row.customVisibility !== null ? row.customVisibility : true,
     }));
   } catch (error) {
     console.error(
@@ -89,11 +90,11 @@ export async function createSubgroup(
   try {
     // Validate input
     if (!request.name || request.name.trim().length === 0) {
-      throw new Error("Sub-group name cannot be empty");
+      throw new Error('Sub-group name cannot be empty');
     }
 
     if (!request.categoryIds || request.categoryIds.length === 0) {
-      throw new Error("Sub-group must contain at least one category");
+      throw new Error('Sub-group must contain at least one category');
     }
 
     // Check for duplicate name within simulation
@@ -171,7 +172,7 @@ export async function createSubgroup(
       categoryIds: request.categoryIds,
     };
   } catch (error) {
-    console.error("Error creating sub-group:", error);
+    console.error('Error creating sub-group:', error);
     throw error;
   }
 }
@@ -195,14 +196,14 @@ export async function updateSubgroup(
 
     const existingArray = normalizeQueryResult(existingSubgroup);
     if (existingArray.length === 0) {
-      throw new Error("Sub-group not found");
+      throw new Error('Sub-group not found');
     }
 
     const currentSubgroup = existingArray[0] as any;
 
     // Validate name if provided
     if (request.name !== undefined && request.name.trim().length === 0) {
-      throw new Error("Sub-group name cannot be empty");
+      throw new Error('Sub-group name cannot be empty');
     }
 
     // Check for duplicate name if updating name
@@ -223,11 +224,8 @@ export async function updateSubgroup(
     }
 
     // Validate categoryIds if provided
-    if (
-      request.categoryIds !== undefined &&
-      request.categoryIds.length === 0
-    ) {
-      throw new Error("Sub-group must contain at least one category");
+    if (request.categoryIds !== undefined && request.categoryIds.length === 0) {
+      throw new Error('Sub-group must contain at least one category');
     }
 
     // Build UPDATE query with conditional SET clauses
@@ -277,7 +275,7 @@ export async function updateSubgroup(
 
     const updateArray = normalizeQueryResult(updateResult);
     if (updateArray.length === 0) {
-      throw new Error("Failed to update sub-group");
+      throw new Error('Failed to update sub-group');
     }
 
     const updatedData = updateArray[0] as any;
@@ -317,7 +315,7 @@ export async function updateSubgroup(
       categoryIds: request.categoryIds || [],
     };
   } catch (error) {
-    console.error("Error updating sub-group:", error);
+    console.error('Error updating sub-group:', error);
     throw error;
   }
 }
@@ -339,7 +337,7 @@ export async function deleteSubgroup(
 
     const existingArray = normalizeQueryResult(existingSubgroup);
     if (existingArray.length === 0) {
-      throw new Error("Sub-group not found");
+      throw new Error('Sub-group not found');
     }
 
     // Delete associated categories (cascade is handled by DB, but we do it explicitly)
@@ -355,7 +353,7 @@ export async function deleteSubgroup(
       AND simulation_id = ${simulationId}
     `;
   } catch (error) {
-    console.error("Error deleting sub-group:", error);
+    console.error('Error deleting sub-group:', error);
     throw error;
   }
 }
@@ -375,8 +373,12 @@ export async function ensureSubgroupTablesExist(): Promise<boolean> {
       ) as exists;
     `;
 
-    const simulationSubgroupsArray = normalizeQueryResult(simulationSubgroupsCheckResult);
-    const simulationSubgroupsExists = simulationSubgroupsArray.length > 0 && (simulationSubgroupsArray[0] as any).exists;
+    const simulationSubgroupsArray = normalizeQueryResult(
+      simulationSubgroupsCheckResult
+    );
+    const simulationSubgroupsExists =
+      simulationSubgroupsArray.length > 0 &&
+      (simulationSubgroupsArray[0] as any).exists;
 
     // Check if subgroup_categories table exists
     const subgroupCategoriesCheckResult = await sql`
@@ -386,8 +388,12 @@ export async function ensureSubgroupTablesExist(): Promise<boolean> {
       ) as exists;
     `;
 
-    const subgroupCategoriesArray = normalizeQueryResult(subgroupCategoriesCheckResult);
-    const subgroupCategoriesExists = subgroupCategoriesArray.length > 0 && (subgroupCategoriesArray[0] as any).exists;
+    const subgroupCategoriesArray = normalizeQueryResult(
+      subgroupCategoriesCheckResult
+    );
+    const subgroupCategoriesExists =
+      subgroupCategoriesArray.length > 0 &&
+      (subgroupCategoriesArray[0] as any).exists;
 
     // If both tables exist, we're done
     if (simulationSubgroupsExists && subgroupCategoriesExists) {
@@ -473,7 +479,7 @@ export async function ensureSubgroupTablesExist(): Promise<boolean> {
 
     return true;
   } catch (error) {
-    console.error("Error ensuring sub-group tables exist:", error);
+    console.error('Error ensuring sub-group tables exist:', error);
     throw error;
   }
 }

@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import React from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   AlertTriangle,
   RefreshCw,
@@ -13,8 +13,8 @@ import {
   Bug,
   CheckCircle,
   Info,
-} from "lucide-react";
-import type { ApiError } from "@/hooks/use-payment-method-validation";
+} from 'lucide-react';
+import type { ApiError } from '@/hooks/use-payment-method-validation';
 
 interface PaymentMethodErrorHandlerProps {
   error: ApiError | Error | null;
@@ -33,59 +33,59 @@ export function PaymentMethodErrorHandler({
   canRetry = false,
   retryCount = 0,
   maxRetries = 3,
-  className = "",
+  className = '',
 }: PaymentMethodErrorHandlerProps) {
   if (!error) return null;
 
   // Determine error type and appropriate icon/styling
   const getErrorInfo = (error: ApiError | Error) => {
-    if ("code" in error) {
+    if ('code' in error) {
       const apiError = error as ApiError;
       switch (apiError.code) {
-        case "NETWORK_ERROR":
+        case 'NETWORK_ERROR':
           return {
             icon: Wifi,
-            variant: "destructive" as const,
-            title: "Error de Conexión",
+            variant: 'destructive' as const,
+            title: 'Error de Conexión',
             canAutoRetry: true,
           };
-        case "DATABASE_CONNECTION_ERROR":
+        case 'DATABASE_CONNECTION_ERROR':
           return {
             icon: Database,
-            variant: "destructive" as const,
-            title: "Error de Base de Datos",
+            variant: 'destructive' as const,
+            title: 'Error de Base de Datos',
             canAutoRetry: true,
           };
-        case "TIMEOUT_ERROR":
+        case 'TIMEOUT_ERROR':
           return {
             icon: Clock,
-            variant: "destructive" as const,
-            title: "Tiempo Agotado",
+            variant: 'destructive' as const,
+            title: 'Tiempo Agotado',
             canAutoRetry: true,
           };
-        case "INVALID_TYPE":
-        case "EMPTY_ARRAY":
-        case "INVALID_METHODS":
-        case "DUPLICATE_METHODS":
-        case "TOO_MANY_METHODS":
+        case 'INVALID_TYPE':
+        case 'EMPTY_ARRAY':
+        case 'INVALID_METHODS':
+        case 'DUPLICATE_METHODS':
+        case 'TOO_MANY_METHODS':
           return {
             icon: AlertTriangle,
-            variant: "destructive" as const,
-            title: "Error de Validación",
+            variant: 'destructive' as const,
+            title: 'Error de Validación',
             canAutoRetry: false,
           };
-        case "DATABASE_CONSTRAINT_ERROR":
+        case 'DATABASE_CONSTRAINT_ERROR':
           return {
             icon: Database,
-            variant: "destructive" as const,
-            title: "Error de Datos",
+            variant: 'destructive' as const,
+            title: 'Error de Datos',
             canAutoRetry: false,
           };
         default:
           return {
             icon: Bug,
-            variant: "destructive" as const,
-            title: "Error del Sistema",
+            variant: 'destructive' as const,
+            title: 'Error del Sistema',
             canAutoRetry: true,
           };
       }
@@ -93,15 +93,15 @@ export function PaymentMethodErrorHandler({
 
     return {
       icon: AlertTriangle,
-      variant: "destructive" as const,
-      title: "Error",
+      variant: 'destructive' as const,
+      title: 'Error',
       canAutoRetry: false,
     };
   };
 
   const errorInfo = getErrorInfo(error);
   const Icon = errorInfo.icon;
-  const isApiError = "code" in error;
+  const isApiError = 'code' in error;
   const apiError = isApiError ? (error as ApiError) : null;
 
   return (
@@ -119,16 +119,16 @@ export function PaymentMethodErrorHandler({
         <div className="space-y-3">
           {/* Main error message */}
           <p className="font-medium">
-            {isApiError ? apiError!.error : error.message}
+            {isApiError ? apiError!.error : (error as Error).message}
           </p>
 
           {/* Additional details */}
           {apiError?.details && (
-            <div className="text-sm space-y-2">
-              {typeof apiError.details === "string" ? (
+            <div className="space-y-2 text-sm">
+              {typeof apiError.details === 'string' ? (
                 <p className="text-muted-foreground">{apiError.details}</p>
               ) : (
-                <details className="bg-muted/50 p-2 rounded text-xs">
+                <details className="rounded bg-muted/50 p-2 text-xs">
                   <summary className="cursor-pointer font-medium">
                     Detalles técnicos
                   </summary>
@@ -143,10 +143,10 @@ export function PaymentMethodErrorHandler({
           {/* Suggestions based on error type */}
           {apiError?.code && (
             <div className="text-sm">
-              <p className="font-medium text-muted-foreground mb-1">
+              <p className="mb-1 font-medium text-muted-foreground">
                 Soluciones sugeridas:
               </p>
-              <ul className="list-disc list-inside space-y-1 text-muted-foreground">
+              <ul className="list-inside list-disc space-y-1 text-muted-foreground">
                 {getSuggestions(apiError.code).map((suggestion, index) => (
                   <li key={index}>{suggestion}</li>
                 ))}
@@ -163,9 +163,9 @@ export function PaymentMethodErrorHandler({
                 variant="outline"
                 disabled={retryCount >= maxRetries}
               >
-                <RefreshCw className="h-3 w-3 mr-1" />
+                <RefreshCw className="mr-1 h-3 w-3" />
                 {retryCount >= maxRetries
-                  ? "Máximo de reintentos alcanzado"
+                  ? 'Máximo de reintentos alcanzado'
                   : `Reintentar (${retryCount}/${maxRetries})`}
               </Button>
             )}
@@ -187,11 +187,11 @@ export function PaymentMethodErrorHandler({
 
           {/* Retry information */}
           {canRetry && retryCount > 0 && (
-            <div className="text-xs text-muted-foreground pt-2 border-t">
-              <Info className="h-3 w-3 inline mr-1" />
+            <div className="border-t pt-2 text-xs text-muted-foreground">
+              <Info className="mr-1 inline h-3 w-3" />
               Intento {retryCount} de {maxRetries}.
               {retryCount < maxRetries &&
-                " El próximo intento será en unos segundos."}
+                ' El próximo intento será en unos segundos.'}
             </div>
           )}
         </div>
@@ -202,74 +202,74 @@ export function PaymentMethodErrorHandler({
 
 function getSuggestions(errorCode: string): string[] {
   switch (errorCode) {
-    case "NETWORK_ERROR":
+    case 'NETWORK_ERROR':
       return [
-        "Verifica tu conexión a internet",
-        "Intenta recargar la página",
-        "Verifica que el servidor esté disponible",
+        'Verifica tu conexión a internet',
+        'Intenta recargar la página',
+        'Verifica que el servidor esté disponible',
       ];
 
-    case "DATABASE_CONNECTION_ERROR":
+    case 'DATABASE_CONNECTION_ERROR':
       return [
-        "Espera unos momentos e intenta nuevamente",
-        "Verifica que el servicio esté funcionando",
-        "Contacta al administrador si el problema persiste",
+        'Espera unos momentos e intenta nuevamente',
+        'Verifica que el servicio esté funcionando',
+        'Contacta al administrador si el problema persiste',
       ];
 
-    case "TIMEOUT_ERROR":
+    case 'TIMEOUT_ERROR':
       return [
-        "Intenta nuevamente con una conexión más estable",
-        "Verifica que no haya problemas de red",
-        "Reduce la cantidad de datos si es posible",
+        'Intenta nuevamente con una conexión más estable',
+        'Verifica que no haya problemas de red',
+        'Reduce la cantidad de datos si es posible',
       ];
 
-    case "INVALID_TYPE":
+    case 'INVALID_TYPE':
       return [
-        "Verifica que los datos enviados sean del tipo correcto",
-        "Revisa la configuración de métodos de pago",
-        "Recarga la página para restablecer el formulario",
+        'Verifica que los datos enviados sean del tipo correcto',
+        'Revisa la configuración de métodos de pago',
+        'Recarga la página para restablecer el formulario',
       ];
 
-    case "EMPTY_ARRAY":
+    case 'EMPTY_ARRAY':
       return [
         "Selecciona al menos un método de pago o usa 'Todos los métodos'",
-        "Verifica que la selección no esté vacía",
+        'Verifica que la selección no esté vacía',
         "Usa la opción 'Todos los métodos' si quieres incluir todos",
       ];
 
-    case "INVALID_METHODS":
+    case 'INVALID_METHODS':
       return [
-        "Verifica que solo uses métodos válidos: Efectivo, Crédito, Débito",
-        "Recarga la página para restablecer las opciones",
-        "Contacta al administrador si el problema persiste",
+        'Verifica que solo uses métodos válidos: Efectivo, Crédito, Débito',
+        'Recarga la página para restablecer las opciones',
+        'Contacta al administrador si el problema persiste',
       ];
 
-    case "DUPLICATE_METHODS":
+    case 'DUPLICATE_METHODS':
       return [
-        "Elimina los métodos de pago duplicados",
-        "Verifica que cada método esté seleccionado solo una vez",
-        "Recarga la página para restablecer la selección",
+        'Elimina los métodos de pago duplicados',
+        'Verifica que cada método esté seleccionado solo una vez',
+        'Recarga la página para restablecer la selección',
       ];
 
-    case "TOO_MANY_METHODS":
+    case 'TOO_MANY_METHODS':
       return [
-        "Verifica que no hayas seleccionado métodos duplicados",
-        "Solo puedes seleccionar hasta 3 métodos diferentes",
-        "Recarga la página para restablecer la selección",
+        'Verifica que no hayas seleccionado métodos duplicados',
+        'Solo puedes seleccionar hasta 3 métodos diferentes',
+        'Recarga la página para restablecer la selección',
       ];
 
-    case "DATABASE_CONSTRAINT_ERROR":
+    case 'DATABASE_CONSTRAINT_ERROR':
       return [
-        "Verifica que los datos cumplan con los requisitos",
-        "Revisa que no haya conflictos con datos existentes",
-        "Contacta al administrador para revisar las restricciones",
+        'Verifica que los datos cumplan con los requisitos',
+        'Revisa que no haya conflictos con datos existentes',
+        'Contacta al administrador para revisar las restricciones',
       ];
 
     default:
       return [
-        "Intenta recargar la página",
-        "Verifica tu conexión a internet",
-        "Contacta al administrador si el problema persiste",
+        'Intenta recargar la página',
+        'Verifica tu conexión a internet',
+        'Contacta al administrador si el problema persiste',
       ];
   }
 }
@@ -286,7 +286,7 @@ export function PaymentMethodSuccessHandler({
   message,
   details,
   onDismiss,
-  className = "",
+  className = '',
 }: PaymentMethodSuccessHandlerProps) {
   return (
     <Alert className={`border-green-200 bg-green-50 ${className}`}>

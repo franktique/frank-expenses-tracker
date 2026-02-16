@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -11,7 +11,7 @@ import {
   ContextMenuSub,
   ContextMenuSubContent,
   ContextMenuSubTrigger,
-} from "@/components/ui/context-menu";
+} from '@/components/ui/context-menu';
 import {
   Settings,
   BarChart3,
@@ -22,7 +22,7 @@ import {
   Zap,
   Download,
   RefreshCw,
-} from "lucide-react";
+} from 'lucide-react';
 
 // Types
 type Simulation = {
@@ -65,7 +65,7 @@ export function SimulationContextMenu({
       if (!simulation) return;
 
       try {
-        const response = await fetch("/api/simulations");
+        const response = await fetch('/api/simulations');
         if (response.ok) {
           const data = await response.json();
           // Get recent simulations excluding current one
@@ -80,7 +80,7 @@ export function SimulationContextMenu({
           setRecentSimulations(recent);
         }
       } catch (error) {
-        console.error("Error loading recent simulations:", error);
+        console.error('Error loading recent simulations:', error);
       }
     };
 
@@ -97,7 +97,7 @@ export function SimulationContextMenu({
   };
 
   const navigateToSimulationList = () => {
-    router.push("/simular");
+    router.push('/simular');
   };
 
   // Export handler
@@ -109,31 +109,31 @@ export function SimulationContextMenu({
         `/api/simulations/${simulation.id}/analytics?export=true`
       );
       if (!response.ok) {
-        throw new Error("Error al exportar datos");
+        throw new Error('Error al exportar datos');
       }
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.style.display = "none";
+      const a = document.createElement('a');
+      a.style.display = 'none';
       a.href = url;
       a.download = `simulacion-${simulation.id}-${simulation.name.replace(
         /[^a-zA-Z0-9]/g,
-        "-"
+        '-'
       )}.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error("Error exporting simulation:", error);
+      console.error('Error exporting simulation:', error);
     }
   };
 
   // Check current page context
-  const isAnalyticsPage = pathname.includes("/analytics");
-  const isConfigPage = pathname.includes("/simular/") && !isAnalyticsPage;
-  const isListPage = pathname === "/simular";
+  const isAnalyticsPage = pathname.includes('/analytics');
+  const isConfigPage = pathname.includes('/simular/') && !isAnalyticsPage;
+  const isListPage = pathname === '/simular';
 
   return (
     <ContextMenu>
@@ -243,8 +243,8 @@ export function SimulationContextMenu({
                     }}
                     className="flex items-center justify-between"
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">
                         {sim.name}
                       </div>
                       <div className="text-xs text-muted-foreground">

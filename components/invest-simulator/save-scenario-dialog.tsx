@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Save } from "lucide-react";
+import { useState } from 'react';
+import { Save } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -10,12 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 
 interface SaveScenarioDialogProps {
   onSave: (name: string, notes?: string) => Promise<void>;
@@ -27,8 +27,8 @@ interface SaveScenarioDialogProps {
 
 export function SaveScenarioDialog({
   onSave,
-  defaultName = "",
-  defaultNotes = "",
+  defaultName = '',
+  defaultNotes = '',
   isUpdate = false,
   trigger,
 }: SaveScenarioDialogProps) {
@@ -41,9 +41,9 @@ export function SaveScenarioDialog({
   const handleSave = async () => {
     if (!name.trim()) {
       toast({
-        title: "Error",
-        description: "El nombre de la simulación es obligatorio",
-        variant: "destructive",
+        title: 'Error',
+        description: 'El nombre de la simulación es obligatorio',
+        variant: 'destructive',
       });
       return;
     }
@@ -52,18 +52,19 @@ export function SaveScenarioDialog({
     try {
       await onSave(name.trim(), notes.trim() || undefined);
       setOpen(false);
-      setName("");
-      setNotes("");
+      setName('');
+      setNotes('');
       toast({
-        title: isUpdate ? "Simulación actualizada" : "Simulación guardada",
-        description: `"${name.trim()}" ha sido ${isUpdate ? "actualizada" : "guardada"} exitosamente`,
+        title: isUpdate ? 'Simulación actualizada' : 'Simulación guardada',
+        description: `"${name.trim()}" ha sido ${isUpdate ? 'actualizada' : 'guardada'} exitosamente`,
       });
     } catch (error: any) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
-          error.message || `No se pudo ${isUpdate ? "actualizar" : "guardar"} la simulación`,
-        variant: "destructive",
+          error.message ||
+          `No se pudo ${isUpdate ? 'actualizar' : 'guardar'} la simulación`,
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -83,20 +84,20 @@ export function SaveScenarioDialog({
       <DialogTrigger asChild>
         {trigger || (
           <Button className="bg-purple-600 hover:bg-purple-700">
-            <Save className="h-4 w-4 mr-2" />
-            {isUpdate ? "Actualizar" : "Guardar"} Simulación
+            <Save className="mr-2 h-4 w-4" />
+            {isUpdate ? 'Actualizar' : 'Guardar'} Simulación
           </Button>
         )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {isUpdate ? "Actualizar Simulación" : "Guardar Simulación"}
+            {isUpdate ? 'Actualizar Simulación' : 'Guardar Simulación'}
           </DialogTitle>
           <DialogDescription>
             {isUpdate
-              ? "Actualiza el nombre y guarda los cambios de tu simulación."
-              : "Dale un nombre a tu simulación para guardarla y poder cargarla después."}
+              ? 'Actualiza el nombre y guarda los cambios de tu simulación.'
+              : 'Dale un nombre a tu simulación para guardarla y poder cargarla después.'}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -108,7 +109,7 @@ export function SaveScenarioDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === 'Enter') {
                   handleSave();
                 }
               }}
@@ -126,7 +127,7 @@ export function SaveScenarioDialog({
               maxLength={2000}
               className="resize-none"
             />
-            <p className="text-xs text-muted-foreground text-right">
+            <p className="text-right text-xs text-muted-foreground">
               {notes.length} / 2000 caracteres
             </p>
           </div>
@@ -140,7 +141,7 @@ export function SaveScenarioDialog({
             disabled={isLoading || !name.trim()}
             className="bg-purple-600 hover:bg-purple-700"
           >
-            {isLoading ? "Guardando..." : isUpdate ? "Actualizar" : "Guardar"}
+            {isLoading ? 'Guardando...' : isUpdate ? 'Actualizar' : 'Guardar'}
           </Button>
         </DialogFooter>
       </DialogContent>

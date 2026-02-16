@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import type React from "react";
+import type React from 'react';
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from 'react';
 import {
   Fund,
   Category,
@@ -15,19 +15,19 @@ import {
   FundOperationResult,
   FundBalanceRecalculationResult,
   CategoryFundRelationship,
-} from "@/types/funds";
-import { CreditCard, CreditCardOperationResult } from "@/types/credit-cards";
-import { AppSettings } from "@/types/settings";
-import { ActivePeriodStorage } from "@/lib/active-period-storage";
-import { loadActivePeriod } from "@/lib/active-period-service";
+} from '@/types/funds';
+import { CreditCard, CreditCardOperationResult } from '@/types/credit-cards';
+import { AppSettings } from '@/types/settings';
+import { ActivePeriodStorage } from '@/lib/active-period-storage';
+import { loadActivePeriod } from '@/lib/active-period-service';
 import {
   categoryFundCache,
   invalidateCategoryFundCache,
   warmCategoryFundCache,
-} from "@/lib/category-fund-cache";
-import { CategoryFundFallback } from "@/lib/category-fund-fallback";
+} from '@/lib/category-fund-cache';
+import { CategoryFundFallback } from '@/lib/category-fund-fallback';
 
-type BudgetContextType = {
+export type BudgetContextType = {
   categories: Category[];
   periods: Period[];
   budgets: Budget[];
@@ -217,15 +217,15 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   // Helper function to safely update session storage with active period
   const updateActivePeriodCache = (
     period: Period | null,
-    operation: "save" | "clear"
+    operation: 'save' | 'clear'
   ) => {
     try {
-      if (operation === "save" && period) {
+      if (operation === 'save' && period) {
         ActivePeriodStorage.saveActivePeriod(period);
         console.log(`Saved active period to cache: ${period.name}`);
-      } else if (operation === "clear") {
+      } else if (operation === 'clear') {
         ActivePeriodStorage.clearActivePeriod();
-        console.log("Cleared active period from cache");
+        console.log('Cleared active period from cache');
       }
     } catch (storageError) {
       console.warn(`Failed to ${operation} active period cache:`, storageError);
@@ -240,7 +240,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       const defaultFund = getDefaultFund();
       if (defaultFund) {
         setFundFilter(defaultFund.id);
-        console.log(`Fund filter initialized to default fund: ${defaultFund.name}`);
+        console.log(
+          `Fund filter initialized to default fund: ${defaultFund.name}`
+        );
       }
     }
   }, [funds, fundFilter, dataLoaded]);
@@ -261,12 +263,12 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         if (cachedPeriod) {
           setActivePeriod(cachedPeriod);
           setIsActivePeriodFromCache(true);
-          console.log("Loaded active period from cache:", cachedPeriod.name);
+          console.log('Loaded active period from cache:', cachedPeriod.name);
         }
       } catch (error) {
-        console.warn("Failed to load cached active period:", error);
+        console.warn('Failed to load cached active period:', error);
         // Clear corrupted cache
-        updateActivePeriodCache(null, "clear");
+        updateActivePeriodCache(null, 'clear');
       }
     };
 
@@ -280,9 +282,12 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     }
 
     // Set up periodic background sync every 5 minutes
-    const syncInterval = setInterval(() => {
-      syncActivePeriodWithServer();
-    }, 5 * 60 * 1000); // 5 minutes
+    const syncInterval = setInterval(
+      () => {
+        syncActivePeriodWithServer();
+      },
+      5 * 60 * 1000
+    ); // 5 minutes
 
     // Also sync when the component mounts (after initial data load)
     if (!isLoading && activePeriod) {
@@ -305,7 +310,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkDbStatus = async () => {
       try {
-        const response = await fetch("/api/check-db-status");
+        const response = await fetch('/api/check-db-status');
 
         // Handle non-OK responses
         if (!response.ok) {
@@ -322,11 +327,11 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
               errorMessage = errorText || errorMessage;
             } catch (textError) {
               // If all else fails, use the status code
-              console.error("Failed to parse error response:", textError);
+              console.error('Failed to parse error response:', textError);
             }
           }
 
-          console.error("Database status check failed:", errorMessage);
+          console.error('Database status check failed:', errorMessage);
           setDbConnectionError(true);
           setConnectionErrorDetails(errorMessage);
           setIsLoading(false);
@@ -337,9 +342,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         try {
           data = await response.json();
         } catch (err) {
-          console.error("Error parsing JSON response:", err);
+          console.error('Error parsing JSON response:', err);
           setDbConnectionError(true);
-          setConnectionErrorDetails("Invalid JSON response from server");
+          setConnectionErrorDetails('Invalid JSON response from server');
           setIsLoading(false);
           return;
         }
@@ -347,7 +352,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         if (!data.connected) {
           setDbConnectionError(true);
           setConnectionErrorDetails(
-            data.error || "Could not connect to database"
+            data.error || 'Could not connect to database'
           );
           setIsLoading(false);
           return;
@@ -363,7 +368,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           setIsLoading(false);
         }
       } catch (err) {
-        console.error("Error checking database status:", err);
+        console.error('Error checking database status:', err);
         setDbConnectionError(true);
         setConnectionErrorDetails((err as Error).message);
         setIsLoading(false);
@@ -379,7 +384,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(true);
       setError(null);
 
-      const response = await fetch("/api/setup-db");
+      const response = await fetch('/api/setup-db');
 
       // Handle non-OK responses
       if (!response.ok) {
@@ -394,7 +399,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         setConnectionErrorDetails(null);
         await refreshData();
       } else {
-        throw new Error(data.message || "Unknown error setting up database");
+        throw new Error(data.message || 'Unknown error setting up database');
       }
     } catch (err) {
       setError((err as Error).message);
@@ -416,7 +421,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
     try {
       // Fetch categories with associated funds
-      const categoriesResponse = await fetch("/api/categories");
+      const categoriesResponse = await fetch('/api/categories');
       if (!categoriesResponse.ok) {
         const errorText = await categoriesResponse.text();
         throw new Error(`Failed to fetch categories: ${errorText}`);
@@ -447,7 +452,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       }
 
       // Fetch periods
-      const periodsResponse = await fetch("/api/periods");
+      const periodsResponse = await fetch('/api/periods');
       if (!periodsResponse.ok) {
         const errorText = await periodsResponse.text();
         throw new Error(`Failed to fetch periods: ${errorText}`);
@@ -474,15 +479,15 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         // Check if cached period matches server state
         if (isActivePeriodFromCache && activePeriod) {
           if (activePeriod.id !== serverActivePeriod.id) {
-            console.log("Active period changed on server, updating cache");
-            updateActivePeriodCache(serverActivePeriod, "save");
+            console.log('Active period changed on server, updating cache');
+            updateActivePeriodCache(serverActivePeriod, 'save');
           } else {
             // Update cached period with latest server data
-            updateActivePeriodCache(serverActivePeriod, "save");
+            updateActivePeriodCache(serverActivePeriod, 'save');
           }
         } else {
           // No cached period or first load, save to cache
-          updateActivePeriodCache(serverActivePeriod, "save");
+          updateActivePeriodCache(serverActivePeriod, 'save');
         }
 
         setActivePeriod(serverActivePeriod);
@@ -490,15 +495,15 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       } else {
         // No active period on server, clear cache
         if (isActivePeriodFromCache || activePeriod) {
-          console.log("No active period on server, clearing cache");
-          updateActivePeriodCache(null, "clear");
+          console.log('No active period on server, clearing cache');
+          updateActivePeriodCache(null, 'clear');
           setActivePeriod(null);
           setIsActivePeriodFromCache(false);
         }
       }
 
       // Fetch budgets
-      const budgetsResponse = await fetch("/api/budgets");
+      const budgetsResponse = await fetch('/api/budgets');
       if (!budgetsResponse.ok) {
         const errorText = await budgetsResponse.text();
         throw new Error(`Failed to fetch budgets: ${errorText}`);
@@ -507,7 +512,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       setBudgets(budgetsData);
 
       // Fetch incomes
-      const incomesResponse = await fetch("/api/incomes");
+      const incomesResponse = await fetch('/api/incomes');
       if (!incomesResponse.ok) {
         const errorText = await incomesResponse.text();
         throw new Error(`Failed to fetch incomes: ${errorText}`);
@@ -516,7 +521,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       setIncomes(incomesData);
 
       // Fetch expenses
-      const expensesResponse = await fetch("/api/expenses");
+      const expensesResponse = await fetch('/api/expenses');
       if (!expensesResponse.ok) {
         const errorText = await expensesResponse.text();
         throw new Error(`Failed to fetch expenses: ${errorText}`);
@@ -525,18 +530,18 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       setExpenses(expensesData);
 
       // Fetch funds
-      const fundsResponse = await fetch("/api/funds");
+      const fundsResponse = await fetch('/api/funds');
       if (!fundsResponse.ok) {
         // If funds fetch fails, it might be because the funds table doesn't exist
         // Try to run the migration first
         try {
-          const migrationResponse = await fetch("/api/migrate-fondos", {
-            method: "POST",
+          const migrationResponse = await fetch('/api/migrate-fondos', {
+            method: 'POST',
           });
 
           if (migrationResponse.ok) {
             // Migration successful, try fetching funds again
-            const retryResponse = await fetch("/api/funds");
+            const retryResponse = await fetch('/api/funds');
             if (!retryResponse.ok) {
               const errorText = await retryResponse.text();
               throw new Error(
@@ -560,20 +565,20 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
       // Fetch credit cards
       try {
-        const creditCardsResponse = await fetch("/api/credit-cards");
+        const creditCardsResponse = await fetch('/api/credit-cards');
         if (creditCardsResponse.ok) {
           const creditCardsData = await creditCardsResponse.json();
           setCreditCards(creditCardsData);
         } else {
           // Credit cards might not be migrated yet, try migration
           try {
-            const migrationResponse = await fetch("/api/migrate-credit-cards", {
-              method: "POST",
+            const migrationResponse = await fetch('/api/migrate-credit-cards', {
+              method: 'POST',
             });
 
             if (migrationResponse.ok) {
               // Migration successful, try fetching credit cards again
-              const retryResponse = await fetch("/api/credit-cards");
+              const retryResponse = await fetch('/api/credit-cards');
               if (retryResponse.ok) {
                 const creditCardsData = await retryResponse.json();
                 setCreditCards(creditCardsData);
@@ -592,13 +597,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (creditCardError) {
         // Credit card fetch error, set empty array (credit cards are optional)
-        console.warn("Failed to fetch credit cards:", creditCardError);
+        console.warn('Failed to fetch credit cards:', creditCardError);
         setCreditCards([]);
       }
 
       // Fetch settings
       try {
-        const settingsResponse = await fetch("/api/settings");
+        const settingsResponse = await fetch('/api/settings');
         if (settingsResponse.ok) {
           const settingsData = await settingsResponse.json();
           if (settingsData.success && settingsData.settings) {
@@ -607,12 +612,12 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         } else {
           // Settings might not be initialized yet, try to set up the table
           try {
-            const setupResponse = await fetch("/api/setup-settings", {
-              method: "POST",
+            const setupResponse = await fetch('/api/setup-settings', {
+              method: 'POST',
             });
             if (setupResponse.ok) {
               // Table setup successful, try fetching settings again
-              const retryResponse = await fetch("/api/settings");
+              const retryResponse = await fetch('/api/settings');
               if (retryResponse.ok) {
                 const settingsData = await retryResponse.json();
                 if (settingsData.success && settingsData.settings) {
@@ -621,11 +626,11 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
               }
             }
           } catch (setupError) {
-            console.warn("Failed to set up settings table:", setupError);
+            console.warn('Failed to set up settings table:', setupError);
           }
         }
       } catch (settingsError) {
-        console.warn("Failed to fetch settings:", settingsError);
+        console.warn('Failed to fetch settings:', settingsError);
       }
 
       // Clear category-fund cache when funds are updated during data refresh
@@ -635,7 +640,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       // Mark data as loaded only when ALL data has been successfully fetched
       setDataLoaded(true);
     } catch (err) {
-      console.error("Error refreshing data:", err);
+      console.error('Error refreshing data:', err);
       setError((err as Error).message);
       setDataLoaded(false);
     } finally {
@@ -667,10 +672,10 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      const response = await fetch("/api/categories", {
-        method: "POST",
+      const response = await fetch('/api/categories', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
       });
@@ -716,9 +721,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       }
 
       const response = await fetch(`/api/categories/${id}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(requestBody),
       });
@@ -747,7 +752,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const deleteCategory = async (id: string) => {
     try {
       const response = await fetch(`/api/categories/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (!response.ok) {
@@ -815,9 +820,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   ): Promise<void> => {
     try {
       const response = await fetch(`/api/categories/${categoryId}/funds`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ fund_ids: fundIds }),
       });
@@ -838,7 +843,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       });
 
       // Refresh categories to get updated associated_funds
-      const categoriesResponse = await fetch("/api/categories");
+      const categoriesResponse = await fetch('/api/categories');
       if (categoriesResponse.ok) {
         const categoriesData = await categoriesResponse.json();
         setCategories(categoriesData);
@@ -857,7 +862,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       const response = await fetch(
         `/api/categories/${categoryId}/funds/${fundId}`,
         {
-          method: "DELETE",
+          method: 'DELETE',
         }
       );
 
@@ -879,7 +884,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       });
 
       // Refresh categories to get updated associated_funds
-      const categoriesResponse = await fetch("/api/categories");
+      const categoriesResponse = await fetch('/api/categories');
       if (categoriesResponse.ok) {
         const categoriesData = await categoriesResponse.json();
         setCategories(categoriesData);
@@ -920,7 +925,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       setCategoryFundsCache(new Map());
 
       // Refresh categories to get updated associated_funds
-      const categoriesResponse = await fetch("/api/categories");
+      const categoriesResponse = await fetch('/api/categories');
       if (categoriesResponse.ok) {
         const categoriesData = await categoriesResponse.json();
         setCategories(categoriesData);
@@ -951,7 +956,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         }
       }
     } catch (err) {
-      console.error("Error refreshing category-fund relationships:", err);
+      console.error('Error refreshing category-fund relationships:', err);
       setError((err as Error).message);
     }
   };
@@ -978,10 +983,10 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   // Period functions
   const addPeriod = async (name: string, month: number, year: number) => {
     try {
-      const response = await fetch("/api/periods", {
-        method: "POST",
+      const response = await fetch('/api/periods', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ name, month, year }),
       });
@@ -1007,9 +1012,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       const response = await fetch(`/api/periods/${id}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ name, month, year }),
       });
@@ -1037,7 +1042,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const deletePeriod = async (id: string) => {
     try {
       const response = await fetch(`/api/periods/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (!response.ok) {
@@ -1081,7 +1086,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
       // Then send request to server
       const response = await fetch(`/api/periods/open/${id}`, {
-        method: "POST",
+        method: 'POST',
       });
 
       if (!response.ok) {
@@ -1102,7 +1107,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       setActivePeriod(openedPeriod);
 
       // Save new active period to session storage atomically with server state
-      updateActivePeriodCache(openedPeriod, "save");
+      updateActivePeriodCache(openedPeriod, 'save');
 
       return openedPeriod;
     } catch (err) {
@@ -1112,16 +1117,16 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         await refreshData();
       } catch (refreshError) {
         console.error(
-          "Failed to refresh data after openPeriod error:",
+          'Failed to refresh data after openPeriod error:',
           refreshError
         );
         // If refresh fails, ensure session storage is consistent with the previous state
         // Since the server operation failed, we should restore the previous active period
         const previousActivePeriod = periods.find((p) => p.is_open || p.isOpen);
         if (previousActivePeriod) {
-          updateActivePeriodCache(previousActivePeriod, "save");
+          updateActivePeriodCache(previousActivePeriod, 'save');
         } else {
-          updateActivePeriodCache(null, "clear");
+          updateActivePeriodCache(null, 'clear');
         }
       }
       throw err;
@@ -1137,12 +1142,12 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       // Optimistic update - update UI immediately
       const periodToClose = periods.find((p) => p.id === id);
       if (!periodToClose) {
-        throw new Error("Period not found in local state");
+        throw new Error('Period not found in local state');
       }
 
       // Check if period is already inactive
       if (!periodToClose.is_open && !periodToClose.isOpen) {
-        throw new Error("Period is already inactive");
+        throw new Error('Period is already inactive');
       }
 
       // Update the specific period to be closed
@@ -1159,9 +1164,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
       // Then send request to server
       const response = await fetch(`/api/periods/close/${id}`, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
 
@@ -1169,37 +1174,37 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       try {
         responseData = await response.json();
       } catch (parseError) {
-        throw new Error("Invalid response from server");
+        throw new Error('Invalid response from server');
       }
 
       if (!response.ok) {
         // Handle specific error codes from the API
         const errorCode = responseData.code;
-        let errorMessage = responseData.error || "Failed to close period";
+        let errorMessage = responseData.error || 'Failed to close period';
 
         switch (errorCode) {
-          case "PERIOD_NOT_FOUND":
-            errorMessage = "El periodo no existe o fue eliminado";
+          case 'PERIOD_NOT_FOUND':
+            errorMessage = 'El periodo no existe o fue eliminado';
             break;
-          case "PERIOD_ALREADY_INACTIVE":
-            errorMessage = "El periodo ya está inactivo";
+          case 'PERIOD_ALREADY_INACTIVE':
+            errorMessage = 'El periodo ya está inactivo';
             break;
-          case "CONCURRENT_MODIFICATION":
+          case 'CONCURRENT_MODIFICATION':
             errorMessage =
-              "El periodo fue modificado por otra operación. Actualizando datos...";
+              'El periodo fue modificado por otra operación. Actualizando datos...';
             // Trigger data refresh for concurrent modifications
             setTimeout(() => refreshData(), 1000);
             break;
-          case "DATABASE_CONNECTION_ERROR":
+          case 'DATABASE_CONNECTION_ERROR':
             errorMessage =
-              "Error de conexión a la base de datos. Intenta nuevamente.";
+              'Error de conexión a la base de datos. Intenta nuevamente.';
             break;
-          case "DATABASE_TIMEOUT":
-            errorMessage = "La operación tardó demasiado. Intenta nuevamente.";
+          case 'DATABASE_TIMEOUT':
+            errorMessage = 'La operación tardó demasiado. Intenta nuevamente.';
             break;
-          case "DATABASE_CONSTRAINT_ERROR":
+          case 'DATABASE_CONSTRAINT_ERROR':
             errorMessage =
-              "Error de integridad de datos. Actualizando información...";
+              'Error de integridad de datos. Actualizando información...';
             setTimeout(() => refreshData(), 1000);
             break;
           default:
@@ -1229,12 +1234,12 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         setActivePeriod(null);
 
         // Clear active period from session storage atomically with server state
-        updateActivePeriodCache(null, "clear");
+        updateActivePeriodCache(null, 'clear');
       }
 
       return closedPeriod;
     } catch (err) {
-      console.error("Error in closePeriod:", err);
+      console.error('Error in closePeriod:', err);
 
       // Set error for global error handling
       setError((err as Error).message);
@@ -1243,17 +1248,17 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       try {
         await refreshData();
       } catch (refreshError) {
-        console.error("Failed to refresh data after error:", refreshError);
+        console.error('Failed to refresh data after error:', refreshError);
         // If refresh fails, at least restore the previous state
         setPeriods(previousPeriods);
         setActivePeriod(previousActivePeriod);
 
         // Restore cache state atomically with rollback
         if (previousActivePeriod) {
-          updateActivePeriodCache(previousActivePeriod, "save");
+          updateActivePeriodCache(previousActivePeriod, 'save');
         } else {
           // Ensure cache is cleared if there was no previous active period
-          updateActivePeriodCache(null, "clear");
+          updateActivePeriodCache(null, 'clear');
         }
       }
 
@@ -1269,10 +1274,10 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     paymentMethod: PaymentMethod
   ) => {
     try {
-      const response = await fetch("/api/budgets", {
-        method: "POST",
+      const response = await fetch('/api/budgets', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           categoryId,
@@ -1316,9 +1321,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   ) => {
     try {
       const response = await fetch(`/api/budgets/${id}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           expectedAmount,
@@ -1344,7 +1349,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const deleteBudget = async (id: string) => {
     try {
       const response = await fetch(`/api/budgets/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (!response.ok) {
@@ -1373,10 +1378,10 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       const defaultFund = getDefaultFund();
       const finalFundId = fundId || defaultFund?.id;
 
-      const response = await fetch("/api/incomes", {
-        method: "POST",
+      const response = await fetch('/api/incomes', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           period_id: periodId,
@@ -1419,9 +1424,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       const finalFundId = fundId || defaultFund?.id;
 
       const response = await fetch(`/api/incomes/${id}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           period_id: periodId,
@@ -1454,7 +1459,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const deleteIncome = async (id: string) => {
     try {
       const response = await fetch(`/api/incomes/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (!response.ok) {
@@ -1489,13 +1494,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     try {
       // Validate fund transfer - prevent same fund transfers
       if (destinationFundId && sourceFundId === destinationFundId) {
-        throw new Error("No se puede transferir dinero al mismo fondo");
+        throw new Error('No se puede transferir dinero al mismo fondo');
       }
 
-      const response = await fetch("/api/expenses", {
-        method: "POST",
+      const response = await fetch('/api/expenses', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           category_id: categoryId,
@@ -1548,13 +1553,13 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         sourceFundId &&
         sourceFundId === destinationFundId
       ) {
-        throw new Error("No se puede transferir dinero al mismo fondo");
+        throw new Error('No se puede transferir dinero al mismo fondo');
       }
 
       const response = await fetch(`/api/expenses/${id}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           category_id: categoryId,
@@ -1593,7 +1598,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const deleteExpense = async (id: string) => {
     try {
       const response = await fetch(`/api/expenses/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (!response.ok) {
@@ -1619,10 +1624,10 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     startDate: string
   ): Promise<Fund> => {
     try {
-      const response = await fetch("/api/funds", {
-        method: "POST",
+      const response = await fetch('/api/funds', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name,
@@ -1662,9 +1667,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         updateData.initial_balance = initialBalance;
 
       const response = await fetch(`/api/funds/${id}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(updateData),
       });
@@ -1690,7 +1695,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const deleteFund = async (id: string): Promise<void> => {
     try {
       const response = await fetch(`/api/funds/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (!response.ok) {
@@ -1717,7 +1722,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   ): Promise<FundBalanceRecalculationResult> => {
     try {
       const response = await fetch(`/api/funds/${id}/recalculate`, {
-        method: "POST",
+        method: 'POST',
       });
 
       if (!response.ok) {
@@ -1753,7 +1758,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     if (!categories) {
       return [];
     }
-    if (!fundId || fundId === "all") {
+    if (!fundId || fundId === 'all') {
       return categories;
     }
 
@@ -1765,7 +1770,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     if (!incomes) {
       return [];
     }
-    if (!fundId || fundId === "all") {
+    if (!fundId || fundId === 'all') {
       return incomes;
     }
     return incomes.filter((income) => income.fund_id === fundId);
@@ -1775,7 +1780,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     if (!expenses || !categories) {
       return [];
     }
-    if (!fundId || fundId === "all") {
+    if (!fundId || fundId === 'all') {
       return expenses;
     }
 
@@ -1795,8 +1800,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const getDashboardData = async (fundId?: string): Promise<any> => {
     try {
       const params = new URLSearchParams();
-      if (fundId && fundId !== "all") {
-        params.append("fund_id", fundId);
+      if (fundId && fundId !== 'all') {
+        params.append('fund_id', fundId);
       }
 
       const response = await fetch(`/api/dashboard?${params.toString()}`);
@@ -1806,7 +1811,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
       return await response.json();
     } catch (err) {
-      console.error("Error fetching dashboard data:", err);
+      console.error('Error fetching dashboard data:', err);
       setError((err as Error).message);
       throw err;
     }
@@ -1814,18 +1819,18 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
   const refreshFunds = async (): Promise<void> => {
     try {
-      const fundsResponse = await fetch("/api/funds");
+      const fundsResponse = await fetch('/api/funds');
       if (!fundsResponse.ok) {
         // If funds fetch fails, it might be because the funds table doesn't exist
         // Try to run the migration first
         try {
-          const migrationResponse = await fetch("/api/migrate-fondos", {
-            method: "POST",
+          const migrationResponse = await fetch('/api/migrate-fondos', {
+            method: 'POST',
           });
 
           if (migrationResponse.ok) {
             // Migration successful, try fetching funds again
-            const retryResponse = await fetch("/api/funds");
+            const retryResponse = await fetch('/api/funds');
             if (!retryResponse.ok) {
               const errorText = await retryResponse.text();
               throw new Error(
@@ -1852,7 +1857,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       categoryFundCache.clear();
       setCategoryFundsCache(new Map());
     } catch (err) {
-      console.error("Error refreshing funds:", err);
+      console.error('Error refreshing funds:', err);
       setError((err as Error).message);
       throw err;
     }
@@ -1873,22 +1878,22 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
         if (!cachedPeriod || cachedPeriod.id !== serverPeriod.id) {
           // Cache is invalid, update it
-          updateActivePeriodCache(serverPeriod, "save");
+          updateActivePeriodCache(serverPeriod, 'save');
           setActivePeriod(serverPeriod);
           return false;
         }
 
         // Cache is valid, but update with latest server data
-        updateActivePeriodCache(serverPeriod, "save");
+        updateActivePeriodCache(serverPeriod, 'save');
         return true;
       } else {
         // No active period on server, clear cache
-        updateActivePeriodCache(null, "clear");
+        updateActivePeriodCache(null, 'clear');
         setActivePeriod(null);
         return false;
       }
     } catch (error) {
-      console.warn("Cache validation failed:", error);
+      console.warn('Cache validation failed:', error);
       return false;
     }
   };
@@ -1909,14 +1914,16 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const getDefaultFund = (): Fund | undefined => {
     // First, try to use the configured default fund from settings
     if (settings?.default_fund_id) {
-      const configuredDefault = funds.find((fund) => fund.id === settings.default_fund_id);
+      const configuredDefault = funds.find(
+        (fund) => fund.id === settings.default_fund_id
+      );
       if (configuredDefault) {
         return configuredDefault;
       }
     }
 
     // Fallback to CategoryFundFallback logic for backward compatibility
-    return CategoryFundFallback.getDefaultFund(funds);
+    return CategoryFundFallback.getDefaultFund(funds) ?? undefined;
   };
 
   // Credit Card functions
@@ -1926,10 +1933,10 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     lastFourDigits: string
   ): Promise<CreditCard> => {
     try {
-      const response = await fetch("/api/credit-cards", {
-        method: "POST",
+      const response = await fetch('/api/credit-cards', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           bank_name: bankName,
@@ -1966,9 +1973,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         updateData.last_four_digits = lastFourDigits;
 
       const response = await fetch(`/api/credit-cards/${id}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(updateData),
       });
@@ -1992,7 +1999,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const deleteCreditCard = async (id: string): Promise<void> => {
     try {
       const response = await fetch(`/api/credit-cards/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (!response.ok) {
@@ -2013,7 +2020,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
   const refreshCreditCards = async (): Promise<void> => {
     try {
-      const response = await fetch("/api/credit-cards");
+      const response = await fetch('/api/credit-cards');
       if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`Failed to refresh credit cards: ${errorText}`);
@@ -2022,7 +2029,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       const creditCardsData = await response.json();
       setCreditCards(creditCardsData);
     } catch (err) {
-      console.error("Error refreshing credit cards:", err);
+      console.error('Error refreshing credit cards:', err);
       setError((err as Error).message);
       throw err;
     }
@@ -2038,25 +2045,25 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
         // Check if current active period matches server
         if (!activePeriod || activePeriod.id !== serverPeriod.id) {
-          console.log("Background sync: Active period changed on server");
+          console.log('Background sync: Active period changed on server');
           setActivePeriod(serverPeriod);
-          updateActivePeriodCache(serverPeriod, "save");
+          updateActivePeriodCache(serverPeriod, 'save');
         } else {
           // Update cache with latest server data
-          updateActivePeriodCache(serverPeriod, "save");
+          updateActivePeriodCache(serverPeriod, 'save');
         }
-      } else if (result.error.type === "no_active_period") {
+      } else if (result.error.type === 'no_active_period') {
         // No active period on server, clear local state
         if (activePeriod) {
           console.log(
-            "Background sync: No active period on server, clearing local state"
+            'Background sync: No active period on server, clearing local state'
           );
           setActivePeriod(null);
-          updateActivePeriodCache(null, "clear");
+          updateActivePeriodCache(null, 'clear');
         }
       }
     } catch (error) {
-      console.warn("Background sync failed:", error);
+      console.warn('Background sync failed:', error);
     }
   };
 
@@ -2137,7 +2144,10 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 export function useBudget() {
   const context = useContext(BudgetContext);
   if (context === undefined) {
-    throw new Error("useBudget must be used within a BudgetProvider");
+    throw new Error('useBudget must be used within a BudgetProvider');
   }
   return context;
 }
+
+// Re-export types for convenience
+export type { PaymentMethod, Income, Period, Budget } from '@/types/funds';

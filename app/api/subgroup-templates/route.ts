@@ -4,16 +4,13 @@
  * POST: Create a new template
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import {
-  getTemplates,
-  createTemplate,
-} from "@/lib/subgroup-template-db-utils";
+import { NextRequest, NextResponse } from 'next/server';
+import { getTemplates, createTemplate } from '@/lib/subgroup-template-db-utils';
 import type {
   CreateTemplateRequest,
   TemplateListResponse,
   TemplateResponse,
-} from "@/types/subgroup-templates";
+} from '@/types/subgroup-templates';
 
 /**
  * GET /api/subgroup-templates
@@ -34,9 +31,9 @@ export async function GET(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error fetching templates:", error);
+    console.error('Error fetching templates:', error);
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to fetch templates";
+      error instanceof Error ? error.message : 'Failed to fetch templates';
 
     return NextResponse.json(
       {
@@ -65,7 +62,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid request body",
+          error: 'Invalid request body',
           statusCode: 400,
         },
         { status: 400 }
@@ -73,11 +70,11 @@ export async function POST(
     }
 
     // Validate request body
-    if (!requestBody.name || typeof requestBody.name !== "string") {
+    if (!requestBody.name || typeof requestBody.name !== 'string') {
       return NextResponse.json(
         {
           success: false,
-          error: "Template name is required and must be a string",
+          error: 'Template name is required and must be a string',
           statusCode: 400,
         },
         { status: 400 }
@@ -88,7 +85,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "subgroups must be an array",
+          error: 'subgroups must be an array',
           statusCode: 400,
         },
         { status: 400 }
@@ -99,7 +96,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Template must contain at least one subgroup",
+          error: 'Template must contain at least one subgroup',
           statusCode: 400,
         },
         { status: 400 }
@@ -118,12 +115,12 @@ export async function POST(
       { status: 201 }
     );
   } catch (error) {
-    console.error("Error creating template:", error);
+    console.error('Error creating template:', error);
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to create template";
+      error instanceof Error ? error.message : 'Failed to create template';
 
     // Check if it's a duplicate name error
-    if (errorMessage.includes("already exists")) {
+    if (errorMessage.includes('already exists')) {
       return NextResponse.json(
         {
           success: false,
@@ -136,8 +133,8 @@ export async function POST(
 
     // Check if it's a validation error
     if (
-      errorMessage.includes("cannot be empty") ||
-      errorMessage.includes("must contain")
+      errorMessage.includes('cannot be empty') ||
+      errorMessage.includes('must contain')
     ) {
       return NextResponse.json(
         {

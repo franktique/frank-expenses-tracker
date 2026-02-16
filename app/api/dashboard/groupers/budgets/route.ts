@@ -1,19 +1,19 @@
-import { NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const periodId = searchParams.get("periodId");
-    const grouperIds = searchParams.get("grouperIds");
-    const estudioId = searchParams.get("estudioId");
-    const budgetPaymentMethods = searchParams.get("budgetPaymentMethods");
+    const periodId = searchParams.get('periodId');
+    const grouperIds = searchParams.get('grouperIds');
+    const estudioId = searchParams.get('estudioId');
+    const budgetPaymentMethods = searchParams.get('budgetPaymentMethods');
 
     // Parse grouperIds if provided
     let grouperIdArray: number[] | null = null;
     if (grouperIds) {
       try {
-        grouperIdArray = grouperIds.split(",").map((id) => {
+        grouperIdArray = grouperIds.split(',').map((id) => {
           const parsed = parseInt(id.trim());
           if (isNaN(parsed)) {
             throw new Error(`Invalid grouper ID: ${id}`);
@@ -34,13 +34,15 @@ export async function GET(request: Request) {
     let budgetPaymentMethodsArray: string[] | null = null;
     if (budgetPaymentMethods) {
       try {
-        budgetPaymentMethodsArray = budgetPaymentMethods.split(",").map((method) => {
-          const trimmed = method.trim();
-          if (!["cash", "credit", "debit"].includes(trimmed)) {
-            throw new Error(`Invalid budget payment method: ${trimmed}`);
-          }
-          return trimmed;
-        });
+        budgetPaymentMethodsArray = budgetPaymentMethods
+          .split(',')
+          .map((method) => {
+            const trimmed = method.trim();
+            if (!['cash', 'credit', 'debit'].includes(trimmed)) {
+              throw new Error(`Invalid budget payment method: ${trimmed}`);
+            }
+            return trimmed;
+          });
       } catch (error) {
         return NextResponse.json(
           {
@@ -52,9 +54,9 @@ export async function GET(request: Request) {
     }
 
     // Validate periodId if provided (it should be a valid UUID string)
-    if (periodId && typeof periodId !== "string") {
+    if (periodId && typeof periodId !== 'string') {
       return NextResponse.json(
-        { error: "Invalid periodId parameter" },
+        { error: 'Invalid periodId parameter' },
         { status: 400 }
       );
     }
@@ -155,7 +157,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error in groupers budgets API:", error);
+    console.error('Error in groupers budgets API:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

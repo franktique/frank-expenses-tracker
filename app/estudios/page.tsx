@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { toast } from "@/components/ui/use-toast";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { toast } from '@/components/ui/use-toast';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -18,14 +18,14 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from '@/components/ui/table';
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   BookOpen,
   PlusCircle,
@@ -33,7 +33,7 @@ import {
   Trash2,
   AlertCircle,
   RefreshCw,
-} from "lucide-react";
+} from 'lucide-react';
 
 type Estudio = {
   id: number;
@@ -46,12 +46,12 @@ type Estudio = {
 export default function EstudiosPage() {
   const [estudios, setEstudios] = useState<Estudio[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [newEstudioName, setNewEstudioName] = useState<string>("");
+  const [newEstudioName, setNewEstudioName] = useState<string>('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState<boolean>(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false);
   const [currentEstudio, setCurrentEstudio] = useState<Estudio | null>(null);
-  const [editEstudioName, setEditEstudioName] = useState<string>("");
+  const [editEstudioName, setEditEstudioName] = useState<string>('');
 
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -65,7 +65,7 @@ export default function EstudiosPage() {
         setFetchError(null);
       }
 
-      const response = await fetch("/api/estudios");
+      const response = await fetch('/api/estudios');
 
       if (response.ok) {
         const data = await response.json();
@@ -80,28 +80,28 @@ export default function EstudiosPage() {
 
         if (!isRetry) {
           toast({
-            title: "Error al cargar estudios",
+            title: 'Error al cargar estudios',
             description: errorMessage,
-            variant: "destructive",
+            variant: 'destructive',
           });
         }
       }
     } catch (error) {
-      console.error("Error fetching estudios:", error);
+      console.error('Error fetching estudios:', error);
       const errorMessage =
         error instanceof Error
-          ? error.message.includes("fetch")
-            ? "Error de conexión. Verifique su conexión a internet."
+          ? error.message.includes('fetch')
+            ? 'Error de conexión. Verifique su conexión a internet.'
             : error.message
-          : "No se pudieron cargar los estudios";
+          : 'No se pudieron cargar los estudios';
 
       setFetchError(errorMessage);
 
       if (!isRetry) {
         toast({
-          title: "Error al cargar estudios",
+          title: 'Error al cargar estudios',
           description: errorMessage,
-          variant: "destructive",
+          variant: 'destructive',
         });
       }
     } finally {
@@ -113,10 +113,10 @@ export default function EstudiosPage() {
   const retryFetchEstudios = async () => {
     if (retryCount >= maxRetries) {
       toast({
-        title: "Error persistente",
+        title: 'Error persistente',
         description:
-          "Se alcanzó el máximo número de reintentos. Recargue la página.",
-        variant: "destructive",
+          'Se alcanzó el máximo número de reintentos. Recargue la página.',
+        variant: 'destructive',
       });
       return;
     }
@@ -125,7 +125,7 @@ export default function EstudiosPage() {
     const delay = Math.pow(2, retryCount) * 1000; // Exponential backoff
 
     toast({
-      title: "Reintentando...",
+      title: 'Reintentando...',
       description: `Intento ${retryCount + 1} de ${maxRetries}`,
     });
 
@@ -147,18 +147,18 @@ export default function EstudiosPage() {
     // Client-side validation
     if (!trimmedName) {
       toast({
-        title: "Nombre requerido",
-        description: "Por favor ingrese un nombre para el estudio",
-        variant: "destructive",
+        title: 'Nombre requerido',
+        description: 'Por favor ingrese un nombre para el estudio',
+        variant: 'destructive',
       });
       return;
     }
 
     if (trimmedName.length > 255) {
       toast({
-        title: "Nombre muy largo",
-        description: "El nombre no puede exceder 255 caracteres",
-        variant: "destructive",
+        title: 'Nombre muy largo',
+        description: 'El nombre no puede exceder 255 caracteres',
+        variant: 'destructive',
       });
       return;
     }
@@ -170,9 +170,9 @@ export default function EstudiosPage() {
 
     if (duplicateExists) {
       toast({
-        title: "Nombre duplicado",
-        description: "Ya existe un estudio con este nombre",
-        variant: "destructive",
+        title: 'Nombre duplicado',
+        description: 'Ya existe un estudio con este nombre',
+        variant: 'destructive',
       });
       return;
     }
@@ -180,19 +180,19 @@ export default function EstudiosPage() {
     try {
       setIsCreating(true);
 
-      const response = await fetch("/api/estudios", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
+      const response = await fetch('/api/estudios', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: trimmedName }),
       });
 
       if (response.ok) {
         const newEstudio = await response.json();
         setEstudios([...estudios, { ...newEstudio, grouper_count: 0 }]);
-        setNewEstudioName("");
+        setNewEstudioName('');
         setIsAddDialogOpen(false);
         toast({
-          title: "Estudio creado",
+          title: 'Estudio creado',
           description: `El estudio "${trimmedName}" ha sido creado con éxito.`,
         });
       } else {
@@ -201,24 +201,24 @@ export default function EstudiosPage() {
           error.error || `Error ${response.status}: ${response.statusText}`;
 
         toast({
-          title: "Error al crear estudio",
+          title: 'Error al crear estudio',
           description: errorMessage,
-          variant: "destructive",
+          variant: 'destructive',
         });
       }
     } catch (error) {
-      console.error("Exception while creating estudio:", error);
+      console.error('Exception while creating estudio:', error);
       const errorMessage =
         error instanceof Error
-          ? error.message.includes("fetch")
-            ? "Error de conexión. Verifique su conexión a internet."
+          ? error.message.includes('fetch')
+            ? 'Error de conexión. Verifique su conexión a internet.'
             : error.message
-          : "No se pudo crear el estudio";
+          : 'No se pudo crear el estudio';
 
       toast({
-        title: "Error al crear estudio",
+        title: 'Error al crear estudio',
         description: errorMessage,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsCreating(false);
@@ -236,18 +236,18 @@ export default function EstudiosPage() {
     // Client-side validation
     if (!trimmedName) {
       toast({
-        title: "Nombre requerido",
-        description: "Por favor ingrese un nombre para el estudio",
-        variant: "destructive",
+        title: 'Nombre requerido',
+        description: 'Por favor ingrese un nombre para el estudio',
+        variant: 'destructive',
       });
       return;
     }
 
     if (trimmedName.length > 255) {
       toast({
-        title: "Nombre muy largo",
-        description: "El nombre no puede exceder 255 caracteres",
-        variant: "destructive",
+        title: 'Nombre muy largo',
+        description: 'El nombre no puede exceder 255 caracteres',
+        variant: 'destructive',
       });
       return;
     }
@@ -267,9 +267,9 @@ export default function EstudiosPage() {
 
     if (duplicateExists) {
       toast({
-        title: "Nombre duplicado",
-        description: "Ya existe otro estudio con este nombre",
-        variant: "destructive",
+        title: 'Nombre duplicado',
+        description: 'Ya existe otro estudio con este nombre',
+        variant: 'destructive',
       });
       return;
     }
@@ -278,8 +278,8 @@ export default function EstudiosPage() {
       setIsUpdating(true);
 
       const response = await fetch(`/api/estudios/${currentEstudio.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name: trimmedName }),
       });
 
@@ -297,7 +297,7 @@ export default function EstudiosPage() {
         );
         setIsEditDialogOpen(false);
         toast({
-          title: "Estudio actualizado",
+          title: 'Estudio actualizado',
           description: `El estudio ha sido actualizado a "${trimmedName}".`,
         });
       } else {
@@ -306,24 +306,24 @@ export default function EstudiosPage() {
           error.error || `Error ${response.status}: ${response.statusText}`;
 
         toast({
-          title: "Error al actualizar estudio",
+          title: 'Error al actualizar estudio',
           description: errorMessage,
-          variant: "destructive",
+          variant: 'destructive',
         });
       }
     } catch (error) {
-      console.error("Exception while updating estudio:", error);
+      console.error('Exception while updating estudio:', error);
       const errorMessage =
         error instanceof Error
-          ? error.message.includes("fetch")
-            ? "Error de conexión. Verifique su conexión a internet."
+          ? error.message.includes('fetch')
+            ? 'Error de conexión. Verifique su conexión a internet.'
             : error.message
-          : "No se pudo actualizar el estudio";
+          : 'No se pudo actualizar el estudio';
 
       toast({
-        title: "Error al actualizar estudio",
+        title: 'Error al actualizar estudio',
         description: errorMessage,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsUpdating(false);
@@ -339,10 +339,10 @@ export default function EstudiosPage() {
     // Check if this is the last estudio
     if (estudios.length === 1) {
       toast({
-        title: "No se puede eliminar",
+        title: 'No se puede eliminar',
         description:
-          "No se puede eliminar el último estudio. Debe existir al menos un estudio para usar el dashboard.",
-        variant: "destructive",
+          'No se puede eliminar el último estudio. Debe existir al menos un estudio para usar el dashboard.',
+        variant: 'destructive',
       });
       return;
     }
@@ -351,7 +351,7 @@ export default function EstudiosPage() {
       setIsDeleting(true);
 
       const response = await fetch(`/api/estudios/${currentEstudio.id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
 
       if (response.ok) {
@@ -362,10 +362,10 @@ export default function EstudiosPage() {
         const grouperMessage =
           result.grouperCount > 0
             ? ` Los ${result.grouperCount} agrupadores han sido desasociados.`
-            : "";
+            : '';
 
         toast({
-          title: "Estudio eliminado",
+          title: 'Estudio eliminado',
           description: `El estudio "${currentEstudio.name}" ha sido eliminado.${grouperMessage}`,
         });
       } else {
@@ -374,33 +374,33 @@ export default function EstudiosPage() {
           error.error || `Error ${response.status}: ${response.statusText}`;
 
         // Handle specific error cases
-        if (error.code === "LAST_ESTUDIO") {
+        if (error.code === 'LAST_ESTUDIO') {
           toast({
-            title: "No se puede eliminar",
+            title: 'No se puede eliminar',
             description: errorMessage,
-            variant: "destructive",
+            variant: 'destructive',
           });
         } else {
           toast({
-            title: "Error al eliminar estudio",
+            title: 'Error al eliminar estudio',
             description: errorMessage,
-            variant: "destructive",
+            variant: 'destructive',
           });
         }
       }
     } catch (error) {
-      console.error("Error deleting estudio:", error);
+      console.error('Error deleting estudio:', error);
       const errorMessage =
         error instanceof Error
-          ? error.message.includes("fetch")
-            ? "Error de conexión. Verifique su conexión a internet."
+          ? error.message.includes('fetch')
+            ? 'Error de conexión. Verifique su conexión a internet.'
             : error.message
-          : "No se pudo eliminar el estudio";
+          : 'No se pudo eliminar el estudio';
 
       toast({
-        title: "Error al eliminar estudio",
+        title: 'Error al eliminar estudio',
         description: errorMessage,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsDeleting(false);
@@ -409,7 +409,7 @@ export default function EstudiosPage() {
 
   return (
     <div className="container mx-auto py-6">
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <BookOpen className="h-6 w-6" />
           <h1 className="text-3xl font-bold">Estudios</h1>
@@ -429,19 +429,19 @@ export default function EstudiosPage() {
         </CardHeader>
         <CardContent>
           {isLoading ? (
-            <div className="text-center py-8">
+            <div className="py-8 text-center">
               <div className="flex items-center justify-center gap-2">
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                <div className="h-6 w-6 animate-spin rounded-full border-b-2 border-primary"></div>
                 <span>Cargando estudios...</span>
               </div>
             </div>
           ) : fetchError ? (
-            <div className="text-center py-8">
+            <div className="py-8 text-center">
               <div className="flex flex-col items-center gap-4">
                 <div className="text-destructive">
-                  <AlertCircle className="h-12 w-12 mx-auto mb-2" />
+                  <AlertCircle className="mx-auto mb-2 h-12 w-12" />
                   <p className="font-medium">Error al cargar estudios</p>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     {fetchError}
                   </p>
                 </div>
@@ -450,10 +450,10 @@ export default function EstudiosPage() {
                   variant="outline"
                   disabled={retryCount >= maxRetries}
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                  <RefreshCw className="mr-2 h-4 w-4" />
                   {retryCount >= maxRetries
-                    ? "Máximo de reintentos alcanzado"
-                    : "Reintentar"}
+                    ? 'Máximo de reintentos alcanzado'
+                    : 'Reintentar'}
                 </Button>
                 {retryCount >= maxRetries && (
                   <Button
@@ -466,12 +466,12 @@ export default function EstudiosPage() {
               </div>
             </div>
           ) : estudios.length === 0 ? (
-            <div className="text-center py-8">
-              <BookOpen className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-lg font-medium mb-2">
+            <div className="py-8 text-center">
+              <BookOpen className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+              <h3 className="mb-2 text-lg font-medium">
                 No hay estudios definidos
               </h3>
-              <p className="text-muted-foreground mb-4">
+              <p className="mb-4 text-muted-foreground">
                 Cree un estudio para comenzar a organizar sus agrupadores en
                 colecciones.
               </p>
@@ -543,7 +543,7 @@ export default function EstudiosPage() {
         open={isAddDialogOpen}
         onOpenChange={(open) => {
           setIsAddDialogOpen(open);
-          if (!open) setNewEstudioName(""); // Reset input when dialog closes
+          if (!open) setNewEstudioName(''); // Reset input when dialog closes
         }}
       >
         <DialogContent>
@@ -556,7 +556,7 @@ export default function EstudiosPage() {
               value={newEstudioName}
               onChange={(e) => setNewEstudioName(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && newEstudioName.trim()) {
+                if (e.key === 'Enter' && newEstudioName.trim()) {
                   e.preventDefault();
                   handleAddEstudio();
                 }
@@ -581,11 +581,11 @@ export default function EstudiosPage() {
             >
               {isCreating ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
                   Creando...
                 </>
               ) : (
-                "Crear"
+                'Crear'
               )}
             </Button>
           </DialogFooter>
@@ -610,7 +610,7 @@ export default function EstudiosPage() {
               value={editEstudioName}
               onChange={(e) => setEditEstudioName(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && editEstudioName.trim()) {
+                if (e.key === 'Enter' && editEstudioName.trim()) {
                   e.preventDefault();
                   handleUpdateEstudio();
                 }
@@ -635,11 +635,11 @@ export default function EstudiosPage() {
             >
               {isUpdating ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
                   Actualizando...
                 </>
               ) : (
-                "Actualizar"
+                'Actualizar'
               )}
             </Button>
           </DialogFooter>
@@ -656,7 +656,7 @@ export default function EstudiosPage() {
             ¿Está seguro de que desea eliminar el estudio "
             {currentEstudio?.name}"?
             {currentEstudio && currentEstudio.grouper_count > 0 && (
-              <span className="block text-red-500 mt-2">
+              <span className="mt-2 block text-red-500">
                 Este estudio contiene {currentEstudio.grouper_count} agrupadores
                 que serán desasociados.
               </span>
@@ -670,11 +670,11 @@ export default function EstudiosPage() {
             >
               {isDeleting ? (
                 <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
                   Eliminando...
                 </>
               ) : (
-                "Eliminar"
+                'Eliminar'
               )}
             </Button>
             <Button

@@ -40,18 +40,15 @@
 ### Enhanced Features Added:
 
 1. **Dual Persistence Strategy**:
-
    - Primary: URL parameters for better shareability and browser navigation
    - Fallback: Session storage for reliability
 
 2. **Cross-Tab State Synchronization**:
-
    - Filter state tracking includes estudio selection
    - State is synchronized across all three dashboard tabs
    - Data refresh is triggered when filter state changes
 
 3. **Browser Navigation Support**:
-
    - PopState event listener for back/forward navigation
    - URL parameters are maintained during navigation
    - Automatic synchronization between URL and session storage
@@ -73,20 +70,17 @@
 ## Testing Instructions
 
 1. **Basic Persistence Test**:
-
    - Select an estudio in the dashboard
    - Switch between tabs - estudio should remain selected
    - Refresh the page - estudio selection should persist
    - Check URL parameters and session storage
 
 2. **Browser Navigation Test**:
-
    - Select different estudios and navigate between tabs
    - Use browser back/forward buttons
    - Verify estudio selection is maintained
 
 3. **Direct URL Access Test**:
-
    - Copy URL with estudioId parameter
    - Open in new tab/window
    - Verify estudio is automatically selected

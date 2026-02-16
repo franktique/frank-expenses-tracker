@@ -57,12 +57,10 @@ The expense source fund migration adds a `source_fund_id` column to the expenses
 The migration follows this priority order for determining source funds:
 
 1. **Category-Fund Relationships** (preferred): Uses the many-to-many relationship table
-
    - Takes the first available fund if multiple relationships exist
    - Ordered by creation date (oldest first)
 
 2. **Legacy Fund Assignment** (fallback): Uses the direct category.fund_id field
-
    - Maintains backward compatibility with existing data
 
 3. **No Assignment**: Expenses without valid fund relationships remain unmigrated
@@ -153,13 +151,11 @@ Returns current migration status and statistics.
 ### Common Issues
 
 1. **Expenses Not Migrated**
-
    - Check if categories have fund relationships
    - Verify category_fund_relationships table exists
    - Check for orphaned categories
 
 2. **Migration Fails**
-
    - Ensure database has proper permissions
    - Check for foreign key constraint violations
    - Verify funds table integrity

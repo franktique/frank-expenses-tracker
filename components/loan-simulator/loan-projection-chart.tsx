@@ -1,12 +1,7 @@
-"use client";
+'use client';
 
-import { useMemo } from "react";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   ResponsiveContainer,
   AreaChart,
@@ -16,10 +11,10 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-} from "recharts";
-import { TrendingUp } from "lucide-react";
-import type { AmortizationPayment } from "@/types/loan-simulator";
-import { formatCurrency } from "@/lib/loan-calculations";
+} from 'recharts';
+import { TrendingUp } from 'lucide-react';
+import type { AmortizationPayment } from '@/types/loan-simulator';
+import { formatCurrency } from '@/lib/loan-calculations';
 
 interface LoanProjectionChartProps {
   payments: AmortizationPayment[];
@@ -70,7 +65,9 @@ export function LoanProjectionChart({
       const step = Math.max(1, Math.floor(payments.length / maxPoints));
 
       return payments
-        .filter((_, index) => index % step === 0 || index === payments.length - 1)
+        .filter(
+          (_, index) => index % step === 0 || index === payments.length - 1
+        )
         .map((payment) => ({
           period: `#${payment.paymentNumber}`,
           principal: Math.round(payment.principalPortion),
@@ -83,8 +80,8 @@ export function LoanProjectionChart({
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-background border rounded-lg shadow-lg p-3">
-          <p className="font-semibold mb-2">{payload[0].payload.period}</p>
+        <div className="rounded-lg border bg-background p-3 shadow-lg">
+          <p className="mb-2 font-semibold">{payload[0].payload.period}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} className="text-sm" style={{ color: entry.color }}>
               {entry.name}: {formatCurrency(entry.value)}
@@ -122,24 +119,40 @@ export function LoanProjectionChart({
                   />
                 </linearGradient>
                 <linearGradient id="colorInterest" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="rgb(249, 115, 22)" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="rgb(249, 115, 22)" stopOpacity={0} />
+                  <stop
+                    offset="5%"
+                    stopColor="rgb(249, 115, 22)"
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="rgb(249, 115, 22)"
+                    stopOpacity={0}
+                  />
                 </linearGradient>
                 <linearGradient id="colorBalance" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="rgb(59, 130, 246)" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="rgb(59, 130, 246)" stopOpacity={0} />
+                  <stop
+                    offset="5%"
+                    stopColor="rgb(59, 130, 246)"
+                    stopOpacity={0.8}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="rgb(59, 130, 246)"
+                    stopOpacity={0}
+                  />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
               <XAxis
                 dataKey="period"
                 className="text-xs"
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
               />
               <YAxis
                 tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
                 className="text-xs"
-                tick={{ fill: "hsl(var(--muted-foreground))" }}
+                tick={{ fill: 'hsl(var(--muted-foreground))' }}
               />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
@@ -172,9 +185,9 @@ export function LoanProjectionChart({
             </AreaChart>
           </ResponsiveContainer>
         </div>
-        <p className="text-xs text-muted-foreground mt-4">
-          Visualización del pago de capital vs interés y el balance restante a lo
-          largo del tiempo.
+        <p className="mt-4 text-xs text-muted-foreground">
+          Visualización del pago de capital vs interés y el balance restante a
+          lo largo del tiempo.
         </p>
       </CardContent>
     </Card>

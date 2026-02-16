@@ -1,9 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { convertCategoryToMultiFund } from "@/lib/category-fund-migration";
-import { z } from "zod";
+import { type NextRequest, NextResponse } from 'next/server';
+import { convertCategoryToMultiFund } from '@/lib/category-fund-migration';
+import { z } from 'zod';
 
 const MigrateCategoryFundsSchema = z.object({
-  fund_ids: z.array(z.string().uuid()).min(0, "Fund IDs array is required"),
+  fund_ids: z.array(z.string().uuid()).min(0, 'Fund IDs array is required'),
 });
 
 export async function POST(
@@ -20,7 +20,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Validation failed",
+          error: 'Validation failed',
           details: validationResult.error.errors,
         },
         { status: 400 }
@@ -39,7 +39,7 @@ export async function POST(
       status: migrationResult.success ? 200 : 400,
     });
   } catch (error) {
-    console.error("Error migrating category funds:", error);
+    console.error('Error migrating category funds:', error);
     return NextResponse.json(
       {
         success: false,

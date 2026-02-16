@@ -3,13 +3,13 @@
  * Handles database operations for subgroup templates
  */
 
-import { sql } from "@/lib/db";
+import { sql } from '@/lib/db';
 import type {
   SubgroupTemplate,
   TemplateSubgroup,
   CreateTemplateRequest,
   UpdateTemplateRequest,
-} from "@/types/subgroup-templates";
+} from '@/types/subgroup-templates';
 
 /**
  * Helper to normalize SQL query results
@@ -48,7 +48,7 @@ export async function getTemplates(): Promise<SubgroupTemplate[]> {
       updatedAt: row.updatedAt.toISOString(),
     }));
   } catch (error) {
-    console.error("Error fetching templates:", error);
+    console.error('Error fetching templates:', error);
     throw error;
   }
 }
@@ -56,7 +56,9 @@ export async function getTemplates(): Promise<SubgroupTemplate[]> {
 /**
  * Get a single template by ID with its subgroups and categories
  */
-export async function getTemplateById(templateId: string): Promise<SubgroupTemplate | null> {
+export async function getTemplateById(
+  templateId: string
+): Promise<SubgroupTemplate | null> {
   try {
     // Get template
     const templateResult = await sql`
@@ -101,7 +103,9 @@ export async function getTemplateById(templateId: string): Promise<SubgroupTempl
       ORDER BY ts.display_order ASC
     `;
 
-    const subgroups: TemplateSubgroup[] = normalizeQueryResult(subgroupsResult).map((row: any) => ({
+    const subgroups: TemplateSubgroup[] = normalizeQueryResult(
+      subgroupsResult
+    ).map((row: any) => ({
       id: row.id,
       templateId: row.templateId,
       name: row.name,
@@ -127,15 +131,17 @@ export async function getTemplateById(templateId: string): Promise<SubgroupTempl
 /**
  * Create a new template with subgroups and optional categories
  */
-export async function createTemplate(request: CreateTemplateRequest): Promise<SubgroupTemplate> {
+export async function createTemplate(
+  request: CreateTemplateRequest
+): Promise<SubgroupTemplate> {
   try {
     // Validate input
     if (!request.name || request.name.trim().length === 0) {
-      throw new Error("Template name cannot be empty");
+      throw new Error('Template name cannot be empty');
     }
 
     if (!request.subgroups || request.subgroups.length === 0) {
-      throw new Error("Template must contain at least one subgroup");
+      throw new Error('Template must contain at least one subgroup');
     }
 
     // Check for duplicate name
@@ -174,7 +180,8 @@ export async function createTemplate(request: CreateTemplateRequest): Promise<Su
     const subgroups: TemplateSubgroup[] = [];
     for (let i = 0; i < request.subgroups.length; i++) {
       const subgroup = request.subgroups[i];
-      const displayOrder = subgroup.displayOrder !== undefined ? subgroup.displayOrder : i;
+      const displayOrder =
+        subgroup.displayOrder !== undefined ? subgroup.displayOrder : i;
 
       const subgroupResult = await sql`
         INSERT INTO template_subgroups (
@@ -235,7 +242,7 @@ export async function createTemplate(request: CreateTemplateRequest): Promise<Su
       subgroups,
     };
   } catch (error) {
-    console.error("Error creating template:", error);
+    console.error('Error creating template:', error);
     throw error;
   }
 }
@@ -256,14 +263,14 @@ export async function updateTemplate(
 
     const existingArray = normalizeQueryResult(existingTemplate);
     if (existingArray.length === 0) {
-      throw new Error("Template not found");
+      throw new Error('Template not found');
     }
 
     const currentTemplate = existingArray[0] as any;
 
     // Validate name if provided
     if (request.name !== undefined && request.name.trim().length === 0) {
-      throw new Error("Template name cannot be empty");
+      throw new Error('Template name cannot be empty');
     }
 
     // Check for duplicate name if updating name
@@ -315,7 +322,7 @@ export async function updateTemplate(
 
     const updateArray = normalizeQueryResult(updateResult);
     if (updateArray.length === 0) {
-      throw new Error("Failed to update template");
+      throw new Error('Failed to update template');
     }
 
     const updatedData = updateArray[0] as any;
@@ -328,7 +335,7 @@ export async function updateTemplate(
       updatedAt: updatedData.updatedAt.toISOString(),
     };
   } catch (error) {
-    console.error("Error updating template:", error);
+    console.error('Error updating template:', error);
     throw error;
   }
 }
@@ -346,7 +353,7 @@ export async function deleteTemplate(templateId: string): Promise<void> {
 
     const existingArray = normalizeQueryResult(existingTemplate);
     if (existingArray.length === 0) {
-      throw new Error("Template not found");
+      throw new Error('Template not found');
     }
 
     // Delete the template (CASCADE will delete template_subgroups)
@@ -355,7 +362,7 @@ export async function deleteTemplate(templateId: string): Promise<void> {
       WHERE id = ${templateId}
     `;
   } catch (error) {
-    console.error("Error deleting template:", error);
+    console.error('Error deleting template:', error);
     throw error;
   }
 }
@@ -370,7 +377,7 @@ export async function addSubgroupToTemplate(
   try {
     // Validate input
     if (!subgroupName || subgroupName.trim().length === 0) {
-      throw new Error("Subgroup name cannot be empty");
+      throw new Error('Subgroup name cannot be empty');
     }
 
     // Check if template exists
@@ -381,7 +388,7 @@ export async function addSubgroupToTemplate(
 
     const templateArray = normalizeQueryResult(templateExists);
     if (templateArray.length === 0) {
-      throw new Error("Template not found");
+      throw new Error('Template not found');
     }
 
     // Check for duplicate subgroup name in template
@@ -393,7 +400,9 @@ export async function addSubgroupToTemplate(
 
     const duplicateArray = normalizeQueryResult(duplicateSubgroup);
     if (duplicateArray.length > 0) {
-      throw new Error(`Subgroup with name "${subgroupName}" already exists in this template`);
+      throw new Error(
+        `Subgroup with name "${subgroupName}" already exists in this template`
+      );
     }
 
     // Get next display order
@@ -434,7 +443,7 @@ export async function addSubgroupToTemplate(
       createdAt: subgroupData.createdAt.toISOString(),
     };
   } catch (error) {
-    console.error("Error adding subgroup to template:", error);
+    console.error('Error adding subgroup to template:', error);
     throw error;
   }
 }
@@ -456,7 +465,7 @@ export async function removeSubgroupFromTemplate(
 
     const existingArray = normalizeQueryResult(existingSubgroup);
     if (existingArray.length === 0) {
-      throw new Error("Subgroup not found in template");
+      throw new Error('Subgroup not found in template');
     }
 
     // Delete the subgroup
@@ -466,7 +475,7 @@ export async function removeSubgroupFromTemplate(
       AND template_id = ${templateId}
     `;
   } catch (error) {
-    console.error("Error removing subgroup from template:", error);
+    console.error('Error removing subgroup from template:', error);
     throw error;
   }
 }
@@ -489,11 +498,11 @@ export async function applyTemplateToSimulation(
     // Get template with subgroups and categories
     const template = await getTemplateById(templateId);
     if (!template) {
-      throw new Error("Template not found");
+      throw new Error('Template not found');
     }
 
     if (!template.subgroups || template.subgroups.length === 0) {
-      throw new Error("Template has no subgroups");
+      throw new Error('Template has no subgroups');
     }
 
     // Get available categories in the simulation for matching
@@ -558,18 +567,20 @@ export async function applyTemplateToSimulation(
     const missingCategories: (string | number)[] = [];
 
     for (const createdSubgroup of createdSubgroups) {
-      const templateSubgroup = template.subgroups.find(sg => sg.id === createdSubgroup.templateId);
+      const templateSubgroup = template.subgroups.find(
+        (sg) => sg.id === createdSubgroup.templateId
+      );
       if (!templateSubgroup || !templateSubgroup.categoryIds) continue;
 
       for (const templateCategoryId of templateSubgroup.categoryIds) {
         let matchedCategoryId: string | number | null = null;
-        let matchType: "exact" | "name" | "none" = "none";
+        let matchType: 'exact' | 'name' | 'none' = 'none';
         let categoryName: string | undefined;
 
         // Try exact ID match first
         if (categoryById.has(templateCategoryId)) {
           matchedCategoryId = categoryById.get(templateCategoryId).id;
-          matchType = "exact";
+          matchType = 'exact';
           categoryName = categoryById.get(templateCategoryId).name;
         }
         // If no exact match, try to find by name (fetch category name from template_categories)
@@ -588,8 +599,10 @@ export async function applyTemplateToSimulation(
             categoryName = catNameArray[0].name;
             // Try to match by name in target simulation
             if (categoryByName.has(categoryName.toLowerCase())) {
-              matchedCategoryId = categoryByName.get(categoryName.toLowerCase()).id;
-              matchType = "name";
+              matchedCategoryId = categoryByName.get(
+                categoryName.toLowerCase()
+              ).id;
+              matchType = 'name';
             }
           }
         }
@@ -647,7 +660,7 @@ export async function applyTemplateToSimulation(
       missingCategories,
     };
   } catch (error) {
-    console.error("Error applying template to simulation:", error);
+    console.error('Error applying template to simulation:', error);
     throw error;
   }
 }
@@ -687,7 +700,10 @@ export async function getAppliedTemplate(simulationId: number): Promise<{
       appliedAt: data.appliedAt ? data.appliedAt.toISOString() : null,
     };
   } catch (error) {
-    console.error(`Error getting applied template for simulation ${simulationId}:`, error);
+    console.error(
+      `Error getting applied template for simulation ${simulationId}:`,
+      error
+    );
     throw error;
   }
 }

@@ -1,11 +1,11 @@
-import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { DashboardData, BudgetSummaryItem } from "@/types/dashboard";
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { DashboardData, BudgetSummaryItem } from '@/types/dashboard';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const fundId = searchParams.get("fund_id");
+    const fundId = searchParams.get('fund_id');
 
     // Get active period
     const [activePeriod] = await sql`
@@ -159,7 +159,7 @@ export async function GET(request: NextRequest) {
     const budgetSummary = await budgetQuery;
 
     // Log values for debugging
-    console.log("API Dashboard Data:", {
+    console.log('API Dashboard Data:', {
       activePeriodId: activePeriod.id,
       activePeriodName: activePeriod.name,
       fundFilter: fundId,
@@ -201,7 +201,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("Error fetching dashboard data:", error);
+    console.error('Error fetching dashboard data:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

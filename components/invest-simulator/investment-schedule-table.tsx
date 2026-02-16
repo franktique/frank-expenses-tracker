@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useMemo } from "react";
+import { useState, useMemo } from 'react';
 import {
   Table,
   TableBody,
@@ -8,17 +8,20 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { InvestmentPeriodDetail, CurrencyCode } from "@/types/invest-simulator";
-import { formatCurrency } from "@/types/invest-simulator";
+} from '@/components/ui/table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import type {
+  InvestmentPeriodDetail,
+  CurrencyCode,
+} from '@/types/invest-simulator';
+import { formatCurrency } from '@/types/invest-simulator';
 
 interface InvestmentScheduleTableProps {
   schedule: InvestmentPeriodDetail[];
   currency: CurrencyCode;
-  compoundingFrequency: "daily" | "monthly";
+  compoundingFrequency: 'daily' | 'monthly';
 }
 
 const ITEMS_PER_PAGE = 12;
@@ -41,20 +44,21 @@ export function InvestmentScheduleTable({
     setCurrentPage(Math.max(1, Math.min(page, totalPages)));
   };
 
-  const periodLabel = compoundingFrequency === "monthly" ? "Mes" : "Día";
+  const periodLabel = compoundingFrequency === 'monthly' ? 'Mes' : 'Día';
 
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="text-lg">
-          Detalle por {compoundingFrequency === "monthly" ? "Mes" : "Día"}
+          Detalle por {compoundingFrequency === 'monthly' ? 'Mes' : 'Día'}
         </CardTitle>
         <div className="text-sm text-muted-foreground">
-          {schedule.length} {compoundingFrequency === "monthly" ? "meses" : "días"}
+          {schedule.length}{' '}
+          {compoundingFrequency === 'monthly' ? 'meses' : 'días'}
         </div>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border overflow-x-auto">
+        <div className="overflow-x-auto rounded-md border">
           <Table>
             <TableHeader>
               <TableRow>
@@ -99,14 +103,14 @@ export function InvestmentScheduleTable({
 
         {/* Pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-4">
+          <div className="mt-4 flex items-center justify-between">
             <Button
               variant="outline"
               size="sm"
               onClick={() => goToPage(currentPage - 1)}
               disabled={currentPage === 1}
             >
-              <ChevronLeft className="h-4 w-4 mr-1" />
+              <ChevronLeft className="mr-1 h-4 w-4" />
               Anterior
             </Button>
 
@@ -123,16 +127,16 @@ export function InvestmentScheduleTable({
               disabled={currentPage === totalPages}
             >
               Siguiente
-              <ChevronRight className="h-4 w-4 ml-1" />
+              <ChevronRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
         )}
 
         {/* Summary row */}
         {schedule.length > 0 && (
-          <div className="mt-4 pt-4 border-t grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+          <div className="mt-4 grid grid-cols-2 gap-4 border-t pt-4 text-sm md:grid-cols-4">
             <div>
-              <span className="text-muted-foreground block">Total Aportes</span>
+              <span className="block text-muted-foreground">Total Aportes</span>
               <span className="font-semibold text-blue-600 dark:text-blue-400">
                 {formatCurrency(
                   schedule[schedule.length - 1].cumulativeContributions,
@@ -141,7 +145,9 @@ export function InvestmentScheduleTable({
               </span>
             </div>
             <div>
-              <span className="text-muted-foreground block">Total Intereses</span>
+              <span className="block text-muted-foreground">
+                Total Intereses
+              </span>
               <span className="font-semibold text-green-600 dark:text-green-400">
                 {formatCurrency(
                   schedule[schedule.length - 1].cumulativeInterest,
@@ -150,7 +156,7 @@ export function InvestmentScheduleTable({
               </span>
             </div>
             <div>
-              <span className="text-muted-foreground block">Saldo Final</span>
+              <span className="block text-muted-foreground">Saldo Final</span>
               <span className="font-semibold">
                 {formatCurrency(
                   schedule[schedule.length - 1].closingBalance,
@@ -159,7 +165,7 @@ export function InvestmentScheduleTable({
               </span>
             </div>
             <div>
-              <span className="text-muted-foreground block">Rendimiento</span>
+              <span className="block text-muted-foreground">Rendimiento</span>
               <span className="font-semibold text-purple-600 dark:text-purple-400">
                 {(
                   (schedule[schedule.length - 1].cumulativeInterest /

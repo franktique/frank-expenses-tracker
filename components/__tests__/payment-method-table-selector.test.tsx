@@ -1,10 +1,10 @@
-import React from "react";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import "@testing-library/jest-dom";
-import { PaymentMethodTableSelector } from "../payment-method-table-selector";
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { PaymentMethodTableSelector } from '../payment-method-table-selector';
 
 // Mock the UI components
-jest.mock("@/components/ui/button", () => ({
+jest.mock('@/components/ui/button', () => ({
   Button: ({ children, onClick, disabled, className, ...props }: any) => (
     <button
       onClick={onClick}
@@ -18,7 +18,7 @@ jest.mock("@/components/ui/button", () => ({
   ),
 }));
 
-jest.mock("@/components/ui/popover", () => ({
+jest.mock('@/components/ui/popover', () => ({
   Popover: ({ children, open, onOpenChange }: any) => (
     <div data-testid="popover" data-open={open}>
       {children}
@@ -32,7 +32,7 @@ jest.mock("@/components/ui/popover", () => ({
   ),
 }));
 
-jest.mock("@/components/ui/tooltip", () => ({
+jest.mock('@/components/ui/tooltip', () => ({
   Tooltip: ({ children }: any) => <div data-testid="tooltip">{children}</div>,
   TooltipTrigger: ({ children }: any) => (
     <div data-testid="tooltip-trigger">{children}</div>
@@ -45,12 +45,12 @@ jest.mock("@/components/ui/tooltip", () => ({
   ),
 }));
 
-jest.mock("lucide-react", () => ({
+jest.mock('lucide-react', () => ({
   Edit3: () => <div data-testid="edit-icon" />,
   AlertCircle: () => <div data-testid="alert-icon" />,
 }));
 
-jest.mock("../payment-method-selector", () => ({
+jest.mock('../payment-method-selector', () => ({
   PaymentMethodSelector: ({
     selectedMethods,
     onSelectionChange,
@@ -62,7 +62,7 @@ jest.mock("../payment-method-selector", () => ({
       </div>
       <button
         data-testid="change-methods"
-        onClick={() => onSelectionChange(["cash", "credit"])}
+        onClick={() => onSelectionChange(['cash', 'credit'])}
         disabled={disabled}
       >
         Change Methods
@@ -71,34 +71,34 @@ jest.mock("../payment-method-selector", () => ({
   ),
 }));
 
-jest.mock("../payment-method-badges", () => ({
+jest.mock('../payment-method-badges', () => ({
   PaymentMethodBadges: ({ selectedMethods }: any) => (
     <div data-testid="payment-method-badges">
       {selectedMethods.length === 0
-        ? "All Methods"
-        : selectedMethods.join(", ")}
+        ? 'All Methods'
+        : selectedMethods.join(', ')}
     </div>
   ),
 }));
 
-describe("PaymentMethodTableSelector", () => {
+describe('PaymentMethodTableSelector', () => {
   const mockOnSelectionChange = jest.fn();
 
   beforeEach(() => {
     mockOnSelectionChange.mockClear();
   });
 
-  it("renders badges and edit button", () => {
+  it('renders badges and edit button', () => {
     render(
       <PaymentMethodTableSelector
-        selectedMethods={["cash", "credit"]}
+        selectedMethods={['cash', 'credit']}
         onSelectionChange={mockOnSelectionChange}
       />
     );
 
-    expect(screen.getByTestId("payment-method-badges")).toBeInTheDocument();
-    expect(screen.getByTestId("edit-button")).toBeInTheDocument();
-    expect(screen.getByText("cash, credit")).toBeInTheDocument();
+    expect(screen.getByTestId('payment-method-badges')).toBeInTheDocument();
+    expect(screen.getByTestId('edit-button')).toBeInTheDocument();
+    expect(screen.getByText('cash, credit')).toBeInTheDocument();
   });
 
   it('shows "All Methods" when no methods selected', () => {
@@ -109,106 +109,106 @@ describe("PaymentMethodTableSelector", () => {
       />
     );
 
-    expect(screen.getByText("All Methods")).toBeInTheDocument();
+    expect(screen.getByText('All Methods')).toBeInTheDocument();
   });
 
-  it("shows unsaved changes indicator when hasUnsavedChanges is true", () => {
+  it('shows unsaved changes indicator when hasUnsavedChanges is true', () => {
     render(
       <PaymentMethodTableSelector
-        selectedMethods={["cash"]}
+        selectedMethods={['cash']}
         onSelectionChange={mockOnSelectionChange}
         hasUnsavedChanges={true}
       />
     );
 
-    const alertIcon = screen.getByTestId("alert-icon");
+    const alertIcon = screen.getByTestId('alert-icon');
     expect(alertIcon).toBeInTheDocument();
   });
 
-  it("does not show unsaved changes indicator when hasUnsavedChanges is false", () => {
+  it('does not show unsaved changes indicator when hasUnsavedChanges is false', () => {
     render(
       <PaymentMethodTableSelector
-        selectedMethods={["cash"]}
+        selectedMethods={['cash']}
         onSelectionChange={mockOnSelectionChange}
         hasUnsavedChanges={false}
       />
     );
 
-    expect(screen.queryByTestId("alert-icon")).not.toBeInTheDocument();
+    expect(screen.queryByTestId('alert-icon')).not.toBeInTheDocument();
   });
 
-  it("applies orange styling to edit button when hasUnsavedChanges is true", () => {
+  it('applies orange styling to edit button when hasUnsavedChanges is true', () => {
     render(
       <PaymentMethodTableSelector
-        selectedMethods={["cash"]}
+        selectedMethods={['cash']}
         onSelectionChange={mockOnSelectionChange}
         hasUnsavedChanges={true}
       />
     );
 
-    const editButton = screen.getByTestId("edit-button");
-    expect(editButton).toHaveClass("text-orange-600");
+    const editButton = screen.getByTestId('edit-button');
+    expect(editButton).toHaveClass('text-orange-600');
   });
 
-  it("disables edit button when disabled prop is true", () => {
+  it('disables edit button when disabled prop is true', () => {
     render(
       <PaymentMethodTableSelector
-        selectedMethods={["cash"]}
+        selectedMethods={['cash']}
         onSelectionChange={mockOnSelectionChange}
         disabled={true}
       />
     );
 
-    const editButton = screen.getByTestId("edit-button");
+    const editButton = screen.getByTestId('edit-button');
     expect(editButton).toBeDisabled();
   });
 
-  it("calls onSelectionChange when methods are changed in selector", () => {
+  it('calls onSelectionChange when methods are changed in selector', () => {
     render(
       <PaymentMethodTableSelector
-        selectedMethods={["cash"]}
+        selectedMethods={['cash']}
         onSelectionChange={mockOnSelectionChange}
       />
     );
 
-    const changeButton = screen.getByTestId("change-methods");
+    const changeButton = screen.getByTestId('change-methods');
     fireEvent.click(changeButton);
 
-    expect(mockOnSelectionChange).toHaveBeenCalledWith(["cash", "credit"]);
+    expect(mockOnSelectionChange).toHaveBeenCalledWith(['cash', 'credit']);
   });
 
-  it("passes disabled prop to PaymentMethodSelector", () => {
+  it('passes disabled prop to PaymentMethodSelector', () => {
     render(
       <PaymentMethodTableSelector
-        selectedMethods={["cash"]}
+        selectedMethods={['cash']}
         onSelectionChange={mockOnSelectionChange}
         disabled={true}
       />
     );
 
-    const changeButton = screen.getByTestId("change-methods");
+    const changeButton = screen.getByTestId('change-methods');
     expect(changeButton).toBeDisabled();
   });
 
-  it("shows tooltip provider", () => {
+  it('shows tooltip provider', () => {
     render(
       <PaymentMethodTableSelector
-        selectedMethods={["cash"]}
+        selectedMethods={['cash']}
         onSelectionChange={mockOnSelectionChange}
       />
     );
 
-    expect(screen.getByTestId("tooltip-provider")).toBeInTheDocument();
+    expect(screen.getByTestId('tooltip-provider')).toBeInTheDocument();
   });
 
-  it("shows edit icon", () => {
+  it('shows edit icon', () => {
     render(
       <PaymentMethodTableSelector
-        selectedMethods={["cash"]}
+        selectedMethods={['cash']}
         onSelectionChange={mockOnSelectionChange}
       />
     );
 
-    expect(screen.getByTestId("edit-icon")).toBeInTheDocument();
+    expect(screen.getByTestId('edit-icon')).toBeInTheDocument();
   });
 });

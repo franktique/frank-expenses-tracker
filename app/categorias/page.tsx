@@ -1,5 +1,5 @@
-import { CategoriesView } from "@/components/categories-view"
+import { CategoriesView } from '@/components/categories-view';
 
 export default function CategoriesPage() {
-  return <CategoriesView />
+  return <CategoriesView />;
 }

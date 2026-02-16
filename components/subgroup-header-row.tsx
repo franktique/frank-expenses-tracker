@@ -1,10 +1,19 @@
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { TableCell, TableRow } from "@/components/ui/table";
-import { ChevronDown, ChevronUp, Trash2, Plus, Check, GripVertical, Eye, EyeOff } from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
-import type { Subtotals } from "@/lib/subgroup-calculations";
+import { Button } from '@/components/ui/button';
+import { TableCell, TableRow } from '@/components/ui/table';
+import {
+  ChevronDown,
+  ChevronUp,
+  Trash2,
+  Plus,
+  Check,
+  GripVertical,
+  Eye,
+  EyeOff,
+} from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
+import type { Subtotals } from '@/lib/subgroup-calculations';
 
 interface SubgroupHeaderRowProps {
   subgroupId: string;
@@ -27,7 +36,7 @@ interface SubgroupHeaderRowProps {
   onDragStart?: (e: React.DragEvent) => void;
   onDragOver?: (e: React.DragEvent) => void;
   onDragLeave?: (e: React.DragEvent) => void;
-  onDrop?: (e: React.DragEvent, position: "before" | "after") => void;
+  onDrop?: (e: React.DragEvent, position: 'before' | 'after') => void;
   onDragEnd?: (e: React.DragEvent) => void;
   isVisible?: boolean;
   onToggleVisibility?: (subgroupId: string) => void;
@@ -91,7 +100,7 @@ export function SubgroupHeaderRow({
     }
   };
 
-  const handleDropClick = (position: "before" | "after") => {
+  const handleDropClick = (position: 'before' | 'after') => {
     return (e: React.DragEvent) => {
       if (onDrop) {
         onDrop(e, position);
@@ -103,22 +112,20 @@ export function SubgroupHeaderRow({
   const grossTotal = subtotals.efectivoAmount + subtotals.creditoAmount;
   const ahorroEfectivoPercentage =
     subtotals.efectivoAmount > 0
-      ? ((subtotals.ahorroEfectivoAmount / subtotals.efectivoAmount) * 100)
+      ? (subtotals.ahorroEfectivoAmount / subtotals.efectivoAmount) * 100
       : 0;
   const ahorroCreditoPercentage =
     subtotals.creditoAmount > 0
-      ? ((subtotals.ahorroCreditoAmount / subtotals.creditoAmount) * 100)
+      ? (subtotals.ahorroCreditoAmount / subtotals.creditoAmount) * 100
       : 0;
 
   const totalPercentage =
-    totalIncome > 0
-      ? ((subtotals.total / totalIncome) * 100)
-      : 0;
+    totalIncome > 0 ? (subtotals.total / totalIncome) * 100 : 0;
 
   // Format percentage with 2 decimal places
   const formatPercentage = (percentage: number): string => {
-    if (percentage === 0) return "0%";
-    if (percentage < 0.01) return "< 0.01%";
+    if (percentage === 0) return '0%';
+    if (percentage < 0.01) return '< 0.01%';
     return `${percentage.toFixed(2)}%`;
   };
 
@@ -126,21 +133,23 @@ export function SubgroupHeaderRow({
     <TableRow
       draggable={!isInAddMode}
       className={`group font-medium transition-all ${
-        !isVisible ? "bg-gray-200 dark:bg-gray-800 opacity-60 line-through" : "bg-accent/50 hover:bg-accent/70"
+        !isVisible
+          ? 'bg-gray-200 line-through opacity-60 dark:bg-gray-800'
+          : 'bg-accent/50 hover:bg-accent/70'
       } ${
-        isDragging ? "opacity-50 bg-accent" : ""
-      } ${isDragOver ? "bg-blue-50 dark:bg-blue-950" : ""}`}
+        isDragging ? 'bg-accent opacity-50' : ''
+      } ${isDragOver ? 'bg-blue-50 dark:bg-blue-950' : ''}`}
       data-testid={`subgroup-header-${subgroupId}`}
       onDragStart={onDragStart}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
-      onDrop={handleDropClick("before")}
+      onDrop={handleDropClick('before')}
       onDragEnd={onDragEnd}
     >
       {/* Drag Handle Icon */}
       <TableCell className="w-8 pl-2">
         {!isInAddMode && (
-          <div className="cursor-move opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <div className="flex cursor-move items-center justify-center opacity-0 transition-opacity group-hover:opacity-100">
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </div>
         )}
@@ -152,10 +161,10 @@ export function SubgroupHeaderRow({
           <Button
             variant="ghost"
             size="sm"
-            className="h-5 w-5 p-0 flex-shrink-0"
+            className="h-5 w-5 flex-shrink-0 p-0"
             onClick={() => onToggleExpand(subgroupId)}
             disabled={isLoading}
-            aria-label={isExpanded ? "Collapse sub-group" : "Expand sub-group"}
+            aria-label={isExpanded ? 'Collapse sub-group' : 'Expand sub-group'}
           >
             {isExpanded ? (
               <ChevronUp className="h-4 w-4" />
@@ -172,7 +181,7 @@ export function SubgroupHeaderRow({
 
       {/* Tipo Gasto Column */}
       <TableCell>
-        <span className="text-muted-foreground text-sm">-</span>
+        <span className="text-sm text-muted-foreground">-</span>
       </TableCell>
 
       {/* Efectivo Amount */}
@@ -231,7 +240,7 @@ export function SubgroupHeaderRow({
       </TableCell>
 
       {/* Action Buttons */}
-      <TableCell className="text-right flex items-center justify-end gap-1">
+      <TableCell className="flex items-center justify-end gap-1 text-right">
         {isInAddMode ? (
           <>
             <Button
@@ -262,13 +271,21 @@ export function SubgroupHeaderRow({
             <Button
               variant="ghost"
               size="sm"
-              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-purple-100 hover:text-purple-600 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
+              className="h-6 w-6 p-0 opacity-0 transition-opacity hover:bg-purple-100 hover:text-purple-600 group-hover:opacity-100 dark:hover:bg-purple-900/20 dark:hover:text-purple-400"
               onClick={handleVisibilityClick}
               disabled={isLoading}
-              aria-label={isVisible ? `Hide sub-group ${subgroupName}` : `Show sub-group ${subgroupName}`}
-              title={isVisible ? "Hide sub-group" : "Show sub-group"}
+              aria-label={
+                isVisible
+                  ? `Hide sub-group ${subgroupName}`
+                  : `Show sub-group ${subgroupName}`
+              }
+              title={isVisible ? 'Hide sub-group' : 'Show sub-group'}
             >
-              {isVisible ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+              {isVisible ? (
+                <Eye className="h-4 w-4" />
+              ) : (
+                <EyeOff className="h-4 w-4" />
+              )}
             </Button>
             <Button
               variant="ghost"

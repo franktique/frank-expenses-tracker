@@ -38,12 +38,18 @@ export function calculateDefaultDate(
 
   // Validate day is within valid range
   if (!Number.isInteger(day) || day < 1 || day > 31) {
-    throw new Error(`Invalid day: ${day}. Day must be an integer between 1 and 31.`);
+    throw new Error(
+      `Invalid day: ${day}. Day must be an integer between 1 and 31.`
+    );
   }
 
   // Convert strings to Date objects if needed
-  const start = typeof periodStartDate === "string" ? new Date(periodStartDate) : periodStartDate;
-  const end = typeof periodEndDate === "string" ? new Date(periodEndDate) : periodEndDate;
+  const start =
+    typeof periodStartDate === 'string'
+      ? new Date(periodStartDate)
+      : periodStartDate;
+  const end =
+    typeof periodEndDate === 'string' ? new Date(periodEndDate) : periodEndDate;
 
   // Get the year and month of the period's end date (last month in the period)
   const year = end.getFullYear();
@@ -59,7 +65,7 @@ export function calculateDefaultDate(
   const targetDate = new Date(year, month, actualDay);
 
   // Return in ISO format YYYY-MM-DD
-  return targetDate.toISOString().split("T")[0];
+  return targetDate.toISOString().split('T')[0];
 }
 
 /**
@@ -101,7 +107,7 @@ export function isValidDay(day: number | null | undefined): boolean {
  */
 export function formatDefaultDay(day: number | null | undefined): string {
   if (day === null || day === undefined) {
-    return "";
+    return '';
   }
   return day.toString();
 }
@@ -117,9 +123,12 @@ export function formatDefaultDay(day: number | null | undefined): string {
  * getDefaultDayDescription(15) // "15th"
  * getDefaultDayDescription(31, false) // "31"
  */
-export function getDefaultDayDescription(day: number | null | undefined, includeOrdinal = true): string {
+export function getDefaultDayDescription(
+  day: number | null | undefined,
+  includeOrdinal = true
+): string {
   if (day === null || day === undefined) {
-    return "No especificado";
+    return 'No especificado';
   }
 
   if (!includeOrdinal) {
@@ -127,10 +136,10 @@ export function getDefaultDayDescription(day: number | null | undefined, include
   }
 
   // Get ordinal suffix
-  let suffix = "th";
-  if (day === 1 || day === 21 || day === 31) suffix = "st";
-  else if (day === 2 || day === 22) suffix = "nd";
-  else if (day === 3 || day === 23) suffix = "rd";
+  let suffix = 'th';
+  if (day === 1 || day === 21 || day === 31) suffix = 'st';
+  else if (day === 2 || day === 22) suffix = 'nd';
+  else if (day === 3 || day === 23) suffix = 'rd';
 
   return `${day}${suffix}`;
 }

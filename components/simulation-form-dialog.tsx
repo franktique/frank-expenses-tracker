@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,11 +9,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/components/ui/use-toast';
 
 // Types
 type Simulation = {
@@ -28,7 +28,7 @@ type Simulation = {
 interface SimulationFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  mode: "create" | "edit";
+  mode: 'create' | 'edit';
   simulation?: Simulation | null;
   onSuccess?: (simulation: Simulation) => void;
 }
@@ -44,8 +44,8 @@ export function SimulationFormDialog({
 
   // Form state
   const [formData, setFormData] = useState({
-    name: "",
-    description: "",
+    name: '',
+    description: '',
   });
 
   // Loading state
@@ -60,15 +60,15 @@ export function SimulationFormDialog({
   // Reset form when dialog opens/closes or simulation changes
   useEffect(() => {
     if (open) {
-      if (mode === "edit" && simulation) {
+      if (mode === 'edit' && simulation) {
         setFormData({
           name: simulation.name,
-          description: simulation.description || "",
+          description: simulation.description || '',
         });
       } else {
         setFormData({
-          name: "",
-          description: "",
+          name: '',
+          description: '',
         });
       }
       setErrors({});
@@ -81,14 +81,14 @@ export function SimulationFormDialog({
 
     // Name validation
     if (!formData.name.trim()) {
-      newErrors.name = "El nombre de la simulación es requerido";
+      newErrors.name = 'El nombre de la simulación es requerido';
     } else if (formData.name.length > 255) {
-      newErrors.name = "El nombre no puede exceder 255 caracteres";
+      newErrors.name = 'El nombre no puede exceder 255 caracteres';
     }
 
     // Description validation (optional, but check length if provided)
     if (formData.description && formData.description.length > 1000) {
-      newErrors.description = "La descripción no puede exceder 1000 caracteres";
+      newErrors.description = 'La descripción no puede exceder 1000 caracteres';
     }
 
     setErrors(newErrors);
@@ -105,16 +105,16 @@ export function SimulationFormDialog({
 
     try {
       const url =
-        mode === "create"
-          ? "/api/simulations"
+        mode === 'create'
+          ? '/api/simulations'
           : `/api/simulations/${simulation?.id}`;
 
-      const method = mode === "create" ? "POST" : "PUT";
+      const method = mode === 'create' ? 'POST' : 'PUT';
 
       const response = await fetch(url, {
         method,
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: formData.name.trim(),
@@ -127,7 +127,7 @@ export function SimulationFormDialog({
         throw new Error(
           errorData.error ||
             `Error al ${
-              mode === "create" ? "crear" : "actualizar"
+              mode === 'create' ? 'crear' : 'actualizar'
             } la simulación`
         );
       }
@@ -137,9 +137,9 @@ export function SimulationFormDialog({
       // Show success message
       toast({
         title:
-          mode === "create" ? "Simulación creada" : "Simulación actualizada",
+          mode === 'create' ? 'Simulación creada' : 'Simulación actualizada',
         description: `La simulación ha sido ${
-          mode === "create" ? "creada" : "actualizada"
+          mode === 'create' ? 'creada' : 'actualizada'
         } exitosamente`,
       });
 
@@ -152,13 +152,13 @@ export function SimulationFormDialog({
       onOpenChange(false);
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
           (error as Error).message ||
           `No se pudo ${
-            mode === "create" ? "crear" : "actualizar"
+            mode === 'create' ? 'crear' : 'actualizar'
           } la simulación`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -198,12 +198,12 @@ export function SimulationFormDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {mode === "create" ? "Crear Nueva Simulación" : "Editar Simulación"}
+            {mode === 'create' ? 'Crear Nueva Simulación' : 'Editar Simulación'}
           </DialogTitle>
           <DialogDescription>
-            {mode === "create"
-              ? "Ingresa los detalles de la nueva simulación de presupuesto"
-              : "Actualiza los detalles de la simulación"}
+            {mode === 'create'
+              ? 'Ingresa los detalles de la nueva simulación de presupuesto'
+              : 'Actualiza los detalles de la simulación'}
           </DialogDescription>
         </DialogHeader>
 
@@ -217,9 +217,9 @@ export function SimulationFormDialog({
               onChange={handleNameChange}
               placeholder="Ej: Presupuesto Optimizado 2024"
               maxLength={255}
-              className={errors.name ? "border-destructive" : ""}
+              className={errors.name ? 'border-destructive' : ''}
             />
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <div>
                 {errors.name && (
                   <p className="text-xs text-destructive">{errors.name}</p>
@@ -243,9 +243,9 @@ export function SimulationFormDialog({
               placeholder="Describe el propósito de esta simulación..."
               rows={3}
               maxLength={1000}
-              className={errors.description ? "border-destructive" : ""}
+              className={errors.description ? 'border-destructive' : ''}
             />
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <div>
                 {errors.description && (
                   <p className="text-xs text-destructive">
@@ -270,12 +270,12 @@ export function SimulationFormDialog({
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>
             {isSubmitting
-              ? mode === "create"
-                ? "Creando..."
-                : "Guardando..."
-              : mode === "create"
-              ? "Crear Simulación"
-              : "Guardar Cambios"}
+              ? mode === 'create'
+                ? 'Creando...'
+                : 'Guardando...'
+              : mode === 'create'
+                ? 'Crear Simulación'
+                : 'Guardar Cambios'}
           </Button>
         </DialogFooter>
       </DialogContent>

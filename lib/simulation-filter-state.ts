@@ -20,10 +20,10 @@ export interface SimulationFilterOptions {
   maxAge?: number; // in milliseconds
 }
 
-const DEFAULT_FILTER_STATE: Omit<SimulationFilterState, "lastUpdated"> = {
+const DEFAULT_FILTER_STATE: Omit<SimulationFilterState, 'lastUpdated'> = {
   selectedEstudio: null,
   selectedGroupers: [],
-  selectedPaymentMethods: ["efectivo", "credito"],
+  selectedPaymentMethods: ['efectivo', 'credito'],
   comparisonPeriods: 3,
 };
 
@@ -34,7 +34,7 @@ const DEFAULT_MAX_AGE = 24 * 60 * 60 * 1000; // 24 hours
  */
 function getStorageKey(
   simulationId: number,
-  scope: "session" | "local" = "session"
+  scope: 'session' | 'local' = 'session'
 ): string {
   return `simulation-${simulationId}-filter-state-${scope}`;
 }
@@ -42,13 +42,13 @@ function getStorageKey(
 /**
  * Check if session/local storage is available
  */
-function isStorageAvailable(type: "session" | "local"): boolean {
+function isStorageAvailable(type: 'session' | 'local'): boolean {
   try {
-    if (typeof window === "undefined") return false;
+    if (typeof window === 'undefined') return false;
 
-    const storage = type === "session" ? sessionStorage : localStorage;
+    const storage = type === 'session' ? sessionStorage : localStorage;
     const testKey = `test-${type}-storage`;
-    storage.setItem(testKey, "test");
+    storage.setItem(testKey, 'test');
     storage.removeItem(testKey);
     return true;
   } catch (error) {
@@ -61,7 +61,7 @@ function isStorageAvailable(type: "session" | "local"): boolean {
  * Save simulation filter state to storage
  */
 export function saveSimulationFilterState(
-  state: Omit<SimulationFilterState, "lastUpdated">,
+  state: Omit<SimulationFilterState, 'lastUpdated'>,
   options: SimulationFilterOptions & { instanceId?: string }
 ): void {
   try {
@@ -72,18 +72,18 @@ export function saveSimulationFilterState(
     };
 
     // Save to session storage for tab persistence
-    if (options.persistAcrossTabs && isStorageAvailable("session")) {
-      const sessionKey = getStorageKey(options.simulationId, "session");
+    if (options.persistAcrossTabs && isStorageAvailable('session')) {
+      const sessionKey = getStorageKey(options.simulationId, 'session');
       sessionStorage.setItem(sessionKey, JSON.stringify(stateWithMetadata));
     }
 
     // Save to local storage for navigation persistence
-    if (options.persistAcrossNavigation && isStorageAvailable("local")) {
-      const localKey = getStorageKey(options.simulationId, "local");
+    if (options.persistAcrossNavigation && isStorageAvailable('local')) {
+      const localKey = getStorageKey(options.simulationId, 'local');
       localStorage.setItem(localKey, JSON.stringify(stateWithMetadata));
     }
   } catch (error) {
-    console.error("Error saving simulation filter state:", error);
+    console.error('Error saving simulation filter state:', error);
   }
 }
 
@@ -98,8 +98,8 @@ export function loadSimulationFilterState(
     let savedState: SimulationFilterState | null = null;
 
     // Try to load from session storage first (more recent)
-    if (options.persistAcrossTabs && isStorageAvailable("session")) {
-      const sessionKey = getStorageKey(options.simulationId, "session");
+    if (options.persistAcrossTabs && isStorageAvailable('session')) {
+      const sessionKey = getStorageKey(options.simulationId, 'session');
       const sessionData = sessionStorage.getItem(sessionKey);
       if (sessionData) {
         const parsed = JSON.parse(sessionData) as SimulationFilterState;
@@ -113,9 +113,9 @@ export function loadSimulationFilterState(
     if (
       !savedState &&
       options.persistAcrossNavigation &&
-      isStorageAvailable("local")
+      isStorageAvailable('local')
     ) {
-      const localKey = getStorageKey(options.simulationId, "local");
+      const localKey = getStorageKey(options.simulationId, 'local');
       const localData = localStorage.getItem(localKey);
       if (localData) {
         const parsed = JSON.parse(localData) as SimulationFilterState;
@@ -127,7 +127,7 @@ export function loadSimulationFilterState(
 
     return savedState;
   } catch (error) {
-    console.error("Error loading simulation filter state:", error);
+    console.error('Error loading simulation filter state:', error);
     return null;
   }
 }
@@ -139,17 +139,17 @@ export function clearSimulationFilterState(
   options: SimulationFilterOptions
 ): void {
   try {
-    if (options.persistAcrossTabs && isStorageAvailable("session")) {
-      const sessionKey = getStorageKey(options.simulationId, "session");
+    if (options.persistAcrossTabs && isStorageAvailable('session')) {
+      const sessionKey = getStorageKey(options.simulationId, 'session');
       sessionStorage.removeItem(sessionKey);
     }
 
-    if (options.persistAcrossNavigation && isStorageAvailable("local")) {
-      const localKey = getStorageKey(options.simulationId, "local");
+    if (options.persistAcrossNavigation && isStorageAvailable('local')) {
+      const localKey = getStorageKey(options.simulationId, 'local');
       localStorage.removeItem(localKey);
     }
   } catch (error) {
-    console.error("Error clearing simulation filter state:", error);
+    console.error('Error clearing simulation filter state:', error);
   }
 }
 
@@ -158,7 +158,7 @@ export function clearSimulationFilterState(
  */
 export function getDefaultSimulationFilterState(): Omit<
   SimulationFilterState,
-  "lastUpdated"
+  'lastUpdated'
 > {
   return { ...DEFAULT_FILTER_STATE };
 }
@@ -189,14 +189,14 @@ export function validateSimulationFilterState(
   state: any
 ): state is SimulationFilterState {
   return (
-    typeof state === "object" &&
+    typeof state === 'object' &&
     state !== null &&
     (state.selectedEstudio === null ||
-      typeof state.selectedEstudio === "number") &&
+      typeof state.selectedEstudio === 'number') &&
     Array.isArray(state.selectedGroupers) &&
     Array.isArray(state.selectedPaymentMethods) &&
-    typeof state.comparisonPeriods === "number" &&
-    typeof state.lastUpdated === "number"
+    typeof state.comparisonPeriods === 'number' &&
+    typeof state.lastUpdated === 'number'
   );
 }
 
@@ -292,7 +292,7 @@ export function useSimulationFilterState(
 
   // Validate the merged state
   if (!validateSimulationFilterState(mergedState)) {
-    console.warn("Invalid simulation filter state, using defaults");
+    console.warn('Invalid simulation filter state, using defaults');
     return { ...defaultState, lastUpdated: Date.now() };
   }
 

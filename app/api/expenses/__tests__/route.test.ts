@@ -1,14 +1,14 @@
-import { NextRequest } from "next/server";
-import { GET, POST } from "../route";
-import { sql } from "@/lib/db";
-import { validateExpenseSourceFunds } from "@/lib/source-fund-validation";
+import { NextRequest } from 'next/server';
+import { GET, POST } from '../route';
+import { sql } from '@/lib/db';
+import { validateExpenseSourceFunds } from '@/lib/source-fund-validation';
 
 // Mock dependencies
-jest.mock("@/lib/db", () => ({
+jest.mock('@/lib/db', () => ({
   sql: jest.fn(),
 }));
 
-jest.mock("@/lib/source-fund-validation", () => ({
+jest.mock('@/lib/source-fund-validation', () => ({
   validateExpenseSourceFunds: jest.fn(),
 }));
 
@@ -18,51 +18,51 @@ const mockValidateExpenseSourceFunds =
     typeof validateExpenseSourceFunds
   >;
 
-describe("/api/expenses", () => {
+describe('/api/expenses', () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
 
-  describe("GET", () => {
+  describe('GET', () => {
     const mockExpenses = [
       {
-        id: "expense-1",
-        category_id: "cat-1",
-        period_id: "period-1",
-        payment_method: "credit",
-        description: "Test expense",
+        id: 'expense-1',
+        category_id: 'cat-1',
+        period_id: 'period-1',
+        payment_method: 'credit',
+        description: 'Test expense',
         amount: 100,
         event: null,
-        date: "2024-01-15",
-        source_fund_id: "fund-1",
-        destination_fund_id: "fund-2",
-        category_name: "Test Category",
-        period_name: "January 2024",
-        source_fund_name: "Source Fund",
-        destination_fund_name: "Destination Fund",
+        date: '2024-01-15',
+        source_fund_id: 'fund-1',
+        destination_fund_id: 'fund-2',
+        category_name: 'Test Category',
+        period_name: 'January 2024',
+        source_fund_name: 'Source Fund',
+        destination_fund_name: 'Destination Fund',
       },
       {
-        id: "expense-2",
-        category_id: "cat-1",
-        period_id: "period-1",
-        payment_method: "debit",
-        description: "Another expense",
+        id: 'expense-2',
+        category_id: 'cat-1',
+        period_id: 'period-1',
+        payment_method: 'debit',
+        description: 'Another expense',
         amount: 50,
-        event: "Test event",
-        date: "2024-01-16",
-        source_fund_id: "fund-1",
+        event: 'Test event',
+        date: '2024-01-16',
+        source_fund_id: 'fund-1',
         destination_fund_id: null,
-        category_name: "Test Category",
-        period_name: "January 2024",
-        source_fund_name: "Source Fund",
+        category_name: 'Test Category',
+        period_name: 'January 2024',
+        source_fund_name: 'Source Fund',
         destination_fund_name: null,
       },
     ];
 
-    it("should return all expenses with source fund information when no filter is applied", async () => {
+    it('should return all expenses with source fund information when no filter is applied', async () => {
       mockSql.mockResolvedValueOnce(mockExpenses);
 
-      const request = new NextRequest("http://localhost:3000/api/expenses");
+      const request = new NextRequest('http://localhost:3000/api/expenses');
       const response = await GET(request);
       const data = await response.json();
 
@@ -70,22 +70,22 @@ describe("/api/expenses", () => {
       expect(data).toEqual(mockExpenses);
       expect(mockSql).toHaveBeenCalledWith(
         expect.stringContaining(
-          "LEFT JOIN funds sf ON e.source_fund_id = sf.id"
+          'LEFT JOIN funds sf ON e.source_fund_id = sf.id'
         )
       );
       expect(mockSql).toHaveBeenCalledWith(
         expect.stringContaining(
-          "LEFT JOIN funds df ON e.destination_fund_id = df.id"
+          'LEFT JOIN funds df ON e.destination_fund_id = df.id'
         )
       );
     });
 
-    it("should filter expenses by source fund when fund_id parameter is provided", async () => {
+    it('should filter expenses by source fund when fund_id parameter is provided', async () => {
       const filteredExpenses = [mockExpenses[0]];
       mockSql.mockResolvedValueOnce(filteredExpenses);
 
       const request = new NextRequest(
-        "http://localhost:3000/api/expenses?fund_id=fund-1"
+        'http://localhost:3000/api/expenses?fund_id=fund-1'
       );
       const response = await GET(request);
       const data = await response.json();
@@ -93,60 +93,60 @@ describe("/api/expenses", () => {
       expect(response.status).toBe(200);
       expect(data).toEqual(filteredExpenses);
       expect(mockSql).toHaveBeenCalledWith(
-        expect.stringContaining("WHERE e.source_fund_id = ${fundFilter}")
+        expect.stringContaining('WHERE e.source_fund_id = ${fundFilter}')
       );
     });
 
-    it("should include category fund relationships in filter query", async () => {
+    it('should include category fund relationships in filter query', async () => {
       mockSql.mockResolvedValueOnce([]);
 
       const request = new NextRequest(
-        "http://localhost:3000/api/expenses?fund_id=fund-1"
+        'http://localhost:3000/api/expenses?fund_id=fund-1'
       );
       await GET(request);
 
-      expect(mockSql).toHaveBeenCalledWith(expect.stringContaining("EXISTS ("));
+      expect(mockSql).toHaveBeenCalledWith(expect.stringContaining('EXISTS ('));
       expect(mockSql).toHaveBeenCalledWith(
-        expect.stringContaining("category_fund_relationships cfr")
+        expect.stringContaining('category_fund_relationships cfr')
       );
     });
 
-    it("should handle database errors gracefully", async () => {
-      mockSql.mockRejectedValueOnce(new Error("Database connection failed"));
+    it('should handle database errors gracefully', async () => {
+      mockSql.mockRejectedValueOnce(new Error('Database connection failed'));
 
-      const request = new NextRequest("http://localhost:3000/api/expenses");
+      const request = new NextRequest('http://localhost:3000/api/expenses');
       const response = await GET(request);
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe("Database connection failed");
+      expect(data.error).toBe('Database connection failed');
     });
   });
 
-  describe("POST", () => {
+  describe('POST', () => {
     const validExpenseData = {
-      category_id: "cat-1",
-      period_id: "period-1",
-      date: "2024-01-15",
-      event: "Test event",
-      payment_method: "credit",
-      description: "Test expense",
+      category_id: 'cat-1',
+      period_id: 'period-1',
+      date: '2024-01-15',
+      event: 'Test event',
+      payment_method: 'credit',
+      description: 'Test expense',
       amount: 100,
-      source_fund_id: "fund-1",
-      destination_fund_id: "fund-2",
+      source_fund_id: 'fund-1',
+      destination_fund_id: 'fund-2',
     };
 
     const mockNewExpense = {
-      id: "expense-1",
+      id: 'expense-1',
       ...validExpenseData,
     };
 
     const mockExpenseWithFunds = {
       ...mockNewExpense,
-      category_name: "Test Category",
-      period_name: "January 2024",
-      source_fund_name: "Source Fund",
-      destination_fund_name: "Destination Fund",
+      category_name: 'Test Category',
+      period_name: 'January 2024',
+      source_fund_name: 'Source Fund',
+      destination_fund_name: 'Destination Fund',
     };
 
     beforeEach(() => {
@@ -155,22 +155,22 @@ describe("/api/expenses", () => {
         errors: [],
         warnings: [],
         data: {
-          sourceFundName: "Source Fund",
-          destinationFundName: "Destination Fund",
+          sourceFundName: 'Source Fund',
+          destinationFundName: 'Destination Fund',
           isTransfer: true,
         },
       });
     });
 
-    it("should create expense with source fund validation", async () => {
+    it('should create expense with source fund validation', async () => {
       mockSql
         .mockResolvedValueOnce([mockNewExpense]) // INSERT expense
         .mockResolvedValueOnce([]) // UPDATE source fund balance
         .mockResolvedValueOnce([]) // UPDATE destination fund balance
         .mockResolvedValueOnce([mockExpenseWithFunds]); // SELECT expense with funds
 
-      const request = new NextRequest("http://localhost:3000/api/expenses", {
-        method: "POST",
+      const request = new NextRequest('http://localhost:3000/api/expenses', {
+        method: 'POST',
         body: JSON.stringify(validExpenseData),
       });
 
@@ -180,22 +180,22 @@ describe("/api/expenses", () => {
       expect(response.status).toBe(200);
       expect(data).toEqual(mockExpenseWithFunds);
       expect(mockValidateExpenseSourceFunds).toHaveBeenCalledWith(
-        "cat-1",
-        "fund-1",
-        "fund-2",
+        'cat-1',
+        'fund-1',
+        'fund-2',
         100
       );
     });
 
-    it("should update fund balances correctly for transfers", async () => {
+    it('should update fund balances correctly for transfers', async () => {
       mockSql
         .mockResolvedValueOnce([mockNewExpense])
         .mockResolvedValueOnce([]) // UPDATE source fund balance
         .mockResolvedValueOnce([]) // UPDATE destination fund balance
         .mockResolvedValueOnce([mockExpenseWithFunds]);
 
-      const request = new NextRequest("http://localhost:3000/api/expenses", {
-        method: "POST",
+      const request = new NextRequest('http://localhost:3000/api/expenses', {
+        method: 'POST',
         body: JSON.stringify(validExpenseData),
       });
 
@@ -203,24 +203,24 @@ describe("/api/expenses", () => {
 
       // Check source fund balance decrease
       expect(mockSql).toHaveBeenCalledWith(
-        expect.stringContaining("UPDATE funds"),
+        expect.stringContaining('UPDATE funds'),
         expect.stringContaining(
-          "current_balance = current_balance - ${amount}"
+          'current_balance = current_balance - ${amount}'
         ),
-        expect.stringContaining("WHERE id = ${source_fund_id}")
+        expect.stringContaining('WHERE id = ${source_fund_id}')
       );
 
       // Check destination fund balance increase
       expect(mockSql).toHaveBeenCalledWith(
-        expect.stringContaining("UPDATE funds"),
+        expect.stringContaining('UPDATE funds'),
         expect.stringContaining(
-          "current_balance = current_balance + ${amount}"
+          'current_balance = current_balance + ${amount}'
         ),
-        expect.stringContaining("WHERE id = ${destination_fund_id}")
+        expect.stringContaining('WHERE id = ${destination_fund_id}')
       );
     });
 
-    it("should handle expenses without destination fund (internal expenses)", async () => {
+    it('should handle expenses without destination fund (internal expenses)', async () => {
       const internalExpenseData = {
         ...validExpenseData,
         destination_fund_id: undefined,
@@ -239,8 +239,8 @@ describe("/api/expenses", () => {
           },
         ]);
 
-      const request = new NextRequest("http://localhost:3000/api/expenses", {
-        method: "POST",
+      const request = new NextRequest('http://localhost:3000/api/expenses', {
+        method: 'POST',
         body: JSON.stringify(internalExpenseData),
       });
 
@@ -250,14 +250,14 @@ describe("/api/expenses", () => {
       expect(mockSql).toHaveBeenCalledTimes(3); // INSERT, UPDATE source, SELECT
     });
 
-    it("should reject invalid request data", async () => {
+    it('should reject invalid request data', async () => {
       const invalidData = {
         ...validExpenseData,
         source_fund_id: undefined, // Missing required field
       };
 
-      const request = new NextRequest("http://localhost:3000/api/expenses", {
-        method: "POST",
+      const request = new NextRequest('http://localhost:3000/api/expenses', {
+        method: 'POST',
         body: JSON.stringify(invalidData),
       });
 
@@ -265,20 +265,20 @@ describe("/api/expenses", () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe("Validation failed");
+      expect(data.error).toBe('Validation failed');
       expect(data.details).toBeDefined();
     });
 
-    it("should reject expenses that fail source fund validation", async () => {
+    it('should reject expenses that fail source fund validation', async () => {
       mockValidateExpenseSourceFunds.mockResolvedValue({
         isValid: false,
-        errors: ["El fondo origen no está asociado con esta categoría"],
+        errors: ['El fondo origen no está asociado con esta categoría'],
         warnings: [],
         data: null,
       });
 
-      const request = new NextRequest("http://localhost:3000/api/expenses", {
-        method: "POST",
+      const request = new NextRequest('http://localhost:3000/api/expenses', {
+        method: 'POST',
         body: JSON.stringify(validExpenseData),
       });
 
@@ -286,22 +286,22 @@ describe("/api/expenses", () => {
       const data = await response.json();
 
       expect(response.status).toBe(400);
-      expect(data.error).toBe("Validation failed");
+      expect(data.error).toBe('Validation failed');
       expect(data.details).toContain(
-        "El fondo origen no está asociado con esta categoría"
+        'El fondo origen no está asociado con esta categoría'
       );
     });
 
-    it("should log warnings but still create expense when validation has warnings", async () => {
-      const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
+    it('should log warnings but still create expense when validation has warnings', async () => {
+      const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
 
       mockValidateExpenseSourceFunds.mockResolvedValue({
         isValid: true,
         errors: [],
-        warnings: ["El monto excede el balance disponible del fondo origen"],
+        warnings: ['El monto excede el balance disponible del fondo origen'],
         data: {
-          sourceFundName: "Source Fund",
-          destinationFundName: "Destination Fund",
+          sourceFundName: 'Source Fund',
+          destinationFundName: 'Destination Fund',
           isTransfer: true,
         },
       });
@@ -312,25 +312,25 @@ describe("/api/expenses", () => {
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([mockExpenseWithFunds]);
 
-      const request = new NextRequest("http://localhost:3000/api/expenses", {
-        method: "POST",
+      const request = new NextRequest('http://localhost:3000/api/expenses', {
+        method: 'POST',
         body: JSON.stringify(validExpenseData),
       });
 
       const response = await POST(request);
 
       expect(response.status).toBe(200);
-      expect(consoleSpy).toHaveBeenCalledWith("Expense creation warnings:", [
-        "El monto excede el balance disponible del fondo origen",
+      expect(consoleSpy).toHaveBeenCalledWith('Expense creation warnings:', [
+        'El monto excede el balance disponible del fondo origen',
       ]);
 
       consoleSpy.mockRestore();
     });
 
-    it("should handle ISO date strings correctly", async () => {
+    it('should handle ISO date strings correctly', async () => {
       const dataWithISODate = {
         ...validExpenseData,
-        date: "2024-01-15T10:30:00.000Z",
+        date: '2024-01-15T10:30:00.000Z',
       };
 
       mockSql
@@ -339,8 +339,8 @@ describe("/api/expenses", () => {
         .mockResolvedValueOnce([])
         .mockResolvedValueOnce([mockExpenseWithFunds]);
 
-      const request = new NextRequest("http://localhost:3000/api/expenses", {
-        method: "POST",
+      const request = new NextRequest('http://localhost:3000/api/expenses', {
+        method: 'POST',
         body: JSON.stringify(dataWithISODate),
       });
 
@@ -348,18 +348,18 @@ describe("/api/expenses", () => {
 
       // Should extract only the date part
       expect(mockSql).toHaveBeenCalledWith(
-        expect.stringContaining("INSERT INTO expenses"),
+        expect.stringContaining('INSERT INTO expenses'),
         expect.objectContaining({
           // The date should be "2024-01-15" not the full ISO string
         })
       );
     });
 
-    it("should handle database errors during expense creation", async () => {
-      mockSql.mockRejectedValueOnce(new Error("Database insert failed"));
+    it('should handle database errors during expense creation', async () => {
+      mockSql.mockRejectedValueOnce(new Error('Database insert failed'));
 
-      const request = new NextRequest("http://localhost:3000/api/expenses", {
-        method: "POST",
+      const request = new NextRequest('http://localhost:3000/api/expenses', {
+        method: 'POST',
         body: JSON.stringify(validExpenseData),
       });
 
@@ -367,16 +367,16 @@ describe("/api/expenses", () => {
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe("Database insert failed");
+      expect(data.error).toBe('Database insert failed');
     });
 
-    it("should handle fund balance update failures", async () => {
+    it('should handle fund balance update failures', async () => {
       mockSql
         .mockResolvedValueOnce([mockNewExpense]) // INSERT succeeds
-        .mockRejectedValueOnce(new Error("Fund balance update failed")); // UPDATE fails
+        .mockRejectedValueOnce(new Error('Fund balance update failed')); // UPDATE fails
 
-      const request = new NextRequest("http://localhost:3000/api/expenses", {
-        method: "POST",
+      const request = new NextRequest('http://localhost:3000/api/expenses', {
+        method: 'POST',
         body: JSON.stringify(validExpenseData),
       });
 
@@ -384,7 +384,7 @@ describe("/api/expenses", () => {
       const data = await response.json();
 
       expect(response.status).toBe(500);
-      expect(data.error).toBe("Fund balance update failed");
+      expect(data.error).toBe('Fund balance update failed');
     });
   });
 });

@@ -47,18 +47,17 @@ export async function POST() {
         'Added percentage column to estudio_groupers table',
         'Added percentage range constraint (0-100)',
         'Created index for percentage filtering',
-        'Added column documentation'
-      ]
+        'Added column documentation',
+      ],
     });
-
   } catch (error) {
     console.error('Error in estudio grouper percentages migration:', error);
-    
+
     return NextResponse.json(
-      { 
-        success: false, 
-        error: 'Migration failed', 
-        details: error instanceof Error ? error.message : 'Unknown error'
+      {
+        success: false,
+        error: 'Migration failed',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

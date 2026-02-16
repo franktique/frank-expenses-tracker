@@ -3,8 +3,8 @@
  * Handles automatic updates of budget default_dates when category default_day changes
  */
 
-import { sql } from "@/lib/db";
-import { calculateDefaultDate } from "@/lib/default-day-utils";
+import { sql } from '@/lib/db';
+import { calculateDefaultDate } from '@/lib/default-day-utils';
 
 /**
  * Interface for period information needed to calculate budget dates
@@ -69,7 +69,7 @@ export async function updateBudgetDefaultDatesForCategory(
       return {
         success: true,
         updated_count: 0,
-        message: "No budgets found for this category",
+        message: 'No budgets found for this category',
       };
     }
 
@@ -101,7 +101,7 @@ export async function updateBudgetDefaultDatesForCategory(
       });
 
       console.log(
-        `Budget ${budget.id} (${budget.year}-${String(budget.month).padStart(2, "0")}): default_date = ${calculatedDate}`
+        `Budget ${budget.id} (${budget.year}-${String(budget.month).padStart(2, '0')}): default_date = ${calculatedDate}`
       );
     }
 
@@ -116,7 +116,8 @@ export async function updateBudgetDefaultDatesForCategory(
         const budgetId = update.budgetId;
         const defaultDate = update.defaultDate;
 
-        const result = await sql`UPDATE budgets SET default_date = ${defaultDate} WHERE id = ${budgetId} RETURNING id`;
+        const result =
+          await sql`UPDATE budgets SET default_date = ${defaultDate} WHERE id = ${budgetId} RETURNING id`;
         if (result && result.length > 0) {
           updateCount++;
         }
@@ -127,10 +128,12 @@ export async function updateBudgetDefaultDatesForCategory(
       }
     }
 
-    console.log(`✓ Updated ${updateCount}/${updates.length} budgets with new default_dates`);
+    console.log(
+      `✓ Updated ${updateCount}/${updates.length} budgets with new default_dates`
+    );
 
     if (errors.length > 0) {
-      console.warn(`Update errors: ${errors.join("; ")}`);
+      console.warn(`Update errors: ${errors.join('; ')}`);
     }
 
     return {
@@ -140,12 +143,12 @@ export async function updateBudgetDefaultDatesForCategory(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error updating budget default dates:", error);
+    console.error('Error updating budget default dates:', error);
 
     return {
       success: false,
       updated_count: 0,
-      message: "Failed to update budget default_dates",
+      message: 'Failed to update budget default_dates',
       error: errorMessage,
     };
   }
@@ -178,7 +181,7 @@ export async function getBudgetsForCategory(categoryId: string) {
 
     return budgets || [];
   } catch (error) {
-    console.error("Error fetching budgets for category:", error);
+    console.error('Error fetching budgets for category:', error);
     return [];
   }
 }
@@ -190,7 +193,9 @@ export async function getBudgetsForCategory(categoryId: string) {
  * @param categoryId - The ID of the category
  * @returns Number of budgets updated
  */
-export async function clearBudgetDefaultDatesForCategory(categoryId: string): Promise<number> {
+export async function clearBudgetDefaultDatesForCategory(
+  categoryId: string
+): Promise<number> {
   try {
     const result = await sql`
       UPDATE budgets
@@ -200,11 +205,13 @@ export async function clearBudgetDefaultDatesForCategory(categoryId: string): Pr
     `;
 
     const count = result?.length || 0;
-    console.log(`Cleared default_dates for ${count} budgets in category ${categoryId}`);
+    console.log(
+      `Cleared default_dates for ${count} budgets in category ${categoryId}`
+    );
 
     return count;
   } catch (error) {
-    console.error("Error clearing budget default dates:", error);
+    console.error('Error clearing budget default dates:', error);
     return 0;
   }
 }
@@ -262,7 +269,7 @@ export async function validateCategoryBudgetDates(categoryId: string): Promise<{
       issues,
     };
   } catch (error) {
-    console.error("Error validating category budget dates:", error);
+    console.error('Error validating category budget dates:', error);
     return {
       valid: false,
       category_default_day: null,

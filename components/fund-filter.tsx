@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from 'react';
+import { Check, ChevronsUpDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -10,15 +10,15 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@/components/ui/command";
+} from '@/components/ui/command';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { useBudget } from "@/context/budget-context";
-import { Fund } from "@/types/funds";
+} from '@/components/ui/popover';
+import { cn } from '@/lib/utils';
+import { useBudget } from '@/context/budget-context';
+import { Fund } from '@/types/funds';
 
 interface FundFilterProps {
   selectedFund: Fund | null;
@@ -29,21 +29,22 @@ interface FundFilterProps {
   allFundsLabel?: string;
   availableFunds?: Fund[]; // New prop to filter available funds
   defaultFund?: Fund | null; // Optional default fund for initial selection
+  required?: boolean; // Optional required flag for validation styling
 }
 
 export function FundFilter({
   selectedFund,
   onFundChange,
-  placeholder = "Seleccionar fondo...",
+  placeholder = 'Seleccionar fondo...',
   className,
   includeAllFunds = true,
-  allFundsLabel = "Todos los fondos",
+  allFundsLabel = 'Todos los fondos',
   availableFunds,
   defaultFund,
 }: FundFilterProps) {
   const { funds, isLoading, error } = useBudget();
   const [open, setOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
+  const [searchValue, setSearchValue] = useState('');
 
   // Use availableFunds if provided, otherwise use all funds
   const fundsToUse = availableFunds || funds || [];
@@ -61,7 +62,7 @@ export function FundFilter({
       onFundChange(fund || null);
     }
     setOpen(false);
-    setSearchValue("");
+    setSearchValue('');
   };
 
   const getDisplayValue = () => {
@@ -79,7 +80,7 @@ export function FundFilter({
       <Button
         variant="outline"
         role="combobox"
-        className={cn("w-[200px] justify-between", className)}
+        className={cn('w-[200px] justify-between', className)}
         disabled
       >
         Cargando...
@@ -93,7 +94,7 @@ export function FundFilter({
       <Button
         variant="outline"
         role="combobox"
-        className={cn("w-[200px] justify-between text-destructive", className)}
+        className={cn('w-[200px] justify-between text-destructive', className)}
         disabled
       >
         Error cargando fondos
@@ -108,7 +109,7 @@ export function FundFilter({
         variant="outline"
         role="combobox"
         className={cn(
-          "w-[200px] justify-between text-muted-foreground",
+          'w-[200px] justify-between text-muted-foreground',
           className
         )}
         disabled
@@ -126,7 +127,7 @@ export function FundFilter({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn("w-[200px] justify-between", className)}
+          className={cn('w-[200px] justify-between', className)}
         >
           {getDisplayValue()}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -149,8 +150,8 @@ export function FundFilter({
                 >
                   <Check
                     className={cn(
-                      "mr-2 h-4 w-4",
-                      selectedFund === null ? "opacity-100" : "opacity-0"
+                      'mr-2 h-4 w-4',
+                      selectedFund === null ? 'opacity-100' : 'opacity-0'
                     )}
                   />
                   {allFundsLabel}
@@ -158,7 +159,7 @@ export function FundFilter({
               )}
               {filteredFunds
                 .sort((a, b) =>
-                  a.name.localeCompare(b.name, "es", { sensitivity: "base" })
+                  a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
                 )
                 .map((fund) => (
                   <CommandItem
@@ -168,13 +169,13 @@ export function FundFilter({
                   >
                     <Check
                       className={cn(
-                        "mr-2 h-4 w-4",
+                        'mr-2 h-4 w-4',
                         selectedFund?.id === fund.id
-                          ? "opacity-100"
-                          : "opacity-0"
+                          ? 'opacity-100'
+                          : 'opacity-0'
                       )}
                     />
-                    <div className="flex flex-col flex-1">
+                    <div className="flex flex-1 flex-col">
                       <span>{fund.name}</span>
                       {fund.description && (
                         <span className="text-xs text-muted-foreground">
@@ -183,7 +184,7 @@ export function FundFilter({
                       )}
                     </div>
                     {defaultFund?.id === fund.id && (
-                      <span className="text-xs text-blue-600 ml-2">
+                      <span className="ml-2 text-xs text-blue-600">
                         Por defecto
                       </span>
                     )}
@@ -198,7 +199,7 @@ export function FundFilter({
 }
 
 // Hook for managing fund filter state with persistence
-export function useFundFilter(storageKey: string = "selectedFund") {
+export function useFundFilter(storageKey: string = 'selectedFund') {
   const { funds, selectedFund, setSelectedFund } = useBudget();
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -217,7 +218,7 @@ export function useFundFilter(storageKey: string = "selectedFund") {
           }
         }
       } catch (error) {
-        console.warn("Failed to load fund filter from localStorage:", error);
+        console.warn('Failed to load fund filter from localStorage:', error);
       }
       setIsInitialized(true);
     }
@@ -232,7 +233,7 @@ export function useFundFilter(storageKey: string = "selectedFund") {
           JSON.stringify(selectedFund?.id || null)
         );
       } catch (error) {
-        console.warn("Failed to save fund filter to localStorage:", error);
+        console.warn('Failed to save fund filter to localStorage:', error);
       }
     }
   }, [selectedFund, storageKey, isInitialized]);
@@ -250,7 +251,7 @@ export function useFundFilter(storageKey: string = "selectedFund") {
 
 // Specialized components for common use cases
 export function ExpenseFundFilter() {
-  const { selectedFund, onFundChange } = useFundFilter("expenseFundFilter");
+  const { selectedFund, onFundChange } = useFundFilter('expenseFundFilter');
 
   return (
     <FundFilter
@@ -264,7 +265,7 @@ export function ExpenseFundFilter() {
 }
 
 export function DashboardFundFilter() {
-  const { selectedFund, onFundChange } = useFundFilter("dashboardFundFilter");
+  const { selectedFund, onFundChange } = useFundFilter('dashboardFundFilter');
 
   return (
     <FundFilter
@@ -279,7 +280,7 @@ export function DashboardFundFilter() {
 }
 
 export function CategoryFundFilter() {
-  const { selectedFund, onFundChange } = useFundFilter("categoryFundFilter");
+  const { selectedFund, onFundChange } = useFundFilter('categoryFundFilter');
 
   return (
     <FundFilter

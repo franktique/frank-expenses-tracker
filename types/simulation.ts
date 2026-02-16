@@ -89,6 +89,6 @@ export type VisibilityState = Record<string, boolean>;
  */
 export type VisibilityToggleItem = {
   id: string | number; // Item ID (subgroup ID or category ID)
-  type: "subgroup" | "category"; // Type of item being toggled
+  type: 'subgroup' | 'category'; // Type of item being toggled
   isVisible: boolean; // Current visibility state
 };

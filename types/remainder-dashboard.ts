@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export interface RemainderCategoryItem {
   category_id: string;
@@ -62,10 +62,12 @@ export const RemainderDashboardTotalsSchema = z.object({
 });
 
 export const RemainderDashboardDataSchema = z.object({
-  activePeriod: z.object({
-    id: z.string().uuid(),
-    name: z.string(),
-  }).nullable(),
+  activePeriod: z
+    .object({
+      id: z.string().uuid(),
+      name: z.string(),
+    })
+    .nullable(),
   categories: z.array(RemainderCategoryItemSchema),
   totals: RemainderDashboardTotalsSchema,
   appliedFilters: z.object({
@@ -92,11 +94,17 @@ export const RemainderDashboardFiltersSchema = z.object({
 });
 
 // Utility functions
-export function calculateRemainderBudget(originalBudget: number, currentExpenses: number): number {
+export function calculateRemainderBudget(
+  originalBudget: number,
+  currentExpenses: number
+): number {
   return originalBudget - currentExpenses;
 }
 
-export function calculateBudgetUsagePercentage(originalBudget: number, currentExpenses: number): number {
+export function calculateBudgetUsagePercentage(
+  originalBudget: number,
+  currentExpenses: number
+): number {
   if (originalBudget === 0) return 0;
   return Math.min((currentExpenses / originalBudget) * 100, 100);
 }
@@ -106,15 +114,24 @@ export function hasRemainingBudget(item: RemainderCategoryItem): boolean {
 }
 
 // Sort functions for category list
-export function sortCategoriesByRemainderDesc(a: RemainderCategoryItem, b: RemainderCategoryItem): number {
+export function sortCategoriesByRemainderDesc(
+  a: RemainderCategoryItem,
+  b: RemainderCategoryItem
+): number {
   return b.remainder_planned_budget - a.remainder_planned_budget;
 }
 
-export function sortCategoriesByName(a: RemainderCategoryItem, b: RemainderCategoryItem): number {
+export function sortCategoriesByName(
+  a: RemainderCategoryItem,
+  b: RemainderCategoryItem
+): number {
   return a.category_name.localeCompare(b.category_name);
 }
 
-export function sortCategoriesByExpenses(a: RemainderCategoryItem, b: RemainderCategoryItem): number {
+export function sortCategoriesByExpenses(
+  a: RemainderCategoryItem,
+  b: RemainderCategoryItem
+): number {
   return b.current_expenses - a.current_expenses;
 }
 

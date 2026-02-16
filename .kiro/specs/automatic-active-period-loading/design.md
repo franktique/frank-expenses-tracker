@@ -105,7 +105,7 @@ interface CachedActivePeriod {
 
 ```typescript
 interface PeriodLoadingError {
-  type: "network" | "authentication" | "no_active_period" | "invalid_cache";
+  type: 'network' | 'authentication' | 'no_active_period' | 'invalid_cache';
   message: string;
   retryable: boolean;
   timestamp: number;
@@ -117,13 +117,11 @@ interface PeriodLoadingError {
 ### Unit Tests
 
 1. **Session Storage Manager**
-
    - Test save/load/clear operations
    - Test cache validation logic
    - Test error handling for storage failures
 
 2. **Auth Context Enhancement**
-
    - Test active period loading on login
    - Test error handling during period loading
    - Test logout cleanup
@@ -136,13 +134,11 @@ interface PeriodLoadingError {
 ### Integration Tests
 
 1. **Login Flow**
-
    - Test complete login with active period loading
    - Test login with no active period
    - Test login with network failures
 
 2. **Period Management**
-
    - Test period activation/deactivation synchronization
    - Test session storage updates
    - Test cross-tab synchronization
@@ -155,7 +151,6 @@ interface PeriodLoadingError {
 ### End-to-End Tests
 
 1. **User Journey**
-
    - Login → Immediate data visibility
    - Period changes → Session storage updates
    - Page refresh → Cached data loading

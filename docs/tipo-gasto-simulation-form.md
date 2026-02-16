@@ -19,35 +19,40 @@ The simulation form currently displays budget data for categories but does not s
 ## Context
 
 ### Current State
+
 - **Location**: `/components/simulation-budget-form.tsx`
 - **Current Columns**: Categoría, Efectivo, Crédito, Ahorro Esperado, Total, Balance
 - **Data Source**: Categories fetched from `/api/categories` (already includes `tipo_gasto`)
 - **Tipo Gasto Components**: Already exist (`TipoGastoBadge`, `TipoGastoSelect`)
 
 ### Tipo Gasto Values
-| Value | Label | Color |
-|-------|-------|-------|
-| F | Fijo (Fixed) | Blue |
-| V | Variable | Green |
-| SF | Semi Fijo (Semi-Fixed) | Orange |
-| E | Eventual | Red |
+
+| Value | Label                  | Color  |
+| ----- | ---------------------- | ------ |
+| F     | Fijo (Fixed)           | Blue   |
+| V     | Variable               | Green  |
+| SF    | Semi Fijo (Semi-Fixed) | Orange |
+| E     | Eventual               | Red    |
 
 ---
 
 ## Implementation Plan
 
 ### Phase 1: Update Data Structure
+
 - [x] Update `SimulationBudget` type to include `tipo_gasto` field
 - [x] Ensure categories data fetched includes `tipo_gasto` from API response
 - [x] Map tipo_gasto from category to simulation budget state
 
 ### Phase 2: UI Updates - Column Addition
+
 - [x] Add tipo gasto column before notes column in simulation budget table
 - [x] Import and use `TipoGastoBadge` component for displaying tipo gasto
 - [x] Style column header ("Tipo Gasto")
 - [x] Ensure responsive design on mobile
 
 ### Phase 3: Sorting Implementation
+
 - [x] Add sort state to component (current sort column + direction)
 - [x] Make column headers clickable for sorting
 - [x] Implement sort logic:
@@ -58,6 +63,7 @@ The simulation form currently displays budget data for categories but does not s
 - [x] Update table data based on sort state
 
 ### Phase 4: Testing & Validation
+
 - [-] Test column displays correctly on desktop and mobile
 - [-] Test sorting works for all tipo gasto values
 - [-] Test sorting with null/undefined tipo gasto values
@@ -65,6 +71,7 @@ The simulation form currently displays budget data for categories but does not s
 - [-] Test with existing simulations
 
 ### Phase 5: Code Quality
+
 - [x] Add/update component tests if applicable
 - [x] Verify TypeScript types are correct
 - [x] Lint and format code
@@ -75,6 +82,7 @@ The simulation form currently displays budget data for categories but does not s
 ## Technical Details
 
 ### Files to Modify
+
 1. **`/components/simulation-budget-form.tsx`** (Main changes)
    - Update type definitions
    - Add sort state management
@@ -87,13 +95,16 @@ The simulation form currently displays budget data for categories but does not s
    - Verify `TIPO_GASTO_VALUES` and `TIPO_GASTO_LABELS` exports
 
 ### Components Already Available
+
 - `TipoGastoBadge` - No changes needed, just import and use
 - `TipoGastoSelect` - Not needed for this feature
 
 ### API Changes
+
 - **None required** - `/api/categories` already returns `tipo_gasto`
 
 ### Database Changes
+
 - **None required** - `tipo_gasto` column already exists in `categories` table
 
 ---
@@ -101,11 +112,13 @@ The simulation form currently displays budget data for categories but does not s
 ## Column Placement
 
 **Before**:
+
 ```
 Categoría | Efectivo | Crédito | Ahorro Esperado | Total | Balance | [Notes]
 ```
 
 **After**:
+
 ```
 Categoría | Tipo Gasto | Efectivo | Crédito | Ahorro Esperado | Total | Balance | [Notes]
 ```
@@ -117,6 +130,7 @@ Categoría | Tipo Gasto | Efectivo | Crédito | Ahorro Esperado | Total | Balanc
 **Default State**: No sorting applied (maintains current order)
 
 **When Clicking "Tipo Gasto" Header**:
+
 1. **First Click**: Sort ascending (F, V, SF, E)
 2. **Second Click**: Sort descending (E, SF, V, F)
 3. **Third Click**: Clear sort (return to default/unsorted)
@@ -144,6 +158,7 @@ Categoría | Tipo Gasto | Efectivo | Crédito | Ahorro Esperado | Total | Balanc
 ## Implementation Summary
 
 ### What Was Done
+
 1. **Updated type definitions** in `simulation-budget-form.tsx`:
    - Added `tipo_gasto?: TipoGasto` to `Category` type
    - Added `tipo_gasto?: TipoGasto` to `SimulationBudget` type
@@ -168,12 +183,15 @@ Categoría | Tipo Gasto | Efectivo | Crédito | Ahorro Esperado | Total | Balanc
    - Updated empty state colspan from 6 to 7 to account for new column
 
 ### Files Modified
+
 - `/components/simulation-budget-form.tsx` (234 insertions, 15 deletions)
 
 ### Files Created
+
 - `/docs/tipo-gasto-simulation-form.md` (plan and documentation)
 
 ### PR Details
+
 - **Branch**: `tipo-gasto-simulation`
 - **Commit**: `b03f59f` - "feat: Add tipo_gasto column with sorting to simulation budget form"
 - **PR**: https://github.com/franktique/frank-expenses-tracker/pull/56
@@ -184,4 +202,3 @@ Categoría | Tipo Gasto | Efectivo | Crédito | Ahorro Esperado | Total | Balanc
 - **Performance**: Sorting is client-side with memoization to prevent unnecessary recalculations
 - **Accessibility**: Sort headers are clickable buttons with proper styling
 - **Styling**: Uses existing design tokens and color system via TipoGastoBadge component
-

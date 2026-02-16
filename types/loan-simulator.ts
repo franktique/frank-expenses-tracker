@@ -3,7 +3,7 @@
  * Defines types for loan scenarios, amortization schedules, and extra payments
  */
 
-import { z } from "zod";
+import { z } from 'zod';
 
 // ============================================================================
 // Types
@@ -13,12 +13,12 @@ import { z } from "zod";
  * Supported currencies for loan simulations
  */
 export const SUPPORTED_CURRENCIES = {
-  USD: { code: "USD", symbol: "$", locale: "en-US", name: "US Dollar" },
-  COP: { code: "COP", symbol: "$", locale: "es-CO", name: "Colombian Peso" },
-  EUR: { code: "EUR", symbol: "€", locale: "de-DE", name: "Euro" },
-  MXN: { code: "MXN", symbol: "$", locale: "es-MX", name: "Mexican Peso" },
-  ARS: { code: "ARS", symbol: "$", locale: "es-AR", name: "Argentine Peso" },
-  GBP: { code: "GBP", symbol: "£", locale: "en-GB", name: "British Pound" },
+  USD: { code: 'USD', symbol: '$', locale: 'en-US', name: 'US Dollar' },
+  COP: { code: 'COP', symbol: '$', locale: 'es-CO', name: 'Colombian Peso' },
+  EUR: { code: 'EUR', symbol: '€', locale: 'de-DE', name: 'Euro' },
+  MXN: { code: 'MXN', symbol: '$', locale: 'es-MX', name: 'Mexican Peso' },
+  ARS: { code: 'ARS', symbol: '$', locale: 'es-AR', name: 'Argentine Peso' },
+  GBP: { code: 'GBP', symbol: '£', locale: 'en-GB', name: 'British Pound' },
 } as const;
 
 export type CurrencyCode = keyof typeof SUPPORTED_CURRENCIES;
@@ -118,25 +118,25 @@ export const LoanScenarioSchema = z.object({
   id: z.string().uuid(),
   name: z
     .string()
-    .min(1, "El nombre del préstamo es obligatorio")
-    .max(255, "El nombre del préstamo es demasiado largo"),
+    .min(1, 'El nombre del préstamo es obligatorio')
+    .max(255, 'El nombre del préstamo es demasiado largo'),
   principal: z
     .number()
-    .positive("El monto del préstamo debe ser positivo")
-    .max(999999999999, "El monto del préstamo es demasiado grande"),
+    .positive('El monto del préstamo debe ser positivo')
+    .max(999999999999, 'El monto del préstamo es demasiado grande'),
   interestRate: z
     .number()
-    .positive("La tasa de interés debe ser positiva")
-    .max(100, "La tasa de interés no puede exceder 100%"),
+    .positive('La tasa de interés debe ser positiva')
+    .max(100, 'La tasa de interés no puede exceder 100%'),
   termMonths: z
     .number()
-    .int("El plazo debe ser un número entero")
-    .positive("El plazo debe ser positivo")
-    .max(480, "El plazo no puede exceder 480 meses (40 años)"),
+    .int('El plazo debe ser un número entero')
+    .positive('El plazo debe ser positivo')
+    .max(480, 'El plazo no puede exceder 480 meses (40 años)'),
   startDate: z
     .string()
-    .refine((date) => !isNaN(Date.parse(date)), "Fecha de inicio inválida"),
-  currency: z.enum(["USD", "COP", "EUR", "MXN", "ARS", "GBP"]),
+    .refine((date) => !isNaN(Date.parse(date)), 'Fecha de inicio inválida'),
+  currency: z.enum(['USD', 'COP', 'EUR', 'MXN', 'ARS', 'GBP']),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -147,25 +147,25 @@ export const LoanScenarioSchema = z.object({
 export const CreateLoanScenarioSchema = z.object({
   name: z
     .string()
-    .min(1, "El nombre del préstamo es obligatorio")
-    .max(255, "El nombre del préstamo es demasiado largo"),
+    .min(1, 'El nombre del préstamo es obligatorio')
+    .max(255, 'El nombre del préstamo es demasiado largo'),
   principal: z
     .number()
-    .positive("El monto del préstamo debe ser positivo")
-    .max(999999999.99, "El monto del préstamo es demasiado grande"),
+    .positive('El monto del préstamo debe ser positivo')
+    .max(999999999.99, 'El monto del préstamo es demasiado grande'),
   interestRate: z
     .number()
-    .positive("La tasa de interés debe ser positiva")
-    .max(100, "La tasa de interés no puede exceder 100%"),
+    .positive('La tasa de interés debe ser positiva')
+    .max(100, 'La tasa de interés no puede exceder 100%'),
   termMonths: z
     .number()
-    .int("El plazo debe ser un número entero")
-    .positive("El plazo debe ser positivo")
-    .max(480, "El plazo no puede exceder 480 meses (40 años)"),
+    .int('El plazo debe ser un número entero')
+    .positive('El plazo debe ser positivo')
+    .max(480, 'El plazo no puede exceder 480 meses (40 años)'),
   startDate: z
     .string()
-    .refine((date) => !isNaN(Date.parse(date)), "Fecha de inicio inválida"),
-  currency: z.enum(["USD", "COP", "EUR", "MXN", "ARS", "GBP"]).default("USD"),
+    .refine((date) => !isNaN(Date.parse(date)), 'Fecha de inicio inválida'),
+  currency: z.enum(['USD', 'COP', 'EUR', 'MXN', 'ARS', 'GBP']).default('USD'),
 });
 
 /**
@@ -174,28 +174,28 @@ export const CreateLoanScenarioSchema = z.object({
 export const UpdateLoanScenarioSchema = z.object({
   name: z
     .string()
-    .min(1, "El nombre del préstamo es obligatorio")
-    .max(255, "El nombre del préstamo es demasiado largo")
+    .min(1, 'El nombre del préstamo es obligatorio')
+    .max(255, 'El nombre del préstamo es demasiado largo')
     .optional(),
   principal: z
     .number()
-    .positive("El monto del préstamo debe ser positivo")
-    .max(999999999.99, "El monto del préstamo es demasiado grande")
+    .positive('El monto del préstamo debe ser positivo')
+    .max(999999999.99, 'El monto del préstamo es demasiado grande')
     .optional(),
   interestRate: z
     .number()
-    .positive("La tasa de interés debe ser positiva")
-    .max(100, "La tasa de interés no puede exceder 100%")
+    .positive('La tasa de interés debe ser positiva')
+    .max(100, 'La tasa de interés no puede exceder 100%')
     .optional(),
   termMonths: z
     .number()
-    .int("El plazo debe ser un número entero")
-    .positive("El plazo debe ser positivo")
-    .max(480, "El plazo no puede exceder 480 meses (40 años)")
+    .int('El plazo debe ser un número entero')
+    .positive('El plazo debe ser positivo')
+    .max(480, 'El plazo no puede exceder 480 meses (40 años)')
     .optional(),
   startDate: z
     .string()
-    .refine((date) => !isNaN(Date.parse(date)), "Fecha de inicio inválida")
+    .refine((date) => !isNaN(Date.parse(date)), 'Fecha de inicio inválida')
     .optional(),
 });
 
@@ -207,13 +207,16 @@ export const ExtraPaymentSchema = z.object({
   loanScenarioId: z.string().uuid(),
   paymentNumber: z
     .number()
-    .int("El número de pago debe ser un número entero")
-    .positive("El número de pago debe ser positivo"),
+    .int('El número de pago debe ser un número entero')
+    .positive('El número de pago debe ser positivo'),
   amount: z
     .number()
-    .positive("El monto del pago extra debe ser positivo")
-    .max(999999999.99, "El monto del pago extra es demasiado grande"),
-  description: z.string().max(500, "La descripción es demasiado larga").optional(),
+    .positive('El monto del pago extra debe ser positivo')
+    .max(999999999.99, 'El monto del pago extra es demasiado grande'),
+  description: z
+    .string()
+    .max(500, 'La descripción es demasiado larga')
+    .optional(),
   createdAt: z.string(),
 });
 
@@ -223,13 +226,16 @@ export const ExtraPaymentSchema = z.object({
 export const CreateExtraPaymentSchema = z.object({
   paymentNumber: z
     .number()
-    .int("El número de pago debe ser un número entero")
-    .positive("El número de pago debe ser positivo"),
+    .int('El número de pago debe ser un número entero')
+    .positive('El número de pago debe ser positivo'),
   amount: z
     .number()
-    .positive("El monto del pago extra debe ser positivo")
-    .max(999999999.99, "El monto del pago extra es demasiado grande"),
-  description: z.string().max(500, "La descripción es demasiado larga").optional(),
+    .positive('El monto del pago extra debe ser positivo')
+    .max(999999999.99, 'El monto del pago extra es demasiado grande'),
+  description: z
+    .string()
+    .max(500, 'La descripción es demasiado larga')
+    .optional(),
 });
 
 /**
@@ -238,17 +244,17 @@ export const CreateExtraPaymentSchema = z.object({
 export const UpdateExtraPaymentSchema = z.object({
   paymentNumber: z
     .number()
-    .int("El número de pago debe ser un número entero")
-    .positive("El número de pago debe ser positivo")
+    .int('El número de pago debe ser un número entero')
+    .positive('El número de pago debe ser positivo')
     .optional(),
   amount: z
     .number()
-    .positive("El monto del pago extra debe ser positivo")
-    .max(999999999.99, "El monto del pago extra es demasiado grande")
+    .positive('El monto del pago extra debe ser positivo')
+    .max(999999999.99, 'El monto del pago extra es demasiado grande')
     .optional(),
   description: z
     .string()
-    .max(500, "La descripción es demasiado larga")
+    .max(500, 'La descripción es demasiado larga')
     .optional(),
 });
 
@@ -260,16 +266,16 @@ export const UpdateExtraPaymentSchema = z.object({
  * LOAN_ERROR_MESSAGES - Error messages for loan simulator operations
  */
 export const LOAN_ERROR_MESSAGES = {
-  SCENARIO_NOT_FOUND: "El escenario de préstamo no existe",
-  SCENARIO_NAME_REQUIRED: "El nombre del préstamo es obligatorio",
-  PRINCIPAL_REQUIRED: "El monto del préstamo es obligatorio",
-  PRINCIPAL_MUST_BE_POSITIVE: "El monto del préstamo debe ser positivo",
-  INTEREST_RATE_REQUIRED: "La tasa de interés es obligatoria",
-  INTEREST_RATE_MUST_BE_POSITIVE: "La tasa de interés debe ser positiva",
-  TERM_REQUIRED: "El plazo es obligatorio",
-  TERM_MUST_BE_POSITIVE: "El plazo debe ser positivo",
-  START_DATE_REQUIRED: "La fecha de inicio es obligatoria",
-  EXTRA_PAYMENT_NOT_FOUND: "El pago extra no existe",
-  INVALID_PAYMENT_NUMBER: "El número de pago es inválido",
-  DUPLICATE_NAME: "Ya existe un préstamo con este nombre",
+  SCENARIO_NOT_FOUND: 'El escenario de préstamo no existe',
+  SCENARIO_NAME_REQUIRED: 'El nombre del préstamo es obligatorio',
+  PRINCIPAL_REQUIRED: 'El monto del préstamo es obligatorio',
+  PRINCIPAL_MUST_BE_POSITIVE: 'El monto del préstamo debe ser positivo',
+  INTEREST_RATE_REQUIRED: 'La tasa de interés es obligatoria',
+  INTEREST_RATE_MUST_BE_POSITIVE: 'La tasa de interés debe ser positiva',
+  TERM_REQUIRED: 'El plazo es obligatorio',
+  TERM_MUST_BE_POSITIVE: 'El plazo debe ser positivo',
+  START_DATE_REQUIRED: 'La fecha de inicio es obligatoria',
+  EXTRA_PAYMENT_NOT_FOUND: 'El pago extra no existe',
+  INVALID_PAYMENT_NUMBER: 'El número de pago es inválido',
+  DUPLICATE_NAME: 'Ya existe un préstamo con este nombre',
 } as const;

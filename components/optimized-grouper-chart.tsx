@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { memo, useMemo, useCallback } from "react";
+import React, { memo, useMemo, useCallback } from 'react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -11,8 +11,8 @@ import {
   Tooltip,
   Cell,
   LabelList,
-} from "recharts";
-import { formatCurrency } from "@/lib/utils";
+} from 'recharts';
+import { formatCurrency } from '@/lib/utils';
 // Chart animation optimization simplified to avoid circular dependencies
 
 type GrouperData = {
@@ -100,7 +100,7 @@ const BudgetBarCells = memo<{
   );
 });
 
-BudgetBarCells.displayName = "BudgetBarCells";
+BudgetBarCells.displayName = 'BudgetBarCells';
 
 // Memoized main bar cells
 const MainBarCells = memo<{
@@ -120,7 +120,7 @@ const MainBarCells = memo<{
           return (
             <Cell
               key={`main-cell-${index}`}
-              fill={isSelected ? "#ff6361" : `${baseColor}B3`} // 70% opacity in projection mode
+              fill={isSelected ? '#ff6361' : `${baseColor}B3`} // 70% opacity in projection mode
               stroke={baseColor}
               strokeWidth={2}
               strokeDasharray="5 3" // Dashed pattern for projection
@@ -131,7 +131,7 @@ const MainBarCells = memo<{
         return (
           <Cell
             key={`main-cell-${index}`}
-            fill={isSelected ? "#ff6361" : baseColor}
+            fill={isSelected ? '#ff6361' : baseColor}
           />
         );
       })}
@@ -139,7 +139,7 @@ const MainBarCells = memo<{
   );
 });
 
-MainBarCells.displayName = "MainBarCells";
+MainBarCells.displayName = 'MainBarCells';
 
 // Memoized label formatter
 const useLabelFormatter = (projectionMode: boolean) => {
@@ -156,7 +156,7 @@ const useLabelFormatter = (projectionMode: boolean) => {
 
 // Memoized budget label formatter
 const budgetLabelFormatter = (value: number) =>
-  value > 0 ? `Presup: ${formatCurrency(value)}` : "";
+  value > 0 ? `Presup: ${formatCurrency(value)}` : '';
 
 // Main optimized chart component with enhanced performance and deep comparison
 export const OptimizedGrouperChart = memo<OptimizedGrouperChartProps>(
@@ -178,7 +178,7 @@ export const OptimizedGrouperChart = memo<OptimizedGrouperChartProps>(
     const animationConfig = useMemo(
       () => ({
         duration: data.length > 30 || projectionMode ? 0 : 300,
-        easing: "ease-out",
+        easing: 'ease-out',
         delay: 0,
         stagger: 0,
       }),
@@ -188,18 +188,18 @@ export const OptimizedGrouperChart = memo<OptimizedGrouperChartProps>(
     // Memoized chart configuration with enhanced animation optimization
     const chartConfig = useMemo(
       () => ({
-        layout: "vertical" as const,
+        layout: 'vertical' as const,
         margin: { top: 10, right: 120, left: 120, bottom: 10 },
         // Use optimized animation configuration
-        ...getRechartsProps(0),
+        animationDuration: 0,
       }),
-      [getRechartsProps]
+      []
     );
 
     // Memoized axis configuration
     const xAxisConfig = useMemo(
       () => ({
-        type: "number" as const,
+        type: 'number' as const,
         domain: [0, maxAmount],
         tickFormatter: formatCurrency,
         // Optimize tick count for performance
@@ -210,13 +210,13 @@ export const OptimizedGrouperChart = memo<OptimizedGrouperChartProps>(
 
     const yAxisConfig = useMemo(
       () => ({
-        dataKey: "name",
-        type: "category" as const,
+        dataKey: 'name',
+        type: 'category' as const,
         width: 150,
         tick: { fontSize: 12 },
         interval: 0,
         // Optimize text rendering
-        textAnchor: "end" as const,
+        textAnchor: 'end' as const,
       }),
       []
     );
@@ -224,8 +224,8 @@ export const OptimizedGrouperChart = memo<OptimizedGrouperChartProps>(
     // Memoized bar configurations with enhanced performance optimizations
     const budgetBarConfig = useMemo(
       () => ({
-        dataKey: "budget_amount",
-        name: "Presupuesto",
+        dataKey: 'budget_amount',
+        name: 'Presupuesto',
         opacity: 0.5,
         animationBegin: 50,
         animationDuration: animationConfig.duration,
@@ -236,10 +236,10 @@ export const OptimizedGrouperChart = memo<OptimizedGrouperChartProps>(
 
     const mainBarConfig = useMemo(
       () => ({
-        dataKey: "amount",
-        name: projectionMode ? "Presupuesto" : "Gastos",
+        dataKey: 'amount',
+        name: projectionMode ? 'Presupuesto' : 'Gastos',
         onClick: onGrouperClick,
-        cursor: "pointer" as const,
+        cursor: 'pointer' as const,
         opacity: projectionMode ? 0.7 : 1,
         animationBegin: 0,
         animationDuration: animationConfig.duration,
@@ -251,20 +251,20 @@ export const OptimizedGrouperChart = memo<OptimizedGrouperChartProps>(
     // Memoized label styles
     const budgetLabelStyle = useMemo(
       () => ({
-        fontSize: "11px",
-        fill: "#475569",
-        fontWeight: "600",
-        fontStyle: "italic",
+        fontSize: '11px',
+        fill: '#475569',
+        fontWeight: '600',
+        fontStyle: 'italic',
       }),
       []
     );
 
     const mainLabelStyle = useMemo(
       () => ({
-        fontSize: "11px",
-        fontWeight: "600",
-        fontStyle: projectionMode ? "italic" : "normal",
-        fill: projectionMode ? "#6366f1" : "#374151",
+        fontSize: '11px',
+        fontWeight: '600',
+        fontStyle: projectionMode ? 'italic' : 'normal',
+        fill: projectionMode ? '#6366f1' : '#374151',
       }),
       [projectionMode]
     );
@@ -272,15 +272,15 @@ export const OptimizedGrouperChart = memo<OptimizedGrouperChartProps>(
     // Memoized grid configuration for performance
     const gridConfig = useMemo(
       () => ({
-        strokeDasharray: "3 3",
-        stroke: "#e2e8f0",
+        strokeDasharray: '3 3',
+        stroke: '#e2e8f0',
         strokeOpacity: 0.5,
       }),
       []
     );
 
     return (
-      <div className="w-full h-[400px] mt-4">
+      <div className="mt-4 h-[400px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} {...chartConfig}>
             <CartesianGrid {...gridConfig} />
@@ -327,7 +327,7 @@ export const OptimizedGrouperChart = memo<OptimizedGrouperChartProps>(
   }
 );
 
-OptimizedGrouperChart.displayName = "OptimizedGrouperChart";
+OptimizedGrouperChart.displayName = 'OptimizedGrouperChart';
 
 // Enhanced memo comparison function for better performance with optimized checks
 const arePropsEqual = (
@@ -362,13 +362,13 @@ const arePropsEqual = (
         (item) =>
           `${item.grouper_id}-${item.total_amount}-${item.budget_amount || 0}`
       )
-      .join("|");
+      .join('|');
     const nextHash = nextProps.data
       .map(
         (item) =>
           `${item.grouper_id}-${item.total_amount}-${item.budget_amount || 0}`
       )
-      .join("|");
+      .join('|');
 
     if (prevHash !== nextHash) {
       return false;

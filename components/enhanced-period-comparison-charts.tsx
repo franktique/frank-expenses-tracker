@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import React, { memo, useMemo, useState } from "react";
+import React, { memo, useMemo, useState } from 'react';
 import {
   BarChart,
   Bar,
@@ -17,18 +17,18 @@ import {
   AreaChart,
   ReferenceLine,
   Cell,
-} from "recharts";
-import { formatCurrency } from "@/lib/utils";
+} from 'recharts';
+import { formatCurrency } from '@/lib/utils';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   TrendingUp,
   TrendingDown,
@@ -40,7 +40,7 @@ import {
   Zap,
   Eye,
   EyeOff,
-} from "lucide-react";
+} from 'lucide-react';
 
 // Enhanced types for period comparison with simulation
 interface EnhancedPeriodData {
@@ -55,7 +55,7 @@ interface EnhancedPeriodData {
     total_amount: number;
     budget_amount?: number;
     variance_from_previous?: number;
-    trend?: "up" | "down" | "stable";
+    trend?: 'up' | 'down' | 'stable';
   }[];
 }
 
@@ -66,14 +66,14 @@ interface VarianceIndicator {
   previous_value: number;
   variance_percentage: number;
   variance_absolute: number;
-  trend: "increase" | "decrease" | "stable";
-  significance: "high" | "medium" | "low";
+  trend: 'increase' | 'decrease' | 'stable';
+  significance: 'high' | 'medium' | 'low';
 }
 
 interface TrendAnalysis {
   grouper_id: number;
   grouper_name: string;
-  trend_direction: "upward" | "downward" | "stable" | "volatile";
+  trend_direction: 'upward' | 'downward' | 'stable' | 'volatile';
   trend_strength: number; // 0-1 scale
   periods_analyzed: number;
   average_change: number;
@@ -110,25 +110,25 @@ const EnhancedPeriodTooltip = memo<EnhancedPeriodTooltipProps>(
       .slice(0, 6); // Show top 6 groupers
 
     return (
-      <div className="bg-background border border-border rounded-lg p-4 shadow-lg max-w-sm">
-        <div className="flex items-center gap-2 mb-3">
+      <div className="max-w-sm rounded-lg border border-border bg-background p-4 shadow-lg">
+        <div className="mb-3 flex items-center gap-2">
           <p className="font-semibold text-foreground">{label}</p>
           {isSimulation && (
             <Badge
               variant="outline"
-              className="text-blue-600 border-blue-600 text-xs"
+              className="border-blue-600 text-xs text-blue-600"
             >
               Simulación
             </Badge>
           )}
         </div>
 
-        <div className="space-y-2 max-h-64 overflow-y-auto">
+        <div className="max-h-64 space-y-2 overflow-y-auto">
           {sortedPayload.map((entry, index) => {
             const grouperKey = entry.dataKey as string;
             const grouperName =
               grouperNames[grouperKey] ||
-              grouperKey.replace("grouper_", "Agrupador ");
+              grouperKey.replace('grouper_', 'Agrupador ');
             const variance = varianceData[grouperKey];
 
             return (
@@ -136,11 +136,11 @@ const EnhancedPeriodTooltip = memo<EnhancedPeriodTooltipProps>(
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span
-                      className="inline-block w-3 h-3 rounded-full"
+                      className="inline-block h-3 w-3 rounded-full"
                       style={{ backgroundColor: entry.color }}
                     />
                     <span
-                      className="text-sm font-medium truncate max-w-[120px]"
+                      className="max-w-[120px] truncate text-sm font-medium"
                       title={grouperName}
                     >
                       {grouperName}
@@ -152,28 +152,28 @@ const EnhancedPeriodTooltip = memo<EnhancedPeriodTooltipProps>(
                 </div>
 
                 {showVariance && variance && (
-                  <div className="flex items-center gap-1 ml-5 text-xs">
-                    {variance.trend === "increase" ? (
+                  <div className="ml-5 flex items-center gap-1 text-xs">
+                    {variance.trend === 'increase' ? (
                       <TrendingUp className="h-3 w-3 text-green-600" />
-                    ) : variance.trend === "decrease" ? (
+                    ) : variance.trend === 'decrease' ? (
                       <TrendingDown className="h-3 w-3 text-red-600" />
                     ) : (
                       <Minus className="h-3 w-3 text-gray-500" />
                     )}
                     <span
                       className={`${
-                        variance.trend === "increase"
-                          ? "text-green-600"
-                          : variance.trend === "decrease"
-                          ? "text-red-600"
-                          : "text-gray-500"
+                        variance.trend === 'increase'
+                          ? 'text-green-600'
+                          : variance.trend === 'decrease'
+                            ? 'text-red-600'
+                            : 'text-gray-500'
                       }`}
                     >
-                      {variance.variance_percentage > 0 ? "+" : ""}
+                      {variance.variance_percentage > 0 ? '+' : ''}
                       {variance.variance_percentage.toFixed(1)}%
                     </span>
                     <span className="text-muted-foreground">
-                      ({variance.variance_absolute > 0 ? "+" : ""}
+                      ({variance.variance_absolute > 0 ? '+' : ''}
                       {formatCurrency(variance.variance_absolute)})
                     </span>
                   </div>
@@ -183,14 +183,14 @@ const EnhancedPeriodTooltip = memo<EnhancedPeriodTooltipProps>(
           })}
 
           {payload.filter((entry) => entry.value > 0).length > 6 && (
-            <p className="text-xs text-muted-foreground italic ml-5">
+            <p className="ml-5 text-xs italic text-muted-foreground">
               ... y {payload.filter((entry) => entry.value > 0).length - 6} más
             </p>
           )}
         </div>
 
         {isSimulation && (
-          <p className="text-xs text-blue-600 italic mt-3 pt-2 border-t">
+          <p className="mt-3 border-t pt-2 text-xs italic text-blue-600">
             * Datos de simulación basados en presupuestos configurados
           </p>
         )}
@@ -199,7 +199,7 @@ const EnhancedPeriodTooltip = memo<EnhancedPeriodTooltipProps>(
   }
 );
 
-EnhancedPeriodTooltip.displayName = "EnhancedPeriodTooltip";
+EnhancedPeriodTooltip.displayName = 'EnhancedPeriodTooltip';
 
 // Main enhanced period comparison chart
 interface EnhancedPeriodComparisonChartProps {
@@ -219,8 +219,8 @@ export const EnhancedPeriodComparisonChart =
     ({
       data,
       selectedGroupers = [],
-      title = "Análisis Avanzado de Períodos",
-      description = "Comparación de períodos con análisis de variaciones y tendencias",
+      title = 'Análisis Avanzado de Períodos',
+      description = 'Comparación de períodos con análisis de variaciones y tendencias',
       isLoading = false,
       showVarianceIndicators = true,
       showTrendAnalysis = true,
@@ -228,8 +228,8 @@ export const EnhancedPeriodComparisonChart =
       onGrouperClick,
     }) => {
       const [activeView, setActiveView] = useState<
-        "stacked" | "grouped" | "trend"
-      >("stacked");
+        'stacked' | 'grouped' | 'trend'
+      >('stacked');
       const [highlightedGrouper, setHighlightedGrouper] = useState<
         number | null
       >(null);
@@ -298,21 +298,21 @@ export const EnhancedPeriodComparisonChart =
 
         // Generate colors
         const colorPalette = [
-          "#8884d8",
-          "#83a6ed",
-          "#8dd1e1",
-          "#82ca9d",
-          "#a4de6c",
-          "#d0ed57",
-          "#ffc658",
-          "#ff8042",
-          "#ff6361",
-          "#bc5090",
-          "#58508d",
-          "#003f5c",
-          "#2f4b7c",
-          "#665191",
-          "#a05195",
+          '#8884d8',
+          '#83a6ed',
+          '#8dd1e1',
+          '#82ca9d',
+          '#a4de6c',
+          '#d0ed57',
+          '#ffc658',
+          '#ff8042',
+          '#ff6361',
+          '#bc5090',
+          '#58508d',
+          '#003f5c',
+          '#2f4b7c',
+          '#665191',
+          '#a05195',
         ];
 
         const grouperColors: { [key: string]: string } = {};
@@ -337,18 +337,18 @@ export const EnhancedPeriodComparisonChart =
                 ((currentValue - previousValue) / previousValue) * 100;
               const varianceAbsolute = currentValue - previousValue;
 
-              let trend: "increase" | "decrease" | "stable" = "stable";
-              let significance: "high" | "medium" | "low" = "low";
+              let trend: 'increase' | 'decrease' | 'stable' = 'stable';
+              let significance: 'high' | 'medium' | 'low' = 'low';
 
               if (Math.abs(variancePercentage) > 20) {
-                significance = "high";
-                trend = variancePercentage > 0 ? "increase" : "decrease";
+                significance = 'high';
+                trend = variancePercentage > 0 ? 'increase' : 'decrease';
               } else if (Math.abs(variancePercentage) > 10) {
-                significance = "medium";
-                trend = variancePercentage > 0 ? "increase" : "decrease";
+                significance = 'medium';
+                trend = variancePercentage > 0 ? 'increase' : 'decrease';
               } else if (Math.abs(variancePercentage) > 5) {
-                significance = "low";
-                trend = variancePercentage > 0 ? "increase" : "decrease";
+                significance = 'low';
+                trend = variancePercentage > 0 ? 'increase' : 'decrease';
               }
 
               variance[grouperKey] = {
@@ -397,19 +397,19 @@ export const EnhancedPeriodComparisonChart =
               const volatilityScore = volatilitySum / (values.length - 1);
 
               let trendDirection:
-                | "upward"
-                | "downward"
-                | "stable"
-                | "volatile" = "stable";
+                | 'upward'
+                | 'downward'
+                | 'stable'
+                | 'volatile' = 'stable';
               if (volatilityScore > 25) {
-                trendDirection = "volatile";
+                trendDirection = 'volatile';
               } else if (upwardChanges > downwardChanges && averageChange > 5) {
-                trendDirection = "upward";
+                trendDirection = 'upward';
               } else if (
                 downwardChanges > upwardChanges &&
                 averageChange < -5
               ) {
-                trendDirection = "downward";
+                trendDirection = 'downward';
               }
 
               const trendStrength = Math.min(Math.abs(averageChange) / 20, 1); // Normalize to 0-1
@@ -429,7 +429,7 @@ export const EnhancedPeriodComparisonChart =
 
         // Identify significant changes
         const significant = Object.values(variance)
-          .filter((v) => v.significance === "high")
+          .filter((v) => v.significance === 'high')
           .sort(
             (a, b) =>
               Math.abs(b.variance_percentage) - Math.abs(a.variance_percentage)
@@ -452,7 +452,7 @@ export const EnhancedPeriodComparisonChart =
       const handleGrouperClick = (grouperKey: string) => {
         if (!enableDrillDown || !onGrouperClick) return;
 
-        const grouperId = parseInt(grouperKey.replace("grouper_", ""));
+        const grouperId = parseInt(grouperKey.replace('grouper_', ''));
         const grouperName = grouperNames[grouperKey];
 
         if (grouperId && grouperName) {
@@ -468,8 +468,8 @@ export const EnhancedPeriodComparisonChart =
               <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-center items-center h-[600px]">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              <div className="flex h-[600px] items-center justify-center">
+                <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
               </div>
             </CardContent>
           </Card>
@@ -484,7 +484,7 @@ export const EnhancedPeriodComparisonChart =
               <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex justify-center items-center h-[600px]">
+              <div className="flex h-[600px] items-center justify-center">
                 <p className="text-muted-foreground">
                   No hay datos disponibles para mostrar
                 </p>
@@ -513,17 +513,17 @@ export const EnhancedPeriodComparisonChart =
                       onClick={() => setShowSimulationOnly(!showSimulationOnly)}
                     >
                       {showSimulationOnly ? (
-                        <Eye className="h-4 w-4 mr-2" />
+                        <Eye className="mr-2 h-4 w-4" />
                       ) : (
-                        <EyeOff className="h-4 w-4 mr-2" />
+                        <EyeOff className="mr-2 h-4 w-4" />
                       )}
-                      {showSimulationOnly ? "Mostrar Todo" : "Solo Simulación"}
+                      {showSimulationOnly ? 'Mostrar Todo' : 'Solo Simulación'}
                     </Button>
                   )}
 
                   <Badge
                     variant="outline"
-                    className="text-blue-600 border-blue-600"
+                    className="border-blue-600 text-blue-600"
                   >
                     {chartData.length} períodos
                   </Badge>
@@ -536,7 +536,7 @@ export const EnhancedPeriodComparisonChart =
                 value={activeView}
                 onValueChange={(value) => setActiveView(value as any)}
               >
-                <TabsList className="grid w-full grid-cols-3 mb-4">
+                <TabsList className="mb-4 grid w-full grid-cols-3">
                   <TabsTrigger value="stacked">Apilado</TabsTrigger>
                   <TabsTrigger value="grouped">Agrupado</TabsTrigger>
                   <TabsTrigger value="trend">Tendencias</TabsTrigger>
@@ -570,7 +570,7 @@ export const EnhancedPeriodComparisonChart =
                             />
                           }
                         />
-                        <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                        <Legend wrapperStyle={{ paddingTop: '20px' }} />
 
                         {Object.entries(grouperNames).map(
                           ([grouperKey, grouperName]) => (
@@ -579,19 +579,19 @@ export const EnhancedPeriodComparisonChart =
                               dataKey={grouperKey}
                               name={
                                 grouperName.length > 20
-                                  ? grouperName.substring(0, 20) + "..."
+                                  ? grouperName.substring(0, 20) + '...'
                                   : grouperName
                               }
                               fill={colors[grouperKey]}
                               stackId="groupers"
                               onClick={() => handleGrouperClick(grouperKey)}
                               style={{
-                                cursor: enableDrillDown ? "pointer" : "default",
+                                cursor: enableDrillDown ? 'pointer' : 'default',
                               }}
                               opacity={
                                 highlightedGrouper === null ||
                                 highlightedGrouper ===
-                                  parseInt(grouperKey.replace("grouper_", ""))
+                                  parseInt(grouperKey.replace('grouper_', ''))
                                   ? 1
                                   : 0.3
                               }
@@ -631,7 +631,7 @@ export const EnhancedPeriodComparisonChart =
                             />
                           }
                         />
-                        <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                        <Legend wrapperStyle={{ paddingTop: '20px' }} />
 
                         {Object.entries(grouperNames).map(
                           ([grouperKey, grouperName]) => (
@@ -640,18 +640,18 @@ export const EnhancedPeriodComparisonChart =
                               dataKey={grouperKey}
                               name={
                                 grouperName.length > 20
-                                  ? grouperName.substring(0, 20) + "..."
+                                  ? grouperName.substring(0, 20) + '...'
                                   : grouperName
                               }
                               fill={colors[grouperKey]}
                               onClick={() => handleGrouperClick(grouperKey)}
                               style={{
-                                cursor: enableDrillDown ? "pointer" : "default",
+                                cursor: enableDrillDown ? 'pointer' : 'default',
                               }}
                               opacity={
                                 highlightedGrouper === null ||
                                 highlightedGrouper ===
-                                  parseInt(grouperKey.replace("grouper_", ""))
+                                  parseInt(grouperKey.replace('grouper_', ''))
                                   ? 1
                                   : 0.3
                               }
@@ -691,7 +691,7 @@ export const EnhancedPeriodComparisonChart =
                             />
                           }
                         />
-                        <Legend wrapperStyle={{ paddingTop: "20px" }} />
+                        <Legend wrapperStyle={{ paddingTop: '20px' }} />
 
                         {Object.entries(grouperNames).map(
                           ([grouperKey, grouperName]) => (
@@ -701,7 +701,7 @@ export const EnhancedPeriodComparisonChart =
                               dataKey={grouperKey}
                               name={
                                 grouperName.length > 20
-                                  ? grouperName.substring(0, 20) + "..."
+                                  ? grouperName.substring(0, 20) + '...'
                                   : grouperName
                               }
                               stroke={colors[grouperKey]}
@@ -711,7 +711,7 @@ export const EnhancedPeriodComparisonChart =
                               opacity={
                                 highlightedGrouper === null ||
                                 highlightedGrouper ===
-                                  parseInt(grouperKey.replace("grouper_", ""))
+                                  parseInt(grouperKey.replace('grouper_', ''))
                                   ? 1
                                   : 0.3
                               }
@@ -741,11 +741,11 @@ export const EnhancedPeriodComparisonChart =
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {significantChanges.map((change) => (
                     <div
                       key={change.grouper_id}
-                      className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                      className="flex cursor-pointer items-center justify-between rounded-lg border bg-card p-4 transition-colors hover:bg-accent/50"
                       onClick={() =>
                         setHighlightedGrouper(
                           highlightedGrouper === change.grouper_id
@@ -755,14 +755,14 @@ export const EnhancedPeriodComparisonChart =
                       }
                     >
                       <div className="flex items-center gap-3">
-                        {change.trend === "increase" ? (
+                        {change.trend === 'increase' ? (
                           <TrendingUp className="h-5 w-5 text-green-600" />
                         ) : (
                           <TrendingDown className="h-5 w-5 text-red-600" />
                         )}
                         <div>
                           <p
-                            className="font-medium text-sm truncate max-w-[120px]"
+                            className="max-w-[120px] truncate text-sm font-medium"
                             title={change.grouper_name}
                           >
                             {change.grouper_name}
@@ -774,13 +774,13 @@ export const EnhancedPeriodComparisonChart =
                       </div>
                       <Badge
                         variant={
-                          change.trend === "increase"
-                            ? "default"
-                            : "destructive"
+                          change.trend === 'increase'
+                            ? 'default'
+                            : 'destructive'
                         }
                         className="text-xs"
                       >
-                        {change.variance_percentage > 0 ? "+" : ""}
+                        {change.variance_percentage > 0 ? '+' : ''}
                         {change.variance_percentage.toFixed(1)}%
                       </Badge>
                     </div>
@@ -805,49 +805,49 @@ export const EnhancedPeriodComparisonChart =
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {trendAnalysis
-                    .filter((trend) => trend.trend_direction !== "stable")
+                    .filter((trend) => trend.trend_direction !== 'stable')
                     .sort((a, b) => b.trend_strength - a.trend_strength)
                     .slice(0, 6)
                     .map((trend) => (
                       <div
                         key={trend.grouper_id}
-                        className="p-4 rounded-lg border bg-card"
+                        className="rounded-lg border bg-card p-4"
                       >
-                        <div className="flex items-center justify-between mb-2">
+                        <div className="mb-2 flex items-center justify-between">
                           <p
-                            className="font-medium text-sm truncate max-w-[120px]"
+                            className="max-w-[120px] truncate text-sm font-medium"
                             title={trend.grouper_name}
                           >
                             {trend.grouper_name}
                           </p>
                           <Badge
                             variant={
-                              trend.trend_direction === "upward"
-                                ? "default"
-                                : trend.trend_direction === "downward"
-                                ? "destructive"
-                                : trend.trend_direction === "volatile"
-                                ? "secondary"
-                                : "outline"
+                              trend.trend_direction === 'upward'
+                                ? 'default'
+                                : trend.trend_direction === 'downward'
+                                  ? 'destructive'
+                                  : trend.trend_direction === 'volatile'
+                                    ? 'secondary'
+                                    : 'outline'
                             }
                             className="text-xs"
                           >
-                            {trend.trend_direction === "upward"
-                              ? "Creciente"
-                              : trend.trend_direction === "downward"
-                              ? "Decreciente"
-                              : trend.trend_direction === "volatile"
-                              ? "Volátil"
-                              : "Estable"}
+                            {trend.trend_direction === 'upward'
+                              ? 'Creciente'
+                              : trend.trend_direction === 'downward'
+                                ? 'Decreciente'
+                                : trend.trend_direction === 'volatile'
+                                  ? 'Volátil'
+                                  : 'Estable'}
                           </Badge>
                         </div>
 
                         <div className="space-y-1 text-xs text-muted-foreground">
                           <p>
-                            Cambio promedio:{" "}
-                            {trend.average_change > 0 ? "+" : ""}
+                            Cambio promedio:{' '}
+                            {trend.average_change > 0 ? '+' : ''}
                             {trend.average_change.toFixed(1)}%
                           </p>
                           <p>
@@ -857,21 +857,21 @@ export const EnhancedPeriodComparisonChart =
                         </div>
 
                         <div className="mt-2">
-                          <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div className="h-2 w-full rounded-full bg-gray-200">
                             <div
                               className={`h-2 rounded-full ${
-                                trend.trend_direction === "upward"
-                                  ? "bg-green-600"
-                                  : trend.trend_direction === "downward"
-                                  ? "bg-red-600"
-                                  : "bg-amber-600"
+                                trend.trend_direction === 'upward'
+                                  ? 'bg-green-600'
+                                  : trend.trend_direction === 'downward'
+                                    ? 'bg-red-600'
+                                    : 'bg-amber-600'
                               }`}
                               style={{
                                 width: `${trend.trend_strength * 100}%`,
                               }}
                             />
                           </div>
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="mt-1 text-xs text-muted-foreground">
                             Fuerza: {(trend.trend_strength * 100).toFixed(0)}%
                           </p>
                         </div>
@@ -886,4 +886,4 @@ export const EnhancedPeriodComparisonChart =
     }
   );
 
-EnhancedPeriodComparisonChart.displayName = "EnhancedPeriodComparisonChart";
+EnhancedPeriodComparisonChart.displayName = 'EnhancedPeriodComparisonChart';

@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { CalendarIcon, PlusCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { useState, useEffect } from 'react';
+import { CalendarIcon, PlusCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -19,21 +19,21 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
+} from '@/components/ui/popover';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -41,13 +41,13 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
-import { useBudget, Income, Period } from "@/context/budget-context";
-import { cn, formatCurrency, formatDate } from "@/lib/utils";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { FundFilter } from "@/components/fund-filter";
-import { Fund } from "@/types/funds";
+} from '@/components/ui/table';
+import { useToast } from '@/components/ui/use-toast';
+import { useBudget, Income, Period } from '@/context/budget-context';
+import { cn, formatCurrency, formatDate } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { FundFilter } from '@/components/fund-filter';
+import { Fund } from '@/types/funds';
 
 export function IncomesView() {
   const {
@@ -68,14 +68,14 @@ export function IncomesView() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
 
   const [newIncomePeriod, setNewIncomePeriod] = useState(
-    activePeriod?.id || ""
+    activePeriod?.id || ''
   );
   const [newIncomeDate, setNewIncomeDate] = useState<Date | undefined>(
     new Date()
   );
-  const [newIncomeDescription, setNewIncomeDescription] = useState("");
-  const [newIncomeAmount, setNewIncomeAmount] = useState("");
-  const [newIncomeEvent, setNewIncomeEvent] = useState("");
+  const [newIncomeDescription, setNewIncomeDescription] = useState('');
+  const [newIncomeAmount, setNewIncomeAmount] = useState('');
+  const [newIncomeEvent, setNewIncomeEvent] = useState('');
   const [newIncomeFund, setNewIncomeFund] = useState<Fund | null>(null);
   const [defaultFundInitialized, setDefaultFundInitialized] = useState(false);
 
@@ -121,9 +121,9 @@ export function IncomesView() {
   const handleAddIncome = async () => {
     if (!newIncomeDate || !newIncomeDescription.trim() || !newIncomeAmount) {
       toast({
-        title: "Error",
-        description: "Fecha, descripción y monto son obligatorios",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Fecha, descripción y monto son obligatorios',
+        variant: 'destructive',
       });
       return;
     }
@@ -131,9 +131,9 @@ export function IncomesView() {
     const amount = Number.parseFloat(newIncomeAmount);
     if (isNaN(amount) || amount <= 0) {
       toast({
-        title: "Error",
-        description: "El monto debe ser un número positivo",
-        variant: "destructive",
+        title: 'Error',
+        description: 'El monto debe ser un número positivo',
+        variant: 'destructive',
       });
       return;
     }
@@ -141,7 +141,7 @@ export function IncomesView() {
     setIsSubmitting(true);
     try {
       // Usar el periodo activo si no se seleccionó uno
-      const periodId = newIncomePeriod || (activePeriod ? activePeriod.id : "");
+      const periodId = newIncomePeriod || (activePeriod ? activePeriod.id : '');
 
       await addIncome(
         periodId,
@@ -152,24 +152,24 @@ export function IncomesView() {
         newIncomeFund?.id
       );
 
-      setNewIncomePeriod(activePeriod?.id || "");
+      setNewIncomePeriod(activePeriod?.id || '');
       setNewIncomeDate(new Date());
-      setNewIncomeDescription("");
-      setNewIncomeAmount("");
-      setNewIncomeEvent("");
+      setNewIncomeDescription('');
+      setNewIncomeAmount('');
+      setNewIncomeEvent('');
       setNewIncomeFund(null);
       setDefaultFundInitialized(false);
       setIsAddOpen(false);
 
       toast({
-        title: "Ingreso agregado",
-        description: "El ingreso ha sido registrado exitosamente",
+        title: 'Ingreso agregado',
+        description: 'El ingreso ha sido registrado exitosamente',
       });
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description: `Error al agregar ingreso: ${(error as Error).message}`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -184,9 +184,9 @@ export function IncomesView() {
       !editIncome.amount
     ) {
       toast({
-        title: "Error",
-        description: "Fecha, descripción y monto son obligatorios",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Fecha, descripción y monto son obligatorios',
+        variant: 'destructive',
       });
       return;
     }
@@ -194,9 +194,9 @@ export function IncomesView() {
     const amount = Number.parseFloat(editIncome.amount);
     if (isNaN(amount) || amount <= 0) {
       toast({
-        title: "Error",
-        description: "El monto debe ser un número positivo",
-        variant: "destructive",
+        title: 'Error',
+        description: 'El monto debe ser un número positivo',
+        variant: 'destructive',
       });
       return;
     }
@@ -205,7 +205,7 @@ export function IncomesView() {
     try {
       // Usar el periodo activo si no se seleccionó uno
       const periodId =
-        editIncome.periodId || (activePeriod ? activePeriod.id : "");
+        editIncome.periodId || (activePeriod ? activePeriod.id : '');
 
       await updateIncome(
         editIncome.id,
@@ -222,14 +222,14 @@ export function IncomesView() {
       setIsEditOpen(false);
 
       toast({
-        title: "Ingreso actualizado",
-        description: "El ingreso ha sido actualizado exitosamente",
+        title: 'Ingreso actualizado',
+        description: 'El ingreso ha sido actualizado exitosamente',
       });
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description: `Error al actualizar ingreso: ${(error as Error).message}`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -245,14 +245,14 @@ export function IncomesView() {
         setIsDeleteOpen(false);
 
         toast({
-          title: "Ingreso eliminado",
-          description: "El ingreso ha sido eliminado exitosamente",
+          title: 'Ingreso eliminado',
+          description: 'El ingreso ha sido eliminado exitosamente',
         });
       } catch (error) {
         toast({
-          title: "Error",
+          title: 'Error',
           description: `Error al eliminar ingreso: ${(error as Error).message}`,
-          variant: "destructive",
+          variant: 'destructive',
         });
       } finally {
         setIsSubmitting(false);
@@ -284,7 +284,7 @@ export function IncomesView() {
         <h1 className="text-3xl font-bold tracking-tight">Ingresos</h1>
         <Alert
           variant="warning"
-          className="bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-900 dark:text-yellow-200"
+          className="border-yellow-200 bg-yellow-50 text-yellow-800 dark:border-yellow-900 dark:bg-yellow-900/20 dark:text-yellow-200"
         >
           <AlertTitle>No hay periodos disponibles</AlertTitle>
           <AlertDescription>
@@ -295,7 +295,7 @@ export function IncomesView() {
             <Button
               variant="outline"
               className="mt-2"
-              onClick={() => (window.location.href = "/periodos")}
+              onClick={() => (window.location.href = '/periodos')}
             >
               Ir a Periodos
             </Button>
@@ -331,14 +331,17 @@ export function IncomesView() {
                   onValueChange={setNewIncomePeriod}
                   disabled={!periods || !periods.length}
                 >
-                  <SelectTrigger componentId="income-add-period-select" id="period">
+                  <SelectTrigger
+                    componentId="income-add-period-select"
+                    id="period"
+                  >
                     <SelectValue placeholder="Selecciona un periodo" />
                   </SelectTrigger>
                   <SelectContent>
                     {periods.map((period: Period) => (
                       <SelectItem key={period.id} value={period.id}>
-                        {period.name}{" "}
-                        {period.is_open || period.isOpen ? "(Activo)" : ""}
+                        {period.name}{' '}
+                        {period.is_open || period.isOpen ? '(Activo)' : ''}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -355,10 +358,10 @@ export function IncomesView() {
                   <PopoverTrigger asChild>
                     <Button
                       id="date"
-                      variant={"outline"}
+                      variant={'outline'}
                       className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !newIncomeDate && "text-muted-foreground"
+                        'w-full justify-start text-left font-normal',
+                        !newIncomeDate && 'text-muted-foreground'
                       )}
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
@@ -424,8 +427,7 @@ export function IncomesView() {
                 <p className="text-sm text-muted-foreground">
                   {getDefaultFund()
                     ? `Si no seleccionas un fondo, se asignará al fondo "${getDefaultFund()?.name}" por defecto`
-                    : 'Si no seleccionas un fondo, se asignará al fondo "Disponible" por defecto'
-                  }
+                    : 'Si no seleccionas un fondo, se asignará al fondo "Disponible" por defecto'}
                 </p>
               </div>
             </div>
@@ -438,8 +440,12 @@ export function IncomesView() {
               >
                 Cancelar
               </Button>
-              <Button componentId="income-add-submit" onClick={handleAddIncome} disabled={isSubmitting}>
-                {isSubmitting ? "Guardando..." : "Guardar"}
+              <Button
+                componentId="income-add-submit"
+                onClick={handleAddIncome}
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Guardando...' : 'Guardar'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -452,7 +458,7 @@ export function IncomesView() {
           <CardDescription>
             {activePeriod
               ? `Ingresos del periodo: ${activePeriod.name}`
-              : "Historial de todos los ingresos registrados"}
+              : 'Historial de todos los ingresos registrados'}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -477,16 +483,16 @@ export function IncomesView() {
                   <TableRow key={income.id}>
                     <TableCell>
                       {/* Forzar visualización correcta de fechas sin desplazamiento de zona horaria */}
-                      {income.date && typeof income.date === "string"
+                      {income.date && typeof income.date === 'string'
                         ? // Si es string, usar método manual para evitar conversiones automáticas de zona horaria
                           formatDate(
-                            new Date(income.date.split("T")[0] + "T12:00:00Z")
+                            new Date(income.date.split('T')[0] + 'T12:00:00Z')
                           )
                         : formatDate(new Date(income.date))}
                     </TableCell>
                     <TableCell>{income.description}</TableCell>
-                    <TableCell>{income.event || ""}</TableCell>
-                    <TableCell>{period?.name || "Desconocido"}</TableCell>
+                    <TableCell>{income.event || ''}</TableCell>
+                    <TableCell>{period?.name || 'Desconocido'}</TableCell>
                     <TableCell>
                       {income.fund_name ? (
                         <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
@@ -508,11 +514,11 @@ export function IncomesView() {
                         onClick={() => {
                           setEditIncome({
                             id: income.id,
-                            periodId: income.period_id || "",
+                            periodId: income.period_id || '',
                             date: new Date(income.date),
                             description: income.description,
                             amount: income.amount.toString(),
-                            event: income.event || "",
+                            event: income.event || '',
                             fundId: income.fund_id,
                           });
                           // Set the fund for editing
@@ -544,7 +550,7 @@ export function IncomesView() {
                 <TableRow>
                   <TableCell
                     colSpan={6}
-                    className="text-center py-4 text-muted-foreground"
+                    className="py-4 text-center text-muted-foreground"
                   >
                     No hay ingresos registrados. Agrega un nuevo ingreso para
                     comenzar.
@@ -569,7 +575,7 @@ export function IncomesView() {
             <div className="grid gap-2">
               <Label htmlFor="edit-period">Periodo *</Label>
               <Select
-                value={editIncome?.periodId || ""}
+                value={editIncome?.periodId || ''}
                 onValueChange={(value) =>
                   setEditIncome((prev) =>
                     prev ? { ...prev, periodId: value } : null
@@ -583,8 +589,8 @@ export function IncomesView() {
                 <SelectContent>
                   {periods.map((period) => (
                     <SelectItem key={period.id} value={period.id}>
-                      {period.name}{" "}
-                      {period.is_open || period.isOpen ? "(Activo)" : ""}
+                      {period.name}{' '}
+                      {period.is_open || period.isOpen ? '(Activo)' : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -601,10 +607,10 @@ export function IncomesView() {
                 <PopoverTrigger asChild>
                   <Button
                     id="edit-date"
-                    variant={"outline"}
+                    variant={'outline'}
                     className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !editIncome?.date && "text-muted-foreground"
+                      'w-full justify-start text-left font-normal',
+                      !editIncome?.date && 'text-muted-foreground'
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4" />
@@ -631,7 +637,7 @@ export function IncomesView() {
               <Label htmlFor="edit-description">Descripción *</Label>
               <Input
                 id="edit-description"
-                value={editIncome?.description || ""}
+                value={editIncome?.description || ''}
                 onChange={(e) =>
                   setEditIncome((prev) =>
                     prev ? { ...prev, description: e.target.value } : null
@@ -646,7 +652,7 @@ export function IncomesView() {
                 type="number"
                 min="0"
                 step="0.01"
-                value={editIncome?.amount || ""}
+                value={editIncome?.amount || ''}
                 onChange={(e) =>
                   setEditIncome((prev) =>
                     prev ? { ...prev, amount: e.target.value } : null
@@ -658,7 +664,7 @@ export function IncomesView() {
               <Label htmlFor="edit-event">Evento (opcional)</Label>
               <Input
                 id="edit-event"
-                value={editIncome?.event || ""}
+                value={editIncome?.event || ''}
                 onChange={(e) =>
                   setEditIncome((prev) =>
                     prev ? { ...prev, event: e.target.value } : null
@@ -680,8 +686,7 @@ export function IncomesView() {
               <p className="text-sm text-muted-foreground">
                 {getDefaultFund()
                   ? `Si no seleccionas un fondo, se asignará al fondo "${getDefaultFund()?.name}" por defecto`
-                  : 'Si no seleccionas un fondo, se asignará al fondo "Disponible" por defecto'
-                }
+                  : 'Si no seleccionas un fondo, se asignará al fondo "Disponible" por defecto'}
               </p>
             </div>
           </div>
@@ -694,7 +699,7 @@ export function IncomesView() {
               Cancelar
             </Button>
             <Button onClick={handleEditIncome} disabled={isSubmitting}>
-              {isSubmitting ? "Guardando..." : "Guardar"}
+              {isSubmitting ? 'Guardando...' : 'Guardar'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -723,7 +728,7 @@ export function IncomesView() {
               onClick={handleDeleteIncome}
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Eliminando..." : "Eliminar"}
+              {isSubmitting ? 'Eliminando...' : 'Eliminar'}
             </Button>
           </DialogFooter>
         </DialogContent>

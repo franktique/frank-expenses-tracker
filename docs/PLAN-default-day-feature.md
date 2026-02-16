@@ -11,6 +11,7 @@ Add a `default_day` field to categories (values 1-31) that represents the prefer
 ## Current State
 
 ### Database Schema
+
 - **Categories Table**: Currently has only `id` and `name` columns
   - `tipo_gasto` already added via migration
   - `fund_id` available for fund relationships
@@ -18,6 +19,7 @@ Add a `default_day` field to categories (values 1-31) that represents the prefer
   - **NO date-related fields exist** (no `default_date`, `recurrent_date`, or `default_day`)
 
 ### Frontend
+
 - Categories are edited in `/components/categories-view.tsx`
 - Uses dialog-based add/edit operations
 - Type definitions in `/types/funds.ts`
@@ -196,6 +198,7 @@ Add a `default_day` field to categories (values 1-31) that represents the prefer
 **Goal**: Given a day number (1-31) and a period, calculate the actual date for that day in the period's last month.
 
 **Algorithm**:
+
 ```
 1. Get period's year and start/end months
 2. For each month in the period:
@@ -206,11 +209,13 @@ Add a `default_day` field to categories (values 1-31) that represents the prefer
 ```
 
 **Example**:
+
 - Category default_day = 15
 - Period: Jan-Mar 2025
 - Result: 2025-03-15 (15th of March, the last month)
 
 **Edge Case**:
+
 - Category default_day = 31
 - Period: Jan-Feb 2025
 - Result: 2025-02-28 (last day of Feb, since it only has 28 days)
@@ -252,12 +257,12 @@ ADD COLUMN default_date DATE;
 
 ## Potential Risks & Mitigation
 
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| Invalid day values (0, 32+) | Data corruption | Input validation in UI + DB constraints |
-| Month boundary issues | Incorrect dates | Comprehensive date calculation tests |
-| Performance on bulk updates | Slow response | Batch update with transaction |
-| Backward compatibility | Breaking existing features | Nullable fields, null checks in code |
+| Risk                        | Impact                     | Mitigation                              |
+| --------------------------- | -------------------------- | --------------------------------------- |
+| Invalid day values (0, 32+) | Data corruption            | Input validation in UI + DB constraints |
+| Month boundary issues       | Incorrect dates            | Comprehensive date calculation tests    |
+| Performance on bulk updates | Slow response              | Batch update with transaction           |
+| Backward compatibility      | Breaking existing features | Nullable fields, null checks in code    |
 
 ## Notes
 

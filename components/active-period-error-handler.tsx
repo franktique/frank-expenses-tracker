@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import React from "react";
-import { useRouter } from "next/navigation";
+import React from 'react';
+import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
   RefreshCw,
@@ -11,18 +11,18 @@ import {
   Server,
   Clock,
   Settings,
-} from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+} from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
-import { PeriodLoadingError } from "@/lib/active-period-service";
+} from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { PeriodLoadingError } from '@/lib/active-period-service';
 
 interface ActivePeriodErrorHandlerProps {
   error: PeriodLoadingError;
@@ -37,24 +37,24 @@ export function ActivePeriodErrorHandler({
   onRetry,
   isRetrying = false,
   showFullCard = true,
-  className = "",
+  className = '',
 }: ActivePeriodErrorHandlerProps) {
   const router = useRouter();
   const { toast } = useToast();
 
   const getErrorIcon = () => {
     switch (error.type) {
-      case "network":
+      case 'network':
         return <Wifi className="h-4 w-4" />;
-      case "authentication":
+      case 'authentication':
         return <LogIn className="h-4 w-4" />;
-      case "no_active_period":
+      case 'no_active_period':
         return <CalendarRange className="h-4 w-4" />;
-      case "server":
+      case 'server':
         return <Server className="h-4 w-4" />;
-      case "timeout":
+      case 'timeout':
         return <Clock className="h-4 w-4" />;
-      case "invalid_cache":
+      case 'invalid_cache':
         return <RefreshCw className="h-4 w-4" />;
       default:
         return <AlertCircle className="h-4 w-4" />;
@@ -63,41 +63,41 @@ export function ActivePeriodErrorHandler({
 
   const getErrorTitle = () => {
     switch (error.type) {
-      case "network":
-        return "Error de conexión";
-      case "authentication":
-        return "Sesión expirada";
-      case "no_active_period":
-        return "No hay periodo activo";
-      case "server":
-        return "Error del servidor";
-      case "timeout":
-        return "Tiempo de espera agotado";
-      case "invalid_cache":
-        return "Datos desactualizados";
+      case 'network':
+        return 'Error de conexión';
+      case 'authentication':
+        return 'Sesión expirada';
+      case 'no_active_period':
+        return 'No hay periodo activo';
+      case 'server':
+        return 'Error del servidor';
+      case 'timeout':
+        return 'Tiempo de espera agotado';
+      case 'invalid_cache':
+        return 'Datos desactualizados';
       default:
-        return "Error desconocido";
+        return 'Error desconocido';
     }
   };
 
   const getErrorDescription = () => {
     switch (error.type) {
-      case "network":
-        return "No se pudo conectar al servidor. Verifica tu conexión a internet e intenta nuevamente.";
-      case "authentication":
-        return "Tu sesión ha expirado. Por favor, inicia sesión nuevamente para continuar.";
-      case "no_active_period":
-        return "No hay un periodo activo configurado. Necesitas activar un periodo para ver los datos.";
-      case "server":
-        return "Ocurrió un error en el servidor. Intenta nuevamente en unos momentos.";
-      case "timeout":
-        return "La operación tardó demasiado tiempo. Verifica tu conexión e intenta nuevamente.";
-      case "invalid_cache":
-        return "Los datos almacenados están desactualizados. Se están recargando automáticamente.";
+      case 'network':
+        return 'No se pudo conectar al servidor. Verifica tu conexión a internet e intenta nuevamente.';
+      case 'authentication':
+        return 'Tu sesión ha expirado. Por favor, inicia sesión nuevamente para continuar.';
+      case 'no_active_period':
+        return 'No hay un periodo activo configurado. Necesitas activar un periodo para ver los datos.';
+      case 'server':
+        return 'Ocurrió un error en el servidor. Intenta nuevamente en unos momentos.';
+      case 'timeout':
+        return 'La operación tardó demasiado tiempo. Verifica tu conexión e intenta nuevamente.';
+      case 'invalid_cache':
+        return 'Los datos almacenados están desactualizados. Se están recargando automáticamente.';
       default:
         return (
           error.message ||
-          "Ocurrió un error inesperado al cargar el periodo activo."
+          'Ocurrió un error inesperado al cargar el periodo activo.'
         );
     }
   };
@@ -132,11 +132,11 @@ export function ActivePeriodErrorHandler({
 
     // Specific action buttons based on error type
     switch (error.type) {
-      case "authentication":
+      case 'authentication':
         buttons.push(
           <Button
             key="login"
-            onClick={() => router.push("/login")}
+            onClick={() => router.push('/login')}
             variant="outline"
             size="sm"
           >
@@ -146,11 +146,11 @@ export function ActivePeriodErrorHandler({
         );
         break;
 
-      case "no_active_period":
+      case 'no_active_period':
         buttons.push(
           <Button
             key="periods"
-            onClick={() => router.push("/periodos")}
+            onClick={() => router.push('/periodos')}
             variant="outline"
             size="sm"
           >
@@ -160,12 +160,12 @@ export function ActivePeriodErrorHandler({
         );
         break;
 
-      case "server":
-      case "timeout":
+      case 'server':
+      case 'timeout':
         buttons.push(
           <Button
             key="setup"
-            onClick={() => router.push("/setup")}
+            onClick={() => router.push('/setup')}
             variant="outline"
             size="sm"
           >
@@ -181,9 +181,9 @@ export function ActivePeriodErrorHandler({
 
   const handleDismiss = () => {
     toast({
-      title: "Error reconocido",
+      title: 'Error reconocido',
       description:
-        "El error ha sido reconocido. Puedes continuar usando la aplicación.",
+        'El error ha sido reconocido. Puedes continuar usando la aplicación.',
     });
   };
 
@@ -196,7 +196,7 @@ export function ActivePeriodErrorHandler({
         <AlertDescription className="space-y-2">
           <p>{getErrorDescription()}</p>
           {getActionButtons().length > 0 && (
-            <div className="flex gap-2 mt-2">{getActionButtons()}</div>
+            <div className="mt-2 flex gap-2">{getActionButtons()}</div>
           )}
         </AlertDescription>
       </Alert>
@@ -220,9 +220,9 @@ export function ActivePeriodErrorHandler({
             <strong>Tipo de error:</strong> {error.type}
           </p>
           <p>
-            <strong>Hora:</strong>{" "}
-            {new Date(error.timestamp).toLocaleString("es-CO", {
-              timeZone: "America/Bogota",
+            <strong>Hora:</strong>{' '}
+            {new Date(error.timestamp).toLocaleString('es-CO', {
+              timeZone: 'America/Bogota',
             })}
           </p>
           {error.retryable && (
@@ -239,9 +239,9 @@ export function ActivePeriodErrorHandler({
 
         {/* Troubleshooting tips */}
         <div className="space-y-2">
-          <h4 className="font-medium text-sm">Sugerencias:</h4>
-          <ul className="text-sm text-muted-foreground space-y-1">
-            {error.type === "network" && (
+          <h4 className="text-sm font-medium">Sugerencias:</h4>
+          <ul className="space-y-1 text-sm text-muted-foreground">
+            {error.type === 'network' && (
               <>
                 <li>• Verifica tu conexión a internet</li>
                 <li>• Intenta recargar la página</li>
@@ -250,7 +250,7 @@ export function ActivePeriodErrorHandler({
                 </li>
               </>
             )}
-            {error.type === "authentication" && (
+            {error.type === 'authentication' && (
               <>
                 <li>• Cierra sesión e inicia sesión nuevamente</li>
                 <li>• Verifica que tu contraseña sea correcta</li>
@@ -259,21 +259,21 @@ export function ActivePeriodErrorHandler({
                 </li>
               </>
             )}
-            {error.type === "no_active_period" && (
+            {error.type === 'no_active_period' && (
               <>
                 <li>• Ve a la sección de Periodos</li>
                 <li>• Crea un nuevo periodo si no existe ninguno</li>
                 <li>• Activa un periodo existente haciendo clic en "Abrir"</li>
               </>
             )}
-            {(error.type === "server" || error.type === "timeout") && (
+            {(error.type === 'server' || error.type === 'timeout') && (
               <>
                 <li>• Espera unos momentos e intenta nuevamente</li>
                 <li>• Verifica el estado de la base de datos</li>
                 <li>• Contacta al administrador si el problema persiste</li>
               </>
             )}
-            {error.type === "invalid_cache" && (
+            {error.type === 'invalid_cache' && (
               <>
                 <li>• Los datos se están actualizando automáticamente</li>
                 <li>• Recarga la página si el problema persiste</li>
@@ -284,8 +284,8 @@ export function ActivePeriodErrorHandler({
         </div>
 
         {/* Dismiss button for non-critical errors */}
-        {!["authentication", "no_active_period"].includes(error.type) && (
-          <div className="pt-2 border-t">
+        {!['authentication', 'no_active_period'].includes(error.type) && (
+          <div className="border-t pt-2">
             <Button
               onClick={handleDismiss}
               variant="ghost"

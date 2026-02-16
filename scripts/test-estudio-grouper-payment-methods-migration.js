@@ -5,17 +5,17 @@
  * This script validates that the migration works correctly
  */
 
-const { neon } = require("@neondatabase/serverless");
+const { neon } = require('@neondatabase/serverless');
 
 // Get database URL from environment
 const sql = neon(process.env.DATABASE_URL_NEW);
 
 async function testPaymentMethodsMigration() {
-  console.log("🧪 Testing Estudio Grouper Payment Methods Migration...\n");
+  console.log('🧪 Testing Estudio Grouper Payment Methods Migration...\n');
 
   try {
     // Test 1: Check if column exists
-    console.log("1️⃣ Checking if payment_methods column exists...");
+    console.log('1️⃣ Checking if payment_methods column exists...');
     const columnCheck = await sql`
       SELECT column_name, data_type, is_nullable 
       FROM information_schema.columns 
@@ -24,15 +24,15 @@ async function testPaymentMethodsMigration() {
     `;
 
     if (columnCheck.length === 0) {
-      throw new Error("payment_methods column not found");
+      throw new Error('payment_methods column not found');
     }
-    console.log("✅ payment_methods column exists");
+    console.log('✅ payment_methods column exists');
     console.log(
       `   Type: ${columnCheck[0].data_type}, Nullable: ${columnCheck[0].is_nullable}\n`
     );
 
     // Test 2: Check constraint exists
-    console.log("2️⃣ Checking payment methods constraint...");
+    console.log('2️⃣ Checking payment methods constraint...');
     const constraintCheck = await sql`
       SELECT constraint_name 
       FROM information_schema.check_constraints 
@@ -40,12 +40,12 @@ async function testPaymentMethodsMigration() {
     `;
 
     if (constraintCheck.length === 0) {
-      throw new Error("check_payment_methods constraint not found");
+      throw new Error('check_payment_methods constraint not found');
     }
-    console.log("✅ Payment methods constraint exists\n");
+    console.log('✅ Payment methods constraint exists\n');
 
     // Test 3: Check GIN index exists
-    console.log("3️⃣ Checking GIN index...");
+    console.log('3️⃣ Checking GIN index...');
     const indexCheck = await sql`
       SELECT indexname 
       FROM pg_indexes 
@@ -54,12 +54,12 @@ async function testPaymentMethodsMigration() {
     `;
 
     if (indexCheck.length === 0) {
-      throw new Error("GIN index not found");
+      throw new Error('GIN index not found');
     }
-    console.log("✅ GIN index exists\n");
+    console.log('✅ GIN index exists\n');
 
     // Test 4: Check helper functions exist
-    console.log("4️⃣ Checking helper functions...");
+    console.log('4️⃣ Checking helper functions...');
     const functionsCheck = await sql`
       SELECT routine_name 
       FROM information_schema.routines 
@@ -73,10 +73,10 @@ async function testPaymentMethodsMigration() {
     `;
 
     const expectedFunctions = [
-      "check_payment_methods_migration_status",
-      "expense_matches_payment_filter",
-      "get_payment_method_filter",
-      "validate_payment_methods",
+      'check_payment_methods_migration_status',
+      'expense_matches_payment_filter',
+      'get_payment_method_filter',
+      'validate_payment_methods',
     ];
 
     if (functionsCheck.length !== expectedFunctions.length) {
@@ -84,10 +84,10 @@ async function testPaymentMethodsMigration() {
         `Expected ${expectedFunctions.length} functions, found ${functionsCheck.length}`
       );
     }
-    console.log("✅ All helper functions exist\n");
+    console.log('✅ All helper functions exist\n');
 
     // Test 5: Test constraint validation
-    console.log("5️⃣ Testing constraint validation...");
+    console.log('5️⃣ Testing constraint validation...');
 
     // Create test estudio and grouper if they don't exist
     const testEstudio = await sql`
@@ -132,7 +132,7 @@ async function testPaymentMethodsMigration() {
         ON CONFLICT (estudio_id, grouper_id) DO UPDATE SET 
         payment_methods = ARRAY['cash', 'credit']
       `;
-      console.log("✅ Valid payment methods accepted");
+      console.log('✅ Valid payment methods accepted');
     } catch (error) {
       throw new Error(`Valid payment methods rejected: ${error.message}`);
     }
@@ -145,11 +145,11 @@ async function testPaymentMethodsMigration() {
         WHERE estudio_id = ${estudioId} AND grouper_id = ${grouperId}
       `;
       throw new Error(
-        "Invalid payment methods were accepted (should have been rejected)"
+        'Invalid payment methods were accepted (should have been rejected)'
       );
     } catch (error) {
-      if (error.message.includes("check_payment_methods")) {
-        console.log("✅ Invalid payment methods correctly rejected");
+      if (error.message.includes('check_payment_methods')) {
+        console.log('✅ Invalid payment methods correctly rejected');
       } else {
         throw error;
       }
@@ -162,10 +162,10 @@ async function testPaymentMethodsMigration() {
         SET payment_methods = ARRAY[]::text[] 
         WHERE estudio_id = ${estudioId} AND grouper_id = ${grouperId}
       `;
-      throw new Error("Empty array was accepted (should have been rejected)");
+      throw new Error('Empty array was accepted (should have been rejected)');
     } catch (error) {
-      if (error.message.includes("check_payment_methods")) {
-        console.log("✅ Empty array correctly rejected");
+      if (error.message.includes('check_payment_methods')) {
+        console.log('✅ Empty array correctly rejected');
       } else {
         throw error;
       }
@@ -178,20 +178,20 @@ async function testPaymentMethodsMigration() {
         SET payment_methods = NULL 
         WHERE estudio_id = ${estudioId} AND grouper_id = ${grouperId}
       `;
-      console.log("✅ NULL payment methods accepted (all methods)\n");
+      console.log('✅ NULL payment methods accepted (all methods)\n');
     } catch (error) {
       throw new Error(`NULL payment methods rejected: ${error.message}`);
     }
 
     // Test 6: Test helper functions
-    console.log("6️⃣ Testing helper functions...");
+    console.log('6️⃣ Testing helper functions...');
 
     // Test validate_payment_methods function
     const validationTests = [
       { input: "ARRAY['cash', 'credit']", expected: true },
       { input: "ARRAY['invalid']", expected: false },
-      { input: "ARRAY[]::text[]", expected: false },
-      { input: "NULL", expected: true },
+      { input: 'ARRAY[]::text[]', expected: false },
+      { input: 'NULL', expected: true },
     ];
 
     for (const test of validationTests) {
@@ -203,19 +203,19 @@ async function testPaymentMethodsMigration() {
         );
       }
     }
-    console.log("✅ validate_payment_methods function works correctly");
+    console.log('✅ validate_payment_methods function works correctly');
 
     // Test get_payment_method_filter function
     const filterResult = await sql`
       SELECT get_payment_method_filter(${estudioId}, ${grouperId}) as filter_methods
     `;
-    console.log("✅ get_payment_method_filter function works correctly");
+    console.log('✅ get_payment_method_filter function works correctly');
 
     // Test expense_matches_payment_filter function
     const matchTests = [
-      { payment: "cash", filter: "ARRAY['cash', 'credit']", expected: true },
-      { payment: "debit", filter: "ARRAY['cash', 'credit']", expected: false },
-      { payment: "cash", filter: "NULL", expected: true },
+      { payment: 'cash', filter: "ARRAY['cash', 'credit']", expected: true },
+      { payment: 'debit', filter: "ARRAY['cash', 'credit']", expected: false },
+      { payment: 'cash', filter: 'NULL', expected: true },
     ];
 
     for (const test of matchTests) {
@@ -228,10 +228,10 @@ async function testPaymentMethodsMigration() {
         );
       }
     }
-    console.log("✅ expense_matches_payment_filter function works correctly\n");
+    console.log('✅ expense_matches_payment_filter function works correctly\n');
 
     // Test 7: Run migration status check
-    console.log("7️⃣ Running migration status check...");
+    console.log('7️⃣ Running migration status check...');
     const statusResult =
       await sql`SELECT * FROM check_payment_methods_migration_status()`;
     const status = statusResult[0];
@@ -249,20 +249,20 @@ async function testPaymentMethodsMigration() {
     console.log(`   Migration complete: ${status.migration_complete}\n`);
 
     // Cleanup test data
-    console.log("🧹 Cleaning up test data...");
+    console.log('🧹 Cleaning up test data...');
     await sql`
       DELETE FROM estudio_groupers 
       WHERE estudio_id = ${estudioId} AND grouper_id = ${grouperId}
     `;
     await sql`DELETE FROM estudios WHERE id = ${estudioId}`;
     await sql`DELETE FROM groupers WHERE id = ${grouperId}`;
-    console.log("✅ Test data cleaned up\n");
+    console.log('✅ Test data cleaned up\n');
 
     console.log(
-      "🎉 All tests passed! Payment methods migration is working correctly."
+      '🎉 All tests passed! Payment methods migration is working correctly.'
     );
   } catch (error) {
-    console.error("❌ Test failed:", error.message);
+    console.error('❌ Test failed:', error.message);
     process.exit(1);
   }
 }

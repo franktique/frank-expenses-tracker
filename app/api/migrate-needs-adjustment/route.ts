@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { sql, testConnection } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql, testConnection } from '@/lib/db';
 
 /**
  * API endpoint to add needs_adjustment column to simulation_budgets table
@@ -21,7 +21,7 @@ export async function GET() {
       return NextResponse.json(
         {
           success: false,
-          message: "Could not connect to the database: " + connectionTest.error,
+          message: 'Could not connect to the database: ' + connectionTest.error,
         },
         { status: 500 }
       );
@@ -41,7 +41,8 @@ export async function GET() {
     if (!tableExists) {
       return NextResponse.json({
         success: false,
-        message: "Table simulation_budgets does not exist. Run simulation setup first.",
+        message:
+          'Table simulation_budgets does not exist. Run simulation setup first.',
         skipped: true,
       });
     }
@@ -62,8 +63,7 @@ export async function GET() {
       )
     `;
 
-    const columnExists =
-      columnCheck.length > 0 ? columnCheck[0].exists : false;
+    const columnExists = columnCheck.length > 0 ? columnCheck[0].exists : false;
 
     if (!columnExists) {
       try {
@@ -72,24 +72,26 @@ export async function GET() {
           ADD COLUMN needs_adjustment BOOLEAN DEFAULT FALSE NOT NULL
         `;
         migrationResults.push({
-          step: "add_needs_adjustment_column",
+          step: 'add_needs_adjustment_column',
           success: true,
-          message: "Added needs_adjustment column",
+          message: 'Added needs_adjustment column',
         });
-        console.log("✓ Added needs_adjustment column");
+        console.log('✓ Added needs_adjustment column');
       } catch (error) {
         migrationResults.push({
-          step: "add_needs_adjustment_column",
+          step: 'add_needs_adjustment_column',
           success: false,
-          message: "Failed to add needs_adjustment column: " + (error as Error).message,
+          message:
+            'Failed to add needs_adjustment column: ' +
+            (error as Error).message,
         });
         throw error;
       }
     } else {
       migrationResults.push({
-        step: "add_needs_adjustment_column",
+        step: 'add_needs_adjustment_column',
         success: true,
-        message: "needs_adjustment column already exists",
+        message: 'needs_adjustment column already exists',
         skipped: true,
       });
     }
@@ -103,8 +105,7 @@ export async function GET() {
       )
     `;
 
-    const indexExists =
-      indexCheck.length > 0 ? indexCheck[0].exists : false;
+    const indexExists = indexCheck.length > 0 ? indexCheck[0].exists : false;
 
     if (!indexExists) {
       try {
@@ -114,24 +115,26 @@ export async function GET() {
           WHERE needs_adjustment = TRUE
         `;
         migrationResults.push({
-          step: "create_needs_adjustment_index",
+          step: 'create_needs_adjustment_index',
           success: true,
-          message: "Created index for needs_adjustment",
+          message: 'Created index for needs_adjustment',
         });
-        console.log("✓ Created index idx_simulation_budgets_needs_adjustment");
+        console.log('✓ Created index idx_simulation_budgets_needs_adjustment');
       } catch (error) {
         migrationResults.push({
-          step: "create_needs_adjustment_index",
+          step: 'create_needs_adjustment_index',
           success: false,
-          message: "Failed to create needs_adjustment index: " + (error as Error).message,
+          message:
+            'Failed to create needs_adjustment index: ' +
+            (error as Error).message,
         });
         throw error;
       }
     } else {
       migrationResults.push({
-        step: "create_needs_adjustment_index",
+        step: 'create_needs_adjustment_index',
         success: true,
-        message: "idx_simulation_budgets_needs_adjustment index already exists",
+        message: 'idx_simulation_budgets_needs_adjustment index already exists',
         skipped: true,
       });
     }
@@ -146,23 +149,23 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: "Needs adjustment migration completed successfully",
+      message: 'Needs adjustment migration completed successfully',
       steps: migrationResults,
       summary: summaryStats[0],
       details: {
-        new_columns: ["needs_adjustment"],
-        indexes: ["idx_simulation_budgets_needs_adjustment"],
+        new_columns: ['needs_adjustment'],
+        indexes: ['idx_simulation_budgets_needs_adjustment'],
         description:
-          "Added needs_adjustment boolean column to track categories pending review. " +
-          "When TRUE, the category row will be highlighted in dark-yellow in the UI.",
+          'Added needs_adjustment boolean column to track categories pending review. ' +
+          'When TRUE, the category row will be highlighted in dark-yellow in the UI.',
       },
     });
   } catch (error) {
-    console.error("Migration failed:", error);
+    console.error('Migration failed:', error);
     return NextResponse.json(
       {
         success: false,
-        message: "Migration failed: " + (error as Error).message,
+        message: 'Migration failed: ' + (error as Error).message,
       },
       { status: 500 }
     );

@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 // GET /api/simulations/[id]/export - Get simulation data for Excel export
 export async function GET(
@@ -14,8 +14,8 @@ export async function GET(
     if (isNaN(simulationId) || simulationId <= 0) {
       return NextResponse.json(
         {
-          error: "ID de simulación inválido",
-          code: "INVALID_SIMULATION_ID",
+          error: 'ID de simulación inválido',
+          code: 'INVALID_SIMULATION_ID',
         },
         { status: 400 }
       );
@@ -29,8 +29,8 @@ export async function GET(
     if (!simulation) {
       return NextResponse.json(
         {
-          error: "Simulación no encontrada",
-          code: "SIMULATION_NOT_FOUND",
+          error: 'Simulación no encontrada',
+          code: 'SIMULATION_NOT_FOUND',
           simulation_id: simulationId,
         },
         { status: 404 }
@@ -48,7 +48,8 @@ export async function GET(
     `;
 
     const totalIncome = incomes.reduce(
-      (sum, income) => sum + Number(income.amount),
+      (sum: number, income: { amount: string | number }) =>
+        sum + Number(income.amount),
       0
     );
 
@@ -93,37 +94,53 @@ export async function GET(
     let totalAhorroCredito = 0;
     let runningBalance = totalIncome;
 
-    const budgetsWithBalances = budgets.map((budget) => {
-      const efectivoAmount = Number(budget.efectivo_amount) || 0;
-      const creditoAmount = Number(budget.credito_amount) || 0;
-      const ahorroEfectivoAmount = Number(budget.ahorro_efectivo_amount) || 0;
-      const ahorroCreditoAmount = Number(budget.ahorro_credito_amount) || 0;
-      const total = efectivoAmount + creditoAmount - ahorroEfectivoAmount - ahorroCreditoAmount;
+    const budgetsWithBalances = budgets.map(
+      (budget: {
+        category_id: string | number;
+        category_name: string;
+        efectivo_amount: string | number;
+        credito_amount: string | number;
+        ahorro_efectivo_amount: string | number;
+        ahorro_credito_amount: string | number;
+      }) => {
+        const efectivoAmount = Number(budget.efectivo_amount) || 0;
+        const creditoAmount = Number(budget.credito_amount) || 0;
+        const ahorroEfectivoAmount = Number(budget.ahorro_efectivo_amount) || 0;
+        const ahorroCreditoAmount = Number(budget.ahorro_credito_amount) || 0;
+        const total =
+          efectivoAmount +
+          creditoAmount -
+          ahorroEfectivoAmount -
+          ahorroCreditoAmount;
 
-      totalEfectivo += efectivoAmount;
-      totalCredito += creditoAmount;
-      totalAhorroEfectivo += ahorroEfectivoAmount;
-      totalAhorroCredito += ahorroCreditoAmount;
+        totalEfectivo += efectivoAmount;
+        totalCredito += creditoAmount;
+        totalAhorroEfectivo += ahorroEfectivoAmount;
+        totalAhorroCredito += ahorroCreditoAmount;
 
-      // Running balance only decreases with efectivo (cash) amounts minus efectivo savings
-      runningBalance -= (efectivoAmount - ahorroEfectivoAmount);
+        // Running balance only decreases with efectivo (cash) amounts minus efectivo savings
+        runningBalance -= efectivoAmount - ahorroEfectivoAmount;
 
-      return {
-        category_id: budget.category_id,
-        category_name: budget.category_name,
-        efectivo_amount: efectivoAmount,
-        credito_amount: creditoAmount,
-        ahorro_efectivo_amount: ahorroEfectivoAmount,
-        ahorro_credito_amount: ahorroCreditoAmount,
-        total: total,
-        balance: runningBalance,
-      };
-    });
+        return {
+          category_id: budget.category_id,
+          category_name: budget.category_name,
+          efectivo_amount: efectivoAmount,
+          credito_amount: creditoAmount,
+          ahorro_efectivo_amount: ahorroEfectivoAmount,
+          ahorro_credito_amount: ahorroCreditoAmount,
+          total: total,
+          balance: runningBalance,
+        };
+      }
+    );
 
-    const totalGeneral = totalEfectivo + totalCredito - totalAhorroEfectivo - totalAhorroCredito;
+    const totalGeneral =
+      totalEfectivo + totalCredito - totalAhorroEfectivo - totalAhorroCredito;
 
     // Count categories with budget
-    const categoryCount = budgetsWithBalances.filter((b) => b.total > 0).length;
+    const categoryCount = budgetsWithBalances.filter(
+      (b: { total: number }) => b.total > 0
+    ).length;
 
     return NextResponse.json({
       simulation: {
@@ -131,18 +148,27 @@ export async function GET(
         name: simulation.name,
         description: simulation.description,
       },
-      incomes: incomes.map((income) => ({
-        description: income.description,
-        amount: Number(income.amount),
-      })),
+      incomes: incomes.map(
+        (income: { description: string; amount: string | number }) => ({
+          description: income.description,
+          amount: Number(income.amount),
+        })
+      ),
       totalIncome,
       budgets: budgetsWithBalances,
-      subgroups: subgroups.map((sg) => ({
-        id: sg.id,
-        name: sg.name,
-        displayOrder: sg.display_order,
-        categoryIds: sg.category_ids || [],
-      })),
+      subgroups: subgroups.map(
+        (sg: {
+          id: string;
+          name: string;
+          display_order: number;
+          category_ids?: string[];
+        }) => ({
+          id: sg.id,
+          name: sg.name,
+          displayOrder: sg.display_order,
+          categoryIds: sg.category_ids || [],
+        })
+      ),
       totals: {
         efectivo: totalEfectivo,
         credito: totalCredito,
@@ -154,14 +180,14 @@ export async function GET(
       totalCategories: categories.length,
     });
   } catch (error) {
-    console.error("Error fetching simulation export data:", error);
+    console.error('Error fetching simulation export data:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -171,8 +197,8 @@ export async function GET(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al cargar datos de exportación",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al cargar datos de exportación',
+        code: 'INTERNAL_SERVER_ERROR',
         retryable: true,
       },
       { status: 500 }

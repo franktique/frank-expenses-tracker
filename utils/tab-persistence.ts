@@ -14,7 +14,7 @@ const DEFAULT_STORAGE_CONFIG = {
   maxClosedTabs: 20,
   maxStorageAge: 7 * 24 * 60 * 60 * 1000, // 7 days
   enableCompression: false,
-  enableEncryption: false
+  enableEncryption: false,
 };
 
 // Tab persistence manager
@@ -32,9 +32,9 @@ export class TabPersistenceManager {
       const limitedTabs = tabs.slice(-this.config.maxTabs);
 
       const storageData: TabStorageData = {
-        tabs: limitedTabs.map(tab => this.serializeTab(tab)),
+        tabs: limitedTabs.map((tab) => this.serializeTab(tab)),
         activeTabId,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
       const jsonData = JSON.stringify(storageData);
@@ -60,7 +60,8 @@ export class TabPersistenceManager {
       const storageData: TabStorageData = JSON.parse(storedData);
 
       // Check if data is too old
-      const isRecent = Date.now() - storageData.timestamp < this.config.maxStorageAge;
+      const isRecent =
+        Date.now() - storageData.timestamp < this.config.maxStorageAge;
       if (!isRecent) {
         this.clearExpiredData();
         return null;
@@ -68,12 +69,12 @@ export class TabPersistenceManager {
 
       // Validate and deserialize tabs
       const validTabs = storageData.tabs
-        .map(tab => this.deserializeTab(tab))
+        .map((tab) => this.deserializeTab(tab))
         .filter(Boolean) as Tab[];
 
       return {
         tabs: validTabs,
-        activeTabId: storageData.activeTabId
+        activeTabId: storageData.activeTabId,
       };
     } catch (error) {
       console.error('Failed to load tabs:', error);
@@ -87,10 +88,13 @@ export class TabPersistenceManager {
       const existingStates = this.loadAllTabStates();
       existingStates[tabId] = {
         ...state,
-        timestamp: Date.now()
+        timestamp: Date.now(),
       };
 
-      localStorage.setItem(TAB_STATE_STORAGE_KEY, JSON.stringify(existingStates));
+      localStorage.setItem(
+        TAB_STATE_STORAGE_KEY,
+        JSON.stringify(existingStates)
+      );
       return true;
     } catch (error) {
       console.error('Failed to save tab state:', error);
@@ -141,13 +145,16 @@ export class TabPersistenceManager {
       // Add to beginning of array
       closedTabs.unshift({
         ...this.serializeTab(tab),
-        closedAt: Date.now()
+        closedAt: Date.now(),
       });
 
       // Limit size of history
       const limitedHistory = closedTabs.slice(0, this.config.maxClosedTabs);
 
-      localStorage.setItem(CLOSED_TABS_HISTORY_KEY, JSON.stringify(limitedHistory));
+      localStorage.setItem(
+        CLOSED_TABS_HISTORY_KEY,
+        JSON.stringify(limitedHistory)
+      );
       return true;
     } catch (error) {
       console.error('Failed to save closed tab:', error);
@@ -240,11 +247,14 @@ export class TabPersistenceManager {
 
       // Clear expired closed tabs
       const closedTabs = this.getClosedTabsHistory();
-      const validClosedTabs = closedTabs.filter(tab =>
-        now - tab.closedAt < this.config.maxStorageAge
+      const validClosedTabs = closedTabs.filter(
+        (tab) => now - tab.closedAt < this.config.maxStorageAge
       );
 
-      localStorage.setItem(CLOSED_TABS_HISTORY_KEY, JSON.stringify(validClosedTabs));
+      localStorage.setItem(
+        CLOSED_TABS_HISTORY_KEY,
+        JSON.stringify(validClosedTabs)
+      );
 
       return true;
     } catch (error) {
@@ -266,7 +276,7 @@ export class TabPersistenceManager {
       state: tab.state,
       createdAt: tab.createdAt.toISOString(),
       lastAccessed: tab.lastAccessed.toISOString(),
-      routeParams: tab.routeParams
+      routeParams: tab.routeParams,
       // Note: icon function is not serializable and will be lost
     };
   }
@@ -285,7 +295,7 @@ export class TabPersistenceManager {
         state: data.state,
         createdAt: new Date(data.createdAt),
         lastAccessed: new Date(data.lastAccessed),
-        routeParams: data.routeParams
+        routeParams: data.routeParams,
       };
 
       // Validate the deserialized tab
@@ -321,23 +331,28 @@ export class TabPersistenceManager {
     const tabCount = tabsData ? JSON.parse(tabsData).tabs?.length || 0 : 0;
 
     const statesData = localStorage.getItem(TAB_STATE_STORAGE_KEY);
-    const stateCount = statesData ? Object.keys(JSON.parse(statesData)).length : 0;
+    const stateCount = statesData
+      ? Object.keys(JSON.parse(statesData)).length
+      : 0;
 
     const closedTabsData = localStorage.getItem(CLOSED_TABS_HISTORY_KEY);
-    const closedTabCount = closedTabsData ? JSON.parse(closedTabsData).length : 0;
+    const closedTabCount = closedTabsData
+      ? JSON.parse(closedTabsData).length
+      : 0;
 
     return {
-      totalSize: calculateSize(TABS_STORAGE_KEY) +
-                 calculateSize(TAB_STATE_STORAGE_KEY) +
-                 calculateSize(TAB_PREFERENCES_KEY) +
-                 calculateSize(CLOSED_TABS_HISTORY_KEY),
+      totalSize:
+        calculateSize(TABS_STORAGE_KEY) +
+        calculateSize(TAB_STATE_STORAGE_KEY) +
+        calculateSize(TAB_PREFERENCES_KEY) +
+        calculateSize(CLOSED_TABS_HISTORY_KEY),
       tabsSize: calculateSize(TABS_STORAGE_KEY),
       statesSize: calculateSize(TAB_STATE_STORAGE_KEY),
       preferencesSize: calculateSize(TAB_PREFERENCES_KEY),
       closedTabsSize: calculateSize(CLOSED_TABS_HISTORY_KEY),
       tabCount,
       stateCount,
-      closedTabCount
+      closedTabCount,
     };
   }
 }
@@ -349,8 +364,7 @@ export const tabPersistenceManager = new TabPersistenceManager();
 export const saveTabsToStorage = (tabs: Tab[], activeTabId: string | null) =>
   tabPersistenceManager.saveTabs(tabs, activeTabId);
 
-export const loadTabsFromStorage = () =>
-  tabPersistenceManager.loadTabs();
+export const loadTabsFromStorage = () => tabPersistenceManager.loadTabs();
 
 export const saveTabStateToStorage = (tabId: string, state: TabState) =>
   tabPersistenceManager.saveTabState(tabId, state);
@@ -364,8 +378,6 @@ export const saveClosedTabToHistory = (tab: Tab) =>
 export const restoreClosedTabFromHistory = () =>
   tabPersistenceManager.restoreClosedTab();
 
-export const clearAllTabData = () =>
-  tabPersistenceManager.clearAllData();
+export const clearAllTabData = () => tabPersistenceManager.clearAllData();
 
-export const getTabStorageStats = () =>
-  tabPersistenceManager.getStorageStats();
+export const getTabStorageStats = () => tabPersistenceManager.getStorageStats();

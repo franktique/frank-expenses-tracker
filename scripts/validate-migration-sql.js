@@ -5,45 +5,45 @@
  * This script validates the SQL syntax and logic without executing against a database
  */
 
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
 
 function validateSQLFile(filename) {
   console.log(`\n=== Validating ${filename} ===`);
 
   try {
     const filePath = path.join(__dirname, filename);
-    const content = fs.readFileSync(filePath, "utf8");
+    const content = fs.readFileSync(filePath, 'utf8');
 
     // Basic SQL syntax checks
     const checks = [
       {
-        name: "ALTER TABLE statement",
+        name: 'ALTER TABLE statement',
         pattern: /ALTER TABLE expenses ADD COLUMN.*source_fund_id/i,
         required: true,
       },
       {
-        name: "CREATE INDEX statement",
+        name: 'CREATE INDEX statement',
         pattern: /CREATE INDEX.*idx_expenses_source_fund_id/i,
         required: true,
       },
       {
-        name: "UPDATE statement for migration",
+        name: 'UPDATE statement for migration',
         pattern: /UPDATE expenses\s+SET source_fund_id/i,
         required: true,
       },
       {
-        name: "Foreign key reference",
+        name: 'Foreign key reference',
         pattern: /REFERENCES funds\(id\)/i,
         required: true,
       },
       {
-        name: "Function creation",
+        name: 'Function creation',
         pattern: /CREATE OR REPLACE FUNCTION/i,
         required: true,
       },
       {
-        name: "COALESCE for fallback logic",
+        name: 'COALESCE for fallback logic',
         pattern: /COALESCE/i,
         required: true,
       },
@@ -69,27 +69,27 @@ function validateSQLFile(filename) {
     const issues = [];
 
     // Check for proper UUID handling
-    if (!content.includes("UUID")) {
-      issues.push("Missing UUID type references");
+    if (!content.includes('UUID')) {
+      issues.push('Missing UUID type references');
     }
 
     // Check for proper error handling in functions
     if (
-      content.includes("CREATE OR REPLACE FUNCTION") &&
-      !content.includes("EXCEPTION")
+      content.includes('CREATE OR REPLACE FUNCTION') &&
+      !content.includes('EXCEPTION')
     ) {
       // This is actually OK for our functions, they don't need exception handling
     }
 
     // Check for proper indexing
-    if (!content.includes("CREATE INDEX")) {
-      issues.push("Missing index creation");
+    if (!content.includes('CREATE INDEX')) {
+      issues.push('Missing index creation');
     }
 
     console.log(`\n📊 Summary: ${passed} passed, ${failed} failed`);
 
     if (issues.length > 0) {
-      console.log("\n⚠️ Potential issues:");
+      console.log('\n⚠️ Potential issues:');
       issues.forEach((issue) => console.log(`  - ${issue}`));
     }
 
@@ -101,13 +101,13 @@ function validateSQLFile(filename) {
 }
 
 function validateMigrationLogic() {
-  console.log("\n=== Validating Migration Logic ===");
+  console.log('\n=== Validating Migration Logic ===');
 
   const migrationFile = path.join(
     __dirname,
-    "create-expense-source-fund-migration.sql"
+    'create-expense-source-fund-migration.sql'
   );
-  const content = fs.readFileSync(migrationFile, "utf8");
+  const content = fs.readFileSync(migrationFile, 'utf8');
 
   // Check migration priority logic
   const updateMatch = content.match(
@@ -118,14 +118,14 @@ function validateMigrationLogic() {
     const updateLogic = updateMatch[1];
 
     // Should prioritize category_fund_relationships over legacy fund_id
-    const hasCoalesce = updateLogic.includes("COALESCE");
+    const hasCoalesce = updateLogic.includes('COALESCE');
     const hasCategoryFundRelationships = updateLogic.includes(
-      "category_fund_relationships"
+      'category_fund_relationships'
     );
     const hasLegacyFallback =
-      (updateLogic.includes("categories c") ||
-        updateLogic.includes("FROM categories")) &&
-      (updateLogic.includes("c.fund_id") || updateLogic.includes("fund_id"));
+      (updateLogic.includes('categories c') ||
+        updateLogic.includes('FROM categories')) &&
+      (updateLogic.includes('c.fund_id') || updateLogic.includes('fund_id'));
 
     console.log(`✅ Uses COALESCE for priority logic: ${hasCoalesce}`);
     console.log(
@@ -135,40 +135,40 @@ function validateMigrationLogic() {
 
     // Debug: show what we found
     console.log(`\nDEBUG - Update logic content:`);
-    console.log(updateLogic.substring(0, 200) + "...");
+    console.log(updateLogic.substring(0, 200) + '...');
 
     if (hasCoalesce && hasCategoryFundRelationships && hasLegacyFallback) {
-      console.log("✅ Migration logic is correct");
+      console.log('✅ Migration logic is correct');
       return true;
     } else {
-      console.log("❌ Migration logic has issues");
+      console.log('❌ Migration logic has issues');
       return false;
     }
   } else {
-    console.log("❌ Could not find UPDATE statement");
+    console.log('❌ Could not find UPDATE statement');
     return false;
   }
 }
 
 function validateFunctionDefinitions() {
-  console.log("\n=== Validating Function Definitions ===");
+  console.log('\n=== Validating Function Definitions ===');
 
   const migrationFile = path.join(
     __dirname,
-    "create-expense-source-fund-migration.sql"
+    'create-expense-source-fund-migration.sql'
   );
-  const content = fs.readFileSync(migrationFile, "utf8");
+  const content = fs.readFileSync(migrationFile, 'utf8');
 
   const expectedFunctions = [
-    "validate_expense_source_fund",
-    "get_category_source_funds",
-    "check_expense_source_fund_migration_status",
+    'validate_expense_source_fund',
+    'get_category_source_funds',
+    'check_expense_source_fund_migration_status',
   ];
 
   let allFound = true;
 
   expectedFunctions.forEach((funcName) => {
-    const pattern = new RegExp(`CREATE OR REPLACE FUNCTION ${funcName}`, "i");
+    const pattern = new RegExp(`CREATE OR REPLACE FUNCTION ${funcName}`, 'i');
     if (pattern.test(content)) {
       console.log(`✅ Function ${funcName} defined`);
     } else {
@@ -181,27 +181,27 @@ function validateFunctionDefinitions() {
 }
 
 function validateRollbackScript() {
-  console.log("\n=== Validating Rollback Script ===");
+  console.log('\n=== Validating Rollback Script ===');
 
   const rollbackFile = path.join(
     __dirname,
-    "rollback-expense-source-fund-migration.sql"
+    'rollback-expense-source-fund-migration.sql'
   );
-  const content = fs.readFileSync(rollbackFile, "utf8");
+  const content = fs.readFileSync(rollbackFile, 'utf8');
 
   const checks = [
     {
-      name: "Drop functions",
+      name: 'Drop functions',
       pattern: /DROP FUNCTION.*validate_expense_source_fund/i,
       required: true,
     },
     {
-      name: "Drop index",
+      name: 'Drop index',
       pattern: /DROP INDEX.*idx_expenses_source_fund_id/i,
       required: true,
     },
     {
-      name: "Drop column",
+      name: 'Drop column',
       pattern: /ALTER TABLE expenses DROP COLUMN.*source_fund_id/i,
       required: true,
     },
@@ -222,12 +222,12 @@ function validateRollbackScript() {
 }
 
 function main() {
-  console.log("🔍 Validating Expense Source Fund Migration SQL");
+  console.log('🔍 Validating Expense Source Fund Migration SQL');
 
   const files = [
-    "create-expense-source-fund-migration.sql",
-    "rollback-expense-source-fund-migration.sql",
-    "verify-expense-source-fund-migration.sql",
+    'create-expense-source-fund-migration.sql',
+    'rollback-expense-source-fund-migration.sql',
+    'verify-expense-source-fund-migration.sql',
   ];
 
   let allValid = true;
@@ -254,14 +254,14 @@ function main() {
     allValid = false;
   }
 
-  console.log("\n" + "=".repeat(50));
+  console.log('\n' + '='.repeat(50));
 
   if (allValid) {
-    console.log("🎉 All validation checks passed!");
-    console.log("✅ Migration scripts are ready for execution");
+    console.log('🎉 All validation checks passed!');
+    console.log('✅ Migration scripts are ready for execution');
   } else {
-    console.log("❌ Some validation checks failed");
-    console.log("⚠️ Please review and fix issues before running migration");
+    console.log('❌ Some validation checks failed');
+    console.log('⚠️ Please review and fix issues before running migration');
   }
 
   return allValid;

@@ -1,12 +1,19 @@
-import { describe, it, expect, beforeEach, afterEach, jest } from "@jest/globals";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import "@testing-library/jest-dom";
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  jest,
+} from '@jest/globals';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
 import {
   SourceFundErrorBoundary,
   SourceFundErrorWrapper,
   useSourceFundErrorHandler,
   SourceFundErrorFallback,
-} from "../source-fund-error-boundary";
+} from '../source-fund-error-boundary';
 
 // Mock component that throws errors
 function ThrowError({
@@ -17,14 +24,14 @@ function ThrowError({
   errorType?: string;
 }) {
   if (shouldThrow) {
-    if (errorType === "validation") {
-      throw new Error("Invalid source fund selection");
-    } else if (errorType === "network") {
-      throw new Error("Network connection failed");
-    } else if (errorType === "server") {
-      throw new Error("Internal server error");
+    if (errorType === 'validation') {
+      throw new Error('Invalid source fund selection');
+    } else if (errorType === 'network') {
+      throw new Error('Network connection failed');
+    } else if (errorType === 'server') {
+      throw new Error('Internal server error');
     } else {
-      throw new Error("Unknown error occurred");
+      throw new Error('Unknown error occurred');
     }
   }
   return <div>No error</div>;
@@ -42,30 +49,30 @@ function TestHookComponent() {
   } = useSourceFundErrorHandler();
 
   const triggerError = () => {
-    handleAsyncError(new Error("Test async error"), "test context");
+    handleAsyncError(new Error('Test async error'), 'test context');
   };
 
   const triggerRetry = async () => {
     await retryOperation(
       async () => {
-        throw new Error("Retry failed");
+        throw new Error('Retry failed');
       },
-      "retry context",
+      'retry context',
       2
     );
   };
 
   const triggerWrap = async () => {
     await wrapAsyncOperation(async () => {
-      throw new Error("Wrapped error");
-    }, "wrap context");
+      throw new Error('Wrapped error');
+    }, 'wrap context');
   };
 
   return (
     <div>
-      <div data-testid="error">{error?.message || "No error"}</div>
+      <div data-testid="error">{error?.message || 'No error'}</div>
       <div data-testid="retrying">
-        {isRetrying ? "Retrying" : "Not retrying"}
+        {isRetrying ? 'Retrying' : 'Not retrying'}
       </div>
       <button onClick={triggerError}>Trigger Error</button>
       <button onClick={triggerRetry}>Trigger Retry</button>
@@ -75,30 +82,30 @@ function TestHookComponent() {
   );
 }
 
-describe("SourceFundErrorBoundary", () => {
+describe('SourceFundErrorBoundary', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     // Mock console methods to avoid noise in tests
-    jest.spyOn(console, "error").mockImplementation(() => {});
-    jest.spyOn(console, "warn").mockImplementation(() => {});
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
-  describe("Error Boundary Component", () => {
-    it("should render children when no error occurs", () => {
+  describe('Error Boundary Component', () => {
+    it('should render children when no error occurs', () => {
       render(
         <SourceFundErrorBoundary>
           <ThrowError shouldThrow={false} />
         </SourceFundErrorBoundary>
       );
 
-      expect(screen.getByText("No error")).toBeInTheDocument();
+      expect(screen.getByText('No error')).toBeInTheDocument();
     });
 
-    it("should catch and display validation errors", () => {
+    it('should catch and display validation errors', () => {
       render(
         <SourceFundErrorBoundary showDetails>
           <ThrowError shouldThrow={true} errorType="validation" />
@@ -106,24 +113,24 @@ describe("SourceFundErrorBoundary", () => {
       );
 
       expect(
-        screen.getByText("Error de validación de fondo origen")
+        screen.getByText('Error de validación de fondo origen')
       ).toBeInTheDocument();
       expect(
         screen.getByText(/Los datos del fondo origen no son válidos/)
       ).toBeInTheDocument();
       expect(
-        screen.getByText("Invalid source fund selection")
+        screen.getByText('Invalid source fund selection')
       ).toBeInTheDocument();
     });
 
-    it("should catch and display network errors", () => {
+    it('should catch and display network errors', () => {
       render(
         <SourceFundErrorBoundary>
           <ThrowError shouldThrow={true} errorType="network" />
         </SourceFundErrorBoundary>
       );
 
-      expect(screen.getByText("Error de conexión")).toBeInTheDocument();
+      expect(screen.getByText('Error de conexión')).toBeInTheDocument();
       expect(
         screen.getByText(/No se pudo conectar con el servidor/)
       ).toBeInTheDocument();
@@ -132,33 +139,33 @@ describe("SourceFundErrorBoundary", () => {
       ).toBeInTheDocument();
     });
 
-    it("should catch and display server errors", () => {
+    it('should catch and display server errors', () => {
       render(
         <SourceFundErrorBoundary>
           <ThrowError shouldThrow={true} errorType="server" />
         </SourceFundErrorBoundary>
       );
 
-      expect(screen.getByText("Error del servidor")).toBeInTheDocument();
+      expect(screen.getByText('Error del servidor')).toBeInTheDocument();
       expect(
         screen.getByText(/Ha ocurrido un error interno del servidor/)
       ).toBeInTheDocument();
     });
 
-    it("should catch and display unknown errors", () => {
+    it('should catch and display unknown errors', () => {
       render(
         <SourceFundErrorBoundary>
           <ThrowError shouldThrow={true} />
         </SourceFundErrorBoundary>
       );
 
-      expect(screen.getByText("Error en fondo origen")).toBeInTheDocument();
+      expect(screen.getByText('Error en fondo origen')).toBeInTheDocument();
       expect(
         screen.getByText(/Ha ocurrido un error inesperado/)
       ).toBeInTheDocument();
     });
 
-    it("should display error ID and timestamp", () => {
+    it('should display error ID and timestamp', () => {
       render(
         <SourceFundErrorBoundary>
           <ThrowError shouldThrow={true} />
@@ -169,20 +176,20 @@ describe("SourceFundErrorBoundary", () => {
       expect(screen.getByText(/Tipo: unknown/)).toBeInTheDocument();
     });
 
-    it("should show technical details when showDetails is true", () => {
+    it('should show technical details when showDetails is true', () => {
       render(
         <SourceFundErrorBoundary showDetails>
           <ThrowError shouldThrow={true} />
         </SourceFundErrorBoundary>
       );
 
-      expect(screen.getByText("Información técnica:")).toBeInTheDocument();
+      expect(screen.getByText('Información técnica:')).toBeInTheDocument();
       expect(
         screen.getByText(/Error: Unknown error occurred/)
       ).toBeInTheDocument();
     });
 
-    it("should call onError callback when error occurs", () => {
+    it('should call onError callback when error occurs', () => {
       const onError = jest.fn();
 
       render(
@@ -199,16 +206,16 @@ describe("SourceFundErrorBoundary", () => {
       );
     });
 
-    it("should reset error state when retry button is clicked", () => {
+    it('should reset error state when retry button is clicked', () => {
       const { rerender } = render(
         <SourceFundErrorBoundary>
           <ThrowError shouldThrow={true} />
         </SourceFundErrorBoundary>
       );
 
-      expect(screen.getByText("Error en fondo origen")).toBeInTheDocument();
+      expect(screen.getByText('Error en fondo origen')).toBeInTheDocument();
 
-      fireEvent.click(screen.getByText("Reintentar"));
+      fireEvent.click(screen.getByText('Reintentar'));
 
       rerender(
         <SourceFundErrorBoundary>
@@ -216,10 +223,10 @@ describe("SourceFundErrorBoundary", () => {
         </SourceFundErrorBoundary>
       );
 
-      expect(screen.getByText("No error")).toBeInTheDocument();
+      expect(screen.getByText('No error')).toBeInTheDocument();
     });
 
-    it("should display context information when provided", () => {
+    it('should display context information when provided', () => {
       render(
         <SourceFundErrorBoundary context="expense form">
           <ThrowError shouldThrow={true} />
@@ -229,7 +236,7 @@ describe("SourceFundErrorBoundary", () => {
       expect(screen.getByText(/Contexto: expense form/)).toBeInTheDocument();
     });
 
-    it("should use custom fallback when provided", () => {
+    it('should use custom fallback when provided', () => {
       const customFallback = <div>Custom error fallback</div>;
 
       render(
@@ -238,26 +245,26 @@ describe("SourceFundErrorBoundary", () => {
         </SourceFundErrorBoundary>
       );
 
-      expect(screen.getByText("Custom error fallback")).toBeInTheDocument();
+      expect(screen.getByText('Custom error fallback')).toBeInTheDocument();
       expect(
-        screen.queryByText("Error en fondo origen")
+        screen.queryByText('Error en fondo origen')
       ).not.toBeInTheDocument();
     });
   });
 
-  describe("Error Wrapper Component", () => {
-    it("should render children normally", () => {
+  describe('Error Wrapper Component', () => {
+    it('should render children normally', () => {
       render(
         <SourceFundErrorWrapper>
           <ThrowError shouldThrow={false} />
         </SourceFundErrorWrapper>
       );
 
-      expect(screen.getByText("No error")).toBeInTheDocument();
+      expect(screen.getByText('No error')).toBeInTheDocument();
     });
 
-    it("should catch errors and log them", () => {
-      const consoleSpy = jest.spyOn(console, "error");
+    it('should catch errors and log them', () => {
+      const consoleSpy = jest.spyOn(console, 'error');
 
       render(
         <SourceFundErrorWrapper context="test wrapper">
@@ -266,22 +273,22 @@ describe("SourceFundErrorBoundary", () => {
       );
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        "Source Fund Error:",
+        'Source Fund Error:',
         expect.objectContaining({
-          error: "Unknown error occurred",
-          context: "test wrapper",
+          error: 'Unknown error occurred',
+          context: 'test wrapper',
         })
       );
     });
 
-    it("should reset on props change when enabled", () => {
+    it('should reset on props change when enabled', () => {
       const { rerender } = render(
         <SourceFundErrorWrapper resetOnPropsChange={true}>
           <ThrowError shouldThrow={true} />
         </SourceFundErrorWrapper>
       );
 
-      expect(screen.getByText("Error en fondo origen")).toBeInTheDocument();
+      expect(screen.getByText('Error en fondo origen')).toBeInTheDocument();
 
       rerender(
         <SourceFundErrorWrapper resetOnPropsChange={true}>
@@ -289,61 +296,61 @@ describe("SourceFundErrorBoundary", () => {
         </SourceFundErrorWrapper>
       );
 
-      expect(screen.getByText("No error")).toBeInTheDocument();
+      expect(screen.getByText('No error')).toBeInTheDocument();
     });
   });
 
-  describe("useSourceFundErrorHandler Hook", () => {
-    it("should handle async errors", () => {
+  describe('useSourceFundErrorHandler Hook', () => {
+    it('should handle async errors', () => {
       render(<TestHookComponent />);
 
-      expect(screen.getByTestId("error")).toHaveTextContent("No error");
+      expect(screen.getByTestId('error')).toHaveTextContent('No error');
 
-      fireEvent.click(screen.getByText("Trigger Error"));
+      fireEvent.click(screen.getByText('Trigger Error'));
 
-      expect(screen.getByTestId("error")).toHaveTextContent("Test async error");
+      expect(screen.getByTestId('error')).toHaveTextContent('Test async error');
     });
 
-    it("should clear errors", () => {
+    it('should clear errors', () => {
       render(<TestHookComponent />);
 
-      fireEvent.click(screen.getByText("Trigger Error"));
-      expect(screen.getByTestId("error")).toHaveTextContent("Test async error");
+      fireEvent.click(screen.getByText('Trigger Error'));
+      expect(screen.getByTestId('error')).toHaveTextContent('Test async error');
 
-      fireEvent.click(screen.getByText("Clear Error"));
-      expect(screen.getByTestId("error")).toHaveTextContent("No error");
+      fireEvent.click(screen.getByText('Clear Error'));
+      expect(screen.getByTestId('error')).toHaveTextContent('No error');
     });
 
-    it("should handle retry operations", async () => {
+    it('should handle retry operations', async () => {
       render(<TestHookComponent />);
 
-      fireEvent.click(screen.getByText("Trigger Retry"));
+      fireEvent.click(screen.getByText('Trigger Retry'));
 
-      expect(screen.getByTestId("retrying")).toHaveTextContent("Retrying");
+      expect(screen.getByTestId('retrying')).toHaveTextContent('Retrying');
 
       await waitFor(() => {
-        expect(screen.getByTestId("retrying")).toHaveTextContent(
-          "Not retrying"
+        expect(screen.getByTestId('retrying')).toHaveTextContent(
+          'Not retrying'
         );
       });
 
-      expect(screen.getByTestId("error")).toHaveTextContent("Retry failed");
+      expect(screen.getByTestId('error')).toHaveTextContent('Retry failed');
     });
 
-    it("should wrap async operations", async () => {
+    it('should wrap async operations', async () => {
       render(<TestHookComponent />);
 
-      fireEvent.click(screen.getByText("Trigger Wrap"));
+      fireEvent.click(screen.getByText('Trigger Wrap'));
 
       await waitFor(() => {
-        expect(screen.getByTestId("error")).toHaveTextContent("Wrapped error");
+        expect(screen.getByTestId('error')).toHaveTextContent('Wrapped error');
       });
     });
   });
 
-  describe("SourceFundErrorFallback Component", () => {
-    it("should render validation error fallback", () => {
-      const error = new Error("Validation failed");
+  describe('SourceFundErrorFallback Component', () => {
+    it('should render validation error fallback', () => {
+      const error = new Error('Validation failed');
       const resetError = jest.fn();
 
       render(
@@ -356,76 +363,76 @@ describe("SourceFundErrorBoundary", () => {
       );
 
       expect(
-        screen.getByText("Error de validación en la selección de fondo origen")
+        screen.getByText('Error de validación en la selección de fondo origen')
       ).toBeInTheDocument();
       expect(
         screen.getByText(/Verifique que ha seleccionado un fondo origen válido/)
       ).toBeInTheDocument();
-      expect(screen.getByText("Validation failed")).toBeInTheDocument();
-      expect(screen.getByText("(test context)")).toBeInTheDocument();
+      expect(screen.getByText('Validation failed')).toBeInTheDocument();
+      expect(screen.getByText('(test context)')).toBeInTheDocument();
     });
 
-    it("should render network error fallback", () => {
+    it('should render network error fallback', () => {
       render(<SourceFundErrorFallback type="network" />);
 
       expect(
-        screen.getByText("Error de conexión al validar el fondo origen")
+        screen.getByText('Error de conexión al validar el fondo origen')
       ).toBeInTheDocument();
       expect(
         screen.getByText(/No se pudo conectar con el servidor/)
       ).toBeInTheDocument();
     });
 
-    it("should render server error fallback", () => {
+    it('should render server error fallback', () => {
       render(<SourceFundErrorFallback type="server" />);
 
       expect(
-        screen.getByText("Error del servidor en la operación de fondo origen")
+        screen.getByText('Error del servidor en la operación de fondo origen')
       ).toBeInTheDocument();
       expect(
         screen.getByText(/Ha ocurrido un error interno/)
       ).toBeInTheDocument();
     });
 
-    it("should render unknown error fallback", () => {
+    it('should render unknown error fallback', () => {
       render(<SourceFundErrorFallback type="unknown" />);
 
       expect(
-        screen.getByText("Error en la gestión de fondo origen")
+        screen.getByText('Error en la gestión de fondo origen')
       ).toBeInTheDocument();
       expect(
         screen.getByText(/Ha ocurrido un error inesperado/)
       ).toBeInTheDocument();
     });
 
-    it("should call resetError when retry button is clicked", () => {
+    it('should call resetError when retry button is clicked', () => {
       const resetError = jest.fn();
 
       render(<SourceFundErrorFallback resetError={resetError} />);
 
-      fireEvent.click(screen.getByText("Reintentar"));
+      fireEvent.click(screen.getByText('Reintentar'));
 
       expect(resetError).toHaveBeenCalled();
     });
 
-    it("should reload page when reload button is clicked", () => {
+    it('should reload page when reload button is clicked', () => {
       // Mock window.location.reload
       const reloadMock = jest.fn();
-      Object.defineProperty(window, "location", {
+      Object.defineProperty(window, 'location', {
         value: { reload: reloadMock },
         writable: true,
       });
 
       render(<SourceFundErrorFallback />);
 
-      fireEvent.click(screen.getByText("Recargar"));
+      fireEvent.click(screen.getByText('Recargar'));
 
       expect(reloadMock).toHaveBeenCalled();
     });
   });
 
-  describe("Error Categorization", () => {
-    it("should categorize validation errors correctly", () => {
+  describe('Error Categorization', () => {
+    it('should categorize validation errors correctly', () => {
       render(
         <SourceFundErrorBoundary>
           <ThrowError shouldThrow={true} errorType="validation" />
@@ -435,7 +442,7 @@ describe("SourceFundErrorBoundary", () => {
       expect(screen.getByText(/Tipo: validation/)).toBeInTheDocument();
     });
 
-    it("should categorize network errors correctly", () => {
+    it('should categorize network errors correctly', () => {
       render(
         <SourceFundErrorBoundary>
           <ThrowError shouldThrow={true} errorType="network" />
@@ -445,7 +452,7 @@ describe("SourceFundErrorBoundary", () => {
       expect(screen.getByText(/Tipo: network/)).toBeInTheDocument();
     });
 
-    it("should categorize server errors correctly", () => {
+    it('should categorize server errors correctly', () => {
       render(
         <SourceFundErrorBoundary>
           <ThrowError shouldThrow={true} errorType="server" />
@@ -456,7 +463,7 @@ describe("SourceFundErrorBoundary", () => {
     });
   });
 
-  describe("Auto-retry for Network Errors", () => {
+  describe('Auto-retry for Network Errors', () => {
     beforeEach(() => {
       jest.useFakeTimers();
     });
@@ -465,14 +472,14 @@ describe("SourceFundErrorBoundary", () => {
       jest.useRealTimers();
     });
 
-    it("should auto-retry network errors after 5 seconds", () => {
+    it('should auto-retry network errors after 5 seconds', () => {
       const { rerender } = render(
         <SourceFundErrorBoundary>
           <ThrowError shouldThrow={true} errorType="network" />
         </SourceFundErrorBoundary>
       );
 
-      expect(screen.getByText("Error de conexión")).toBeInTheDocument();
+      expect(screen.getByText('Error de conexión')).toBeInTheDocument();
 
       // Fast-forward time by 5 seconds
       jest.advanceTimersByTime(5000);
@@ -483,7 +490,7 @@ describe("SourceFundErrorBoundary", () => {
         </SourceFundErrorBoundary>
       );
 
-      expect(screen.getByText("No error")).toBeInTheDocument();
+      expect(screen.getByText('No error')).toBeInTheDocument();
     });
   });
 });

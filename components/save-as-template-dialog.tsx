@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,12 +10,12 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Save } from "lucide-react";
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/components/ui/use-toast';
+import { Loader2, Save } from 'lucide-react';
 
 interface SaveAsTemplateDialogProps {
   simulationId: number;
@@ -31,17 +31,17 @@ export function SaveAsTemplateDialog({
   onTemplateSaved,
 }: SaveAsTemplateDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
   const handleSave = async () => {
     if (!name.trim()) {
       toast({
-        title: "Error",
-        description: "Template name is required",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Template name is required',
+        variant: 'destructive',
       });
       return;
     }
@@ -49,37 +49,41 @@ export function SaveAsTemplateDialog({
     setIsSaving(true);
 
     try {
-      const response = await fetch(`/api/simulations/${simulationId}/save-as-template`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: name.trim(),
-          description: description.trim() || undefined,
-        }),
-      });
+      const response = await fetch(
+        `/api/simulations/${simulationId}/save-as-template`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: name.trim(),
+            description: description.trim() || undefined,
+          }),
+        }
+      );
 
       const data = await response.json();
 
       if (data.success) {
         toast({
-          title: "Template Saved",
+          title: 'Template Saved',
           description: `Template "${name}" has been saved successfully`,
         });
         setIsOpen(false);
-        setName("");
-        setDescription("");
+        setName('');
+        setDescription('');
         onTemplateSaved?.();
       } else {
-        throw new Error(data.error || "Failed to save template");
+        throw new Error(data.error || 'Failed to save template');
       }
     } catch (error) {
-      console.error("Error saving template:", error);
+      console.error('Error saving template:', error);
       toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to save template",
-        variant: "destructive",
+        title: 'Error',
+        description:
+          error instanceof Error ? error.message : 'Failed to save template',
+        variant: 'destructive',
       });
     } finally {
       setIsSaving(false);
@@ -88,8 +92,8 @@ export function SaveAsTemplateDialog({
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      setName("");
-      setDescription("");
+      setName('');
+      setDescription('');
     }
     setIsOpen(open);
   };
@@ -97,7 +101,12 @@ export function SaveAsTemplateDialog({
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="sm" className="gap-2" disabled={subgroupCount === 0}>
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-2"
+          disabled={subgroupCount === 0}
+        >
           <Save className="h-4 w-4" />
           Save as Template
         </Button>
@@ -106,7 +115,8 @@ export function SaveAsTemplateDialog({
         <DialogHeader>
           <DialogTitle>Save Current Setup as Template</DialogTitle>
           <DialogDescription>
-            Save your current subgroup configuration as a reusable template that can be applied to other simulations.
+            Save your current subgroup configuration as a reusable template that
+            can be applied to other simulations.
           </DialogDescription>
         </DialogHeader>
 
@@ -134,17 +144,24 @@ export function SaveAsTemplateDialog({
             />
           </div>
 
-          <div className="bg-muted p-3 rounded-md text-sm">
-            <p className="font-medium mb-1">This will save:</p>
-            <ul className="list-disc list-inside text-muted-foreground space-y-1">
-              <li>{subgroupCount} subgroup{subgroupCount !== 1 ? "s" : ""} with their names</li>
+          <div className="rounded-md bg-muted p-3 text-sm">
+            <p className="mb-1 font-medium">This will save:</p>
+            <ul className="list-inside list-disc space-y-1 text-muted-foreground">
+              <li>
+                {subgroupCount} subgroup{subgroupCount !== 1 ? 's' : ''} with
+                their names
+              </li>
               <li>Subgroup ordering</li>
               {categoryCount !== undefined && categoryCount > 0 && (
-                <li>{categoryCount} category assignment{categoryCount !== 1 ? "s" : ""}</li>
+                <li>
+                  {categoryCount} category assignment
+                  {categoryCount !== 1 ? 's' : ''}
+                </li>
               )}
             </ul>
-            <p className="text-green-600 dark:text-green-400 mt-2 text-xs font-medium">
-              ✓ Category assignments are preserved and will be automatically applied when using this template.
+            <p className="mt-2 text-xs font-medium text-green-600 dark:text-green-400">
+              ✓ Category assignments are preserved and will be automatically
+              applied when using this template.
             </p>
           </div>
         </div>
@@ -160,12 +177,12 @@ export function SaveAsTemplateDialog({
           <Button onClick={handleSave} disabled={isSaving || !name.trim()}>
             {isSaving ? (
               <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Saving...
               </>
             ) : (
               <>
-                <Save className="h-4 w-4 mr-2" />
+                <Save className="mr-2 h-4 w-4" />
                 Save Template
               </>
             )}

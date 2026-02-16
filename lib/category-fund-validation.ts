@@ -1,4 +1,4 @@
-import { sql } from "@/lib/db";
+import { sql } from '@/lib/db';
 
 export interface ValidationResult {
   isValid: boolean;
@@ -33,7 +33,7 @@ export async function validateCategoryFundDeletion(
     `;
 
     if (!category) {
-      errors.push("La categoría especificada no existe");
+      errors.push('La categoría especificada no existe');
       return { isValid: false, errors, warnings };
     }
 
@@ -43,7 +43,7 @@ export async function validateCategoryFundDeletion(
     `;
 
     if (!fund) {
-      errors.push("El fondo especificado no existe");
+      errors.push('El fondo especificado no existe');
       return { isValid: false, errors, warnings };
     }
 
@@ -54,7 +54,7 @@ export async function validateCategoryFundDeletion(
     `;
 
     if (!relationship) {
-      errors.push("La relación entre la categoría y el fondo no existe");
+      errors.push('La relación entre la categoría y el fondo no existe');
       return { isValid: false, errors, warnings };
     }
 
@@ -115,10 +115,10 @@ export async function validateCategoryFundDeletion(
       data: validationData,
     };
   } catch (error) {
-    console.error("Error validating category-fund deletion:", error);
+    console.error('Error validating category-fund deletion:', error);
     return {
       isValid: false,
-      errors: ["Error interno del servidor al validar la eliminación"],
+      errors: ['Error interno del servidor al validar la eliminación'],
       warnings: [],
     };
   }
@@ -141,7 +141,7 @@ export async function validateCategoryFundUpdate(
     `;
 
     if (!category) {
-      errors.push("La categoría especificada no existe");
+      errors.push('La categoría especificada no existe');
       return { isValid: false, errors, warnings };
     }
 
@@ -157,7 +157,7 @@ export async function validateCategoryFundUpdate(
           (id) => !existingFundIds.includes(id)
         );
         errors.push(
-          `Los siguientes fondos no existen: ${invalidFundIds.join(", ")}`
+          `Los siguientes fondos no existen: ${invalidFundIds.join(', ')}`
         );
         return { isValid: false, errors, warnings };
       }
@@ -196,7 +196,7 @@ export async function validateCategoryFundUpdate(
     if (totalExpenses > 0 && removedFundIds.length > 0) {
       warnings.push(
         `Esta categoría tiene ${totalExpenses} gastos registrados. Se eliminarán las relaciones con: ${removedFundNames.join(
-          ", "
+          ', '
         )}. Los gastos existentes no se verán afectados.`
       );
     }
@@ -219,7 +219,7 @@ export async function validateCategoryFundUpdate(
       const addedFundNames = addedFunds.map((f: any) => f.name);
       warnings.push(
         `Se agregarán relaciones con los siguientes fondos: ${addedFundNames.join(
-          ", "
+          ', '
         )}`
       );
     }
@@ -239,10 +239,10 @@ export async function validateCategoryFundUpdate(
       },
     };
   } catch (error) {
-    console.error("Error validating category-fund update:", error);
+    console.error('Error validating category-fund update:', error);
     return {
       isValid: false,
-      errors: ["Error interno del servidor al validar la actualización"],
+      errors: ['Error interno del servidor al validar la actualización'],
       warnings: [],
     };
   }
@@ -265,7 +265,7 @@ export async function validateExpenseFundCategory(
     `;
 
     if (!category) {
-      errors.push("La categoría especificada no existe");
+      errors.push('La categoría especificada no existe');
       return { isValid: false, errors, warnings };
     }
 
@@ -275,7 +275,7 @@ export async function validateExpenseFundCategory(
     `;
 
     if (!fund) {
-      errors.push("El fondo especificado no existe");
+      errors.push('El fondo especificado no existe');
       return { isValid: false, errors, warnings };
     }
 
@@ -296,7 +296,7 @@ export async function validateExpenseFundCategory(
         errors.push(
           `El fondo "${fund.name}" no está asociado con la categoría "${
             category.name
-          }". Fondos permitidos: ${allowedFundNames.join(", ")}`
+          }". Fondos permitidos: ${allowedFundNames.join(', ')}`
         );
         return { isValid: false, errors, warnings };
       }
@@ -323,11 +323,11 @@ export async function validateExpenseFundCategory(
       },
     };
   } catch (error) {
-    console.error("Error validating expense fund-category combination:", error);
+    console.error('Error validating expense fund-category combination:', error);
     return {
       isValid: false,
       errors: [
-        "Error interno del servidor al validar la combinación fondo-categoría",
+        'Error interno del servidor al validar la combinación fondo-categoría',
       ],
       warnings: [],
     };
@@ -377,7 +377,7 @@ export async function getAvailableFundsForCategory(
       hasRestrictions: false,
     };
   } catch (error) {
-    console.error("Error getting available funds for category:", error);
+    console.error('Error getting available funds for category:', error);
     return {
       funds: [],
       hasRestrictions: false,
@@ -389,32 +389,32 @@ export async function getAvailableFundsForCategory(
  * Error messages for category-fund operations
  */
 export const CATEGORY_FUND_ERROR_MESSAGES = {
-  CATEGORY_NOT_FOUND: "La categoría especificada no existe",
-  FUND_NOT_FOUND: "El fondo especificado no existe",
-  RELATIONSHIP_NOT_FOUND: "La relación entre la categoría y el fondo no existe",
-  RELATIONSHIP_EXISTS: "La relación entre esta categoría y fondo ya existe",
+  CATEGORY_NOT_FOUND: 'La categoría especificada no existe',
+  FUND_NOT_FOUND: 'El fondo especificado no existe',
+  RELATIONSHIP_NOT_FOUND: 'La relación entre la categoría y el fondo no existe',
+  RELATIONSHIP_EXISTS: 'La relación entre esta categoría y fondo ya existe',
   EXPENSES_EXIST:
-    "No se puede eliminar la relación porque existen gastos registrados",
+    'No se puede eliminar la relación porque existen gastos registrados',
   INVALID_FUND_FOR_CATEGORY:
-    "El fondo seleccionado no está asociado con esta categoría",
-  MIGRATION_FAILED: "Error durante la migración de relaciones categoría-fondo",
-  VALIDATION_FAILED: "Error de validación en los datos proporcionados",
-  SERVER_ERROR: "Error interno del servidor",
+    'El fondo seleccionado no está asociado con esta categoría',
+  MIGRATION_FAILED: 'Error durante la migración de relaciones categoría-fondo',
+  VALIDATION_FAILED: 'Error de validación en los datos proporcionados',
+  SERVER_ERROR: 'Error interno del servidor',
   LAST_FUND_RELATIONSHIP:
-    "No se puede eliminar la última relación de fondo para una categoría con gastos",
-  INVALID_FUND_IDS: "Algunos de los fondos especificados no existen",
-  NO_FUNDS_AVAILABLE: "No hay fondos disponibles para esta categoría",
+    'No se puede eliminar la última relación de fondo para una categoría con gastos',
+  INVALID_FUND_IDS: 'Algunos de los fondos especificados no existen',
+  NO_FUNDS_AVAILABLE: 'No hay fondos disponibles para esta categoría',
 } as const;
 
 /**
  * Warning messages for category-fund operations
  */
 export const CATEGORY_FUND_WARNING_MESSAGES = {
-  EXPENSES_WILL_BE_AFFECTED: "Esta operación afectará gastos existentes",
+  EXPENSES_WILL_BE_AFFECTED: 'Esta operación afectará gastos existentes',
   LAST_FUND_RELATIONSHIP_REMOVAL:
-    "Al eliminar esta relación, la categoría aceptará gastos desde cualquier fondo",
+    'Al eliminar esta relación, la categoría aceptará gastos desde cualquier fondo',
   FUND_RESTRICTIONS_REMOVED:
-    "Se han eliminado las restricciones de fondos para esta categoría",
+    'Se han eliminado las restricciones de fondos para esta categoría',
   NEW_FUND_RESTRICTIONS_ADDED:
-    "Se han agregado nuevas restricciones de fondos para esta categoría",
+    'Se han agregado nuevas restricciones de fondos para esta categoría',
 } as const;

@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 interface GrouperResult {
   grouper_id: number;
@@ -11,18 +11,18 @@ interface GrouperResult {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const periodId = searchParams.get("periodId");
-    const paymentMethod = searchParams.get("paymentMethod"); // Legacy parameter for backward compatibility
-    const expensePaymentMethods = searchParams.get("expensePaymentMethods");
-    const budgetPaymentMethods = searchParams.get("budgetPaymentMethods");
-    const grouperIds = searchParams.get("grouperIds");
-    const estudioId = searchParams.get("estudioId");
-    const includeBudgets = searchParams.get("includeBudgets") === "true";
-    const projectionMode = searchParams.get("projectionMode") === "true";
+    const periodId = searchParams.get('periodId');
+    const paymentMethod = searchParams.get('paymentMethod'); // Legacy parameter for backward compatibility
+    const expensePaymentMethods = searchParams.get('expensePaymentMethods');
+    const budgetPaymentMethods = searchParams.get('budgetPaymentMethods');
+    const grouperIds = searchParams.get('grouperIds');
+    const estudioId = searchParams.get('estudioId');
+    const includeBudgets = searchParams.get('includeBudgets') === 'true';
+    const projectionMode = searchParams.get('projectionMode') === 'true';
 
     if (!periodId) {
       return NextResponse.json(
-        { error: "Period ID is required" },
+        { error: 'Period ID is required' },
         { status: 400 }
       );
     }
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
     let grouperIdsArray: number[] | null = null;
     if (grouperIds) {
       try {
-        grouperIdsArray = grouperIds.split(",").map((id) => {
+        grouperIdsArray = grouperIds.split(',').map((id) => {
           const parsed = parseInt(id.trim(), 10);
           if (isNaN(parsed)) {
             throw new Error(`Invalid grouper ID: ${id}`);
@@ -56,10 +56,10 @@ export async function GET(request: Request) {
     if (expensePaymentMethods) {
       try {
         expensePaymentMethodsArray = expensePaymentMethods
-          .split(",")
+          .split(',')
           .map((method) => {
             const trimmed = method.trim();
-            if (!["cash", "credit", "debit"].includes(trimmed)) {
+            if (!['cash', 'credit', 'debit'].includes(trimmed)) {
               throw new Error(`Invalid expense payment method: ${trimmed}`);
             }
             return trimmed;
@@ -74,7 +74,7 @@ export async function GET(request: Request) {
           { status: 400 }
         );
       }
-    } else if (paymentMethod && paymentMethod !== "all") {
+    } else if (paymentMethod && paymentMethod !== 'all') {
       // Legacy backward compatibility
       expensePaymentMethodsArray = [paymentMethod];
     }
@@ -83,10 +83,10 @@ export async function GET(request: Request) {
     if (budgetPaymentMethods) {
       try {
         budgetPaymentMethodsArray = budgetPaymentMethods
-          .split(",")
+          .split(',')
           .map((method) => {
             const trimmed = method.trim();
-            if (!["cash", "credit", "debit"].includes(trimmed)) {
+            if (!['cash', 'credit', 'debit'].includes(trimmed)) {
               throw new Error(`Invalid budget payment method: ${trimmed}`);
             }
             return trimmed;
@@ -187,7 +187,7 @@ export async function GET(request: Request) {
     }
 
     // Add WHERE clause for grouper filtering
-    let whereClause = "";
+    let whereClause = '';
     if (grouperIdsArray && grouperIdsArray.length > 0) {
       whereClause = `
       WHERE g.id = ANY($${paramIndex}::int[])`;
@@ -216,11 +216,11 @@ export async function GET(request: Request) {
       );
 
       if (!hasBudgetData) {
-        console.warn("No budget data found for projection mode");
+        console.warn('No budget data found for projection mode');
         // Return data with warning metadata instead of throwing error
         return NextResponse.json(result, {
           headers: {
-            "X-Budget-Warning": "No budget data available for projection",
+            'X-Budget-Warning': 'No budget data available for projection',
           },
         });
       }
@@ -237,10 +237,10 @@ export async function GET(request: Request) {
         itemsWithBudget.length < result.length &&
         itemsWithBudget.length > 0
       ) {
-        console.warn("Partial budget data found for projection mode");
+        console.warn('Partial budget data found for projection mode');
         return NextResponse.json(result, {
           headers: {
-            "X-Budget-Warning": "Partial budget data available for projection",
+            'X-Budget-Warning': 'Partial budget data available for projection',
           },
         });
       }
@@ -248,19 +248,19 @@ export async function GET(request: Request) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error in groupers API:", error);
+    console.error('Error in groupers API:', error);
 
     // Enhanced error handling with context
     const errorMessage = (error as Error).message;
     const { searchParams: errorSearchParams } = new URL(request.url);
     const isProjectionError =
-      errorSearchParams.get("projectionMode") === "true" &&
-      errorMessage.toLowerCase().includes("budget");
+      errorSearchParams.get('projectionMode') === 'true' &&
+      errorMessage.toLowerCase().includes('budget');
 
     if (isProjectionError) {
       return NextResponse.json(
         {
-          error: "Error loading projection data: " + errorMessage,
+          error: 'Error loading projection data: ' + errorMessage,
           projectionError: true,
           fallbackSuggested: true,
         },

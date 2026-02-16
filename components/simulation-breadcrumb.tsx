@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -9,14 +9,14 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
+} from '@/components/ui/breadcrumb';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 import {
   Home,
   ChevronDown,
@@ -24,7 +24,7 @@ import {
   Settings,
   BarChart3,
   ArrowLeft,
-} from "lucide-react";
+} from 'lucide-react';
 
 // Types
 type Simulation = {
@@ -39,14 +39,14 @@ type Simulation = {
 interface SimulationBreadcrumbProps {
   simulationId?: number;
   simulationName?: string;
-  currentPage?: "config" | "analytics";
+  currentPage?: 'config' | 'analytics';
   showQuickActions?: boolean;
 }
 
 export function SimulationBreadcrumb({
   simulationId,
   simulationName,
-  currentPage = "config",
+  currentPage = 'config',
   showQuickActions = true,
 }: SimulationBreadcrumbProps) {
   const router = useRouter();
@@ -62,7 +62,7 @@ export function SimulationBreadcrumb({
 
       setIsLoading(true);
       try {
-        const response = await fetch("/api/simulations");
+        const response = await fetch('/api/simulations');
         if (response.ok) {
           const data = await response.json();
           // Get recent simulations excluding current one
@@ -77,7 +77,7 @@ export function SimulationBreadcrumb({
           setRecentSimulations(recent);
         }
       } catch (error) {
-        console.error("Error loading recent simulations:", error);
+        console.error('Error loading recent simulations:', error);
       } finally {
         setIsLoading(false);
       }
@@ -96,18 +96,18 @@ export function SimulationBreadcrumb({
   };
 
   const navigateToSimulationList = () => {
-    router.push("/simular");
+    router.push('/simular');
   };
 
   const navigateToHome = () => {
-    router.push("/");
+    router.push('/');
   };
 
   // Quick action handlers
   const handleQuickSwitch = () => {
-    if (currentPage === "config" && simulationId) {
+    if (currentPage === 'config' && simulationId) {
       navigateToAnalytics(simulationId);
-    } else if (currentPage === "analytics" && simulationId) {
+    } else if (currentPage === 'analytics' && simulationId) {
       navigateToSimulation(simulationId);
     }
   };
@@ -152,10 +152,10 @@ export function SimulationBreadcrumb({
             <>
               <BreadcrumbSeparator />
               <BreadcrumbItem>
-                {currentPage === "analytics" ? (
+                {currentPage === 'analytics' ? (
                   <BreadcrumbLink
                     href={`/simular/${simulationId}`}
-                    className="hover:text-foreground max-w-[200px] truncate"
+                    className="max-w-[200px] truncate hover:text-foreground"
                     onClick={(e) => {
                       e.preventDefault();
                       navigateToSimulation(simulationId);
@@ -170,7 +170,7 @@ export function SimulationBreadcrumb({
                 )}
               </BreadcrumbItem>
 
-              {currentPage === "analytics" && (
+              {currentPage === 'analytics' && (
                 <>
                   <BreadcrumbSeparator />
                   <BreadcrumbItem>
@@ -202,10 +202,10 @@ export function SimulationBreadcrumb({
             variant="outline"
             size="sm"
             onClick={handleQuickSwitch}
-            disabled={currentPage === "config"}
+            disabled={currentPage === 'config'}
             className="flex items-center gap-1"
           >
-            {currentPage === "config" ? (
+            {currentPage === 'config' ? (
               <>
                 <BarChart3 className="h-3 w-3" />
                 <span className="hidden sm:inline">Análisis</span>
@@ -224,7 +224,7 @@ export function SimulationBreadcrumb({
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" size="sm" disabled={isLoading}>
                   <Zap className="h-3 w-3" />
-                  <ChevronDown className="h-3 w-3 ml-1" />
+                  <ChevronDown className="ml-1 h-3 w-3" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -235,7 +235,7 @@ export function SimulationBreadcrumb({
                   <DropdownMenuItem
                     key={simulation.id}
                     onClick={() => {
-                      if (currentPage === "analytics") {
+                      if (currentPage === 'analytics') {
                         navigateToAnalytics(simulation.id);
                       } else {
                         navigateToSimulation(simulation.id);
@@ -243,8 +243,8 @@ export function SimulationBreadcrumb({
                     }}
                     className="flex items-center justify-between"
                   >
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium text-sm truncate">
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-medium">
                         {simulation.name}
                       </div>
                       <div className="text-xs text-muted-foreground">
@@ -253,9 +253,9 @@ export function SimulationBreadcrumb({
                     </div>
                   </DropdownMenuItem>
                 ))}
-                <div className="border-t mt-1 pt-1">
+                <div className="mt-1 border-t pt-1">
                   <DropdownMenuItem onClick={navigateToSimulationList}>
-                    <Zap className="h-4 w-4 mr-2" />
+                    <Zap className="mr-2 h-4 w-4" />
                     Ver todas
                   </DropdownMenuItem>
                 </div>

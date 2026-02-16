@@ -3,7 +3,7 @@
  * Handles calculations for sub-group subtotals and aggregations
  */
 
-import type { Subgroup, VisibilityState } from "@/types/simulation";
+import type { Subgroup, VisibilityState } from '@/types/simulation';
 
 /**
  * Subtotal data structure for display
@@ -61,7 +61,8 @@ export function calculateSubgroupSubtotals(
     if (data) {
       const efectivo = parseFloat(String(data.efectivo_amount)) || 0;
       const credito = parseFloat(String(data.credito_amount)) || 0;
-      const ahorroEfectivo = parseFloat(String(data.ahorro_efectivo_amount)) || 0;
+      const ahorroEfectivo =
+        parseFloat(String(data.ahorro_efectivo_amount)) || 0;
       const ahorroCredito = parseFloat(String(data.ahorro_credito_amount)) || 0;
 
       efectivoAmount += efectivo;
@@ -71,7 +72,8 @@ export function calculateSubgroupSubtotals(
     }
   }
 
-  const total = efectivoAmount + creditoAmount - ahorroEfectivoAmount - ahorroCreditoAmount;
+  const total =
+    efectivoAmount + creditoAmount - ahorroEfectivoAmount - ahorroCreditoAmount;
 
   return {
     efectivoAmount,

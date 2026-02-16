@@ -11,8 +11,8 @@ import type {
   InvestmentPeriodDetail,
   RateComparisonResult,
   CompoundingFrequency,
-} from "@/types/invest-simulator";
-import { COMPOUNDING_FREQUENCIES } from "@/types/invest-simulator";
+} from '@/types/invest-simulator';
+import { COMPOUNDING_FREQUENCIES } from '@/types/invest-simulator';
 
 // ============================================================================
 // Rate Conversion Functions
@@ -43,7 +43,7 @@ export function convertEAToPeriodicRate(
  * @returns Monthly rate as decimal
  */
 export function convertEAToMonthlyRate(annualRate: number): number {
-  return convertEAToPeriodicRate(annualRate, "monthly");
+  return convertEAToPeriodicRate(annualRate, 'monthly');
 }
 
 /**
@@ -53,7 +53,7 @@ export function convertEAToMonthlyRate(annualRate: number): number {
  * @returns Daily rate as decimal
  */
 export function convertEAToDailyRate(annualRate: number): number {
-  return convertEAToPeriodicRate(annualRate, "daily");
+  return convertEAToPeriodicRate(annualRate, 'daily');
 }
 
 // ============================================================================
@@ -92,7 +92,8 @@ export function calculateFutureValue(
   // For contributions at end of period (ordinary annuity): PMT * ((1+r)^n - 1) / r
   // We use ordinary annuity (contribution at end of period)
   const fvContributions =
-    periodicContribution * ((Math.pow(1 + periodicRate, periods) - 1) / periodicRate);
+    periodicContribution *
+    ((Math.pow(1 + periodicRate, periods) - 1) / periodicRate);
 
   return fvPrincipal + fvContributions;
 }
@@ -124,19 +125,24 @@ export function calculateTotalInterest(
 export function generateProjectionSchedule(
   scenario: Pick<
     InvestmentScenario,
-    | "initialAmount"
-    | "monthlyContribution"
-    | "termMonths"
-    | "annualRate"
-    | "compoundingFrequency"
+    | 'initialAmount'
+    | 'monthlyContribution'
+    | 'termMonths'
+    | 'annualRate'
+    | 'compoundingFrequency'
   >
 ): InvestmentPeriodDetail[] {
-  const { initialAmount, monthlyContribution, termMonths, annualRate, compoundingFrequency } =
-    scenario;
+  const {
+    initialAmount,
+    monthlyContribution,
+    termMonths,
+    annualRate,
+    compoundingFrequency,
+  } = scenario;
 
   const schedule: InvestmentPeriodDetail[] = [];
 
-  if (compoundingFrequency === "monthly") {
+  if (compoundingFrequency === 'monthly') {
     // Monthly compounding - one entry per month
     const monthlyRate = convertEAToMonthlyRate(annualRate);
     let balance = initialAmount;
@@ -165,7 +171,7 @@ export function generateProjectionSchedule(
 
       schedule.push({
         periodNumber: month,
-        date: date.toISOString().split("T")[0],
+        date: date.toISOString().split('T')[0],
         openingBalance: roundToTwo(openingBalance),
         contribution: roundToTwo(contribution),
         interestEarned: roundToTwo(interestEarned),
@@ -193,7 +199,8 @@ export function generateProjectionSchedule(
 
       // Monthly contribution added on first day of each month
       const currentMonth = Math.ceil(day / 30);
-      const contribution = currentMonth > lastContributionMonth ? monthlyContribution : 0;
+      const contribution =
+        currentMonth > lastContributionMonth ? monthlyContribution : 0;
       if (contribution > 0) {
         lastContributionMonth = currentMonth;
       }
@@ -211,7 +218,7 @@ export function generateProjectionSchedule(
 
       schedule.push({
         periodNumber: day,
-        date: date.toISOString().split("T")[0],
+        date: date.toISOString().split('T')[0],
         openingBalance: roundToTwo(openingBalance),
         contribution: roundToTwo(contribution),
         interestEarned: roundToTwo(interestEarned),
@@ -237,19 +244,24 @@ export function generateProjectionSchedule(
 export function generateMonthlySummarySchedule(
   scenario: Pick<
     InvestmentScenario,
-    | "initialAmount"
-    | "monthlyContribution"
-    | "termMonths"
-    | "annualRate"
-    | "compoundingFrequency"
+    | 'initialAmount'
+    | 'monthlyContribution'
+    | 'termMonths'
+    | 'annualRate'
+    | 'compoundingFrequency'
   >
 ): InvestmentPeriodDetail[] {
-  const { initialAmount, monthlyContribution, termMonths, annualRate, compoundingFrequency } =
-    scenario;
+  const {
+    initialAmount,
+    monthlyContribution,
+    termMonths,
+    annualRate,
+    compoundingFrequency,
+  } = scenario;
 
   const schedule: InvestmentPeriodDetail[] = [];
 
-  if (compoundingFrequency === "monthly") {
+  if (compoundingFrequency === 'monthly') {
     // For monthly compounding, just use the regular schedule
     return generateProjectionSchedule(scenario);
   }
@@ -285,7 +297,7 @@ export function generateMonthlySummarySchedule(
 
     schedule.push({
       periodNumber: month,
-      date: date.toISOString().split("T")[0],
+      date: date.toISOString().split('T')[0],
       openingBalance: roundToTwo(openingBalance),
       contribution: roundToTwo(monthlyContribution),
       interestEarned: roundToTwo(monthlyInterest),
@@ -311,21 +323,26 @@ export function generateMonthlySummarySchedule(
 export function calculateInvestmentSummary(
   scenario: Pick<
     InvestmentScenario,
-    | "initialAmount"
-    | "monthlyContribution"
-    | "termMonths"
-    | "annualRate"
-    | "compoundingFrequency"
+    | 'initialAmount'
+    | 'monthlyContribution'
+    | 'termMonths'
+    | 'annualRate'
+    | 'compoundingFrequency'
   >
 ): InvestmentSummary {
-  const { initialAmount, monthlyContribution, termMonths, annualRate, compoundingFrequency } =
-    scenario;
+  const {
+    initialAmount,
+    monthlyContribution,
+    termMonths,
+    annualRate,
+    compoundingFrequency,
+  } = scenario;
 
   let finalBalance: number;
   const totalMonthlyContributions = monthlyContribution * termMonths;
   const totalContributions = initialAmount + totalMonthlyContributions;
 
-  if (compoundingFrequency === "monthly") {
+  if (compoundingFrequency === 'monthly') {
     // Monthly compounding calculation
     const monthlyRate = convertEAToMonthlyRate(annualRate);
     finalBalance = calculateFutureValue(
@@ -383,16 +400,21 @@ export function calculateInvestmentSummary(
 export function compareRates(
   scenario: Pick<
     InvestmentScenario,
-    | "initialAmount"
-    | "monthlyContribution"
-    | "termMonths"
-    | "annualRate"
-    | "compoundingFrequency"
+    | 'initialAmount'
+    | 'monthlyContribution'
+    | 'termMonths'
+    | 'annualRate'
+    | 'compoundingFrequency'
   >,
   additionalRates: Array<{ rate: number; label?: string }>
 ): RateComparisonResult[] {
-  const { initialAmount, monthlyContribution, termMonths, compoundingFrequency, annualRate } =
-    scenario;
+  const {
+    initialAmount,
+    monthlyContribution,
+    termMonths,
+    compoundingFrequency,
+    annualRate,
+  } = scenario;
 
   // Calculate base scenario results
   const baseSummary = calculateInvestmentSummary(scenario);
@@ -401,7 +423,7 @@ export function compareRates(
   const results: RateComparisonResult[] = [
     {
       rate: annualRate,
-      label: "Tasa Base",
+      label: 'Tasa Base',
       finalBalance: baseSummary.finalBalance,
       totalInterestEarned: baseSummary.totalInterestEarned,
       differenceFromBase: 0,
@@ -427,7 +449,9 @@ export function compareRates(
       label,
       finalBalance: comparison.finalBalance,
       totalInterestEarned: comparison.totalInterestEarned,
-      differenceFromBase: roundToTwo(comparison.finalBalance - baseSummary.finalBalance),
+      differenceFromBase: roundToTwo(
+        comparison.finalBalance - baseSummary.finalBalance
+      ),
       isBaseRate: false,
     });
   }
@@ -448,11 +472,11 @@ export function compareRates(
 export function compareRateRange(
   scenario: Pick<
     InvestmentScenario,
-    | "initialAmount"
-    | "monthlyContribution"
-    | "termMonths"
-    | "annualRate"
-    | "compoundingFrequency"
+    | 'initialAmount'
+    | 'monthlyContribution'
+    | 'termMonths'
+    | 'annualRate'
+    | 'compoundingFrequency'
   >,
   minRate: number,
   maxRate: number,
@@ -498,10 +522,18 @@ export function calculateTimeToTarget(
   targetAmount: number,
   scenario: Pick<
     InvestmentScenario,
-    "initialAmount" | "monthlyContribution" | "annualRate" | "compoundingFrequency"
+    | 'initialAmount'
+    | 'monthlyContribution'
+    | 'annualRate'
+    | 'compoundingFrequency'
   >
 ): number {
-  const { initialAmount, monthlyContribution, annualRate, compoundingFrequency } = scenario;
+  const {
+    initialAmount,
+    monthlyContribution,
+    annualRate,
+    compoundingFrequency,
+  } = scenario;
 
   // If target is less than initial, return 0
   if (targetAmount <= initialAmount) {
@@ -564,7 +596,7 @@ export function calculateRequiredContribution(
   compoundingFrequency: CompoundingFrequency
 ): number {
   // For monthly compounding
-  if (compoundingFrequency === "monthly") {
+  if (compoundingFrequency === 'monthly') {
     const monthlyRate = convertEAToMonthlyRate(annualRate);
 
     // FV = P(1+r)^n + PMT * ((1+r)^n - 1) / r

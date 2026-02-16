@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/components/ui/use-toast";
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from '@/components/ui/use-toast';
 import {
   BarChart3,
   TrendingUp,
@@ -14,18 +14,18 @@ import {
   Activity,
   Target,
   Zap,
-} from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+} from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 // Import our simulation chart components
 import {
   SimulationChart,
   SimulationComparisonChart,
-} from "./simulation-chart-components";
-import { SimulationPeriodComparisonChart } from "./simulation-period-comparison-chart";
+} from './simulation-chart-components';
+import { SimulationPeriodComparisonChart } from './simulation-period-comparison-chart';
 
 // Import enhanced filter components
-import { SimulationFilterManager } from "./simulation-filter-manager";
+import { SimulationFilterManager } from './simulation-filter-manager';
 
 // Types for simulation analytics data
 interface SimulationAnalyticsData {
@@ -54,7 +54,7 @@ interface SimulationAnalyticsData {
     avg_historical: number;
     simulation_amount: number;
     variance_percentage: number;
-    trend: "increase" | "decrease" | "stable";
+    trend: 'increase' | 'decrease' | 'stable';
   }>;
   metadata: {
     estudio_id: number | null;
@@ -101,7 +101,7 @@ interface SimulationAnalyticsDashboardProps {
 
 export function SimulationAnalyticsDashboard({
   simulationId,
-  simulationName = "Simulación",
+  simulationName = 'Simulación',
   activePeriod,
   // Filter state props
   selectedEstudio,
@@ -126,8 +126,8 @@ export function SimulationAnalyticsDashboard({
 
   // Active tab state
   const [activeTab, setActiveTab] = useState<
-    "overview" | "comparison" | "periods"
-  >("overview");
+    'overview' | 'comparison' | 'periods'
+  >('overview');
 
   // Fetch simulation analytics data
   const fetchAnalyticsData = useCallback(async () => {
@@ -140,18 +140,18 @@ export function SimulationAnalyticsDashboard({
       });
 
       if (selectedEstudio) {
-        params.append("estudioId", selectedEstudio.toString());
+        params.append('estudioId', selectedEstudio.toString());
       }
 
       if (selectedGroupers.length > 0) {
-        params.append("grouperIds", selectedGroupers.join(","));
+        params.append('grouperIds', selectedGroupers.join(','));
       }
 
       if (
         selectedPaymentMethods.length > 0 &&
         selectedPaymentMethods.length < 2
       ) {
-        params.append("paymentMethods", selectedPaymentMethods.join(","));
+        params.append('paymentMethods', selectedPaymentMethods.join(','));
       }
 
       const response = await fetch(
@@ -168,17 +168,17 @@ export function SimulationAnalyticsDashboard({
       const data = await response.json();
       setAnalyticsData(data);
     } catch (error) {
-      console.error("Error fetching analytics data:", error);
+      console.error('Error fetching analytics data:', error);
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "Error al cargar datos de análisis";
+          : 'Error al cargar datos de análisis';
       setError(errorMessage);
 
       toast({
-        title: "Error",
+        title: 'Error',
         description: errorMessage,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -277,9 +277,9 @@ export function SimulationAnalyticsDashboard({
   if (!activePeriod) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center h-[400px]">
+        <CardContent className="flex h-[400px] items-center justify-center">
           <div className="text-center">
-            <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+            <AlertCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
             <p className="text-muted-foreground">
               No hay período activo seleccionado
             </p>
@@ -294,7 +294,7 @@ export function SimulationAnalyticsDashboard({
       {/* Header with simulation info and summary metrics */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold flex items-center gap-2">
+          <h1 className="flex items-center gap-2 text-2xl font-bold">
             <Activity className="h-6 w-6 text-blue-600" />
             Análisis de {simulationName}
           </h1>
@@ -311,11 +311,11 @@ export function SimulationAnalyticsDashboard({
             disabled={isLoading}
           >
             <RefreshCw
-              className={`h-4 w-4 mr-2 ${isLoading ? "animate-spin" : ""}`}
+              className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
             />
             Actualizar
           </Button>
-          <Badge variant="outline" className="text-blue-600 border-blue-600">
+          <Badge variant="outline" className="border-blue-600 text-blue-600">
             Simulación #{simulationId}
           </Badge>
         </div>
@@ -323,14 +323,14 @@ export function SimulationAnalyticsDashboard({
 
       {/* Summary metrics cards */}
       {summaryMetrics && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2">
                 <Target className="h-4 w-4 text-blue-600" />
                 <span className="text-sm font-medium">Total Simulación</span>
               </div>
-              <p className="text-2xl font-bold text-blue-600 mt-1">
+              <p className="mt-1 text-2xl font-bold text-blue-600">
                 {formatCurrency(summaryMetrics.totalSimulation)}
               </p>
             </CardContent>
@@ -342,7 +342,7 @@ export function SimulationAnalyticsDashboard({
                 <BarChart3 className="h-4 w-4 text-gray-600" />
                 <span className="text-sm font-medium">Promedio Histórico</span>
               </div>
-              <p className="text-2xl font-bold text-gray-600 mt-1">
+              <p className="mt-1 text-2xl font-bold text-gray-600">
                 {formatCurrency(summaryMetrics.totalHistoricalAvg)}
               </p>
             </CardContent>
@@ -354,24 +354,24 @@ export function SimulationAnalyticsDashboard({
                 <TrendingUp
                   className={`h-4 w-4 ${
                     summaryMetrics.overallVariance > 0
-                      ? "text-green-600"
+                      ? 'text-green-600'
                       : summaryMetrics.overallVariance < 0
-                      ? "text-red-600"
-                      : "text-gray-600"
+                        ? 'text-red-600'
+                        : 'text-gray-600'
                   }`}
                 />
                 <span className="text-sm font-medium">Variación Total</span>
               </div>
               <p
-                className={`text-2xl font-bold mt-1 ${
+                className={`mt-1 text-2xl font-bold ${
                   summaryMetrics.overallVariance > 0
-                    ? "text-green-600"
+                    ? 'text-green-600'
                     : summaryMetrics.overallVariance < 0
-                    ? "text-red-600"
-                    : "text-gray-600"
+                      ? 'text-red-600'
+                      : 'text-gray-600'
                 }`}
               >
-                {summaryMetrics.overallVariance > 0 ? "+" : ""}
+                {summaryMetrics.overallVariance > 0 ? '+' : ''}
                 {summaryMetrics.overallVariance.toFixed(1)}%
               </p>
             </CardContent>
@@ -385,7 +385,7 @@ export function SimulationAnalyticsDashboard({
                   Variaciones Significativas
                 </span>
               </div>
-              <p className="text-2xl font-bold text-amber-600 mt-1">
+              <p className="mt-1 text-2xl font-bold text-amber-600">
                 {summaryMetrics.significantVariations}
               </p>
               <p className="text-xs text-muted-foreground">
@@ -430,15 +430,15 @@ export function SimulationAnalyticsDashboard({
       {/* Error state */}
       {error && (
         <Card>
-          <CardContent className="flex items-center justify-center h-[200px]">
+          <CardContent className="flex h-[200px] items-center justify-center">
             <div className="text-center">
-              <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-              <p className="text-destructive font-medium mb-2">
+              <AlertCircle className="mx-auto mb-4 h-12 w-12 text-destructive" />
+              <p className="mb-2 font-medium text-destructive">
                 Error al cargar datos
               </p>
-              <p className="text-muted-foreground text-sm mb-4">{error}</p>
+              <p className="mb-4 text-sm text-muted-foreground">{error}</p>
               <Button onClick={fetchAnalyticsData} variant="outline">
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="mr-2 h-4 w-4" />
                 Reintentar
               </Button>
             </div>
@@ -481,7 +481,7 @@ export function SimulationAnalyticsDashboard({
           <TabsContent value="periods" className="space-y-6">
             <SimulationPeriodComparisonChart
               historicalData={periodComparisonData.historical}
-              simulationData={periodComparisonData.simulation}
+              simulationData={periodComparisonData.simulation ?? undefined}
               selectedGroupers={selectedGroupers}
               title="Comparación por Períodos"
               description="Análisis histórico vs simulación por períodos"

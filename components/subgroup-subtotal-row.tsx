@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { TableCell, TableRow } from "@/components/ui/table";
-import { formatCurrency } from "@/lib/utils";
-import type { Subtotals } from "@/lib/subgroup-calculations";
+import { TableCell, TableRow } from '@/components/ui/table';
+import { formatCurrency } from '@/lib/utils';
+import type { Subtotals } from '@/lib/subgroup-calculations';
 
 interface SubgroupSubtotalRowProps {
   subgroupId: string;
@@ -19,8 +19,8 @@ export function SubgroupSubtotalRow({
 }: SubgroupSubtotalRowProps) {
   return (
     <TableRow
-      className={`bg-muted/30 border-y border-dashed font-medium text-sm ${
-        !isSubgroupVisible ? "opacity-60 line-through" : ""
+      className={`border-y border-dashed bg-muted/30 text-sm font-medium ${
+        !isSubgroupVisible ? 'line-through opacity-60' : ''
       }`}
       data-testid={`subgroup-subtotal-${subgroupId}`}
     >
@@ -28,9 +28,7 @@ export function SubgroupSubtotalRow({
       <TableCell className="w-8 pl-2"></TableCell>
 
       {/* Subtotal label */}
-      <TableCell className="italic text-muted-foreground">
-        Subtotal:
-      </TableCell>
+      <TableCell className="italic text-muted-foreground">Subtotal:</TableCell>
 
       {/* Empty cell for tipo_gasto */}
       <TableCell>
@@ -67,9 +65,7 @@ export function SubgroupSubtotalRow({
 
       {/* Total Subtotal */}
       <TableCell className="text-right">
-        <span className="font-semibold">
-          {formatCurrency(subtotals.total)}
-        </span>
+        <span className="font-semibold">{formatCurrency(subtotals.total)}</span>
       </TableCell>
 
       {/* Balance column */}

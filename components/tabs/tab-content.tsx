@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
@@ -9,7 +9,7 @@ import { useTabs } from './tab-context';
 // Lazy loading wrapper for tab content
 function LazyTabContent({
   children,
-  fallback
+  fallback,
 }: {
   children: React.ReactNode;
   fallback?: React.ReactNode;
@@ -18,7 +18,7 @@ function LazyTabContent({
     <Suspense
       fallback={
         fallback || (
-          <div className="flex items-center justify-center h-64">
+          <div className="flex h-64 items-center justify-center">
             <Loader2 className="h-6 w-6 animate-spin" />
             <span className="ml-2 text-muted-foreground">Loading...</span>
           </div>
@@ -34,7 +34,7 @@ function LazyTabContent({
 function TabStateWrapper({
   tabId,
   children,
-  onStateChange
+  onStateChange,
 }: {
   tabId: string;
   children: React.ReactNode;
@@ -65,7 +65,7 @@ function TabStateWrapper({
     const timeoutId = setTimeout(() => {
       if (scrollContainerRef.current) {
         onStateChange(tabId, {
-          scrollPosition: scrollContainerRef.current.scrollTop
+          scrollPosition: scrollContainerRef.current.scrollTop,
         });
         setHasScrolled(false);
       }
@@ -92,14 +92,14 @@ export function TabContent({
   tabs,
   activeTabId,
   onTabStateChange,
-  children
+  children,
 }: TabContentProps & { children?: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { updateTabState } = useTabs();
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const activeTab = tabs.find(tab => tab.id === activeTabId);
+  const activeTab = tabs.find((tab) => tab.id === activeTabId);
 
   // Handle route changes
   useEffect(() => {
@@ -109,7 +109,7 @@ export function TabContent({
       // Update tab state with current path
       updateTabState(activeTab.id, {
         currentPath: pathname,
-        lastAccessed: new Date()
+        lastAccessed: new Date(),
       });
 
       // Clear transition state after a short delay
@@ -132,18 +132,14 @@ export function TabContent({
     if (!tab) return null;
 
     // Simply return children - the actual page content is handled by Next.js routing
-    return (
-      <div className="h-full">
-        {children}
-      </div>
-    );
+    return <div className="h-full">{children}</div>;
   };
 
   if (!activeTab) {
     return (
-      <div className="flex items-center justify-center h-full">
+      <div className="flex h-full items-center justify-center">
         <div className="text-center">
-          <h2 className="text-lg font-semibold mb-2">No Active Tab</h2>
+          <h2 className="mb-2 text-lg font-semibold">No Active Tab</h2>
           <p className="text-muted-foreground">
             Select a tab or create a new one to get started.
           </p>
@@ -156,20 +152,15 @@ export function TabContent({
     <div className="relative h-full">
       {/* Loading overlay during transitions */}
       {isTransitioning && (
-        <div className="absolute inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
           <Loader2 className="h-6 w-6 animate-spin" />
           <span className="ml-2 text-muted-foreground">Loading...</span>
         </div>
       )}
 
       {/* Tab content */}
-      <TabStateWrapper
-        tabId={activeTab.id}
-        onStateChange={handleStateChange}
-      >
-        <LazyTabContent>
-          {renderTabContent(activeTab)}
-        </LazyTabContent>
+      <TabStateWrapper tabId={activeTab.id} onStateChange={handleStateChange}>
+        <LazyTabContent>{renderTabContent(activeTab)}</LazyTabContent>
       </TabStateWrapper>
     </div>
   );
@@ -196,19 +187,13 @@ export function MobileTabContent(props: TabContentProps) {
 // Tab content factory for creating specific content types
 export const TabContentFactory = {
   // Create dashboard tab content
-  createDashboard: (props: any) => (
-    <div>Dashboard Component</div>
-  ),
+  createDashboard: (props: any) => <div>Dashboard Component</div>,
 
   // Create categories tab content
-  createCategories: (props: any) => (
-    <div>Categories Component</div>
-  ),
+  createCategories: (props: any) => <div>Categories Component</div>,
 
   // Create periods tab content
-  createPeriods: (props: any) => (
-    <div>Periods Component</div>
-  ),
+  createPeriods: (props: any) => <div>Periods Component</div>,
 
   // Add more content factories as needed
 };

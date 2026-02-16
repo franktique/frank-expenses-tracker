@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 interface SimulationAnalyticsResult {
   grouper_id: number;
@@ -28,17 +28,17 @@ export async function GET(
 
     if (isNaN(simulationId)) {
       return NextResponse.json(
-        { error: "ID de simulación inválido" },
+        { error: 'ID de simulación inválido' },
         { status: 400 }
       );
     }
 
     const { searchParams } = new URL(request.url);
-    const estudioId = searchParams.get("estudioId");
-    const grouperIds = searchParams.get("grouperIds");
-    const paymentMethods = searchParams.get("paymentMethods");
+    const estudioId = searchParams.get('estudioId');
+    const grouperIds = searchParams.get('grouperIds');
+    const paymentMethods = searchParams.get('paymentMethods');
     const comparisonPeriods = parseInt(
-      searchParams.get("comparisonPeriods") || "3"
+      searchParams.get('comparisonPeriods') || '3'
     );
 
     // Validate simulation exists
@@ -48,7 +48,7 @@ export async function GET(
 
     if (!simulation) {
       return NextResponse.json(
-        { error: "Simulación no encontrada" },
+        { error: 'Simulación no encontrada' },
         { status: 404 }
       );
     }
@@ -57,7 +57,7 @@ export async function GET(
     let grouperIdsArray: number[] | null = null;
     if (grouperIds) {
       try {
-        grouperIdsArray = grouperIds.split(",").map((id) => {
+        grouperIdsArray = grouperIds.split(',').map((id) => {
           const parsed = parseInt(id.trim(), 10);
           if (isNaN(parsed)) {
             throw new Error(`Invalid grouper ID: ${id}`);
@@ -76,11 +76,11 @@ export async function GET(
 
     // Parse payment methods
     let paymentMethodsArray: string[] | null = null;
-    if (paymentMethods && paymentMethods !== "all") {
+    if (paymentMethods && paymentMethods !== 'all') {
       try {
-        paymentMethodsArray = paymentMethods.split(",").map((method) => {
+        paymentMethodsArray = paymentMethods.split(',').map((method) => {
           const trimmed = method.trim();
-          if (!["efectivo", "credito"].includes(trimmed)) {
+          if (!['efectivo', 'credito'].includes(trimmed)) {
             throw new Error(`Invalid payment method: ${trimmed}`);
           }
           return trimmed;
@@ -219,8 +219,8 @@ export async function GET(
             ? 4
             : 3
           : paymentMethodsArray && paymentMethodsArray.length > 0
-          ? 3
-          : 2;
+            ? 3
+            : 2;
         historicalQuery += `
           WHERE g.id = ANY($${paramIndex}::int[])`;
       }
@@ -264,7 +264,7 @@ export async function GET(
             avg_historical: 0,
             simulation_amount: simItem.simulation_total,
             variance_percentage: 0,
-            trend: "stable" as const,
+            trend: 'stable' as const,
           };
         }
 
@@ -279,10 +279,10 @@ export async function GET(
             ? ((simItem.simulation_total - avgHistorical) / avgHistorical) * 100
             : 0;
 
-        let trend: "increase" | "decrease" | "stable" = "stable";
+        let trend: 'increase' | 'decrease' | 'stable' = 'stable';
         if (Math.abs(variancePercentage) > 5) {
           // 5% threshold
-          trend = variancePercentage > 0 ? "increase" : "decrease";
+          trend = variancePercentage > 0 ? 'increase' : 'decrease';
         }
 
         return {
@@ -326,7 +326,7 @@ export async function GET(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("Error in simulation analytics API:", error);
+    console.error('Error in simulation analytics API:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

@@ -5,7 +5,6 @@
 ### ✅ Category List Visual Indicators
 
 1. **Navigate to Categories page**
-
    - [ ] Categories with specific funds show green dots and fund names as badges
    - [ ] Categories with multiple funds show count indicator "(X fondos)"
    - [ ] Categories without specific funds show "Todos los fondos" with blue dot
@@ -19,7 +18,6 @@
 ### ✅ Category Management Visual Feedback
 
 3. **Add Category Dialog**
-
    - [ ] MultiFundSelector shows selection status (✓ Específico, ⚡ Múltiple, etc.)
    - [ ] Help text explains "Sin fondos seleccionados = acepta cualquier fondo"
    - [ ] Visual count of selected funds
@@ -34,7 +32,6 @@
 ### ✅ Expense Form Visual Constraints
 
 5. **New Expense Form**
-
    - [ ] Fund selection is disabled until fund filter is selected
    - [ ] Clear error message when no fund filter is selected
    - [ ] Constraint indicator shows available funds for selected category
@@ -49,7 +46,6 @@
 ### ✅ Information and Help
 
 7. **Info Panel**
-
    - [ ] Comprehensive explanation of relationship types
    - [ ] Color-coded examples (green = specific, blue = multiple, amber = unrestricted)
    - [ ] Helpful tips for users
@@ -87,7 +83,6 @@
 ## User Experience Flow Test
 
 1. **Complete Category-Fund Management Flow**
-
    - [ ] Create category with no funds → See "Todos los fondos" indicator
    - [ ] Edit category to add specific fund → See green dot and fund name
    - [ ] Edit category to add multiple funds → See multiple badges with count
@@ -124,8 +119,8 @@ Record any issues or improvements needed:
 
 ## Test Results
 
-**Date**: ****\_\_\_****
-**Tester**: ****\_\_\_****
+**Date**: \***\*\_\_\_\*\***
+**Tester**: \***\*\_\_\_\*\***
 **Overall Status**: [ ] Pass [ ] Fail [ ] Needs Improvement
 
 **Summary**:

@@ -3,13 +3,13 @@
  * POST: Convert current simulation subgroups to a new template
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { getSubgroupsBySimulation } from "@/lib/subgroup-db-utils";
-import { createTemplate } from "@/lib/subgroup-template-db-utils";
+import { NextRequest, NextResponse } from 'next/server';
+import { getSubgroupsBySimulation } from '@/lib/subgroup-db-utils';
+import { createTemplate } from '@/lib/subgroup-template-db-utils';
 import type {
   SaveAsTemplateRequest,
   TemplateResponse,
-} from "@/types/subgroup-templates";
+} from '@/types/subgroup-templates';
 
 /**
  * POST /api/simulations/[id]/save-as-template
@@ -27,7 +27,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid simulation ID",
+          error: 'Invalid simulation ID',
           statusCode: 400,
         },
         { status: 400 }
@@ -42,7 +42,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid request body",
+          error: 'Invalid request body',
           statusCode: 400,
         },
         { status: 400 }
@@ -50,11 +50,11 @@ export async function POST(
     }
 
     // Validate request body
-    if (!requestBody.name || typeof requestBody.name !== "string") {
+    if (!requestBody.name || typeof requestBody.name !== 'string') {
       return NextResponse.json(
         {
           success: false,
-          error: "Template name is required and must be a string",
+          error: 'Template name is required and must be a string',
           statusCode: 400,
         },
         { status: 400 }
@@ -68,7 +68,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Simulation has no subgroups to save as template",
+          error: 'Simulation has no subgroups to save as template',
           statusCode: 400,
         },
         { status: 400 }
@@ -78,9 +78,10 @@ export async function POST(
     // Convert simulation subgroups to template format with categories
     const templateSubgroups = existingSubgroups.map((subgroup, index) => ({
       name: subgroup.name,
-      displayOrder: subgroup.customOrder !== null && subgroup.customOrder !== undefined
-        ? subgroup.customOrder
-        : index,
+      displayOrder:
+        subgroup.customOrder !== null && subgroup.customOrder !== undefined
+          ? subgroup.customOrder
+          : index,
       categoryIds: subgroup.categoryIds || [],
     }));
 
@@ -100,12 +101,14 @@ export async function POST(
       { status: 201 }
     );
   } catch (error) {
-    console.error("Error saving simulation as template:", error);
+    console.error('Error saving simulation as template:', error);
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to save simulation as template";
+      error instanceof Error
+        ? error.message
+        : 'Failed to save simulation as template';
 
     // Check if it's a duplicate name error
-    if (errorMessage.includes("already exists")) {
+    if (errorMessage.includes('already exists')) {
       return NextResponse.json(
         {
           success: false,
@@ -117,7 +120,10 @@ export async function POST(
     }
 
     // Check if it's a validation error
-    if (errorMessage.includes("cannot be empty") || errorMessage.includes("must contain")) {
+    if (
+      errorMessage.includes('cannot be empty') ||
+      errorMessage.includes('must contain')
+    ) {
       return NextResponse.json(
         {
           success: false,

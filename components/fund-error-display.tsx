@@ -1,25 +1,25 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 import {
   AlertTriangle,
   RefreshCw,
   X,
   ChevronDown,
   ChevronUp,
-} from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from '@/components/ui/collapsible';
 import {
   FundErrorDetails,
   formatErrorForUser,
-} from "@/lib/fund-error-handling";
+} from '@/lib/fund-error-handling';
 
 interface FundErrorDisplayProps {
   error: FundErrorDetails | string | null;
@@ -42,7 +42,7 @@ export function FundErrorDisplay({
   if (!error) return null;
 
   // Handle string errors
-  if (typeof error === "string") {
+  if (typeof error === 'string') {
     return (
       <Alert variant="destructive" className={className}>
         <AlertTriangle className="h-4 w-4" />
@@ -98,9 +98,9 @@ export function FundErrorDisplay({
                 className="h-7"
               >
                 <RefreshCw
-                  className={`h-3 w-3 mr-1 ${isRetrying ? "animate-spin" : ""}`}
+                  className={`mr-1 h-3 w-3 ${isRetrying ? 'animate-spin' : ''}`}
                 />
-                {isRetrying ? "Reintentando..." : "Reintentar"}
+                {isRetrying ? 'Reintentando...' : 'Reintentar'}
               </Button>
             )}
             {onDismiss && (
@@ -122,8 +122,8 @@ export function FundErrorDisplay({
 
             {formattedError.suggestions.length > 0 && (
               <div>
-                <p className="font-medium text-sm mb-1">Sugerencias:</p>
-                <ul className="list-disc list-inside text-sm space-y-1">
+                <p className="mb-1 text-sm font-medium">Sugerencias:</p>
+                <ul className="list-inside list-disc space-y-1 text-sm">
                   {formattedError.suggestions.map((suggestion, index) => (
                     <li key={index}>{suggestion}</li>
                   ))}
@@ -137,14 +137,14 @@ export function FundErrorDisplay({
                   <Button variant="ghost" size="sm" className="h-6 p-0 text-xs">
                     <span>Detalles técnicos</span>
                     {isDetailsOpen ? (
-                      <ChevronUp className="h-3 w-3 ml-1" />
+                      <ChevronUp className="ml-1 h-3 w-3" />
                     ) : (
-                      <ChevronDown className="h-3 w-3 ml-1" />
+                      <ChevronDown className="ml-1 h-3 w-3" />
                     )}
                   </Button>
                 </CollapsibleTrigger>
                 <CollapsibleContent>
-                  <div className="mt-2 p-2 bg-muted rounded text-xs font-mono">
+                  <div className="mt-2 rounded bg-muted p-2 font-mono text-xs">
                     {error.details}
                   </div>
                 </CollapsibleContent>
@@ -185,10 +185,10 @@ export function FundValidationErrorDisplay({
           )}
         </div>
         <AlertDescription className="mt-2">
-          <ul className="list-disc list-inside space-y-1">
+          <ul className="list-inside list-disc space-y-1">
             {errors.map((error, index) => (
               <li key={index}>
-                <span className="font-medium">{error.field}:</span>{" "}
+                <span className="font-medium">{error.field}:</span>{' '}
                 {error.message}
               </li>
             ))}
@@ -239,11 +239,11 @@ export function FundBalanceErrorDisplay({
                 className="h-7"
               >
                 <RefreshCw
-                  className={`h-3 w-3 mr-1 ${
-                    isRecalculating ? "animate-spin" : ""
+                  className={`mr-1 h-3 w-3 ${
+                    isRecalculating ? 'animate-spin' : ''
                   }`}
                 />
-                {isRecalculating ? "Recalculando..." : "Recalcular"}
+                {isRecalculating ? 'Recalculando...' : 'Recalcular'}
               </Button>
             )}
             {onDismiss && (
@@ -260,10 +260,10 @@ export function FundBalanceErrorDisplay({
         </div>
         <AlertDescription className="mt-2">
           <p>
-            Error al calcular el balance del fondo <strong>{fundName}</strong>:{" "}
+            Error al calcular el balance del fondo <strong>{fundName}</strong>:{' '}
             {error}
           </p>
-          <p className="text-sm mt-1">
+          <p className="mt-1 text-sm">
             El balance mostrado puede no ser preciso. Intenta recalcular el
             balance manualmente.
           </p>
@@ -309,9 +309,9 @@ export function FundConnectionErrorDisplay({
                 className="h-7"
               >
                 <RefreshCw
-                  className={`h-3 w-3 mr-1 ${isRetrying ? "animate-spin" : ""}`}
+                  className={`mr-1 h-3 w-3 ${isRetrying ? 'animate-spin' : ''}`}
                 />
-                {isRetrying ? "Reintentando..." : "Reintentar"}
+                {isRetrying ? 'Reintentando...' : 'Reintentar'}
               </Button>
             )}
             {onDismiss && (

@@ -5,12 +5,15 @@
 **Feature:** Add category exclusion filter to Dashboard > Resumen view
 
 ## Overview
+
 Add a multi-select category filter to the Dashboard's "Resumen" tab that allows users to exclude selected categories from:
+
 - The budget summary table
 - The balance calculations (running balance and totals)
 - Persist selections in localStorage across sessions
 
 ## Requirements
+
 1. **UI Component:** Dropdown with checkboxes for category selection
 2. **Filter Logic:** Exclude selected categories from table and calculations
 3. **Persistence:** Save excluded categories in localStorage
@@ -20,6 +23,7 @@ Add a multi-select category filter to the Dashboard's "Resumen" tab that allows 
 ## Implementation Tasks
 
 ### Phase 1: LocalStorage Utility
+
 - [x] Create `lib/excluded-categories-storage.ts` utility
   - [x] Define storage key and version constants
   - [x] Implement `loadExcludedCategories()` - returns array of category IDs
@@ -30,6 +34,7 @@ Add a multi-select category filter to the Dashboard's "Resumen" tab that allows 
   - [x] Follow pattern from `active-period-storage.ts`
 
 ### Phase 2: UI Component
+
 - [x] Create `components/category-exclusion-filter.tsx`
   - [x] Create dropdown button with current filter status indicator
   - [x] Add Popover/DropdownMenu from shadcn/ui
@@ -44,6 +49,7 @@ Add a multi-select category filter to the Dashboard's "Resumen" tab that allows 
     - `onExcludedCategoriesChange: (categoryIds: string[]) => void`
 
 ### Phase 3: Integration in Dashboard View
+
 - [x] Update `components/dashboard-view.tsx`
   - [x] Add state for excluded categories: `const [excludedCategories, setExcludedCategories] = useState<string[]>([])`
   - [x] Load excluded categories from localStorage on mount
@@ -54,7 +60,7 @@ Add a multi-select category filter to the Dashboard's "Resumen" tab that allows 
   - [x] Filter `budgetSummary` data before rendering:
     ```typescript
     const filteredBudgetSummary = budgetSummary.filter(
-      item => !excludedCategories.includes(item.category_id)
+      (item) => !excludedCategories.includes(item.category_id)
     );
     ```
   - [x] Update all calculations to use filtered data:
@@ -63,6 +69,7 @@ Add a multi-select category filter to the Dashboard's "Resumen" tab that allows 
     - Any other aggregations
 
 ### Phase 4: Visual Indicators
+
 - [x] Update dashboard header to show active filter status
   - [x] Add badge or text showing "X categorías excluidas" when filter is active
   - [x] Update period info line to include filter info
@@ -71,6 +78,7 @@ Add a multi-select category filter to the Dashboard's "Resumen" tab that allows 
   - [x] Add tooltip explaining active filters
 
 ### Phase 5: Testing & Polish
+
 - [x] Test functionality
   - [x] Test excluding single category
   - [x] Test excluding multiple categories
@@ -93,6 +101,7 @@ Add a multi-select category filter to the Dashboard's "Resumen" tab that allows 
 ## Technical Details
 
 ### LocalStorage Schema
+
 ```typescript
 interface ExcludedCategoriesCache {
   categoryIds: string[];
@@ -100,11 +109,12 @@ interface ExcludedCategoriesCache {
   version: string;
 }
 
-const STORAGE_KEY = "budget_tracker_excluded_categories";
-const CACHE_VERSION = "1.0.0";
+const STORAGE_KEY = 'budget_tracker_excluded_categories';
+const CACHE_VERSION = '1.0.0';
 ```
 
 ### Component Structure
+
 ```
 dashboard-view.tsx
 ├── FundFilter (existing)
@@ -121,6 +131,7 @@ dashboard-view.tsx
 ```
 
 ### Filter Logic Flow
+
 1. User opens dropdown and checks/unchecks categories
 2. On "Apply", update state and save to localStorage
 3. Component re-renders with filtered data
@@ -128,6 +139,7 @@ dashboard-view.tsx
 5. Visual indicators update to show active filter
 
 ### Data Flow
+
 ```
 localStorage -> loadExcludedCategories() -> useState -> filter budgetSummary -> render table
                                              ↓
@@ -137,13 +149,16 @@ localStorage -> loadExcludedCategories() -> useState -> filter budgetSummary -> 
 ## Files to Modify/Create
 
 ### New Files
+
 - `lib/excluded-categories-storage.ts` - LocalStorage utility
 - `components/category-exclusion-filter.tsx` - Filter UI component
 
 ### Modified Files
+
 - `components/dashboard-view.tsx` - Integration of filter
 
 ## Dependencies
+
 - No new package dependencies required
 - Uses existing shadcn/ui components:
   - `Button`
@@ -153,6 +168,7 @@ localStorage -> loadExcludedCategories() -> useState -> filter budgetSummary -> 
   - `Badge` (for indicators)
 
 ## Acceptance Criteria
+
 - ✅ User can open a dropdown showing all categories with checkboxes
 - ✅ User can select/deselect multiple categories
 - ✅ Selected categories are excluded from the table
@@ -165,6 +181,7 @@ localStorage -> loadExcludedCategories() -> useState -> filter budgetSummary -> 
 - ✅ Responsive design on all screen sizes
 
 ## Future Enhancements (Not in Scope)
+
 - Quick presets (e.g., "Exclude fixed expenses")
 - Category groups exclusion
 - Search/filter categories in dropdown
@@ -172,6 +189,7 @@ localStorage -> loadExcludedCategories() -> useState -> filter budgetSummary -> 
 - Sync exclusion filter across all dashboard tabs
 
 ## Notes
+
 - This filter is client-side only - no API changes needed
 - Filter applies only to the "Resumen" tab
 - The excluded categories are stored per browser (localStorage)

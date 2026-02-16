@@ -3,13 +3,13 @@
  * Handles organizing and rendering table data with sub-groups and uncategorized categories
  */
 
-import type { Subgroup } from "@/types/simulation";
+import type { Subgroup } from '@/types/simulation';
 
 /**
  * Represents a row in the organized table
  */
 export type TableRowItem = {
-  type: "subgroup_header" | "category" | "subgroup_subtotal";
+  type: 'subgroup_header' | 'category' | 'subgroup_subtotal';
   id: string | number; // Category ID for regular rows, subgroupId for headers/subtotals
   categoryId?: string | number; // Only for regular category rows
   subgroupId?: string; // Only for subgroup header/subtotal rows
@@ -44,11 +44,16 @@ export function organizeTableRowsWithSubgroups(
 
   // Get uncategorized categories (not in any sub-group and not excluded)
   const uncategorizedCategories = allCategories.filter(
-    (cat) => !categoriesInSubgroups.has(cat.id) && !excludedCategoryIds.includes(cat.id)
+    (cat) =>
+      !categoriesInSubgroups.has(cat.id) &&
+      !excludedCategoryIds.includes(cat.id)
   );
 
   // Create a map for quick lookup of uncategorized categories
-  const uncategorizedMap = new Map<string | number, typeof allCategories[0]>();
+  const uncategorizedMap = new Map<
+    string | number,
+    (typeof allCategories)[0]
+  >();
   for (const cat of uncategorizedCategories) {
     uncategorizedMap.set(cat.id, cat);
   }
@@ -57,7 +62,7 @@ export function organizeTableRowsWithSubgroups(
   for (const subgroup of subgroups) {
     // Add sub-group header
     rows.push({
-      type: "subgroup_header",
+      type: 'subgroup_header',
       id: subgroup.id,
       subgroupId: subgroup.id,
       subgroupName: subgroup.name,
@@ -69,7 +74,7 @@ export function organizeTableRowsWithSubgroups(
     for (const categoryId of subgroup.categoryIds) {
       if (!excludedCategoryIds.includes(categoryId)) {
         rows.push({
-          type: "category",
+          type: 'category',
           id: categoryId,
           categoryId,
           displayOrder: subgroup.displayOrder,
@@ -79,7 +84,7 @@ export function organizeTableRowsWithSubgroups(
 
     // Add sub-group subtotal row
     rows.push({
-      type: "subgroup_subtotal",
+      type: 'subgroup_subtotal',
       id: `${subgroup.id}_subtotal`,
       subgroupId: subgroup.id,
       displayOrder: subgroup.displayOrder,
@@ -89,7 +94,7 @@ export function organizeTableRowsWithSubgroups(
   // Add uncategorized categories
   for (const category of uncategorizedCategories) {
     rows.push({
-      type: "category",
+      type: 'category',
       id: category.id,
       categoryId: category.id,
       displayOrder: Infinity, // Place uncategorized at the end by default
@@ -110,7 +115,7 @@ export function getCategoryRowsFromTableRows(
   tableRows: TableRowItem[]
 ): (string | number)[] {
   return tableRows
-    .filter((row) => row.type === "category")
+    .filter((row) => row.type === 'category')
     .map((row) => row.categoryId!)
     .filter((id) => id !== undefined);
 }
@@ -130,7 +135,10 @@ export function shouldShowRow(
   expandedSubgroups: Set<string>
 ): boolean {
   // Headers and subtotals are always shown
-  if (rowItem.type === "subgroup_header" || rowItem.type === "subgroup_subtotal") {
+  if (
+    rowItem.type === 'subgroup_header' ||
+    rowItem.type === 'subgroup_subtotal'
+  ) {
     return true;
   }
 
@@ -139,11 +147,11 @@ export function shouldShowRow(
   let currentSubgroupId: string | undefined = undefined;
 
   for (const row of tableRows) {
-    if (row.type === "subgroup_header") {
+    if (row.type === 'subgroup_header') {
       currentSubgroupId = row.subgroupId;
-    } else if (row.type === "subgroup_subtotal") {
+    } else if (row.type === 'subgroup_subtotal') {
       currentSubgroupId = undefined;
-    } else if (row.type === "category" && row.id === rowItem.id) {
+    } else if (row.type === 'category' && row.id === rowItem.id) {
       // Found the row
       if (currentSubgroupId) {
         // It's part of a sub-group, check if expanded
@@ -173,11 +181,11 @@ export function getSubgroupForCategory(
   let currentSubgroupId: string | undefined = undefined;
 
   for (const row of tableRows) {
-    if (row.type === "subgroup_header") {
+    if (row.type === 'subgroup_header') {
       currentSubgroupId = row.subgroupId;
-    } else if (row.type === "subgroup_subtotal") {
+    } else if (row.type === 'subgroup_subtotal') {
       currentSubgroupId = undefined;
-    } else if (row.type === "category" && row.id === categoryId) {
+    } else if (row.type === 'category' && row.id === categoryId) {
       return currentSubgroupId;
     }
   }

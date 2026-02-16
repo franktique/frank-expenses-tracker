@@ -13,8 +13,8 @@ import type {
   LoanSummary,
   LoanComparison,
   ExtraPayment,
-} from "@/types/loan-simulator";
-import { SUPPORTED_CURRENCIES } from "@/types/loan-simulator";
+} from '@/types/loan-simulator';
+import { SUPPORTED_CURRENCIES } from '@/types/loan-simulator';
 
 // ============================================================================
 // Constants
@@ -75,7 +75,7 @@ export function calculateMonthlyPayment(
 ): number {
   if (principal <= 0 || annualRate <= 0 || termMonths <= 0) {
     throw new Error(
-      "Principal, interest rate, and term must be positive numbers"
+      'Principal, interest rate, and term must be positive numbers'
     );
   }
 
@@ -147,7 +147,7 @@ export function calculatePayoffDate(
   // Check if date is invalid
   if (isNaN(date.getTime())) {
     // Try parsing as YYYY-MM-DD format
-    const parts = startDate.split("-");
+    const parts = startDate.split('-');
     if (parts.length === 3) {
       const [year, month, day] = parts.map(Number);
       date = new Date(year, month - 1, day);
@@ -171,7 +171,7 @@ export function calculatePayoffDate(
   }
 
   const isoString = date.toISOString();
-  return isoString.split("T")[0];
+  return isoString.split('T')[0];
 }
 
 /**
@@ -254,7 +254,7 @@ export function generateAmortizationSchedule(
     }
 
     // Format payment date
-    const dateString = paymentDate.toISOString().split("T")[0];
+    const dateString = paymentDate.toISOString().split('T')[0];
 
     schedule.push({
       paymentNumber,
@@ -369,11 +369,7 @@ export function compareInterestRates(
   const { principal, termMonths } = baseScenario;
 
   const comparisons: LoanComparison[] = interestRates.map((rate) => {
-    const monthlyPayment = calculateMonthlyPayment(
-      principal,
-      rate,
-      termMonths
-    );
+    const monthlyPayment = calculateMonthlyPayment(principal, rate, termMonths);
 
     const totalPayment = monthlyPayment * termMonths;
     const totalInterest = totalPayment - principal;
@@ -423,11 +419,12 @@ export function generateLoanComparisons(
  */
 export function formatCurrency(
   value: number,
-  currencyCode: keyof typeof SUPPORTED_CURRENCIES = "USD"
+  currencyCode: keyof typeof SUPPORTED_CURRENCIES = 'USD'
 ): string {
-  const currency = SUPPORTED_CURRENCIES[currencyCode] || SUPPORTED_CURRENCIES.USD;
+  const currency =
+    SUPPORTED_CURRENCIES[currencyCode] || SUPPORTED_CURRENCIES.USD;
   return new Intl.NumberFormat(currency.locale, {
-    style: "currency",
+    style: 'currency',
     currency: currency.code,
   }).format(value);
 }
@@ -441,14 +438,14 @@ export function formatCurrency(
  */
 export function formatDate(
   dateString: string,
-  locale: string = "es-MX"
+  locale: string = 'es-MX'
 ): string {
   let date = new Date(dateString);
 
   // Check if date is invalid
   if (isNaN(date.getTime())) {
     // Try parsing as YYYY-MM-DD format
-    const parts = dateString.split("-");
+    const parts = dateString.split('-');
     if (parts.length === 3) {
       const [year, month, day] = parts.map(Number);
       date = new Date(year, month - 1, day);
@@ -461,9 +458,9 @@ export function formatDate(
   }
 
   return new Intl.DateTimeFormat(locale, {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   }).format(date);
 }
 

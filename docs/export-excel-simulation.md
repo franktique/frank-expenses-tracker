@@ -7,6 +7,7 @@
 ## Overview
 
 Add an Excel export button to the simulation budget configuration page that exports:
+
 1. **Total Ingresos** (Total Income) summary
 2. **Presupuestos por Categoría** table with:
    - Category name
@@ -27,6 +28,7 @@ Add an Excel export button to the simulation budget configuration page that expo
 ## Implementation Tasks
 
 ### Phase 1: Backend API Endpoint
+
 - [x] Create new API endpoint `/api/simulations/[id]/export`
   - [x] Fetch simulation details (id, name)
   - [x] Fetch total income from `simulation_incomes` table
@@ -36,6 +38,7 @@ Add an Excel export button to the simulation budget configuration page that expo
   - [x] Return structured data for Excel export
 
 ### Phase 2: Excel Export Utility
+
 - [x] Create utility function `/lib/excel-export-utils.ts`
   - [x] Function to generate simulation Excel workbook
   - [x] Sheet 1: "Resumen" (Summary) with total income and totals
@@ -45,6 +48,7 @@ Add an Excel export button to the simulation budget configuration page that expo
   - [x] Generate downloadable file with simulation name
 
 ### Phase 3: Frontend Export Button
+
 - [x] Add export button to `SimulationBudgetForm` component
   - [x] Add "Download" icon button in header or actions area
   - [x] Position near "Guardar Manualmente" button
@@ -53,6 +57,7 @@ Add an Excel export button to the simulation budget configuration page that expo
   - [x] Trigger file download with proper filename
 
 ### Phase 4: Export Functionality
+
 - [x] Implement client-side export handler
   - [x] Call API endpoint to get export data
   - [x] Use xlsx library to generate workbook
@@ -70,6 +75,7 @@ Add an Excel export button to the simulation budget configuration page that expo
   - [x] Download file with name: `simulacion-{name}-{date}.xlsx`
 
 ### Phase 5: Styling & UX
+
 - [x] Style export button to match existing design
 - [x] Add button text: "Exportar a Excel"
 - [x] Show success toast after download
@@ -80,6 +86,7 @@ Add an Excel export button to the simulation budget configuration page that expo
 - [-] Test on different browsers
 
 ### Phase 6: Testing
+
 - [-] Test with empty simulation (no budgets)
 - [-] Test with partial data (some categories)
 - [-] Test with complete data (all categories)
@@ -94,6 +101,7 @@ Add an Excel export button to the simulation budget configuration page that expo
 ## Technical Specifications
 
 ### API Endpoint Structure
+
 ```typescript
 // GET /api/simulations/[id]/export
 Response: {
@@ -137,9 +145,10 @@ Response: {
 |-----------|-------|----------|---------|-------|---------|
 | {name} | {fund} | ${amount} | ${amount} | ${total} | ${balance} |
 | ... | ... | ... | ... | ... | ... |
-| **TOTALES** | | **${total}** | **${total}** | **${total}** | |
+| **TOTALES** | | **${total}** | **${total}** | **${total}\*\* | |
 
 ### Dependencies
+
 - `xlsx` (^0.18.5) - Already installed ✓
 - `@types/xlsx` (^0.0.35) - Already installed ✓
 - `lucide-react` - For Download icon ✓
@@ -147,13 +156,16 @@ Response: {
 ## File Changes
 
 ### New Files
+
 - `/app/api/simulations/[id]/export/route.ts` - Export API endpoint
 - `/lib/excel-export-utils.ts` - Excel generation utilities
 
 ### Modified Files
+
 - `/components/simulation-budget-form.tsx` - Add export button and handler
 
 ## Success Criteria
+
 1. ✓ Export button visible and accessible in simulation budget view
 2. ✓ Clicking export downloads an Excel file
 3. ✓ Excel file contains two sheets: Resumen and Presupuestos
@@ -164,6 +176,7 @@ Response: {
 8. ✓ Performance is acceptable (<2s for typical simulation)
 
 ## Notes
+
 - Keep export functionality simple and focused on current view data
 - Filename format: `simulacion-{name}-{timestamp}.xlsx`
 - Consider adding export date/time to summary sheet

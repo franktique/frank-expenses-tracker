@@ -1,18 +1,22 @@
-import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { 
-  RemainderDashboardData, 
-  RemainderCategoryItem, 
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import {
+  RemainderDashboardData,
+  RemainderCategoryItem,
   RemainderDashboardTotals,
-  calculateRemainderBudget 
-} from "@/types/remainder-dashboard";
+  calculateRemainderBudget,
+} from '@/types/remainder-dashboard';
 
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const fundId = searchParams.get("fundId");
-    const estudioId = searchParams.get("estudioId");
-    const agrupadorIds = searchParams.get("agrupadorIds")?.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+    const fundId = searchParams.get('fundId');
+    const estudioId = searchParams.get('estudioId');
+    const agrupadorIds = searchParams
+      .get('agrupadorIds')
+      ?.split(',')
+      .map((id) => parseInt(id.trim()))
+      .filter((id) => !isNaN(id));
 
     // Get active period
     const [activePeriod] = await sql`
@@ -76,26 +80,31 @@ export async function GET(request: NextRequest) {
     `;
 
     // Process and validate the data
-    const processedCategories: RemainderCategoryItem[] = categories.map((row: any) => ({
-      category_id: row.category_id,
-      category_name: row.category_name,
-      original_planned_budget: Number(row.original_planned_budget) || 0,
-      current_expenses: Number(row.current_expenses) || 0,
-      remainder_planned_budget: Number(row.remainder_planned_budget) || 0,
-      fund_id: row.fund_id,
-      fund_name: row.fund_name,
-      agrupador_id: row.agrupador_id,
-      agrupador_name: row.agrupador_name,
-      estudio_id: row.estudio_id,
-      estudio_name: row.estudio_name,
-    }));
+    const processedCategories: RemainderCategoryItem[] = categories.map(
+      (row: any) => ({
+        category_id: row.category_id,
+        category_name: row.category_name,
+        original_planned_budget: Number(row.original_planned_budget) || 0,
+        current_expenses: Number(row.current_expenses) || 0,
+        remainder_planned_budget: Number(row.remainder_planned_budget) || 0,
+        fund_id: row.fund_id,
+        fund_name: row.fund_name,
+        agrupador_id: row.agrupador_id,
+        agrupador_name: row.agrupador_name,
+        estudio_id: row.estudio_id,
+        estudio_name: row.estudio_name,
+      })
+    );
 
     // Calculate totals
     const totals: RemainderDashboardTotals = processedCategories.reduce(
       (acc, category) => ({
-        totalCurrentExpenses: acc.totalCurrentExpenses + category.current_expenses,
-        totalOriginalBudget: acc.totalOriginalBudget + category.original_planned_budget,
-        totalRemainderBudget: acc.totalRemainderBudget + category.remainder_planned_budget,
+        totalCurrentExpenses:
+          acc.totalCurrentExpenses + category.current_expenses,
+        totalOriginalBudget:
+          acc.totalOriginalBudget + category.original_planned_budget,
+        totalRemainderBudget:
+          acc.totalRemainderBudget + category.remainder_planned_budget,
         categoriesCount: acc.categoriesCount + 1,
       }),
       {
@@ -117,7 +126,8 @@ export async function GET(request: NextRequest) {
     }
 
     if (estudioId) {
-      const [estudio] = await sql`SELECT name FROM estudios WHERE id = ${estudioId}`;
+      const [estudio] =
+        await sql`SELECT name FROM estudios WHERE id = ${estudioId}`;
       estudioName = estudio?.name;
     }
 
@@ -146,13 +156,12 @@ export async function GET(request: NextRequest) {
     };
 
     return NextResponse.json(response);
-
   } catch (error) {
-    console.error("Error fetching remainder dashboard data:", error);
+    console.error('Error fetching remainder dashboard data:', error);
     return NextResponse.json(
-      { 
-        error: "Failed to fetch remainder dashboard data",
-        details: error instanceof Error ? error.message : "Unknown error"
+      {
+        error: 'Failed to fetch remainder dashboard data',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

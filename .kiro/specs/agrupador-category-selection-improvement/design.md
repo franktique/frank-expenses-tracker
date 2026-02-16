@@ -32,7 +32,7 @@ This design improves the agrupador category management interface by replacing th
 
 ```typescript
 // Replace single selection state
-const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
 
 // With multiple selection state
 const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
@@ -194,7 +194,6 @@ interface ErrorResponse {
 ### Unit Tests
 
 1. **Component Tests:**
-
    - Checkbox selection/deselection behavior
    - Button state management (enabled/disabled)
    - Dialog open/close functionality
@@ -209,7 +208,6 @@ interface ErrorResponse {
 ### Integration Tests
 
 1. **End-to-End Workflows:**
-
    - Complete category addition flow
    - Error handling scenarios
    - UI state synchronization

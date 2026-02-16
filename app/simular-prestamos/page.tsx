@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -17,12 +17,12 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Plus, Loader2, Calculator, Trash2, Edit } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
-import { useAuth } from "@/lib/auth-context";
-import type { LoanScenario } from "@/types/loan-simulator";
-import { formatCurrency, formatDate } from "@/lib/loan-calculations";
+} from '@/components/ui/table';
+import { Plus, Loader2, Calculator, Trash2, Edit } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/lib/auth-context';
+import type { LoanScenario } from '@/types/loan-simulator';
+import { formatCurrency, formatDate } from '@/lib/loan-calculations';
 
 export default function LoanScenariosPage() {
   const router = useRouter();
@@ -41,30 +41,31 @@ export default function LoanScenariosPage() {
   const loadScenarios = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/loan-scenarios");
+      const response = await fetch('/api/loan-scenarios');
       if (!response.ok) {
         const data = await response.json();
-        if (data.code === "TABLES_NOT_FOUND") {
+        if (data.code === 'TABLES_NOT_FOUND') {
           toast({
-            title: "Migración requerida",
-            description: "Las tablas de préstamos no existen. Ejecutando migración...",
+            title: 'Migración requerida',
+            description:
+              'Las tablas de préstamos no existen. Ejecutando migración...',
           });
           await runMigration();
           return;
         }
-        throw new Error(data.error || "Error al cargar los escenarios");
+        throw new Error(data.error || 'Error al cargar los escenarios');
       }
 
       const data = await response.json();
       setScenarios(data.scenarios || []);
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
           error instanceof Error
             ? error.message
-            : "Error al cargar los escenarios de préstamo",
-        variant: "destructive",
+            : 'Error al cargar los escenarios de préstamo',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -73,22 +74,22 @@ export default function LoanScenariosPage() {
 
   const runMigration = async () => {
     try {
-      const response = await fetch("/api/migrate-loan-simulator", {
-        method: "POST",
+      const response = await fetch('/api/migrate-loan-simulator', {
+        method: 'POST',
       });
       if (!response.ok) {
-        throw new Error("Error al ejecutar la migración");
+        throw new Error('Error al ejecutar la migración');
       }
       toast({
-        title: "Migración completada",
-        description: "Tablas de préstamos creadas correctamente",
+        title: 'Migración completada',
+        description: 'Tablas de préstamos creadas correctamente',
       });
       await loadScenarios();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Error al ejecutar la migración",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Error al ejecutar la migración',
+        variant: 'destructive',
       });
     }
   };
@@ -101,21 +102,21 @@ export default function LoanScenariosPage() {
     setIsDeleting(id);
     try {
       const response = await fetch(`/api/loan-scenarios/${id}`, {
-        method: "DELETE",
+        method: 'DELETE',
       });
       if (!response.ok) {
-        throw new Error("Error al eliminar el escenario");
+        throw new Error('Error al eliminar el escenario');
       }
       toast({
-        title: "Eliminado",
-        description: "El escenario de préstamo ha sido eliminado",
+        title: 'Eliminado',
+        description: 'El escenario de préstamo ha sido eliminado',
       });
       await loadScenarios();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Error al eliminar el escenario",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Error al eliminar el escenario',
+        variant: 'destructive',
       });
     } finally {
       setIsDeleting(null);
@@ -124,7 +125,7 @@ export default function LoanScenariosPage() {
 
   const handleCreateNew = () => {
     // Create a temporary scenario and navigate to it
-    const tempId = "new";
+    const tempId = 'new';
     router.push(`/simular-prestamos/${tempId}`);
   };
 
@@ -133,9 +134,9 @@ export default function LoanScenariosPage() {
   }
 
   return (
-    <div className="container mx-auto py-6 px-4">
+    <div className="container mx-auto px-4 py-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Simular Préstamos</h1>
           <p className="text-muted-foreground">
@@ -153,7 +154,7 @@ export default function LoanScenariosPage() {
         <Card>
           <CardContent className="flex items-center justify-center py-12">
             <div className="text-center">
-              <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+              <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin" />
               <p className="text-muted-foreground">Cargando escenarios...</p>
             </div>
           </CardContent>
@@ -162,11 +163,11 @@ export default function LoanScenariosPage() {
         /* Empty State */
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <Calculator className="h-16 w-16 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2">
+            <Calculator className="mb-4 h-16 w-16 text-muted-foreground" />
+            <h3 className="mb-2 text-lg font-semibold">
               No hay escenarios de préstamo
             </h3>
-            <p className="text-muted-foreground mb-4 text-center max-w-md">
+            <p className="mb-4 max-w-md text-center text-muted-foreground">
               Crea tu primer escenario para comenzar a simular diferentes
               opciones de préstamos
             </p>
@@ -182,7 +183,7 @@ export default function LoanScenariosPage() {
           <CardHeader>
             <CardTitle>Mis Escenarios de Préstamo</CardTitle>
             <CardDescription>
-              {scenarios.length} escenario{scenarios.length !== 1 ? "s" : ""}
+              {scenarios.length} escenario{scenarios.length !== 1 ? 's' : ''}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -204,13 +205,15 @@ export default function LoanScenariosPage() {
                   <TableRow
                     key={scenario.id}
                     className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => router.push(`/simular-prestamos/${scenario.id}`)}
+                    onClick={() =>
+                      router.push(`/simular-prestamos/${scenario.id}`)
+                    }
                   >
                     <TableCell className="font-medium">
                       {scenario.name}
                     </TableCell>
                     <TableCell>
-                      <span className="px-2 py-1 bg-muted rounded text-sm font-medium">
+                      <span className="rounded bg-muted px-2 py-1 text-sm font-medium">
                         {scenario.currency}
                       </span>
                     </TableCell>
@@ -221,14 +224,17 @@ export default function LoanScenariosPage() {
                       {scenario.interestRate}%
                     </TableCell>
                     <TableCell className="text-right">
-                      {Math.floor(scenario.termMonths / 12)}a{" "}
+                      {Math.floor(scenario.termMonths / 12)}a{' '}
                       {scenario.termMonths % 12}m
                     </TableCell>
                     <TableCell>{formatDate(scenario.startDate)}</TableCell>
                     <TableCell className="text-right">
                       {(scenario as any).extraPaymentsCount || 0}
                     </TableCell>
-                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                    <TableCell
+                      className="text-right"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <div className="flex justify-end gap-2">
                         <Button
                           variant="ghost"

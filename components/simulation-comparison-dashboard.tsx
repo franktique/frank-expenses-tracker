@@ -1,24 +1,24 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
+} from '@/components/ui/select';
+import { toast } from '@/components/ui/use-toast';
 import {
   BarChart3,
   TrendingUp,
@@ -31,14 +31,14 @@ import {
   X,
   Copy,
   Download,
-} from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+} from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 // Import chart components
 import {
   SimulationChart,
   SimulationComparisonChart,
-} from "./simulation-chart-components";
+} from './simulation-chart-components';
 
 // Types
 interface SimulationData {
@@ -69,7 +69,7 @@ interface SimulationAnalyticsData {
     avg_historical: number;
     simulation_amount: number;
     variance_percentage: number;
-    trend: "increase" | "decrease" | "stable";
+    trend: 'increase' | 'decrease' | 'stable';
   }>;
 }
 
@@ -106,28 +106,28 @@ export function SimulationComparisonDashboard({
   const [isLoading, setIsLoading] = useState(true);
   const [isLoadingAnalytics, setIsLoadingAnalytics] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"overview" | "detailed">(
-    "overview"
+  const [activeTab, setActiveTab] = useState<'overview' | 'detailed'>(
+    'overview'
   );
 
   // Load all simulations
   const fetchSimulations = useCallback(async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/simulations");
+      const response = await fetch('/api/simulations');
       if (!response.ok) {
-        throw new Error("Error al cargar simulaciones");
+        throw new Error('Error al cargar simulaciones');
       }
 
       const data = await response.json();
       setAllSimulations(data);
     } catch (error) {
-      console.error("Error fetching simulations:", error);
-      setError("No se pudieron cargar las simulaciones");
+      console.error('Error fetching simulations:', error);
+      setError('No se pudieron cargar las simulaciones');
       toast({
-        title: "Error",
-        description: "No se pudieron cargar las simulaciones",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudieron cargar las simulaciones',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -156,11 +156,11 @@ export function SimulationComparisonDashboard({
       await Promise.all(promises);
       setSimulationAnalytics(analyticsMap);
     } catch (error) {
-      console.error("Error fetching simulation analytics:", error);
+      console.error('Error fetching simulation analytics:', error);
       toast({
-        title: "Error",
-        description: "No se pudieron cargar los análisis de simulación",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudieron cargar los análisis de simulación',
+        variant: 'destructive',
       });
     } finally {
       setIsLoadingAnalytics(false);
@@ -255,7 +255,7 @@ export function SimulationComparisonDashboard({
         grouper_id: grouperId,
         grouper_name:
           grouperName.length > 15
-            ? grouperName.substring(0, 15) + "..."
+            ? grouperName.substring(0, 15) + '...'
             : grouperName,
       };
 
@@ -282,11 +282,11 @@ export function SimulationComparisonDashboard({
       };
 
       const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-        type: "application/json",
+        type: 'application/json',
       });
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.style.display = "none";
+      const a = document.createElement('a');
+      a.style.display = 'none';
       a.href = url;
       a.download = `simulation-comparison-${Date.now()}.json`;
       document.body.appendChild(a);
@@ -295,14 +295,14 @@ export function SimulationComparisonDashboard({
       document.body.removeChild(a);
 
       toast({
-        title: "Exportación exitosa",
-        description: "Los datos de comparación se han descargado correctamente",
+        title: 'Exportación exitosa',
+        description: 'Los datos de comparación se han descargado correctamente',
       });
     } catch (error) {
       toast({
-        title: "Error de exportación",
-        description: "No se pudieron exportar los datos de comparación",
-        variant: "destructive",
+        title: 'Error de exportación',
+        description: 'No se pudieron exportar los datos de comparación',
+        variant: 'destructive',
       });
     }
   };
@@ -310,9 +310,9 @@ export function SimulationComparisonDashboard({
   if (isLoading) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center h-[400px]">
+        <CardContent className="flex h-[400px] items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+            <div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
             <p>Cargando simulaciones...</p>
           </div>
         </CardContent>
@@ -323,15 +323,15 @@ export function SimulationComparisonDashboard({
   if (error) {
     return (
       <Card>
-        <CardContent className="flex items-center justify-center h-[400px]">
+        <CardContent className="flex h-[400px] items-center justify-center">
           <div className="text-center">
-            <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-            <p className="text-destructive font-medium mb-2">
+            <AlertCircle className="mx-auto mb-4 h-12 w-12 text-destructive" />
+            <p className="mb-2 font-medium text-destructive">
               Error al cargar datos
             </p>
-            <p className="text-muted-foreground text-sm mb-4">{error}</p>
+            <p className="mb-4 text-sm text-muted-foreground">{error}</p>
             <Button onClick={fetchSimulations} variant="outline">
-              <RefreshCw className="h-4 w-4 mr-2" />
+              <RefreshCw className="mr-2 h-4 w-4" />
               Reintentar
             </Button>
           </div>
@@ -345,7 +345,7 @@ export function SimulationComparisonDashboard({
       {/* Header with controls */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold flex items-center gap-2">
+          <h2 className="flex items-center gap-2 text-xl font-bold">
             <Activity className="h-5 w-5 text-blue-600" />
             Comparación de Simulaciones
           </h2>
@@ -361,7 +361,7 @@ export function SimulationComparisonDashboard({
             onClick={handleExportComparison}
             disabled={comparisonSummaries.length === 0}
           >
-            <Download className="h-4 w-4 mr-2" />
+            <Download className="mr-2 h-4 w-4" />
             Exportar
           </Button>
           <Button
@@ -371,8 +371,8 @@ export function SimulationComparisonDashboard({
             disabled={isLoadingAnalytics}
           >
             <RefreshCw
-              className={`h-4 w-4 mr-2 ${
-                isLoadingAnalytics ? "animate-spin" : ""
+              className={`mr-2 h-4 w-4 ${
+                isLoadingAnalytics ? 'animate-spin' : ''
               }`}
             />
             Actualizar
@@ -389,7 +389,7 @@ export function SimulationComparisonDashboard({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="mb-4 flex flex-wrap gap-2">
             {selectedSimulations.map((simulationId) => {
               const simulation = allSimulations.find(
                 (s) => s.id === simulationId
@@ -399,7 +399,7 @@ export function SimulationComparisonDashboard({
               return (
                 <Badge
                   key={simulationId}
-                  variant={isCurrentSimulation ? "default" : "secondary"}
+                  variant={isCurrentSimulation ? 'default' : 'secondary'}
                   className="flex items-center gap-2 px-3 py-1"
                 >
                   <span>
@@ -408,7 +408,7 @@ export function SimulationComparisonDashboard({
                   {!isCurrentSimulation && selectedSimulations.length > 1 && (
                     <button
                       onClick={() => handleRemoveSimulation(simulationId)}
-                      className="hover:bg-destructive/20 rounded-full p-0.5"
+                      className="rounded-full p-0.5 hover:bg-destructive/20"
                     >
                       <X className="h-3 w-3" />
                     </button>
@@ -436,7 +436,7 @@ export function SimulationComparisonDashboard({
                       >
                         {simulation.name}
                         {simulation.budget_count > 0 && (
-                          <span className="text-muted-foreground ml-2">
+                          <span className="ml-2 text-muted-foreground">
                             ({simulation.budget_count} categorías)
                           </span>
                         )}
@@ -459,13 +459,13 @@ export function SimulationComparisonDashboard({
 
       {/* Summary cards */}
       {comparisonSummaries.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {comparisonSummaries.map((summary) => (
             <Card key={summary.simulationId} className="relative">
               <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-2">
+                <div className="mb-2 flex items-center justify-between">
                   <h3
-                    className="font-medium truncate"
+                    className="truncate font-medium"
                     title={summary.simulationName}
                   >
                     {summary.simulationName}
@@ -505,8 +505,8 @@ export function SimulationComparisonDashboard({
                     <span
                       className={
                         summary.significantVariations > 0
-                          ? "text-amber-600"
-                          : "text-green-600"
+                          ? 'text-amber-600'
+                          : 'text-green-600'
                       }
                     >
                       {summary.significantVariations}
@@ -519,13 +519,13 @@ export function SimulationComparisonDashboard({
                     <span
                       className={
                         summary.overallVariance > 5
-                          ? "text-green-600"
+                          ? 'text-green-600'
                           : summary.overallVariance < -5
-                          ? "text-red-600"
-                          : "text-gray-600"
+                            ? 'text-red-600'
+                            : 'text-gray-600'
                       }
                     >
-                      {summary.overallVariance > 0 ? "+" : ""}
+                      {summary.overallVariance > 0 ? '+' : ''}
                       {summary.overallVariance.toFixed(1)}%
                     </span>
                   </div>
@@ -535,7 +535,7 @@ export function SimulationComparisonDashboard({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full mt-3"
+                    className="mt-3 w-full"
                     onClick={() =>
                       onNavigateToSimulation?.(summary.simulationId)
                     }
@@ -571,15 +571,15 @@ export function SimulationComparisonDashboard({
               </CardHeader>
               <CardContent>
                 {isLoadingAnalytics ? (
-                  <div className="flex justify-center items-center h-[400px]">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+                  <div className="flex h-[400px] items-center justify-center">
+                    <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
                   </div>
                 ) : (
                   <div className="h-[500px] w-full">
                     {/* This would be a custom multi-simulation comparison chart */}
-                    <div className="flex justify-center items-center h-full text-muted-foreground">
+                    <div className="flex h-full items-center justify-center text-muted-foreground">
                       <div className="text-center">
-                        <BarChart3 className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                        <BarChart3 className="mx-auto mb-4 h-12 w-12 opacity-50" />
                         <p>Gráfico de comparación múltiple</p>
                         <p className="text-sm">
                           Mostrando {selectedSimulations.length} simulaciones

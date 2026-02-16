@@ -1,21 +1,21 @@
-import { NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const periodId = searchParams.get("periodId");
-    const paymentMethod = searchParams.get("paymentMethod"); // Legacy parameter for backward compatibility
-    const expensePaymentMethods = searchParams.get("expensePaymentMethods");
-    const budgetPaymentMethods = searchParams.get("budgetPaymentMethods");
-    const grouperIdsParam = searchParams.get("grouperIds");
-    const estudioId = searchParams.get("estudioId");
-    const includeBudgets = searchParams.get("includeBudgets") === "true";
+    const periodId = searchParams.get('periodId');
+    const paymentMethod = searchParams.get('paymentMethod'); // Legacy parameter for backward compatibility
+    const expensePaymentMethods = searchParams.get('expensePaymentMethods');
+    const budgetPaymentMethods = searchParams.get('budgetPaymentMethods');
+    const grouperIdsParam = searchParams.get('grouperIds');
+    const estudioId = searchParams.get('estudioId');
+    const includeBudgets = searchParams.get('includeBudgets') === 'true';
 
     // Validate required periodId parameter
     if (!periodId) {
       return NextResponse.json(
-        { error: "El parámetro periodId es requerido" },
+        { error: 'El parámetro periodId es requerido' },
         { status: 400 }
       );
     }
@@ -23,12 +23,12 @@ export async function GET(request: Request) {
     // Validate payment method parameter
     if (
       paymentMethod &&
-      !["all", "cash", "credit", "debit"].includes(paymentMethod)
+      !['all', 'cash', 'credit', 'debit'].includes(paymentMethod)
     ) {
       return NextResponse.json(
         {
           error:
-            "Método de pago inválido. Debe ser uno de: all, cash, credit, debit",
+            'Método de pago inválido. Debe ser uno de: all, cash, credit, debit',
         },
         { status: 400 }
       );
@@ -38,7 +38,7 @@ export async function GET(request: Request) {
     let grouperIds: number[] | null = null;
     if (grouperIdsParam) {
       try {
-        grouperIds = grouperIdsParam.split(",").map((id) => {
+        grouperIds = grouperIdsParam.split(',').map((id) => {
           const parsed = parseInt(id.trim());
           if (isNaN(parsed)) {
             throw new Error(`Invalid grouper ID: ${id}`);
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
         return NextResponse.json(
           {
             error:
-              "Invalid grouperIds parameter. Must be comma-separated numbers.",
+              'Invalid grouperIds parameter. Must be comma-separated numbers.',
           },
           { status: 400 }
         );
@@ -64,10 +64,10 @@ export async function GET(request: Request) {
     if (expensePaymentMethods) {
       try {
         expensePaymentMethodsArray = expensePaymentMethods
-          .split(",")
+          .split(',')
           .map((method) => {
             const trimmed = method.trim();
-            if (!["cash", "credit", "debit"].includes(trimmed)) {
+            if (!['cash', 'credit', 'debit'].includes(trimmed)) {
               throw new Error(`Invalid expense payment method: ${trimmed}`);
             }
             return trimmed;
@@ -82,7 +82,7 @@ export async function GET(request: Request) {
           { status: 400 }
         );
       }
-    } else if (paymentMethod && paymentMethod !== "all") {
+    } else if (paymentMethod && paymentMethod !== 'all') {
       // Legacy backward compatibility
       expensePaymentMethodsArray = [paymentMethod];
     }
@@ -91,10 +91,10 @@ export async function GET(request: Request) {
     if (budgetPaymentMethods) {
       try {
         budgetPaymentMethodsArray = budgetPaymentMethods
-          .split(",")
+          .split(',')
           .map((method) => {
             const trimmed = method.trim();
-            if (!["cash", "credit", "debit"].includes(trimmed)) {
+            if (!['cash', 'credit', 'debit'].includes(trimmed)) {
               throw new Error(`Invalid budget payment method: ${trimmed}`);
             }
             return trimmed;
@@ -117,7 +117,7 @@ export async function GET(request: Request) {
     let paramIndex = 2;
 
     // Build WHERE clause for grouper filtering
-    let grouperFilter = "";
+    let grouperFilter = '';
     if (grouperIds && grouperIds.length > 0) {
       grouperFilter = `AND g.id = ANY($${paramIndex}::int[])`;
       queryParams.push(grouperIds);
@@ -125,7 +125,7 @@ export async function GET(request: Request) {
     }
 
     // Build expense payment method filter
-    let expensePaymentMethodFilter = "";
+    let expensePaymentMethodFilter = '';
     if (expensePaymentMethodsArray && expensePaymentMethodsArray.length > 0) {
       expensePaymentMethodFilter = `AND e.payment_method = ANY($${paramIndex}::text[])`;
       queryParams.push(expensePaymentMethodsArray);
@@ -133,7 +133,7 @@ export async function GET(request: Request) {
     }
 
     // Build budget payment method filter
-    let budgetPaymentMethodFilter = "";
+    let budgetPaymentMethodFilter = '';
     if (
       includeBudgets &&
       budgetPaymentMethodsArray &&
@@ -147,11 +147,11 @@ export async function GET(request: Request) {
     // Build budget join and select if requested
     const budgetJoin = includeBudgets
       ? `LEFT JOIN budgets b ON b.category_id = c.id AND b.period_id = $1${budgetPaymentMethodFilter}`
-      : "";
+      : '';
 
     const budgetSelect = includeBudgets
       ? `, COALESCE(SUM(b.expected_amount), 0) as weekly_budget_amount`
-      : "";
+      : '';
 
     // Construct the complete query
     query = `
@@ -239,7 +239,7 @@ export async function GET(request: Request) {
           includeBudgets
             ? `,
         weekly_budget_amount`
-            : ""
+            : ''
         }
       FROM weekly_expenses
       ORDER BY week_start, grouper_name
@@ -261,8 +261,8 @@ export async function GET(request: Request) {
         const endDate = new Date(weekEnd);
 
         const formatDate = (date: Date) => {
-          const day = date.getDate().toString().padStart(2, "0");
-          const month = (date.getMonth() + 1).toString().padStart(2, "0");
+          const day = date.getDate().toString().padStart(2, '0');
+          const month = (date.getMonth() + 1).toString().padStart(2, '0');
           return `${day}/${month}`;
         };
 
@@ -297,21 +297,21 @@ export async function GET(request: Request) {
 
     return NextResponse.json(structuredData);
   } catch (error) {
-    console.error("Error in weekly expenses API:", error);
+    console.error('Error in weekly expenses API:', error);
 
     // Provide more specific error messages
-    let errorMessage = "Error interno del servidor";
+    let errorMessage = 'Error interno del servidor';
     let statusCode = 500;
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
-        errorMessage = "Error de conexión a la base de datos";
-      } else if (error.message.includes("syntax")) {
-        errorMessage = "Error en la consulta de datos";
-      } else if (error.message.includes("timeout")) {
-        errorMessage = "La consulta tardó demasiado tiempo";
-      } else if (error.message.includes("does not exist")) {
-        errorMessage = "El período especificado no existe";
+      if (error.message.includes('connection')) {
+        errorMessage = 'Error de conexión a la base de datos';
+      } else if (error.message.includes('syntax')) {
+        errorMessage = 'Error en la consulta de datos';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'La consulta tardó demasiado tiempo';
+      } else if (error.message.includes('does not exist')) {
+        errorMessage = 'El período especificado no existe';
         statusCode = 404;
       } else {
         errorMessage = error.message;

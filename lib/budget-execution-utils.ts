@@ -2,13 +2,13 @@
  * Utility functions for budget execution visualization
  */
 
-import { format, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
 import type {
   BudgetExecutionData,
   BudgetExecutionViewMode,
   BudgetExecutionResponse,
-} from "@/types/funds";
+} from '@/types/funds';
 
 /**
  * Fetch budget execution data from the API
@@ -19,23 +19,21 @@ import type {
  */
 export async function fetchBudgetExecutionData(
   periodId: string,
-  viewMode: BudgetExecutionViewMode = "daily"
+  viewMode: BudgetExecutionViewMode = 'daily'
 ): Promise<BudgetExecutionResponse> {
   const response = await fetch(
     `/api/budget-execution/${periodId}?viewMode=${viewMode}`,
     {
-      method: "GET",
+      method: 'GET',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
     }
   );
 
   if (!response.ok) {
     const errorData = await response.json();
-    throw new Error(
-      errorData.error || "Failed to fetch budget execution data"
-    );
+    throw new Error(errorData.error || 'Failed to fetch budget execution data');
   }
 
   return response.json();
@@ -54,10 +52,10 @@ export function formatChartData(
   viewMode: BudgetExecutionViewMode
 ) {
   return data.map((item) => {
-    if (viewMode === "daily") {
+    if (viewMode === 'daily') {
       // Validate that date is in proper format (YYYY-MM-DD)
       // If it's a weekly format (week-X), skip it
-      if (item.date.startsWith("week-")) {
+      if (item.date.startsWith('week-')) {
         return {
           ...item,
           displayDate: item.date,
@@ -77,7 +75,7 @@ export function formatChartData(
         }
         return {
           ...item,
-          displayDate: format(date, "dd/MM", { locale: es }),
+          displayDate: format(date, 'dd/MM', { locale: es }),
           fullDate: format(date, "dd 'de' MMMM 'de' yyyy", { locale: es }),
         };
       } catch (error) {
@@ -97,14 +95,14 @@ export function formatChartData(
         ...item,
         displayDate:
           weekStart && weekEnd
-            ? `Sem ${item.weekNumber || ""}`
-            : `Semana ${item.weekNumber || ""}`,
+            ? `Sem ${item.weekNumber || ''}`
+            : `Semana ${item.weekNumber || ''}`,
         fullDate:
           weekStart && weekEnd
-            ? `${format(weekStart, "dd MMM", {
+            ? `${format(weekStart, 'dd MMM', {
                 locale: es,
-              })} - ${format(weekEnd, "dd MMM yyyy", { locale: es })}`
-            : "",
+              })} - ${format(weekEnd, 'dd MMM yyyy', { locale: es })}`
+            : '',
       };
     }
   });
@@ -117,9 +115,9 @@ export function formatChartData(
  * @returns Formatted currency string
  */
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: "MXN",
+  return new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);
@@ -134,7 +132,7 @@ export function formatCurrency(amount: number): string {
 export function getChartTooltipFormatter(viewMode: BudgetExecutionViewMode) {
   return (value: number) => [
     formatCurrency(value),
-    viewMode === "daily" ? "Presupuesto" : "Presupuesto Semanal",
+    viewMode === 'daily' ? 'Presupuesto' : 'Presupuesto Semanal',
   ];
 }
 
@@ -145,7 +143,7 @@ export function getChartTooltipFormatter(viewMode: BudgetExecutionViewMode) {
  * @returns X-axis label
  */
 export function getXAxisLabel(viewMode: BudgetExecutionViewMode): string {
-  return viewMode === "daily" ? "Fecha" : "Semana";
+  return viewMode === 'daily' ? 'Fecha' : 'Semana';
 }
 
 /**
@@ -165,7 +163,7 @@ export function formatDateRange(
   const startDate = new Date(year, month, 1);
   const endDate = new Date(year, month + 1, 0); // Last day of month
 
-  return `${format(startDate, "d", { locale: es })} - ${format(
+  return `${format(startDate, 'd', { locale: es })} - ${format(
     endDate,
     "d 'de' MMMM 'de' yyyy",
     { locale: es }

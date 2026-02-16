@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from 'react';
 import {
   validatePaymentMethods,
   sanitizePaymentMethods,
   type PaymentMethod,
   type PaymentMethodValidationResult,
-} from "@/lib/payment-method-validation";
+} from '@/lib/payment-method-validation';
 
 export interface UsePaymentMethodValidationOptions {
   initialMethods?: string[];
@@ -159,11 +159,11 @@ export function usePaymentMethodApi(options: UsePaymentMethodApiOptions = {}) {
         const apiError: ApiError = {
           error:
             networkError instanceof Error
-              ? networkError.message.includes("fetch")
-                ? "Error de conexión. Verifique su conexión a internet."
+              ? networkError.message.includes('fetch')
+                ? 'Error de conexión. Verifique su conexión a internet.'
                 : networkError.message
-              : "Error de red desconocido",
-          code: "NETWORK_ERROR",
+              : 'Error de red desconocido',
+          code: 'NETWORK_ERROR',
           retryable: true,
         };
 
@@ -184,7 +184,7 @@ export function usePaymentMethodApi(options: UsePaymentMethodApiOptions = {}) {
       if (retryCount >= maxRetries) {
         return {
           success: false,
-          error: { error: "Máximo número de reintentos alcanzado" },
+          error: { error: 'Máximo número de reintentos alcanzado' },
         };
       }
 

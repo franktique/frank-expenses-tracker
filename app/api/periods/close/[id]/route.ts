@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function POST(
   request: NextRequest,
@@ -12,8 +12,8 @@ export async function POST(
     if (!id) {
       return NextResponse.json(
         {
-          error: "Period ID is required",
-          code: "MISSING_PERIOD_ID",
+          error: 'Period ID is required',
+          code: 'MISSING_PERIOD_ID',
         },
         { status: 400 }
       );
@@ -25,8 +25,8 @@ export async function POST(
     if (!uuidRegex.test(id)) {
       return NextResponse.json(
         {
-          error: "Invalid period ID format",
-          code: "INVALID_PERIOD_ID",
+          error: 'Invalid period ID format',
+          code: 'INVALID_PERIOD_ID',
         },
         { status: 400 }
       );
@@ -42,8 +42,8 @@ export async function POST(
     if (!existingPeriod) {
       return NextResponse.json(
         {
-          error: "Period not found",
-          code: "PERIOD_NOT_FOUND",
+          error: 'Period not found',
+          code: 'PERIOD_NOT_FOUND',
         },
         { status: 404 }
       );
@@ -52,8 +52,8 @@ export async function POST(
     if (!existingPeriod.is_open) {
       return NextResponse.json(
         {
-          error: "Period is already inactive",
-          code: "PERIOD_ALREADY_INACTIVE",
+          error: 'Period is already inactive',
+          code: 'PERIOD_ALREADY_INACTIVE',
           period: existingPeriod,
         },
         { status: 409 }
@@ -73,8 +73,8 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Failed to close period - period may have been modified by another operation",
-          code: "CONCURRENT_MODIFICATION",
+            'Failed to close period - period may have been modified by another operation',
+          code: 'CONCURRENT_MODIFICATION',
         },
         { status: 409 }
       );
@@ -83,33 +83,33 @@ export async function POST(
     return NextResponse.json({
       success: true,
       period: closedPeriod,
-      message: "Period closed successfully",
+      message: 'Period closed successfully',
     });
   } catch (error) {
-    console.error("Error closing period:", error);
+    console.error('Error closing period:', error);
 
     // Handle specific database errors
     if (error instanceof Error) {
       // Connection errors
       if (
-        error.message.includes("connection") ||
-        error.message.includes("ECONNREFUSED")
+        error.message.includes('connection') ||
+        error.message.includes('ECONNREFUSED')
       ) {
         return NextResponse.json(
           {
-            error: "Database connection failed. Please try again.",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Database connection failed. Please try again.',
+            code: 'DATABASE_CONNECTION_ERROR',
           },
           { status: 503 }
         );
       }
 
       // Timeout errors
-      if (error.message.includes("timeout")) {
+      if (error.message.includes('timeout')) {
         return NextResponse.json(
           {
-            error: "Operation timed out. Please try again.",
-            code: "DATABASE_TIMEOUT",
+            error: 'Operation timed out. Please try again.',
+            code: 'DATABASE_TIMEOUT',
           },
           { status: 504 }
         );
@@ -117,14 +117,14 @@ export async function POST(
 
       // Constraint violations or other database errors
       if (
-        error.message.includes("constraint") ||
-        error.message.includes("violates")
+        error.message.includes('constraint') ||
+        error.message.includes('violates')
       ) {
         return NextResponse.json(
           {
             error:
-              "Database constraint violation. Please refresh and try again.",
-            code: "DATABASE_CONSTRAINT_ERROR",
+              'Database constraint violation. Please refresh and try again.',
+            code: 'DATABASE_CONSTRAINT_ERROR',
           },
           { status: 409 }
         );
@@ -134,9 +134,9 @@ export async function POST(
     // Generic server error
     return NextResponse.json(
       {
-        error: "Internal server error occurred while closing period",
-        code: "INTERNAL_SERVER_ERROR",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: 'Internal server error occurred while closing period',
+        code: 'INTERNAL_SERVER_ERROR',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

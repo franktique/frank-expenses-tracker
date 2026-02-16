@@ -7,6 +7,7 @@
 ## Feature Overview
 
 Currently, users must click each subgroup header individually to expand or collapse them. This feature adds a single button that will:
+
 - Expand all collapsed subgroups with one click
 - Collapse all expanded subgroups with one click
 - Show appropriate icon and text based on current state
@@ -15,12 +16,15 @@ Currently, users must click each subgroup header individually to expand or colla
 ## Current Implementation Context
 
 ### Existing State Management
+
 - **State**: `expandedSubgroups` - `Set<string>` tracking which subgroups are expanded
 - **Toggle Function**: `toggleSubgroupExpanded(subgroupId)` - toggles individual subgroup
 - **Location**: Lines 162, 613-623 in `simulation-budget-form.tsx`
 
 ### Button Placement
+
 The button will be added to the filter controls section (around line 2032-2150), which currently contains:
+
 1. "Ocultar sin presupuesto" checkbox
 2. "Filtros" button (category exclusion filter)
 3. "Tipo de Gasto" sorting button
@@ -30,6 +34,7 @@ The button will be added to the filter controls section (around line 2032-2150),
 ## Implementation Plan
 
 ### Task 1: Add expand/collapse all functionality
+
 - [x] Create `expandAllSubgroups()` function to add all subgroup IDs to the Set
 - [x] Create `collapseAllSubgroups()` function to clear the Set
 - [x] Create `toggleExpandCollapseAll()` function to determine current state and toggle accordingly
@@ -37,6 +42,7 @@ The button will be added to the filter controls section (around line 2032-2150),
 - [x] Calculate `allCollapsed` state: check if all subgroups are currently collapsed
 
 ### Task 2: Add UI button component
+
 - [x] Import `ChevronsDown` and `ChevronsUp` icons from lucide-react (for expand/collapse all)
 - [x] Create button in the filter controls section (after line 2049, before the Filter button)
 - [x] Add responsive design: show full text on desktop, icon only on mobile
@@ -47,6 +53,7 @@ The button will be added to the filter controls section (around line 2032-2150),
 - [x] Add tooltip or label text: "Expandir Todos" / "Colapsar Todos"
 
 ### Task 3: Handle edge cases
+
 - [x] Handle empty subgroups list (button is hidden with conditional rendering)
 - [x] Handle single subgroup case (button still works)
 - [x] Ensure button state updates when:
@@ -59,6 +66,7 @@ The button will be added to the filter controls section (around line 2032-2150),
   - Category filtering (independent feature, no conflicts)
 
 ### Task 4: Test the feature
+
 - [x] Code implemented and ready for testing
 - [ ] **Manual testing required**: Test expand all with multiple collapsed subgroups
 - [ ] Test collapse all with multiple expanded subgroups
@@ -76,7 +84,7 @@ The button will be added to the filter controls section (around line 2032-2150),
 ```typescript
 // Expand all subgroups
 const expandAllSubgroups = useCallback(() => {
-  const allSubgroupIds = new Set(subgroups.map(sg => sg.id));
+  const allSubgroupIds = new Set(subgroups.map((sg) => sg.id));
   setExpandedSubgroups(allSubgroupIds);
 }, [subgroups]);
 
@@ -87,8 +95,8 @@ const collapseAllSubgroups = useCallback(() => {
 
 // Toggle between expand and collapse all
 const toggleExpandCollapseAll = useCallback(() => {
-  const allSubgroupIds = subgroups.map(sg => sg.id);
-  const allExpanded = allSubgroupIds.every(id => expandedSubgroups.has(id));
+  const allSubgroupIds = subgroups.map((sg) => sg.id);
+  const allExpanded = allSubgroupIds.every((id) => expandedSubgroups.has(id));
 
   if (allExpanded) {
     collapseAllSubgroups();
@@ -104,53 +112,73 @@ const toggleExpandCollapseAll = useCallback(() => {
 // Calculate if all subgroups are expanded
 const allSubgroupsExpanded = useMemo(() => {
   if (subgroups.length === 0) return false;
-  return subgroups.every(sg => expandedSubgroups.has(sg.id));
+  return subgroups.every((sg) => expandedSubgroups.has(sg.id));
 }, [subgroups, expandedSubgroups]);
 ```
 
 ### Button UI (add around line 2049, in the filter controls div)
 
 ```tsx
-{/* Expand/Collapse All Subgroups Button */}
-{subgroups.length > 0 && (
-  <Button
-    variant="outline"
-    size="sm"
-    onClick={toggleExpandCollapseAll}
-    className="gap-2"
-    title={allSubgroupsExpanded ? "Colapsar Todos" : "Expandir Todos"}
-  >
-    {allSubgroupsExpanded ? (
-      <ChevronsUp className="h-4 w-4" />
-    ) : (
-      <ChevronsDown className="h-4 w-4" />
-    )}
-    <span className="hidden sm:inline">
-      {allSubgroupsExpanded ? "Colapsar Todos" : "Expandir Todos"}
-    </span>
-  </Button>
-)}
+{
+  /* Expand/Collapse All Subgroups Button */
+}
+{
+  subgroups.length > 0 && (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={toggleExpandCollapseAll}
+      className="gap-2"
+      title={allSubgroupsExpanded ? 'Colapsar Todos' : 'Expandir Todos'}
+    >
+      {allSubgroupsExpanded ? (
+        <ChevronsUp className="h-4 w-4" />
+      ) : (
+        <ChevronsDown className="h-4 w-4" />
+      )}
+      <span className="hidden sm:inline">
+        {allSubgroupsExpanded ? 'Colapsar Todos' : 'Expandir Todos'}
+      </span>
+    </Button>
+  );
+}
 ```
 
 ## Import Updates
 
 Add to the lucide-react import statement (line 30):
+
 ```typescript
 import {
-  Loader2, Save, Calculator, AlertCircle, Download, ArrowUpDown,
-  GripVertical, Filter, X, Trash2, ChevronDown, ChevronUp,
-  Eye, EyeOff, ChevronsDown, ChevronsUp // Add these two
-} from "lucide-react";
+  Loader2,
+  Save,
+  Calculator,
+  AlertCircle,
+  Download,
+  ArrowUpDown,
+  GripVertical,
+  Filter,
+  X,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  Eye,
+  EyeOff,
+  ChevronsDown,
+  ChevronsUp, // Add these two
+} from 'lucide-react';
 ```
 
 ## UI Layout Placement
 
 The button will be placed in the filter controls row:
+
 ```
 [Ocultar sin presupuesto] [Expandir/Colapsar Todos] [Filtros] [Tipo de Gasto ↕] [+ Subgrupo]
 ```
 
 On mobile (responsive):
+
 ```
 [📋] [↕↕] [🔽] [↕] [+]
 ```
@@ -198,4 +226,5 @@ On mobile (responsive):
 **Pull Request**: #84 - https://github.com/franktique/frank-expenses-tracker/pull/84
 **Estimated Complexity**: Low (straightforward UI feature with existing patterns)
 **Files Modified**:
+
 - `components/simulation-budget-form.tsx` (main implementation - 51 lines added)

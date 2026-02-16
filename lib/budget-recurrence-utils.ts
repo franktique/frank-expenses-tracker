@@ -5,8 +5,8 @@
  * Supports weekly and bi-weekly recurrence patterns.
  */
 
-import { getDaysInMonth, addDays, format } from "date-fns";
-import type { RecurrenceFrequency, ExpandedBudgetPayment } from "@/types/funds";
+import { getDaysInMonth, addDays, format } from 'date-fns';
+import type { RecurrenceFrequency, ExpandedBudgetPayment } from '@/types/funds';
 
 export interface BudgetRecurrenceParams {
   budgetId: string;
@@ -75,7 +75,7 @@ export function expandBudgetPayments(
   }
 
   // Recurring budget calculation
-  const intervalDays = recurrenceFrequency === "weekly" ? 7 : 14;
+  const intervalDays = recurrenceFrequency === 'weekly' ? 7 : 14;
   const paymentDates: Date[] = [];
 
   let currentDate = new Date(periodYear, periodMonth, startDay);
@@ -118,8 +118,8 @@ export function expandBudgetPayments(
  */
 function formatDate(date: Date): string {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
 }
 
@@ -138,7 +138,7 @@ export function validateRecurrenceParams(
   if (recurrenceFrequency && !recurrenceStartDay) {
     return {
       valid: false,
-      error: "El día de inicio es obligatorio para presupuestos recurrentes",
+      error: 'El día de inicio es obligatorio para presupuestos recurrentes',
     };
   }
 
@@ -148,22 +148,26 @@ export function validateRecurrenceParams(
   }
 
   // Validate start day range if provided
-  if (recurrenceStartDay && (recurrenceStartDay < 1 || recurrenceStartDay > 31)) {
+  if (
+    recurrenceStartDay &&
+    (recurrenceStartDay < 1 || recurrenceStartDay > 31)
+  ) {
     return {
       valid: false,
-      error: "El día de inicio debe estar entre 1 y 31",
+      error: 'El día de inicio debe estar entre 1 y 31',
     };
   }
 
   // Validate frequency values
   if (
     recurrenceFrequency &&
-    recurrenceFrequency !== "weekly" &&
-    recurrenceFrequency !== "bi-weekly"
+    recurrenceFrequency !== 'weekly' &&
+    recurrenceFrequency !== 'bi-weekly'
   ) {
     return {
       valid: false,
-      error: "Frecuencia de recurrencia inválida. Debe ser 'weekly' o 'bi-weekly'",
+      error:
+        "Frecuencia de recurrencia inválida. Debe ser 'weekly' o 'bi-weekly'",
     };
   }
 
@@ -182,14 +186,14 @@ export function getRecurrenceDescription(
   recurrenceStartDay: number | null
 ): string {
   if (!recurrenceFrequency) {
-    return "Pago único";
+    return 'Pago único';
   }
 
   const frequencyText =
-    recurrenceFrequency === "weekly" ? "Semanal" : "Quincenal";
+    recurrenceFrequency === 'weekly' ? 'Semanal' : 'Quincenal';
   const startDayText = recurrenceStartDay
     ? ` a partir del día ${recurrenceStartDay}`
-    : "";
+    : '';
 
   return `${frequencyText}${startDayText}`;
 }
@@ -215,7 +219,7 @@ export function calculateExpectedPayments(
 
   const daysInMonth = getDaysInMonth(new Date(periodYear, periodMonth));
   const startDay = Math.min(recurrenceStartDay, daysInMonth);
-  const intervalDays = recurrenceFrequency === "weekly" ? 7 : 14;
+  const intervalDays = recurrenceFrequency === 'weekly' ? 7 : 14;
 
   let count = 0;
   let currentDay = startDay;

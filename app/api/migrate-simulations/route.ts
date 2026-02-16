@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { sql, testConnection } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql, testConnection } from '@/lib/db';
 
 export async function GET() {
   try {
@@ -10,7 +10,7 @@ export async function GET() {
       return NextResponse.json(
         {
           success: false,
-          message: "Could not connect to the database: " + connectionTest.error,
+          message: 'Could not connect to the database: ' + connectionTest.error,
         },
         { status: 500 }
       );
@@ -28,14 +28,14 @@ export async function GET() {
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `;
-      console.log("Simulations table created or already exists");
+      console.log('Simulations table created or already exists');
     } catch (error) {
-      console.error("Error creating simulations table:", error);
+      console.error('Error creating simulations table:', error);
       return NextResponse.json(
         {
           success: false,
           message:
-            "Error creating simulations table: " + (error as Error).message,
+            'Error creating simulations table: ' + (error as Error).message,
         },
         { status: 500 }
       );
@@ -55,14 +55,14 @@ export async function GET() {
           UNIQUE(simulation_id, category_id)
         )
       `;
-      console.log("Simulation budgets table created or already exists");
+      console.log('Simulation budgets table created or already exists');
     } catch (error) {
-      console.error("Error creating simulation_budgets table:", error);
+      console.error('Error creating simulation_budgets table:', error);
       return NextResponse.json(
         {
           success: false,
           message:
-            "Error creating simulation_budgets table: " +
+            'Error creating simulation_budgets table: ' +
             (error as Error).message,
         },
         { status: 500 }
@@ -95,13 +95,13 @@ export async function GET() {
         ON simulations(created_at DESC)
       `;
 
-      console.log("Database indexes created successfully");
+      console.log('Database indexes created successfully');
     } catch (error) {
-      console.error("Error creating indexes:", error);
+      console.error('Error creating indexes:', error);
       return NextResponse.json(
         {
           success: false,
-          message: "Error creating indexes: " + (error as Error).message,
+          message: 'Error creating indexes: ' + (error as Error).message,
         },
         { status: 500 }
       );
@@ -109,10 +109,10 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: "Simulation tables and indexes created successfully",
+      message: 'Simulation tables and indexes created successfully',
     });
   } catch (error) {
-    console.error("Error setting up simulation tables:", error);
+    console.error('Error setting up simulation tables:', error);
     return NextResponse.json(
       {
         success: false,

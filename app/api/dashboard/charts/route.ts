@@ -1,15 +1,15 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
-    const periodId = searchParams.get("periodId");
-    const fundId = searchParams.get("fund_id");
+    const periodId = searchParams.get('periodId');
+    const fundId = searchParams.get('fund_id');
 
     if (!periodId) {
       return NextResponse.json(
-        { error: "Period ID is required" },
+        { error: 'Period ID is required' },
         { status: 400 }
       );
     }
@@ -84,7 +84,7 @@ export async function GET(request: NextRequest) {
       fundFilter: fundId,
     });
   } catch (error) {
-    console.error("Error fetching chart data:", error);
+    console.error('Error fetching chart data:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

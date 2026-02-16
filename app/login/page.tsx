@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/lib/auth-context';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Card,
   CardContent,
@@ -12,11 +12,11 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+} from '@/components/ui/card';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function LoginPage() {
-  const [password, setPassword] = useState("");
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const router = useRouter();
@@ -30,23 +30,23 @@ export default function LoginPage() {
       const success = await login(password);
       if (success) {
         toast({
-          title: "Autenticación exitosa",
-          description: "Bienvenido a tu seguimiento de gastos",
+          title: 'Autenticación exitosa',
+          description: 'Bienvenido a tu seguimiento de gastos',
         });
-        router.push("/");
+        router.push('/');
       } else {
         toast({
-          variant: "destructive",
-          title: "Error de autenticación",
-          description: "La contraseña es incorrecta. Intenta de nuevo.",
+          variant: 'destructive',
+          title: 'Error de autenticación',
+          description: 'La contraseña es incorrecta. Intenta de nuevo.',
         });
       }
     } catch (error) {
-      console.error("Login error:", error);
+      console.error('Login error:', error);
       toast({
-        variant: "destructive",
-        title: "Error",
-        description: "No se pudo procesar la solicitud de inicio de sesión.",
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo procesar la solicitud de inicio de sesión.',
       });
     } finally {
       setIsLoading(false);
@@ -54,9 +54,9 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
+    <div className="flex min-h-screen items-center justify-center bg-background">
       <div className="absolute inset-0 z-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5"></div>
-      <Card className="w-full max-w-md mx-auto z-10 shadow-xl border-t-4 border-t-primary">
+      <Card className="z-10 mx-auto w-full max-w-md border-t-4 border-t-primary shadow-xl">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold">
             Control de Gastos
@@ -79,7 +79,7 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter>
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Validando..." : "Ingresar"}
+              {isLoading ? 'Validando...' : 'Ingresar'}
             </Button>
           </CardFooter>
         </form>

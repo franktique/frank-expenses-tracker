@@ -11,6 +11,7 @@ Add a new view to the "Overspend Actual" menu that displays overspend data acros
 ## Current State
 
 The current "Overspend Actual" view (`/dashboard/overspend`) shows:
+
 - Overspend data **for the active period only**
 - Horizontal bar chart with Planeado (Budgeted) vs Excedente (Overspend)
 - Payment method filtering (Todos, Efectivo/Débito, Tarjeta Crédito)
@@ -20,7 +21,9 @@ The current "Overspend Actual" view (`/dashboard/overspend`) shows:
 ## Proposed Solution
 
 ### Menu Structure
+
 Create a submenu under "Overspend Actual" with two options:
+
 1. **Current Period** (existing view) - Shows overspend for active period
 2. **All Periods** (new view) - Shows overspend aggregated across all periods
 
@@ -29,6 +32,7 @@ Create a submenu under "Overspend Actual" with two options:
 **Route**: `/dashboard/overspend/all-periods`
 
 **Features**:
+
 - Display overspend data aggregated across all available periods
 - Multiple visualization options:
   - **Option A**: Stacked bar chart showing overspend by category, stacked by period
@@ -42,6 +46,7 @@ Create a submenu under "Overspend Actual" with two options:
 ## Implementation Plan
 
 ### Phase 1: Setup & Data Layer
+
 - [x] Create API endpoint `GET /api/overspend/all-periods` to fetch aggregated overspend data
   - Accept optional filters: `paymentMethod`, `excludedCategories`, `periodRange`
   - Return data structure with categories and period-wise breakdown
@@ -49,11 +54,13 @@ Create a submenu under "Overspend Actual" with two options:
 - [x] Add types for all-periods overspend data structure
 
 ### Phase 2: UI Navigation
+
 - [x] Update sidebar menu structure to convert "Overspend Actual" from simple link to submenu
 - [x] Add submenu items: "Current Period" and "All Periods"
 - [x] Update active link detection to handle submenu routing
 
 ### Phase 3: New View Component
+
 - [x] Create `/app/dashboard/overspend/all-periods/page.tsx`
 - [x] Implement payment method filter dropdown
 - [x] Implement category exclusion filter with settings
@@ -61,18 +68,21 @@ Create a submenu under "Overspend Actual" with two options:
 - [x] Create visualization component (choose visualization approach)
 
 ### Phase 4: Visualization
+
 - [x] Design and implement data aggregation logic
 - [x] Create appropriate chart component based on chosen visualization
 - [x] Implement responsive layout for chart
 - [x] Add loading and error states
 
 ### Phase 5: Testing & Refinement
+
 - [x] Test with various data scenarios (multiple periods, different payment methods)
 - [x] Test filter functionality across all periods
 - [x] Verify performance with large datasets
 - [x] Test responsive design on mobile/tablet
 
 ### Phase 6: Documentation & Cleanup
+
 - [x] Update CLAUDE.md with new feature documentation
 - [x] Clean up any temporary code or console logs
 - [x] Ensure code follows project conventions
@@ -80,6 +90,7 @@ Create a submenu under "Overspend Actual" with two options:
 ## Data Structure
 
 ### API Response Format (Proposed)
+
 ```typescript
 {
   overspendByCategory: [
@@ -163,12 +174,12 @@ Create a submenu under "Overspend Actual" with two options:
 
 ## Risks & Mitigation
 
-| Risk | Impact | Mitigation |
-|------|--------|-----------|
-| Performance with many periods | High | Use database aggregation, implement lazy loading |
-| Complex navigation changes | Medium | Carefully test submenu interaction |
-| Data inconsistency | High | Validate data integrity, add tests |
-| Visual clutter | Medium | Keep design clean, focus on readability |
+| Risk                          | Impact | Mitigation                                       |
+| ----------------------------- | ------ | ------------------------------------------------ |
+| Performance with many periods | High   | Use database aggregation, implement lazy loading |
+| Complex navigation changes    | Medium | Carefully test submenu interaction               |
+| Data inconsistency            | High   | Validate data integrity, add tests               |
+| Visual clutter                | Medium | Keep design clean, focus on readability          |
 
 ---
 
@@ -194,6 +205,7 @@ Create a submenu under "Overspend Actual" with two options:
 ✅ **Successfully implemented** "All Periods Overspend View" feature
 
 ### Files Created/Modified:
+
 1. **New API Endpoint**: `/app/api/overspend/all-periods/route.ts`
 2. **New Page Component**: `/app/dashboard/overspend/all-periods/page.tsx`
 3. **Updated Navigation**: `/components/app-sidebar.tsx` (submenu structure)
@@ -203,6 +215,7 @@ Create a submenu under "Overspend Actual" with two options:
    - `/CLAUDE.md` (feature documentation)
 
 ### Key Features Implemented:
+
 - ✅ Aggregated overspend data across all periods
 - ✅ Payment method filtering (Cash/Debit, Credit, All)
 - ✅ Category exclusion filtering
@@ -213,6 +226,7 @@ Create a submenu under "Overspend Actual" with two options:
 - ✅ Submenu navigation structure
 
 ### Performance & Quality:
+
 - Build passes without errors
 - No console warnings or temporary code
 - Code follows project conventions
@@ -220,6 +234,7 @@ Create a submenu under "Overspend Actual" with two options:
 - Responsive layout verified
 
 ### Next Steps (Optional Future Enhancements):
+
 - Add period range selector for custom date filtering
 - Export all-periods data to Excel
 - Add comparison metrics (YoY growth, month-over-month changes)

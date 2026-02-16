@@ -7,6 +7,7 @@
 ## Issue Description
 
 In the simulation form, the subgroup headers have misaligned columns for totals:
+
 - "Ahorro Esperado" value is displayed under the "Total" column instead of "Ahorro Esperado" column
 - "Total" value is displayed under the "Balance" column instead of "Total" column
 - The "Balance" column should remain empty with a dash "-" (as it already is in the subtotal rows)
@@ -14,6 +15,7 @@ In the simulation form, the subgroup headers have misaligned columns for totals:
 ## Current Column Structure
 
 The table has the following columns:
+
 1. Drag Handle (w-8)
 2. Expand/Collapse Icon (w-8)
 3. Categoría (Category Name)
@@ -30,6 +32,7 @@ The table has the following columns:
 After comparing `SubgroupHeaderRow` and `SubgroupSubtotalRow`:
 
 **SubgroupSubtotalRow cell structure (CORRECT):**
+
 1. Empty cell for drag handle (w-8)
 2. "Subtotal:" label (takes up Name + Tipo Gasto columns)
 3. "-" for Tipo Gasto column
@@ -41,6 +44,7 @@ After comparing `SubgroupHeaderRow` and `SubgroupSubtotalRow`:
 9. Empty cell for actions
 
 **SubgroupHeaderRow cell structure (INCORRECT):**
+
 1. Drag Handle icon (w-8)
 2. Expand/Collapse button (w-8) ← **EXTRA CELL** that shouldn't be here
 3. Sub-group Name
@@ -55,10 +59,12 @@ After comparing `SubgroupHeaderRow` and `SubgroupSubtotalRow`:
 ## The Fix
 
 The `SubgroupHeaderRow` should NOT have the Expand/Collapse button in its own TableCell. Instead:
+
 - The expand/collapse button should be part of the Name cell (like how "Subtotal:" works in the subtotal row)
 - This will align all columns correctly with the subtotal row below it
 
 Alternatively:
+
 - Move the expand/collapse button inside the Name cell as a flex container
 - Remove the separate TableCell for it
 
@@ -77,12 +83,14 @@ Alternatively:
 ### Column Alignment Check
 
 **Sub-group Header Row (Servicios):**
+
 ```
 Categoría | Tipo Gasto | Efectivo   | Crédito | Ahorro Esperado | Total      | Balance
 Servicios | -          | $ 582.980 | $ 0    | $ 0             | $ 592.980 | -
 ```
 
 **Subtotal Row (below):**
+
 ```
 Subtotal: | -          | $ 582.980 | $ 0    | $ 0             | $ 592.980 | $ 16.417.020
 ```
@@ -100,22 +108,28 @@ Subtotal: | -          | $ 582.980 | $ 0    | $ 0             | $ 592.980 | $ 16
 **Change**: Consolidated the Expand/Collapse button (previously lines 112-128 as separate TableCell) into the Name cell (now lines 112-134 as part of the flex container).
 
 **Before**:
+
 ```tsx
-{/* Expand/Collapse Icon */}
+{
+  /* Expand/Collapse Icon */
+}
 <TableCell className="w-8">
   <Button>...</Button>
-</TableCell>
+</TableCell>;
 
-{/* Sub-group Name */}
+{
+  /* Sub-group Name */
+}
 <TableCell>
   <div className="flex items-center gap-2">
     <span>{subgroupName}</span>
     ...
   </div>
-</TableCell>
+</TableCell>;
 ```
 
 **After**:
+
 ```tsx
 {/* Sub-group Name with Expand/Collapse Icon */}
 <TableCell>
@@ -131,6 +145,7 @@ Subtotal: | -          | $ 582.980 | $ 0    | $ 0             | $ 592.980 | $ 16
 ```
 
 **Result**: Now the SubgroupHeaderRow has exactly 9 TableCells (same as SubgroupSubtotalRow):
+
 1. Drag Handle (w-8)
 2. Name + Expand/Collapse (combined)
 3. Tipo Gasto
@@ -161,10 +176,12 @@ Subtotal: | -          | $ 582.980 | $ 0    | $ 0             | $ 592.980 | $ 16
 The column alignment issue in sub-group headers has been successfully fixed by consolidating the Expand/Collapse button into the sub-group name cell, reducing the total number of TableCells from 10 to 9, which now matches the SubgroupSubtotalRow structure perfectly.
 
 **Impact**:
+
 - All "Ahorro Esperado" and "Total" values now display in their correct columns
 - Balance column correctly shows "-" in headers and balance values in subtotals
 - All sub-group functionality (expand/collapse, add/delete) remains intact
 - Visual alignment is perfect across all rows
 
 **Files Modified**: 1
+
 - `components/subgroup-header-row.tsx` (lines 112-134)

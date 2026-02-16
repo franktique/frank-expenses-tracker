@@ -7,9 +7,11 @@
 ## Feature Overview
 
 ### User Story
+
 As a budget manager, I want to visualize when budgets are scheduled to be executed during the current period. This helps me understand cash flow projections and plan accordingly. I should be able to view this data by day or by week.
 
 ### Key Requirements
+
 1. **Dashboard Page:** New route `/dashboard/projected-execution`
 2. **Data Aggregation:** Sum all budgets by their `default_date` within the active period
 3. **Default Handling:** Use day 1 of the period as default for budgets without a `default_date`
@@ -21,6 +23,7 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
 ## Implementation Plan
 
 ### Phase 1: Backend - API Endpoint [x]
+
 **Task:** Create API endpoint to aggregate budget data by date
 
 - [x] Create `/app/api/budget-execution/[periodId]/route.ts`
@@ -36,12 +39,15 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
   - Response Type: `BudgetExecutionData[]` with `date`, `amount`, `weekNumber` (optional)
 
 **Files to Create:**
+
 - `/app/api/budget-execution/[periodId]/route.ts`
 
 **Files to Modify:**
+
 - `/types/funds.ts` - Add response types
 
 ### Phase 2: Frontend - Data Fetching Utilities [x]
+
 **Task:** Create utilities for fetching and processing budget execution data
 
 - [x] Create `/lib/budget-execution-utils.ts`
@@ -52,9 +58,11 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
   - `getDateRange()` - Get min/max dates for period
 
 **Files to Create:**
+
 - `/lib/budget-execution-utils.ts`
 
 ### Phase 3: Frontend - Dashboard Page [x]
+
 **Task:** Create the main dashboard page with chart and controls
 
 - [x] Create `/app/dashboard/projected-execution/page.tsx`
@@ -86,9 +94,11 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
     - Memoize KPI calculations
 
 **Files to Create:**
+
 - `/app/dashboard/projected-execution/page.tsx`
 
 ### Phase 4: Frontend - Sidebar Navigation [x]
+
 **Task:** Add new menu item to sidebar navigation
 
 - [x] Modify `/components/app-sidebar.tsx`
@@ -99,9 +109,11 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
   - Consider adding after "Overspend Actual" menu item
 
 **Files to Modify:**
+
 - `/components/app-sidebar.tsx`
 
 ### Phase 5: Types & Interfaces [x]
+
 **Task:** Define TypeScript types for the feature
 
 - [x] Add to `/types/funds.ts`:
@@ -121,9 +133,11 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
   - `BudgetExecutionViewMode` type: 'daily' | 'weekly'
 
 **Files to Modify:**
+
 - `/types/funds.ts`
 
 ### Phase 6: Tests [x]
+
 **Task:** Write unit and integration tests
 
 - [x] Create `/lib/__tests__/budget-execution-utils.test.ts`
@@ -142,10 +156,12 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
   - Test both daily and weekly queries
 
 **Files to Create:**
+
 - `/lib/__tests__/budget-execution-utils.test.ts`
 - `/app/api/budget-execution/__tests__/route.test.ts`
 
 ### Phase 7: Styling & Responsive Design [x]
+
 **Task:** Ensure responsive design and visual polish
 
 - [x] Responsive chart:
@@ -157,6 +173,7 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
 - [x] Dark mode support (should auto-work with existing Tailwind config)
 
 ### Phase 8: Documentation & Edge Cases [x]
+
 **Task:** Document feature and handle edge cases
 
 - [x] Update CLAUDE.md with:
@@ -172,6 +189,7 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
   - Timezone handling (all dates should be in user's local timezone)
 
 ### Phase 9: Integration & Verification [x]
+
 **Task:** Test full feature in running application
 
 - [x] Run dev server: `npm run dev`
@@ -193,10 +211,12 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
 - [x] Check for TypeScript errors: (No new errors in feature code)
 
 ### Phase 10: Commit & Code Review [x]
+
 **Task:** Commit changes and prepare for merge
 
 - [x] Review all changes locally
 - [x] Stage and commit with descriptive message:
+
   ```
   feat: Add projected budget execution dashboard
 
@@ -213,6 +233,7 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
 
   Fixes aggregation and display of projected budget execution.
   ```
+
 - [x] Verify commit is clean: `git log --oneline -1` (Commit: 6050eff)
 - [x] Branch ready for merge: `feat/recurring-date-new`
 
@@ -221,10 +242,12 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
 ✅ **All phases completed successfully!**
 
 **Commits Created:**
+
 1. `24f18c3` - feat: Add default day feature for automatic budget date calculation
 2. `6050eff` - feat: Add projected budget execution dashboard
 
 **Files Created:** 5
+
 - `/app/api/budget-execution/[periodId]/route.ts` (Backend API endpoint)
 - `/app/dashboard/projected-execution/page.tsx` (Dashboard UI)
 - `/lib/budget-execution-utils.ts` (Utility functions)
@@ -232,11 +255,13 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
 - `/docs/PLAN-projected-budget-execution-dashboard.md` (Implementation plan)
 
 **Files Modified:** 3
+
 - `/types/funds.ts` (Added BudgetExecutionData, BudgetExecutionResponse types)
 - `/components/app-sidebar.tsx` (Added menu item for new dashboard)
 - `/CLAUDE.md` (Added documentation)
 
 **Test Results:**
+
 - 22 unit tests passing (formatCurrency, formatChartData, calculateBudgetStats, etc.)
 - Build successful with no new TypeScript errors
 - All responsive design implemented
@@ -246,6 +271,7 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
 ## Technical Considerations
 
 ### Date Handling
+
 - All dates in database are YYYY-MM-DD format
 - Period stores month (0-indexed) and year
 - default_date is calculated from category's default_day
@@ -253,12 +279,14 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
 - Display locale-specific (es-MX) formatted dates
 
 ### Performance
+
 - Memoize expensive calculations (grouping, aggregations)
 - Avoid re-fetching data on every render
 - Use `useMemo` for chart data transformation
 - Consider pagination if periods have 100+ days
 
 ### API Design
+
 - `GET /api/budget-execution/[periodId]?viewMode=daily|weekly`
 - Include query params for filtering (optional):
   - `paymentMethod` - filter by payment method
@@ -266,6 +294,7 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
 - Return empty array if period has no budgets
 
 ### UX Enhancements (Optional for Future)
+
 - Color code bars by payment method (Efectivo, Crédito, etc.)
 - Add filter options for payment method and category
 - Show actual expenses overlay on projected data
@@ -273,6 +302,7 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
 - Export chart as image
 
 ## Success Criteria
+
 - ✅ Dashboard page created and navigable from sidebar
 - ✅ Bar chart displays budget distribution by date or week
 - ✅ Toggle between daily and weekly views works smoothly
@@ -286,6 +316,7 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
 ## File Summary
 
 ### New Files
+
 - `/app/dashboard/projected-execution/page.tsx` - Main dashboard page
 - `/app/api/budget-execution/[periodId]/route.ts` - API endpoint
 - `/lib/budget-execution-utils.ts` - Utility functions
@@ -293,13 +324,16 @@ As a budget manager, I want to visualize when budgets are scheduled to be execut
 - `/app/api/budget-execution/__tests__/route.test.ts` - API tests
 
 ### Modified Files
+
 - `/components/app-sidebar.tsx` - Add menu item
 - `/types/funds.ts` - Add type definitions
 
 ### Documentation
+
 - `/docs/PLAN-projected-budget-execution-dashboard.md` - This plan
 
 ## Notes
+
 - Uses existing BudgetContext for active period
 - Follows established patterns from other dashboards (category-bars, overspend)
 - Integrates with existing default_date feature from previous implementation

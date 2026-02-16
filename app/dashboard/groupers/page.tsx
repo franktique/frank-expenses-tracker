@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   ArrowLeft,
   Filter,
@@ -10,32 +10,32 @@ import {
   AlertCircle,
   RefreshCw,
   X,
-} from "lucide-react";
-import { useRouter } from "next/navigation";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { useBudget } from "@/context/budget-context";
+} from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useBudget } from '@/context/budget-context';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { toast } from "@/components/ui/use-toast";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { AgrupadorFilter } from "@/components/agrupador-filter";
-import { BudgetToggle } from "@/components/budget-toggle";
-import { EstudioFilter } from "@/components/estudio-filter";
-import { PaymentMethodFilter } from "@/components/payment-method-filter";
+} from '@/components/ui/select';
+import { toast } from '@/components/ui/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { AgrupadorFilter } from '@/components/agrupador-filter';
+import { BudgetToggle } from '@/components/budget-toggle';
+import { EstudioFilter } from '@/components/estudio-filter';
+import { PaymentMethodFilter } from '@/components/payment-method-filter';
 import {
   handleProjectionModeError as handleProjectionError,
   validateBudgetData,
   createErrorRecoveryStrategies,
   categorizeProjectionError,
-} from "@/lib/projection-mode-error-handling";
+} from '@/lib/projection-mode-error-handling';
 import {
   ResponsiveContainer,
   BarChart,
@@ -50,13 +50,13 @@ import {
   LabelList,
   Legend,
   ReferenceLine,
-} from "recharts";
+} from 'recharts';
 // Optimized chart components temporarily disabled to fix circular dependencies
 import {
   OptimizedGrouperTooltip,
   OptimizedCategoryTooltip,
   OptimizedGenericTooltip,
-} from "@/components/optimized-chart-tooltip";
+} from '@/components/optimized-chart-tooltip';
 // Performance optimizations temporarily disabled to fix circular dependencies
 // Performance hooks temporarily simplified to avoid circular dependencies
 // Performance optimizations temporarily disabled to fix circular dependencies
@@ -185,8 +185,8 @@ export default function GroupersChartPage() {
 
   // Tab state management
   const [activeTab, setActiveTab] = useState<
-    "current" | "period-comparison" | "weekly-cumulative" | "weekly-expenses"
-  >("current");
+    'current' | 'period-comparison' | 'weekly-cumulative' | 'weekly-expenses'
+  >('current');
 
   // Filter state management
   const [selectedGroupers, setSelectedGroupers] = useState<number[]>([]);
@@ -210,12 +210,12 @@ export default function GroupersChartPage() {
       // Check if sessionStorage is available (browser environment)
       if (!isSessionStorageAvailable()) {
         console.warn(
-          "Session storage is not available, projection mode will not persist"
+          'Session storage is not available, projection mode will not persist'
         );
 
         // Handle session storage error using projection error handling
-        const sessionError = new Error("Session storage is not available");
-        sessionError.name = "SessionStorageError";
+        const sessionError = new Error('Session storage is not available');
+        sessionError.name = 'SessionStorageError';
 
         handleProjectionError(
           sessionError,
@@ -229,7 +229,7 @@ export default function GroupersChartPage() {
             disableProjectionMode: () => {
               // Don't disable projection mode just because storage failed
               console.log(
-                "Session storage unavailable, continuing without persistence"
+                'Session storage unavailable, continuing without persistence'
               );
             },
             refreshData: () => {},
@@ -245,16 +245,17 @@ export default function GroupersChartPage() {
       };
 
       sessionStorage.setItem(
-        "dashboard-projection-mode",
+        'dashboard-projection-mode',
         JSON.stringify(projectionState)
       );
     } catch (error) {
-      console.error("Error saving projection mode to session storage:", error);
+      console.error('Error saving projection mode to session storage:', error);
 
       // Use projection-specific error handling
       const sessionError =
-        error instanceof Error ? error : new Error("Session storage error");
-      sessionError.name = error?.name || "SessionStorageError";
+        error instanceof Error ? error : new Error('Session storage error');
+      (sessionError as any).name =
+        (error as any)?.name || 'SessionStorageError';
 
       handleProjectionError(
         sessionError,
@@ -268,7 +269,7 @@ export default function GroupersChartPage() {
           disableProjectionMode: () => {
             // Don't disable projection mode just because storage failed
             console.log(
-              "Session storage failed, continuing without persistence"
+              'Session storage failed, continuing without persistence'
             );
           },
           refreshData: () => {},
@@ -283,24 +284,24 @@ export default function GroupersChartPage() {
       // Check if sessionStorage is available (browser environment)
       if (!isSessionStorageAvailable()) {
         console.warn(
-          "Session storage is not available, using default projection mode"
+          'Session storage is not available, using default projection mode'
         );
         return false;
       }
 
-      const saved = sessionStorage.getItem("dashboard-projection-mode");
+      const saved = sessionStorage.getItem('dashboard-projection-mode');
       if (saved) {
         const projectionState = JSON.parse(saved);
 
         // Handle legacy format (direct boolean) for backward compatibility
-        if (typeof projectionState === "boolean") {
+        if (typeof projectionState === 'boolean') {
           return projectionState;
         }
 
         // Handle new format with metadata
         if (
           projectionState &&
-          typeof projectionState.projectionMode === "boolean"
+          typeof projectionState.projectionMode === 'boolean'
         ) {
           // Optional: Check if the stored state is not too old (e.g., older than 24 hours)
           const maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
@@ -311,7 +312,7 @@ export default function GroupersChartPage() {
           if (isExpired) {
             // Clear expired state
             clearSimulateModeFromSession();
-            console.log("Simulate mode state expired, using default");
+            console.log('Simulate mode state expired, using default');
             return false;
           }
 
@@ -321,7 +322,7 @@ export default function GroupersChartPage() {
       return false;
     } catch (error) {
       console.error(
-        "Error loading projection mode from session storage:",
+        'Error loading projection mode from session storage:',
         error
       );
 
@@ -329,15 +330,15 @@ export default function GroupersChartPage() {
       const loadError =
         error instanceof Error
           ? error
-          : new Error("Failed to load session storage");
-      loadError.name = "SessionStorageLoadError";
+          : new Error('Failed to load session storage');
+      loadError.name = 'SessionStorageLoadError';
 
       // Clear corrupted data and return default
       clearSimulateModeFromSession();
 
       // Log the error but don't show toast during component initialization
       console.warn(
-        "Session storage corrupted, cleared and using default projection mode"
+        'Session storage corrupted, cleared and using default projection mode'
       );
 
       return false;
@@ -347,12 +348,12 @@ export default function GroupersChartPage() {
   // Clear projection mode from session storage
   const clearSimulateModeFromSession = () => {
     try {
-      if (typeof window !== "undefined" && window.sessionStorage) {
-        sessionStorage.removeItem("dashboard-projection-mode");
+      if (typeof window !== 'undefined' && window.sessionStorage) {
+        sessionStorage.removeItem('dashboard-projection-mode');
       }
     } catch (error) {
       console.error(
-        "Error clearing projection mode from session storage:",
+        'Error clearing projection mode from session storage:',
         error
       );
     }
@@ -361,17 +362,17 @@ export default function GroupersChartPage() {
   // Validate session storage availability and handle quota issues
   const isSessionStorageAvailable = (): boolean => {
     try {
-      if (typeof window === "undefined" || !window.sessionStorage) {
+      if (typeof window === 'undefined' || !window.sessionStorage) {
         return false;
       }
 
       // Test if we can actually write to session storage
-      const testKey = "dashboard-storage-test";
-      sessionStorage.setItem(testKey, "test");
+      const testKey = 'dashboard-storage-test';
+      sessionStorage.setItem(testKey, 'test');
       sessionStorage.removeItem(testKey);
       return true;
     } catch (error) {
-      console.error("Session storage is not available:", error);
+      console.error('Session storage is not available:', error);
       return false;
     }
   };
@@ -382,15 +383,15 @@ export default function GroupersChartPage() {
       setProjectionMode(mode);
       saveProjectionModeToSession(mode);
     } catch (error) {
-      console.error("Error setting projection mode with persistence:", error);
+      console.error('Error setting projection mode with persistence:', error);
       // Still set the mode even if persistence fails
       setProjectionMode(mode);
 
       toast({
-        title: "Advertencia",
+        title: 'Advertencia',
         description:
-          "El modo simulación se activó pero no se pudo guardar la preferencia",
-        variant: "default",
+          'El modo simulación se activó pero no se pudo guardar la preferencia',
+        variant: 'default',
       });
     }
   }, []);
@@ -401,32 +402,32 @@ export default function GroupersChartPage() {
   const [categoryData, setCategoryData] = useState<CategoryData[]>([]);
   // Payment method filtering - separate for expenses and budgets
   const [selectedExpensePaymentMethods, setSelectedExpensePaymentMethods] =
-    useState<string[]>(["cash", "credit", "debit"]);
+    useState<string[]>(['cash', 'credit', 'debit']);
   const [selectedBudgetPaymentMethods, setSelectedBudgetPaymentMethods] =
-    useState<string[]>(["cash", "credit", "debit"]);
+    useState<string[]>(['cash', 'credit', 'debit']);
 
   // Helper functions for backward compatibility
   const getExpensePaymentMethodParam = () => {
-    if (selectedExpensePaymentMethods.length === 3) return "all";
-    return selectedExpensePaymentMethods.join(",");
+    if (selectedExpensePaymentMethods.length === 3) return 'all';
+    return selectedExpensePaymentMethods.join(',');
   };
 
   const getBudgetPaymentMethodParam = () => {
-    if (selectedBudgetPaymentMethods.length === 3) return "all";
-    return selectedBudgetPaymentMethods.join(",");
+    if (selectedBudgetPaymentMethods.length === 3) return 'all';
+    return selectedBudgetPaymentMethods.join(',');
   };
 
   // Legacy paymentMethod for backward compatibility (expense-focused)
   const paymentMethod =
     selectedExpensePaymentMethods.length === 3
-      ? "all"
+      ? 'all'
       : selectedExpensePaymentMethods.length === 1
-      ? selectedExpensePaymentMethods[0]
-      : "all";
+        ? selectedExpensePaymentMethods[0]
+        : 'all';
 
   const setPaymentMethod = (method: string) => {
-    if (method === "all") {
-      setSelectedExpensePaymentMethods(["cash", "credit", "debit"]);
+    if (method === 'all') {
+      setSelectedExpensePaymentMethods(['cash', 'credit', 'debit']);
     } else {
       setSelectedExpensePaymentMethods([method]);
     }
@@ -446,16 +447,16 @@ export default function GroupersChartPage() {
 
   // Color palette for reference lines
   const referenceLineColors = [
-    "#ef4444", // Red
-    "#3b82f6", // Blue
-    "#10b981", // Green
-    "#f59e0b", // Orange
-    "#8b5cf6", // Purple
-    "#06b6d4", // Cyan
-    "#f97316", // Orange-500
-    "#84cc16", // Lime
-    "#ec4899", // Pink
-    "#6b7280", // Gray
+    '#ef4444', // Red
+    '#3b82f6', // Blue
+    '#10b981', // Green
+    '#f59e0b', // Orange
+    '#8b5cf6', // Purple
+    '#06b6d4', // Cyan
+    '#f97316', // Orange-500
+    '#84cc16', // Lime
+    '#ec4899', // Pink
+    '#6b7280', // Gray
   ];
 
   // Handle projection mode toggle with enhanced filter state management
@@ -465,7 +466,7 @@ export default function GroupersChartPage() {
       setProjectionModeWithPersistence(checked);
 
       // Force data refresh by clearing existing data when mode changes
-      if (activeTab === "current") {
+      if (activeTab === 'current') {
         setGrouperData([]);
         setCategoryData([]);
         // Reset category view if active
@@ -481,16 +482,16 @@ export default function GroupersChartPage() {
   // Simplified chart optimization
   const chartColors = useMemo(
     () => [
-      "#8884d8",
-      "#83a6ed",
-      "#8dd1e1",
-      "#82ca9d",
-      "#a4de6c",
-      "#d0ed57",
-      "#ffc658",
-      "#ff8042",
-      "#ff6361",
-      "#bc5090",
+      '#8884d8',
+      '#83a6ed',
+      '#8dd1e1',
+      '#82ca9d',
+      '#a4de6c',
+      '#d0ed57',
+      '#ffc658',
+      '#ff8042',
+      '#ff6361',
+      '#bc5090',
     ],
     []
   );
@@ -523,9 +524,9 @@ export default function GroupersChartPage() {
     useState<WeeklyExpensesData>([]);
   const [isLoadingWeeklyExpenses, setIsLoadingWeeklyExpenses] =
     useState<boolean>(false);
-  const [weeklyExpensesError, setWeeklyExpensesError] = useState<
-    string | null
-  >(null);
+  const [weeklyExpensesError, setWeeklyExpensesError] = useState<string | null>(
+    null
+  );
 
   // Weekly category drill-down state
   const [selectedWeek, setSelectedWeek] = useState<SelectedWeekData>(null);
@@ -533,9 +534,9 @@ export default function GroupersChartPage() {
     useState<WeeklyCategoryData>([]);
   const [isLoadingWeeklyCategories, setIsLoadingWeeklyCategories] =
     useState<boolean>(false);
-  const [weeklyCategoryError, setWeeklyCategoryError] = useState<
-    string | null
-  >(null);
+  const [weeklyCategoryError, setWeeklyCategoryError] = useState<string | null>(
+    null
+  );
 
   // Budget data state
   const [budgetData, setBudgetData] = useState<{
@@ -558,10 +559,10 @@ export default function GroupersChartPage() {
     weeklyCumulative: string;
     weeklyExpenses: string;
   }>({
-    current: "all",
-    periodComparison: "all",
-    weeklyCumulative: "all",
-    weeklyExpenses: "all",
+    current: 'all',
+    periodComparison: 'all',
+    weeklyCumulative: 'all',
+    weeklyExpenses: 'all',
   });
 
   // Track filter state for each tab to ensure proper synchronization
@@ -614,12 +615,12 @@ export default function GroupersChartPage() {
   // Simplified fetch function without complex caching
   const fetchGroupers = useCallback(async (key: any) => {
     const params = new URLSearchParams({
-      periodId: key.periodId || "",
-      paymentMethod: "all",
+      periodId: key.periodId || '',
+      paymentMethod: 'all',
     });
 
     if (key.estudioId) {
-      params.append("estudioId", key.estudioId.toString());
+      params.append('estudioId', key.estudioId.toString());
     }
 
     const response = await fetch(
@@ -643,7 +644,7 @@ export default function GroupersChartPage() {
       setFilterError(null);
 
       const cacheKey = {
-        periodId: activePeriod?.id?.toString() || "",
+        periodId: activePeriod?.id?.toString() || '',
         estudioId: selectedEstudio,
       };
 
@@ -675,20 +676,25 @@ export default function GroupersChartPage() {
             showBudgets: false,
             selectedEstudio: selectedEstudio,
           },
+          weeklyExpenses: {
+            selectedGroupers: [...allGrouperIds],
+            showBudgets: false,
+            selectedEstudio: selectedEstudio,
+          },
         });
       }
     } catch (error) {
-      console.error("Error fetching all groupers:", error);
+      console.error('Error fetching all groupers:', error);
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "Error al cargar los filtros de agrupadores";
+          : 'Error al cargar los filtros de agrupadores';
       setFilterError(errorMessage);
 
       toast({
-        title: "Error al cargar filtros",
+        title: 'Error al cargar filtros',
         description: errorMessage,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsLoadingFilters(false);
@@ -708,7 +714,7 @@ export default function GroupersChartPage() {
       setIsLoadingEstudios(true);
       setEstudioError(null);
 
-      const response = await fetch("/api/estudios");
+      const response = await fetch('/api/estudios');
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -727,13 +733,13 @@ export default function GroupersChartPage() {
       if (selectedEstudio === null && sortedData.length > 0) {
         // First check URL parameters
         const urlParams = new URLSearchParams(window.location.search);
-        const urlEstudioId = urlParams.get("estudioId");
+        const urlEstudioId = urlParams.get('estudioId');
 
         let estudioToSelect: number | null = null;
 
         if (urlEstudioId) {
           const urlEstudio = sortedData.find(
-            (e) => e.id === parseInt(urlEstudioId)
+            (e: any) => e.id === parseInt(urlEstudioId)
           );
           if (urlEstudio) {
             estudioToSelect = urlEstudio.id;
@@ -742,10 +748,10 @@ export default function GroupersChartPage() {
 
         // Fallback to session storage if URL parameter not found or invalid
         if (!estudioToSelect) {
-          const savedEstudioId = sessionStorage.getItem("selectedEstudioId");
+          const savedEstudioId = sessionStorage.getItem('selectedEstudioId');
           if (savedEstudioId) {
             const savedEstudio = sortedData.find(
-              (e) => e.id === parseInt(savedEstudioId)
+              (e: any) => e.id === parseInt(savedEstudioId)
             );
             if (savedEstudio) {
               estudioToSelect = savedEstudio.id;
@@ -754,28 +760,33 @@ export default function GroupersChartPage() {
         }
 
         // Final fallback to first available estudio
-        if (!estudioToSelect) {
+        if (!estudioToSelect && sortedData.length > 0) {
           estudioToSelect = sortedData[0].id;
         }
 
-        setSelectedEstudio(estudioToSelect);
+        if (estudioToSelect !== null) {
+          setSelectedEstudio(estudioToSelect);
 
-        // Ensure both session storage and URL are synchronized
-        sessionStorage.setItem("selectedEstudioId", estudioToSelect.toString());
-        const url = new URL(window.location.href);
-        url.searchParams.set("estudioId", estudioToSelect.toString());
-        window.history.replaceState({}, "", url.toString());
+          // Ensure both session storage and URL are synchronized
+          sessionStorage.setItem(
+            'selectedEstudioId',
+            estudioToSelect.toString()
+          );
+          const url = new URL(window.location.href);
+          url.searchParams.set('estudioId', estudioToSelect.toString());
+          window.history.replaceState({}, '', url.toString());
+        }
       }
     } catch (error) {
-      console.error("Error fetching all estudios:", error);
+      console.error('Error fetching all estudios:', error);
       const errorMessage =
-        error instanceof Error ? error.message : "Error al cargar los estudios";
+        error instanceof Error ? error.message : 'Error al cargar los estudios';
       setEstudioError(errorMessage);
 
       toast({
-        title: "Error al cargar estudios",
+        title: 'Error al cargar estudios',
         description: errorMessage,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsLoadingEstudios(false);
@@ -814,13 +825,19 @@ export default function GroupersChartPage() {
         showBudgets: false,
         selectedEstudio: estudioId,
       },
+      weeklyExpenses: {
+        selectedGroupers: [],
+        showBudgets: false,
+        selectedEstudio: estudioId,
+      },
     });
 
     // Reset payment method tracking to force data refresh
     setLastPaymentMethodUsed({
-      current: "",
-      periodComparison: "",
-      weeklyCumulative: "",
+      current: '',
+      periodComparison: '',
+      weeklyCumulative: '',
+      weeklyExpenses: '',
     });
 
     // Clear existing data to force refresh
@@ -831,17 +848,17 @@ export default function GroupersChartPage() {
 
     // Persist estudio selection in both session storage and URL parameters
     if (estudioId !== null) {
-      sessionStorage.setItem("selectedEstudioId", estudioId.toString());
+      sessionStorage.setItem('selectedEstudioId', estudioId.toString());
       // Update URL parameters for better persistence
       const url = new URL(window.location.href);
-      url.searchParams.set("estudioId", estudioId.toString());
-      window.history.replaceState({}, "", url.toString());
+      url.searchParams.set('estudioId', estudioId.toString());
+      window.history.replaceState({}, '', url.toString());
     } else {
-      sessionStorage.removeItem("selectedEstudioId");
+      sessionStorage.removeItem('selectedEstudioId');
       // Remove from URL parameters
       const url = new URL(window.location.href);
-      url.searchParams.delete("estudioId");
-      window.history.replaceState({}, "", url.toString());
+      url.searchParams.delete('estudioId');
+      window.history.replaceState({}, '', url.toString());
     }
   };
 
@@ -863,11 +880,11 @@ export default function GroupersChartPage() {
 
       // Optional: Show a subtle notification if projection mode was restored
       if (savedSimulateMode) {
-        console.log("Simulate mode restored from session storage");
+        console.log('Simulate mode restored from session storage');
       }
     } catch (error) {
       console.error(
-        "Error restoring projection mode from session storage:",
+        'Error restoring projection mode from session storage:',
         error
       );
       // Fallback to default state
@@ -885,7 +902,7 @@ export default function GroupersChartPage() {
       try {
         saveProjectionModeToSession(projectionMode);
       } catch (error) {
-        console.warn("Failed to save projection mode during cleanup:", error);
+        console.warn('Failed to save projection mode during cleanup:', error);
       }
     };
   }, [activePeriod, selectedEstudio]);
@@ -893,14 +910,14 @@ export default function GroupersChartPage() {
   // Handle page visibility changes to ensure proper session storage management
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "hidden") {
+      if (document.visibilityState === 'hidden') {
         // Page is being hidden (user switching tabs, minimizing, etc.)
         // Ensure current projection mode state is saved
         try {
           saveProjectionModeToSession(projectionMode);
         } catch (error) {
           console.error(
-            "Error saving projection mode on visibility change:",
+            'Error saving projection mode on visibility change:',
             error
           );
         }
@@ -913,18 +930,18 @@ export default function GroupersChartPage() {
       try {
         saveProjectionModeToSession(projectionMode);
       } catch (error) {
-        console.error("Error saving projection mode before unload:", error);
+        console.error('Error saving projection mode before unload:', error);
       }
     };
 
     // Add event listeners for page visibility and unload
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
       // Clean up event listeners
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [projectionMode]);
 
@@ -932,7 +949,7 @@ export default function GroupersChartPage() {
   useEffect(() => {
     const handlePopState = () => {
       const urlParams = new URLSearchParams(window.location.search);
-      const urlEstudioId = urlParams.get("estudioId");
+      const urlEstudioId = urlParams.get('estudioId');
 
       if (urlEstudioId && allEstudios.length > 0) {
         const urlEstudio = allEstudios.find(
@@ -940,13 +957,13 @@ export default function GroupersChartPage() {
         );
         if (urlEstudio && urlEstudio.id !== selectedEstudio) {
           setSelectedEstudio(urlEstudio.id);
-          sessionStorage.setItem("selectedEstudioId", urlEstudio.id.toString());
+          sessionStorage.setItem('selectedEstudioId', urlEstudio.id.toString());
         }
       }
     };
 
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
   }, [allEstudios, selectedEstudio]);
 
   // Handle estudio deletion and automatic fallback selection
@@ -960,10 +977,10 @@ export default function GroupersChartPage() {
         setSelectedEstudio(newEstudioId);
 
         // Update persistence
-        sessionStorage.setItem("selectedEstudioId", newEstudioId.toString());
+        sessionStorage.setItem('selectedEstudioId', newEstudioId.toString());
         const url = new URL(window.location.href);
-        url.searchParams.set("estudioId", newEstudioId.toString());
-        window.history.replaceState({}, "", url.toString());
+        url.searchParams.set('estudioId', newEstudioId.toString());
+        window.history.replaceState({}, '', url.toString());
 
         // Reset filter state for all tabs
         setLastFilterState({
@@ -982,12 +999,17 @@ export default function GroupersChartPage() {
             showBudgets: false,
             selectedEstudio: newEstudioId,
           },
+          weeklyExpenses: {
+            selectedGroupers: [],
+            showBudgets: false,
+            selectedEstudio: newEstudioId,
+          },
         });
 
         toast({
-          title: "Estudio eliminado",
+          title: 'Estudio eliminado',
           description: `Se seleccionó automáticamente "${allEstudios[0].name}"`,
-          variant: "default",
+          variant: 'default',
         });
       }
     }
@@ -1005,6 +1027,7 @@ export default function GroupersChartPage() {
       current: { ...currentState },
       periodComparison: { ...currentState },
       weeklyCumulative: { ...currentState },
+      weeklyExpenses: { ...currentState },
     });
   };
 
@@ -1018,7 +1041,7 @@ export default function GroupersChartPage() {
 
   // Fetch groupers data
   useEffect(() => {
-    if (!activePeriod || activeTab !== "current" || selectedEstudio === null)
+    if (!activePeriod || activeTab !== 'current' || selectedEstudio === null)
       return;
 
     const fetchGrouperData = async () => {
@@ -1036,22 +1059,22 @@ export default function GroupersChartPage() {
         // Add expense payment method filtering
         if (selectedExpensePaymentMethods.length < 3) {
           params.append(
-            "expensePaymentMethods",
-            selectedExpensePaymentMethods.join(",")
+            'expensePaymentMethods',
+            selectedExpensePaymentMethods.join(',')
           );
         }
 
         // Add budget payment method filtering
         if (selectedBudgetPaymentMethods.length < 3) {
           params.append(
-            "budgetPaymentMethods",
-            selectedBudgetPaymentMethods.join(",")
+            'budgetPaymentMethods',
+            selectedBudgetPaymentMethods.join(',')
           );
         }
 
         // Add estudio filtering if selected - works with projection mode
         if (selectedEstudio) {
-          params.append("estudioId", selectedEstudio.toString());
+          params.append('estudioId', selectedEstudio.toString());
         }
 
         // Add grouper filtering if specific groupers are selected - works with projection mode
@@ -1059,17 +1082,17 @@ export default function GroupersChartPage() {
           selectedGroupers.length > 0 &&
           selectedGroupers.length < allGroupers.length
         ) {
-          params.append("grouperIds", selectedGroupers.join(","));
+          params.append('grouperIds', selectedGroupers.join(','));
         }
 
         // Add budget parameter if budget display is enabled or projection mode is active
         if (showBudgets || projectionMode) {
-          params.append("includeBudgets", "true");
+          params.append('includeBudgets', 'true');
         }
 
         // Add projection mode flag to help API understand the context
         if (projectionMode) {
-          params.append("projectionMode", "true");
+          params.append('projectionMode', 'true');
         }
 
         // Create error recovery strategies for this fetch operation
@@ -1119,7 +1142,7 @@ export default function GroupersChartPage() {
           if (projectionMode) {
             // If projection fails, try fallback to actual data
             console.warn(
-              "Simulation failed, falling back to actual data:",
+              'Simulation failed, falling back to actual data:',
               retryError
             );
             try {
@@ -1127,7 +1150,7 @@ export default function GroupersChartPage() {
             } catch (fallbackError) {
               // If even fallback fails, use graceful degradation
               console.error(
-                "Both projection and fallback failed:",
+                'Both projection and fallback failed:',
                 fallbackError
               );
               data = await recoveryStrategies.gracefulDegradation();
@@ -1159,7 +1182,7 @@ export default function GroupersChartPage() {
           if (!validation.isValid && validation.error) {
             // Handle specific budget data validation errors
             // Add safety check to ensure validation.error is valid
-            if (validation.error && typeof validation.error === "object") {
+            if (validation.error && typeof validation.error === 'object') {
               handleProjectionError(
                 validation.error,
                 {
@@ -1172,11 +1195,11 @@ export default function GroupersChartPage() {
               );
             } else {
               console.warn(
-                "Invalid validation error object:",
+                'Invalid validation error object:',
                 validation.error
               );
               // Create a fallback error
-              const fallbackError = new Error("Budget data validation failed");
+              const fallbackError = new Error('Budget data validation failed');
               handleProjectionError(
                 fallbackError,
                 {
@@ -1190,14 +1213,18 @@ export default function GroupersChartPage() {
             }
 
             // If validation fails completely, fall back to actual data
-            if (validation.error.simulateType === "missing_budget_data") {
+            if (
+              (validation.error as any).projectionType === 'missing_budget_data'
+            ) {
               fallbackActions.showActualData();
               return; // Exit early to trigger re-fetch with actual data
             }
-          } else if (validation.error?.simulateType === "partial_budget_data") {
+          } else if (
+            validation.error?.projectionType === 'partial_budget_data'
+          ) {
             // Show warning but continue with projection
             // Add safety check to ensure validation.error is valid
-            if (validation.error && typeof validation.error === "object") {
+            if (validation.error && typeof validation.error === 'object') {
               handleProjectionError(
                 validation.error,
                 {
@@ -1210,11 +1237,11 @@ export default function GroupersChartPage() {
               );
             } else {
               console.warn(
-                "Invalid validation error object:",
+                'Invalid validation error object:',
                 validation.error
               );
               // Create a fallback error
-              const fallbackError = new Error("Partial budget data available");
+              const fallbackError = new Error('Partial budget data available');
               handleProjectionError(
                 fallbackError,
                 {
@@ -1274,7 +1301,7 @@ export default function GroupersChartPage() {
           setMaxGrouperAmount(maxAmount * 1.1); // Add 10% for visualization margin
         }
       } catch (error) {
-        console.error("Error fetching grouper data:", error);
+        console.error('Error fetching grouper data:', error);
 
         // Use projection-specific error handling
         if (projectionMode) {
@@ -1306,13 +1333,13 @@ export default function GroupersChartPage() {
           const errorMessage =
             error instanceof Error
               ? error.message
-              : "Error de conexión al cargar estadísticas";
+              : 'Error de conexión al cargar estadísticas';
           setMainDataError(errorMessage);
 
           toast({
-            title: "Error de conexión",
+            title: 'Error de conexión',
             description: errorMessage,
-            variant: "destructive",
+            variant: 'destructive',
           });
         }
       } finally {
@@ -1335,7 +1362,7 @@ export default function GroupersChartPage() {
 
   // Retry function for main data loading
   const retryMainDataLoad = () => {
-    if (activePeriod && activeTab === "current") {
+    if (activePeriod && activeTab === 'current') {
       setMainDataError(null);
       // The useEffect will trigger automatically due to dependency changes
     }
@@ -1343,7 +1370,7 @@ export default function GroupersChartPage() {
 
   // Fetch reference line data when estudio is selected and active period is available
   useEffect(() => {
-    if (!activePeriod || !selectedEstudio || activeTab !== "current") {
+    if (!activePeriod || !selectedEstudio || activeTab !== 'current') {
       setReferenceLineData([]);
       setPeriodIncomeData(null);
       return;
@@ -1357,7 +1384,7 @@ export default function GroupersChartPage() {
         );
 
         if (!incomeResponse.ok) {
-          console.warn("Could not fetch period income data");
+          console.warn('Could not fetch period income data');
           return;
         }
 
@@ -1370,7 +1397,7 @@ export default function GroupersChartPage() {
         );
 
         if (!grouperResponse.ok) {
-          console.warn("Could not fetch estudio grouper data");
+          console.warn('Could not fetch estudio grouper data');
           return;
         }
 
@@ -1396,7 +1423,7 @@ export default function GroupersChartPage() {
 
         setReferenceLineData(referenceData);
       } catch (error) {
-        console.error("Error fetching reference line data:", error);
+        console.error('Error fetching reference line data:', error);
         // Don't show toast for reference line errors as they're not critical
         setReferenceLineData([]);
         setPeriodIncomeData(null);
@@ -1421,7 +1448,7 @@ export default function GroupersChartPage() {
 
   // Fetch aggregated category data for all selected groupers when no specific grouper is selected
   useEffect(() => {
-    if (!activePeriod || activeTab !== "current" || selectedGrouper) return;
+    if (!activePeriod || activeTab !== 'current' || selectedGrouper) return;
 
     // Only fetch if we have selected groupers and showCategoryChart is true
     if (selectedGroupers.length === 0 || !showCategoryChart) {
@@ -1432,7 +1459,7 @@ export default function GroupersChartPage() {
     const fetchAggregatedCategoryData = async () => {
       try {
         console.log(
-          "--------Fetching aggregated category data for groupers:",
+          '--------Fetching aggregated category data for groupers:',
           selectedGroupers
         );
 
@@ -1445,26 +1472,26 @@ export default function GroupersChartPage() {
           // Add expense payment method filtering
           if (selectedExpensePaymentMethods.length < 3) {
             params.append(
-              "expensePaymentMethods",
-              selectedExpensePaymentMethods.join(",")
+              'expensePaymentMethods',
+              selectedExpensePaymentMethods.join(',')
             );
           }
 
           // Add budget payment method filtering
           if (selectedBudgetPaymentMethods.length < 3) {
             params.append(
-              "budgetPaymentMethods",
-              selectedBudgetPaymentMethods.join(",")
+              'budgetPaymentMethods',
+              selectedBudgetPaymentMethods.join(',')
             );
           }
 
           if (showBudgets || projectionMode) {
-            params.append("includeBudgets", "true");
+            params.append('includeBudgets', 'true');
           }
 
           // Add projection mode flag for category data
           if (projectionMode) {
-            params.append("projectionMode", "true");
+            params.append('projectionMode', 'true');
           }
 
           const response = await fetch(
@@ -1545,7 +1572,7 @@ export default function GroupersChartPage() {
                   b.total_amount - a.total_amount
               );
 
-        console.log("--------Aggregated category data:", aggregatedData);
+        console.log('--------Aggregated category data:', aggregatedData);
 
         const finalCategoryData = aggregatedData;
         setCategoryData(finalCategoryData);
@@ -1567,11 +1594,11 @@ export default function GroupersChartPage() {
           setMaxCategoryAmount(maxAmount * 1.1);
         }
       } catch (error) {
-        console.error("Error fetching aggregated category data:", error);
+        console.error('Error fetching aggregated category data:', error);
         toast({
-          title: "Error fetching category data",
-          description: "Failed to load aggregated category statistics",
-          variant: "destructive",
+          title: 'Error fetching category data',
+          description: 'Failed to load aggregated category statistics',
+          variant: 'destructive',
         });
       }
     };
@@ -1591,7 +1618,7 @@ export default function GroupersChartPage() {
 
   // Fetch category data when a grouper is selected
   useEffect(() => {
-    if (!activePeriod || !selectedGrouper || activeTab !== "current") return;
+    if (!activePeriod || !selectedGrouper || activeTab !== 'current') return;
 
     // Ensure the selected grouper is within the filtered groupers
     if (
@@ -1614,27 +1641,27 @@ export default function GroupersChartPage() {
         // Add expense payment method filtering
         if (selectedExpensePaymentMethods.length < 3) {
           params.append(
-            "expensePaymentMethods",
-            selectedExpensePaymentMethods.join(",")
+            'expensePaymentMethods',
+            selectedExpensePaymentMethods.join(',')
           );
         }
 
         // Add budget payment method filtering
         if (selectedBudgetPaymentMethods.length < 3) {
           params.append(
-            "budgetPaymentMethods",
-            selectedBudgetPaymentMethods.join(",")
+            'budgetPaymentMethods',
+            selectedBudgetPaymentMethods.join(',')
           );
         }
 
         // Add budget parameter if budget display is enabled or projection mode is active
         if (showBudgets || projectionMode) {
-          params.append("includeBudgets", "true");
+          params.append('includeBudgets', 'true');
         }
 
         // Add projection mode flag for single grouper category data
         if (projectionMode) {
-          params.append("projectionMode", "true");
+          params.append('projectionMode', 'true');
         }
 
         // Create error recovery strategies for category data
@@ -1685,7 +1712,7 @@ export default function GroupersChartPage() {
           if (projectionMode) {
             // If category projection fails, try fallback to actual data
             console.warn(
-              "Category projection failed, falling back to actual data:",
+              'Category projection failed, falling back to actual data:',
               retryError
             );
             try {
@@ -1693,7 +1720,7 @@ export default function GroupersChartPage() {
             } catch (fallbackError) {
               // If even fallback fails, use graceful degradation
               console.error(
-                "Both category projection and fallback failed:",
+                'Both category projection and fallback failed:',
                 fallbackError
               );
               data = await recoveryStrategies.gracefulDegradation();
@@ -1728,8 +1755,8 @@ export default function GroupersChartPage() {
             // Handle category-specific budget data validation errors
             const categoryError = {
               ...validation.error,
-              simulateType: "category_projection_failure" as const,
-              message: "Error al simular datos de categorías",
+              projectionType: 'category_projection_failure' as const,
+              message: 'Error al simular datos de categorías',
             };
 
             handleProjectionError(
@@ -1738,21 +1765,25 @@ export default function GroupersChartPage() {
                 selectedEstudio,
                 selectedGroupers: [selectedGrouper.grouper_id],
                 paymentMethod,
-                activeTab: "category-drill-down",
+                activeTab: 'category-drill-down',
               },
               fallbackActions
             );
 
             // If validation fails completely, fall back to actual data
-            if (validation.error.simulateType === "missing_budget_data") {
+            if (
+              (validation.error as any).projectionType === 'missing_budget_data'
+            ) {
               fallbackActions.showActualData();
               return; // Exit early to trigger re-fetch with actual data
             }
-          } else if (validation.error?.simulateType === "partial_budget_data") {
+          } else if (
+            validation.error?.projectionType === 'partial_budget_data'
+          ) {
             // Show warning but continue with category projection
             const partialError = {
               ...validation.error,
-              message: "Algunas categorías no tienen presupuesto asignado",
+              message: 'Algunas categorías no tienen presupuesto asignado',
             };
 
             handleProjectionError(
@@ -1761,7 +1792,7 @@ export default function GroupersChartPage() {
                 selectedEstudio,
                 selectedGroupers: [selectedGrouper.grouper_id],
                 paymentMethod,
-                activeTab: "category-drill-down",
+                activeTab: 'category-drill-down',
               },
               fallbackActions
             );
@@ -1798,7 +1829,7 @@ export default function GroupersChartPage() {
           setMaxCategoryAmount(maxAmount * 1.1); // Add 10% for visualization margin
         }
       } catch (error) {
-        console.error("Error fetching category data:", error);
+        console.error('Error fetching category data:', error);
 
         // Use projection-specific error handling for categories
         if (projectionMode) {
@@ -1806,7 +1837,7 @@ export default function GroupersChartPage() {
             selectedEstudio,
             selectedGroupers: [selectedGrouper.grouper_id],
             paymentMethod,
-            activeTab: "category-drill-down",
+            activeTab: 'category-drill-down',
           };
 
           const fallbackActions = {
@@ -1826,17 +1857,17 @@ export default function GroupersChartPage() {
 
           const categoryError = {
             ...categorizeProjectionError(error, context),
-            simulateType: "category_projection_failure" as const,
-            message: "Error al cargar datos de categorías en modo simulación",
+            projectionType: 'category_projection_failure' as const,
+            message: 'Error al cargar datos de categorías en modo simulación',
           };
 
           handleProjectionError(categoryError, context, fallbackActions);
         } else {
           // Handle regular category errors
           toast({
-            title: "Error al cargar categorías",
-            description: "No se pudieron cargar las estadísticas de categorías",
-            variant: "destructive",
+            title: 'Error al cargar categorías',
+            description: 'No se pudieron cargar las estadísticas de categorías',
+            variant: 'destructive',
           });
         }
       }
@@ -1855,7 +1886,7 @@ export default function GroupersChartPage() {
 
   // Fetch period comparison data
   useEffect(() => {
-    if (activeTab !== "period-comparison" || selectedEstudio === null) return;
+    if (activeTab !== 'period-comparison' || selectedEstudio === null) return;
 
     // Check if filter state has changed for this tab
     const currentFilterState = {
@@ -1890,22 +1921,22 @@ export default function GroupersChartPage() {
         // Add expense payment method filtering
         if (selectedExpensePaymentMethods.length < 3) {
           params.append(
-            "expensePaymentMethods",
-            selectedExpensePaymentMethods.join(",")
+            'expensePaymentMethods',
+            selectedExpensePaymentMethods.join(',')
           );
         }
 
         // Add budget payment method filtering (for budget data in period comparison)
         if (selectedBudgetPaymentMethods.length < 3) {
           params.append(
-            "budgetPaymentMethods",
-            selectedBudgetPaymentMethods.join(",")
+            'budgetPaymentMethods',
+            selectedBudgetPaymentMethods.join(',')
           );
         }
 
         // Add estudio filtering if selected
         if (selectedEstudio) {
-          params.append("estudioId", selectedEstudio.toString());
+          params.append('estudioId', selectedEstudio.toString());
         }
 
         // Add grouper filtering if specific groupers are selected
@@ -1913,12 +1944,12 @@ export default function GroupersChartPage() {
           selectedGroupers.length > 0 &&
           selectedGroupers.length < allGroupers.length
         ) {
-          params.append("grouperIds", selectedGroupers.join(","));
+          params.append('grouperIds', selectedGroupers.join(','));
         }
 
         // Add budget parameter if budget display is enabled
         if (showBudgets) {
-          params.append("includeBudgets", "true");
+          params.append('includeBudgets', 'true');
         }
 
         const response = await fetch(
@@ -1935,7 +1966,7 @@ export default function GroupersChartPage() {
               ...grouper,
               // Ensure budget_amount is a number or undefined, handle null/undefined cases
               budget_amount: showBudgets
-                ? typeof grouper.budget_amount === "number"
+                ? typeof grouper.budget_amount === 'number'
                   ? grouper.budget_amount
                   : 0
                 : undefined,
@@ -1964,22 +1995,22 @@ export default function GroupersChartPage() {
             `HTTP ${response.status}: Error al cargar comparación por períodos`;
           setPeriodComparisonError(errorMessage);
           toast({
-            title: "Error al cargar comparación por períodos",
+            title: 'Error al cargar comparación por períodos',
             description: errorMessage,
-            variant: "destructive",
+            variant: 'destructive',
           });
         }
       } catch (error) {
-        console.error("Error fetching period comparison data:", error);
+        console.error('Error fetching period comparison data:', error);
         const errorMessage =
           error instanceof Error
             ? error.message
-            : "Error de conexión al cargar datos de comparación";
+            : 'Error de conexión al cargar datos de comparación';
         setPeriodComparisonError(errorMessage);
         toast({
-          title: "Error de conexión",
+          title: 'Error de conexión',
           description: errorMessage,
-          variant: "destructive",
+          variant: 'destructive',
         });
       } finally {
         setIsLoadingPeriodComparison(false);
@@ -2002,7 +2033,7 @@ export default function GroupersChartPage() {
   // Fetch weekly cumulative data
   useEffect(() => {
     if (
-      activeTab !== "weekly-cumulative" ||
+      activeTab !== 'weekly-cumulative' ||
       !activePeriod ||
       selectedEstudio === null
     )
@@ -2043,22 +2074,22 @@ export default function GroupersChartPage() {
         // Add expense payment method filtering
         if (selectedExpensePaymentMethods.length < 3) {
           params.append(
-            "expensePaymentMethods",
-            selectedExpensePaymentMethods.join(",")
+            'expensePaymentMethods',
+            selectedExpensePaymentMethods.join(',')
           );
         }
 
         // Add budget payment method filtering (for budget data in weekly cumulative)
         if (selectedBudgetPaymentMethods.length < 3) {
           params.append(
-            "budgetPaymentMethods",
-            selectedBudgetPaymentMethods.join(",")
+            'budgetPaymentMethods',
+            selectedBudgetPaymentMethods.join(',')
           );
         }
 
         // Add estudio filtering if selected
         if (selectedEstudio) {
-          params.append("estudioId", selectedEstudio.toString());
+          params.append('estudioId', selectedEstudio.toString());
         }
 
         // Add grouper filtering if specific groupers are selected
@@ -2066,12 +2097,12 @@ export default function GroupersChartPage() {
           selectedGroupers.length > 0 &&
           selectedGroupers.length < allGroupers.length
         ) {
-          params.append("grouperIds", selectedGroupers.join(","));
+          params.append('grouperIds', selectedGroupers.join(','));
         }
 
         // Add budget parameter if budget display is enabled
         if (showBudgets) {
-          params.append("includeBudgets", "true");
+          params.append('includeBudgets', 'true');
         }
 
         const response = await fetch(
@@ -2088,7 +2119,7 @@ export default function GroupersChartPage() {
               ...grouper,
               // Ensure budget_amount is a number or undefined, handle null/undefined cases
               budget_amount: showBudgets
-                ? typeof grouper.budget_amount === "number"
+                ? typeof grouper.budget_amount === 'number'
                   ? grouper.budget_amount
                   : 0
                 : undefined,
@@ -2117,22 +2148,22 @@ export default function GroupersChartPage() {
             `HTTP ${response.status}: Error al cargar acumulado semanal`;
           setWeeklyCumulativeError(errorMessage);
           toast({
-            title: "Error al cargar acumulado semanal",
+            title: 'Error al cargar acumulado semanal',
             description: errorMessage,
-            variant: "destructive",
+            variant: 'destructive',
           });
         }
       } catch (error) {
-        console.error("Error fetching weekly cumulative data:", error);
+        console.error('Error fetching weekly cumulative data:', error);
         const errorMessage =
           error instanceof Error
             ? error.message
-            : "Error de conexión al cargar datos semanales";
+            : 'Error de conexión al cargar datos semanales';
         setWeeklyCumulativeError(errorMessage);
         toast({
-          title: "Error de conexión",
+          title: 'Error de conexión',
           description: errorMessage,
-          variant: "destructive",
+          variant: 'destructive',
         });
       } finally {
         setIsLoadingWeeklyCumulative(false);
@@ -2155,12 +2186,12 @@ export default function GroupersChartPage() {
 
   // Handle period changes for weekly cumulative data
   useEffect(() => {
-    if (activeTab === "weekly-cumulative" && activePeriod) {
+    if (activeTab === 'weekly-cumulative' && activePeriod) {
       // Clear data when period changes to force refresh
       setWeeklyCumulativeData([]);
       setLastPaymentMethodUsed((prev) => ({
         ...prev,
-        weeklyCumulative: "",
+        weeklyCumulative: '',
       }));
     }
   }, [activePeriod, activeTab]);
@@ -2168,7 +2199,7 @@ export default function GroupersChartPage() {
   // Fetch weekly expenses data
   useEffect(() => {
     if (
-      activeTab !== "weekly-expenses" ||
+      activeTab !== 'weekly-expenses' ||
       !activePeriod ||
       selectedEstudio === null
     )
@@ -2204,23 +2235,26 @@ export default function GroupersChartPage() {
         });
 
         // Add grouper filtering
-        if (selectedGroupers.length > 0 && selectedGroupers.length < allGroupers.length) {
-          params.set("grouperIds", selectedGroupers.join(","));
+        if (
+          selectedGroupers.length > 0 &&
+          selectedGroupers.length < allGroupers.length
+        ) {
+          params.set('grouperIds', selectedGroupers.join(','));
         }
 
         // Add estudio filtering
         if (selectedEstudio !== null) {
-          params.set("estudioId", selectedEstudio.toString());
+          params.set('estudioId', selectedEstudio.toString());
         }
 
         // Add expense payment methods
-        if (paymentMethod !== "all") {
-          params.set("expensePaymentMethods", paymentMethod);
+        if (paymentMethod !== 'all') {
+          params.set('expensePaymentMethods', paymentMethod);
         }
 
         // Add budget inclusion
         if (showBudgets) {
-          params.set("includeBudgets", "true");
+          params.set('includeBudgets', 'true');
         }
 
         const response = await fetch(
@@ -2256,13 +2290,13 @@ export default function GroupersChartPage() {
         } else {
           const errorData = await response.json();
           setWeeklyExpensesError(
-            errorData.error || "Error al cargar datos de gastos semanales"
+            errorData.error || 'Error al cargar datos de gastos semanales'
           );
         }
       } catch (error) {
-        console.error("Error fetching weekly expenses data:", error);
+        console.error('Error fetching weekly expenses data:', error);
         setWeeklyExpensesError(
-          "Error de conexión. Verifica tu conexión a internet."
+          'Error de conexión. Verifica tu conexión a internet.'
         );
       } finally {
         setIsLoadingWeeklyExpenses(false);
@@ -2285,12 +2319,12 @@ export default function GroupersChartPage() {
 
   // Handle period changes for weekly expenses data
   useEffect(() => {
-    if (activeTab === "weekly-expenses" && activePeriod) {
+    if (activeTab === 'weekly-expenses' && activePeriod) {
       // Clear data when period changes to force refresh
       setWeeklyExpensesData([]);
       setLastPaymentMethodUsed((prev) => ({
         ...prev,
-        weeklyExpenses: "",
+        weeklyExpenses: '',
       }));
       // Clear selected week when period changes
       clearWeekSelection();
@@ -2301,7 +2335,7 @@ export default function GroupersChartPage() {
   useEffect(() => {
     if (
       !selectedWeek ||
-      activeTab !== "weekly-expenses" ||
+      activeTab !== 'weekly-expenses' ||
       !activePeriod ||
       selectedEstudio === null
     )
@@ -2320,18 +2354,21 @@ export default function GroupersChartPage() {
         });
 
         // Add grouper filtering
-        if (selectedGroupers.length > 0 && selectedGroupers.length < allGroupers.length) {
-          params.set("grouperIds", selectedGroupers.join(","));
+        if (
+          selectedGroupers.length > 0 &&
+          selectedGroupers.length < allGroupers.length
+        ) {
+          params.set('grouperIds', selectedGroupers.join(','));
         }
 
         // Add estudio filtering
         if (selectedEstudio !== null) {
-          params.set("estudioId", selectedEstudio.toString());
+          params.set('estudioId', selectedEstudio.toString());
         }
 
         // Add expense payment methods
-        if (paymentMethod !== "all") {
-          params.set("expensePaymentMethods", paymentMethod);
+        if (paymentMethod !== 'all') {
+          params.set('expensePaymentMethods', paymentMethod);
         }
 
         const response = await fetch(
@@ -2344,13 +2381,13 @@ export default function GroupersChartPage() {
         } else {
           const errorData = await response.json();
           setWeeklyCategoryError(
-            errorData.error || "Error al cargar datos de categorías semanales"
+            errorData.error || 'Error al cargar datos de categorías semanales'
           );
         }
       } catch (error) {
-        console.error("Error fetching weekly category data:", error);
+        console.error('Error fetching weekly category data:', error);
         setWeeklyCategoryError(
-          "Error de conexión. Verifica tu conexión a internet."
+          'Error de conexión. Verifica tu conexión a internet.'
         );
       } finally {
         setIsLoadingWeeklyCategories(false);
@@ -2385,22 +2422,22 @@ export default function GroupersChartPage() {
         const params = new URLSearchParams();
 
         // For current view, fetch budget for active period only
-        if (activeTab === "current") {
-          params.append("periodId", activePeriod.id.toString());
+        if (activeTab === 'current') {
+          params.append('periodId', activePeriod.id.toString());
         }
         // For period comparison and weekly cumulative, fetch all periods
 
         // Add budget payment method filtering
         if (selectedBudgetPaymentMethods.length < 3) {
           params.append(
-            "budgetPaymentMethods",
-            selectedBudgetPaymentMethods.join(",")
+            'budgetPaymentMethods',
+            selectedBudgetPaymentMethods.join(',')
           );
         }
 
         // Add estudio filtering if selected
         if (selectedEstudio) {
-          params.append("estudioId", selectedEstudio.toString());
+          params.append('estudioId', selectedEstudio.toString());
         }
 
         // Add grouper filtering if specific groupers are selected
@@ -2408,7 +2445,7 @@ export default function GroupersChartPage() {
           selectedGroupers.length > 0 &&
           selectedGroupers.length < allGroupers.length
         ) {
-          params.append("grouperIds", selectedGroupers.join(","));
+          params.append('grouperIds', selectedGroupers.join(','));
         }
 
         const response = await fetch(
@@ -2424,7 +2461,7 @@ export default function GroupersChartPage() {
           } = {};
 
           data.forEach((item: any) => {
-            const periodKey = item.period_id?.toString() || "all";
+            const periodKey = item.period_id?.toString() || 'all';
             if (!budgetLookup[periodKey]) {
               budgetLookup[periodKey] = {};
             }
@@ -2440,14 +2477,14 @@ export default function GroupersChartPage() {
           setBudgetError(errorMessage);
 
           // Don't show toast for budget errors, just log them
-          console.warn("Budget data fetch failed:", errorMessage);
+          console.warn('Budget data fetch failed:', errorMessage);
         }
       } catch (error) {
-        console.error("Error fetching budget data:", error);
+        console.error('Error fetching budget data:', error);
         const errorMessage =
           error instanceof Error
             ? error.message
-            : "Error de conexión al cargar presupuestos";
+            : 'Error de conexión al cargar presupuestos';
         setBudgetError(errorMessage);
       } finally {
         setIsLoadingBudgets(false);
@@ -2475,22 +2512,22 @@ export default function GroupersChartPage() {
 
   // Retry function for period comparison data
   const retryPeriodComparisonLoad = () => {
-    if (activeTab === "period-comparison") {
+    if (activeTab === 'period-comparison') {
       setPeriodComparisonError(null);
       setLastPaymentMethodUsed((prev) => ({
         ...prev,
-        periodComparison: "",
+        periodComparison: '',
       }));
     }
   };
 
   // Retry function for weekly cumulative data
   const retryWeeklyCumulativeLoad = () => {
-    if (activeTab === "weekly-cumulative" && activePeriod) {
+    if (activeTab === 'weekly-cumulative' && activePeriod) {
       setWeeklyCumulativeError(null);
       setLastPaymentMethodUsed((prev) => ({
         ...prev,
-        weeklyCumulative: "",
+        weeklyCumulative: '',
       }));
     }
   };
@@ -2504,7 +2541,7 @@ export default function GroupersChartPage() {
       return expenseData;
     }
 
-    const periodKey = periodId?.toString() || "all";
+    const periodKey = periodId?.toString() || 'all';
     const periodBudgets = budgetData[periodKey] || {};
 
     return expenseData.map((item) => ({
@@ -2711,9 +2748,9 @@ export default function GroupersChartPage() {
 
   // Format currency
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("es-MX", {
-      style: "currency",
-      currency: "MXN",
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
       minimumFractionDigits: 0,
     }).format(value);
   };
@@ -2722,7 +2759,7 @@ export default function GroupersChartPage() {
   const retryPeriodComparison = () => {
     setLastPaymentMethodUsed((prev) => ({
       ...prev,
-      periodComparison: "",
+      periodComparison: '',
     }));
     setPeriodComparisonError(null);
   };
@@ -2730,7 +2767,7 @@ export default function GroupersChartPage() {
   const retryWeeklyCumulative = () => {
     setLastPaymentMethodUsed((prev) => ({
       ...prev,
-      weeklyCumulative: "",
+      weeklyCumulative: '',
     }));
     setWeeklyCumulativeError(null);
   };
@@ -2738,7 +2775,7 @@ export default function GroupersChartPage() {
   const retryWeeklyExpenses = () => {
     setLastPaymentMethodUsed((prev) => ({
       ...prev,
-      weeklyExpenses: "",
+      weeklyExpenses: '',
     }));
     setWeeklyExpensesError(null);
   };
@@ -2766,10 +2803,12 @@ export default function GroupersChartPage() {
 
     const payload = data.payload;
     const weekLabel = payload.week_label;
-    
+
     // Find the corresponding week data from weeklyExpensesData
-    const weekData = weeklyExpensesData.find((week) => week.week_label === weekLabel);
-    
+    const weekData = weeklyExpensesData.find(
+      (week) => week.week_label === weekLabel
+    );
+
     if (weekData) {
       const selectedWeekData: SelectedWeekData = {
         week_start: weekData.week_start,
@@ -2797,8 +2836,8 @@ export default function GroupersChartPage() {
 
   // Loading skeleton components
   const ChartSkeleton = () => (
-    <div className="w-full h-[400px] space-y-4">
-      <div className="flex justify-between items-center">
+    <div className="h-[400px] w-full space-y-4">
+      <div className="flex items-center justify-between">
         <Skeleton className="h-6 w-48" />
         <Skeleton className="h-4 w-24" />
       </div>
@@ -2815,15 +2854,15 @@ export default function GroupersChartPage() {
   );
 
   const LineChartSkeleton = () => (
-    <div className="w-full h-[500px] space-y-4">
-      <div className="flex justify-between items-center">
+    <div className="h-[500px] w-full space-y-4">
+      <div className="flex items-center justify-between">
         <Skeleton className="h-6 w-48" />
         <Skeleton className="h-4 w-32" />
       </div>
-      <div className="relative h-[400px] border rounded">
+      <div className="relative h-[400px] rounded border">
         <div className="absolute inset-4 space-y-8">
           {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-end space-x-8 h-12">
+            <div key={i} className="flex h-12 items-end space-x-8">
               {[...Array(6)].map((_, j) => (
                 <Skeleton
                   key={j}
@@ -2859,11 +2898,11 @@ export default function GroupersChartPage() {
     message: string;
     onRetry: () => void;
   }) => (
-    <div className="text-center py-16 space-y-4">
-      <div className="text-red-500 text-lg font-medium">
+    <div className="space-y-4 py-16 text-center">
+      <div className="text-lg font-medium text-red-500">
         Error al cargar los datos
       </div>
-      <p className="text-muted-foreground max-w-md mx-auto">{message}</p>
+      <p className="mx-auto max-w-md text-muted-foreground">{message}</p>
       <Button variant="outline" onClick={onRetry} className="mt-4">
         Intentar de nuevo
       </Button>
@@ -2882,10 +2921,10 @@ export default function GroupersChartPage() {
     icon?: React.ReactNode;
     action?: React.ReactNode;
   }) => (
-    <div className="text-center py-16 space-y-4">
-      {icon && <div className="flex justify-center mb-4">{icon}</div>}
-      <div className="text-muted-foreground text-lg font-medium">{title}</div>
-      <p className="text-muted-foreground max-w-md mx-auto text-sm">
+    <div className="space-y-4 py-16 text-center">
+      {icon && <div className="mb-4 flex justify-center">{icon}</div>}
+      <div className="text-lg font-medium text-muted-foreground">{title}</div>
+      <p className="mx-auto max-w-md text-sm text-muted-foreground">
         {description}
       </p>
       {action && <div className="mt-6">{action}</div>}
@@ -2896,7 +2935,7 @@ export default function GroupersChartPage() {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="p-2 bg-white dark:bg-gray-800 border rounded shadow-sm">
+        <div className="rounded border bg-white p-2 shadow-sm dark:bg-gray-800">
           <p className="font-medium">{payload[0].payload.name}</p>
           <p className="text-sm">{formatCurrency(payload[0].value)}</p>
         </div>
@@ -2939,7 +2978,7 @@ export default function GroupersChartPage() {
           projectionMode={projectionMode}
           formatLabel={(label: string) => label}
           formatValue={(value: number, name: string) =>
-            `${projectionMode ? "Presupuesto" : "Gastos"}: ${formatCurrency(
+            `${projectionMode ? 'Presupuesto' : 'Gastos'}: ${formatCurrency(
               value
             )}`
           }
@@ -2958,18 +2997,18 @@ export default function GroupersChartPage() {
       payload.forEach((entry: any) => {
         if (
           entry.value > 0 ||
-          (showBudgets && entry.dataKey.startsWith("budget_"))
+          (showBudgets && entry.dataKey.startsWith('budget_'))
         ) {
-          const isBudget = entry.dataKey.startsWith("budget_");
+          const isBudget = entry.dataKey.startsWith('budget_');
           const grouperId = parseInt(
-            entry.dataKey.replace(isBudget ? "budget_" : "grouper_", "")
+            entry.dataKey.replace(isBudget ? 'budget_' : 'grouper_', '')
           );
 
           if (!grouperMap.has(grouperId)) {
             const uniqueGroupers = getUniqueGroupers(periodComparisonData);
             const grouperName =
               uniqueGroupers.find((g) => g.grouper_id === grouperId)
-                ?.grouper_name || "Unknown";
+                ?.grouper_name || 'Unknown';
             grouperMap.set(grouperId, {
               name: grouperName,
               expense: 0,
@@ -2991,21 +3030,21 @@ export default function GroupersChartPage() {
       });
 
       return (
-        <div className="p-3 bg-white dark:bg-gray-800 border rounded shadow-lg min-w-[270px]">
-          <p className="font-semibold mb-3 text-center border-b pb-2">
+        <div className="min-w-[270px] rounded border bg-white p-3 shadow-lg dark:bg-gray-800">
+          <p className="mb-3 border-b pb-2 text-center font-semibold">
             {label}
           </p>
           {Array.from(grouperMap.entries()).map(
             ([grouperId, data]: [number, any]) => (
               <div key={grouperId} className="mb-3 last:mb-0">
-                <p className="font-medium text-sm mb-2">{data.name}</p>
+                <p className="mb-2 text-sm font-medium">{data.name}</p>
 
                 {/* Expense data */}
                 {data.expense > 0 && (
                   <div className="flex items-center justify-between gap-3 py-1">
                     <div className="flex items-center gap-2">
                       <div
-                        className="w-3 h-3 rounded-sm"
+                        className="h-3 w-3 rounded-sm"
                         style={{ backgroundColor: data.expenseColor }}
                       />
                       <span className="text-sm font-semibold">
@@ -3023,9 +3062,9 @@ export default function GroupersChartPage() {
                   <div className="flex items-center justify-between gap-3 py-1">
                     <div className="flex items-center gap-2">
                       <div
-                        className="w-3 h-3 rounded-sm border-2 border-dashed"
+                        className="h-3 w-3 rounded-sm border-2 border-dashed"
                         style={{
-                          backgroundColor: data.budgetColor + "40",
+                          backgroundColor: data.budgetColor + '40',
                           borderColor: data.budgetColor,
                         }}
                       />
@@ -3041,7 +3080,7 @@ export default function GroupersChartPage() {
 
                 {/* Show comparison if both values exist */}
                 {showBudgets && data.expense > 0 && data.budget > 0 && (
-                  <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
+                  <div className="mt-2 border-t border-gray-200 pt-2 dark:border-gray-600">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground">Diferencia:</span>
                       {(() => {
@@ -3052,13 +3091,13 @@ export default function GroupersChartPage() {
                           <span
                             className={`font-semibold ${
                               isOverBudget
-                                ? "text-red-600 dark:text-red-400"
-                                : "text-green-600 dark:text-green-400"
+                                ? 'text-red-600 dark:text-red-400'
+                                : 'text-green-600 dark:text-green-400'
                             }`}
                           >
-                            {isOverBudget ? "+" : ""}
+                            {isOverBudget ? '+' : ''}
                             {formatCurrency(difference)}
-                            {isOverBudget ? " 📈" : " 📉"}
+                            {isOverBudget ? ' 📈' : ' 📉'}
                           </span>
                         );
                       })()}
@@ -3072,13 +3111,13 @@ export default function GroupersChartPage() {
           {/* Show filter context information */}
           {(selectedGroupers.length < allGroupers.length ||
             selectedEstudio ||
-            paymentMethod !== "all") && (
-            <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
-              <p className="text-xs text-muted-foreground text-center">
+            paymentMethod !== 'all') && (
+            <div className="mt-3 border-t border-gray-200 pt-2 dark:border-gray-600">
+              <p className="text-center text-xs text-muted-foreground">
                 {selectedGroupers.length < allGroupers.length &&
-                  "Filtrado por agrupadores"}
-                {selectedEstudio && " • Estudio seleccionado"}
-                {paymentMethod !== "all" && " • Método de pago filtrado"}
+                  'Filtrado por agrupadores'}
+                {selectedEstudio && ' • Estudio seleccionado'}
+                {paymentMethod !== 'all' && ' • Método de pago filtrado'}
               </p>
             </div>
           )}
@@ -3092,23 +3131,23 @@ export default function GroupersChartPage() {
   const CustomWeeklyTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="p-3 bg-white dark:bg-gray-800 border rounded shadow-lg">
-          <p className="font-medium mb-2">{label}</p>
+        <div className="rounded border bg-white p-3 shadow-lg dark:bg-gray-800">
+          <p className="mb-2 font-medium">{label}</p>
           {payload.map((entry: any, index: number) => {
             if (entry.value > 0) {
               // Find grouper name from the data key
               const grouperKey = entry.dataKey;
-              const grouperId = parseInt(grouperKey.replace("grouper_", ""));
+              const grouperId = parseInt(grouperKey.replace('grouper_', ''));
               const uniqueGroupers =
                 getUniqueGroupersFromWeekly(weeklyCumulativeData);
               const grouperName =
                 uniqueGroupers.find((g) => g.grouper_id === grouperId)
-                  ?.grouper_name || "Unknown";
+                  ?.grouper_name || 'Unknown';
 
               return (
                 <div key={index} className="flex items-center gap-2 text-sm">
                   <div
-                    className="w-3 h-3 rounded-full"
+                    className="h-3 w-3 rounded-full"
                     style={{ backgroundColor: entry.color }}
                   />
                   <span>{grouperName}:</span>
@@ -3124,13 +3163,13 @@ export default function GroupersChartPage() {
           {/* Show filter context information */}
           {(selectedGroupers.length < allGroupers.length ||
             selectedEstudio ||
-            paymentMethod !== "all") && (
-            <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
-              <p className="text-xs text-muted-foreground text-center">
+            paymentMethod !== 'all') && (
+            <div className="mt-3 border-t border-gray-200 pt-2 dark:border-gray-600">
+              <p className="text-center text-xs text-muted-foreground">
                 {selectedGroupers.length < allGroupers.length &&
-                  "Filtrado por agrupadores"}
-                {selectedEstudio && " • Estudio seleccionado"}
-                {paymentMethod !== "all" && " • Método de pago filtrado"}
+                  'Filtrado por agrupadores'}
+                {selectedEstudio && ' • Estudio seleccionado'}
+                {paymentMethod !== 'all' && ' • Método de pago filtrado'}
               </p>
             </div>
           )}
@@ -3144,23 +3183,23 @@ export default function GroupersChartPage() {
   const CustomWeeklyExpensesTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="p-3 bg-white dark:bg-gray-800 border rounded shadow-lg">
-          <p className="font-medium mb-2">{label}</p>
+        <div className="rounded border bg-white p-3 shadow-lg dark:bg-gray-800">
+          <p className="mb-2 font-medium">{label}</p>
           {payload.map((entry: any, index: number) => {
             if (entry.value > 0) {
               // Find grouper name from the data key
               const grouperKey = entry.dataKey;
-              const grouperId = parseInt(grouperKey.replace("grouper_", ""));
+              const grouperId = parseInt(grouperKey.replace('grouper_', ''));
               const uniqueGroupers =
                 getUniqueGroupersFromWeeklyExpenses(weeklyExpensesData);
               const grouperName =
                 uniqueGroupers.find((g) => g.grouper_id === grouperId)
-                  ?.grouper_name || "Unknown";
+                  ?.grouper_name || 'Unknown';
 
               return (
                 <div key={index} className="flex items-center gap-2 text-sm">
                   <div
-                    className="w-3 h-3 rounded-full"
+                    className="h-3 w-3 rounded-full"
                     style={{ backgroundColor: entry.color }}
                   />
                   <span>{grouperName}:</span>
@@ -3176,13 +3215,13 @@ export default function GroupersChartPage() {
           {/* Show filter context information */}
           {(selectedGroupers.length < allGroupers.length ||
             selectedEstudio ||
-            paymentMethod !== "all") && (
-            <div className="mt-3 pt-2 border-t border-gray-200 dark:border-gray-600">
-              <p className="text-xs text-muted-foreground text-center">
+            paymentMethod !== 'all') && (
+            <div className="mt-3 border-t border-gray-200 pt-2 dark:border-gray-600">
+              <p className="text-center text-xs text-muted-foreground">
                 {selectedGroupers.length < allGroupers.length &&
-                  "Filtrado por agrupadores"}
-                {selectedEstudio && " • Estudio seleccionado"}
-                {paymentMethod !== "all" && " • Método de pago filtrado"}
+                  'Filtrado por agrupadores'}
+                {selectedEstudio && ' • Estudio seleccionado'}
+                {paymentMethod !== 'all' && ' • Método de pago filtrado'}
               </p>
             </div>
           )}
@@ -3209,20 +3248,20 @@ export default function GroupersChartPage() {
     setSelectedGroupers(selected);
 
     // Reset category selection when filter changes (only relevant for current tab)
-    if (activeTab === "current") {
+    if (activeTab === 'current') {
       setSelectedGrouper(null);
       setShowCategoryChart(false);
       setCategoryData([]);
     }
 
     // Set appropriate loading states based on active tab to provide immediate feedback
-    if (activeTab === "current") {
+    if (activeTab === 'current') {
       setIsLoading(true);
-    } else if (activeTab === "period-comparison") {
+    } else if (activeTab === 'period-comparison') {
       setIsLoadingPeriodComparison(true);
-    } else if (activeTab === "weekly-cumulative") {
+    } else if (activeTab === 'weekly-cumulative') {
       setIsLoadingWeeklyCumulative(true);
-    } else if (activeTab === "weekly-expenses") {
+    } else if (activeTab === 'weekly-expenses') {
       setIsLoadingWeeklyExpenses(true);
     }
   };
@@ -3235,13 +3274,13 @@ export default function GroupersChartPage() {
     setBudgetError(null);
 
     // Set appropriate loading states based on active tab to provide immediate feedback
-    if (activeTab === "current") {
+    if (activeTab === 'current') {
       setIsLoading(true);
-    } else if (activeTab === "period-comparison") {
+    } else if (activeTab === 'period-comparison') {
       setIsLoadingPeriodComparison(true);
-    } else if (activeTab === "weekly-cumulative") {
+    } else if (activeTab === 'weekly-cumulative') {
       setIsLoadingWeeklyCumulative(true);
-    } else if (activeTab === "weekly-expenses") {
+    } else if (activeTab === 'weekly-expenses') {
       setIsLoadingWeeklyExpenses(true);
     }
   };
@@ -3251,7 +3290,7 @@ export default function GroupersChartPage() {
     setPaymentMethod(newPaymentMethod);
 
     // Reset category selection when filter changes (only relevant for current tab)
-    if (activeTab === "current") {
+    if (activeTab === 'current') {
       setSelectedGrouper(null);
       setShowCategoryChart(false);
       setCategoryData([]);
@@ -3259,46 +3298,50 @@ export default function GroupersChartPage() {
 
     // Set appropriate loading states based on active tab to provide immediate feedback
     // This ensures users see loading state immediately when filter changes
-    if (activeTab === "current") {
+    if (activeTab === 'current') {
       setIsLoading(true);
-    } else if (activeTab === "period-comparison") {
+    } else if (activeTab === 'period-comparison') {
       setIsLoadingPeriodComparison(true);
-    } else if (activeTab === "weekly-cumulative") {
+    } else if (activeTab === 'weekly-cumulative') {
       setIsLoadingWeeklyCumulative(true);
-    } else if (activeTab === "weekly-expenses") {
+    } else if (activeTab === 'weekly-expenses') {
       setIsLoadingWeeklyExpenses(true);
     }
   };
 
   // Handle tab switching with filter state maintenance
   const handleTabChange = (
-    tab: "current" | "period-comparison" | "weekly-cumulative" | "weekly-expenses"
+    tab:
+      | 'current'
+      | 'period-comparison'
+      | 'weekly-cumulative'
+      | 'weekly-expenses'
   ) => {
     // Store the previous tab for reference
     const previousTab = activeTab;
 
     // Clear loading states for tabs we're switching away from
-    if (activeTab === "current") {
+    if (activeTab === 'current') {
       setIsLoading(false);
-    } else if (activeTab === "period-comparison") {
+    } else if (activeTab === 'period-comparison') {
       setIsLoadingPeriodComparison(false);
-    } else if (activeTab === "weekly-cumulative") {
+    } else if (activeTab === 'weekly-cumulative') {
       setIsLoadingWeeklyCumulative(false);
-    } else if (activeTab === "weekly-expenses") {
+    } else if (activeTab === 'weekly-expenses') {
       setIsLoadingWeeklyExpenses(false);
     }
 
     setActiveTab(tab);
 
     // Reset category selection when switching tabs (only relevant for current view)
-    if (tab !== "current") {
+    if (tab !== 'current') {
       setSelectedGrouper(null);
       setShowCategoryChart(false);
       setCategoryData([]);
     }
 
     // Clear week selection when switching away from weekly-expenses tab
-    if (activeTab === "weekly-expenses" && tab !== "weekly-expenses") {
+    if (activeTab === 'weekly-expenses' && tab !== 'weekly-expenses') {
       clearWeekSelection();
     }
 
@@ -3311,7 +3354,7 @@ export default function GroupersChartPage() {
       };
 
       switch (tabType) {
-        case "current":
+        case 'current':
           const lastCurrentState = lastFilterState.current;
           return (
             !grouperData.length ||
@@ -3323,7 +3366,7 @@ export default function GroupersChartPage() {
             currentFilterState.selectedEstudio !==
               lastCurrentState.selectedEstudio
           );
-        case "period-comparison":
+        case 'period-comparison':
           const lastPeriodState = lastFilterState.periodComparison;
           return (
             !periodComparisonData.length ||
@@ -3335,7 +3378,7 @@ export default function GroupersChartPage() {
             currentFilterState.selectedEstudio !==
               lastPeriodState.selectedEstudio
           );
-        case "weekly-cumulative":
+        case 'weekly-cumulative':
           const lastWeeklyState = lastFilterState.weeklyCumulative;
           return (
             !weeklyCumulativeData.length ||
@@ -3347,7 +3390,7 @@ export default function GroupersChartPage() {
             currentFilterState.selectedEstudio !==
               lastWeeklyState.selectedEstudio
           );
-        case "weekly-expenses":
+        case 'weekly-expenses':
           const lastWeeklyExpensesState = lastFilterState.weeklyExpenses;
           return (
             !weeklyExpensesData.length ||
@@ -3355,7 +3398,8 @@ export default function GroupersChartPage() {
             // Data needs refresh if filters changed
             JSON.stringify(currentFilterState.selectedGroupers) !==
               JSON.stringify(lastWeeklyExpensesState.selectedGroupers) ||
-            currentFilterState.showBudgets !== lastWeeklyExpensesState.showBudgets ||
+            currentFilterState.showBudgets !==
+              lastWeeklyExpensesState.showBudgets ||
             currentFilterState.selectedEstudio !==
               lastWeeklyExpensesState.selectedEstudio
           );
@@ -3366,21 +3410,21 @@ export default function GroupersChartPage() {
 
     // Set loading state for the tab being switched to if data needs to be fetched
     // This provides immediate visual feedback while data loads and ensures filter state is applied
-    if (tab === "current" && needsDataRefresh("current")) {
+    if (tab === 'current' && needsDataRefresh('current')) {
       setIsLoading(true);
     } else if (
-      tab === "period-comparison" &&
-      needsDataRefresh("period-comparison")
+      tab === 'period-comparison' &&
+      needsDataRefresh('period-comparison')
     ) {
       setIsLoadingPeriodComparison(true);
     } else if (
-      tab === "weekly-cumulative" &&
-      needsDataRefresh("weekly-cumulative")
+      tab === 'weekly-cumulative' &&
+      needsDataRefresh('weekly-cumulative')
     ) {
       setIsLoadingWeeklyCumulative(true);
     } else if (
-      tab === "weekly-expenses" &&
-      needsDataRefresh("weekly-expenses")
+      tab === 'weekly-expenses' &&
+      needsDataRefresh('weekly-expenses')
     ) {
       setIsLoadingWeeklyExpenses(true);
     }
@@ -3388,46 +3432,46 @@ export default function GroupersChartPage() {
     // Force data refresh for the new tab to ensure filter state is properly applied
     // This is especially important when switching between tabs with different filter states
     setTimeout(() => {
-      if (tab === "current") {
+      if (tab === 'current') {
         // Trigger current view data refresh by updating a dependency
-        setLastPaymentMethodUsed((prev) => ({ ...prev, current: "" }));
-      } else if (tab === "period-comparison") {
+        setLastPaymentMethodUsed((prev) => ({ ...prev, current: '' }));
+      } else if (tab === 'period-comparison') {
         // Trigger period comparison data refresh
-        setLastPaymentMethodUsed((prev) => ({ ...prev, periodComparison: "" }));
-      } else if (tab === "weekly-cumulative") {
+        setLastPaymentMethodUsed((prev) => ({ ...prev, periodComparison: '' }));
+      } else if (tab === 'weekly-cumulative') {
         // Trigger weekly cumulative data refresh
-        setLastPaymentMethodUsed((prev) => ({ ...prev, weeklyCumulative: "" }));
-      } else if (tab === "weekly-expenses") {
+        setLastPaymentMethodUsed((prev) => ({ ...prev, weeklyCumulative: '' }));
+      } else if (tab === 'weekly-expenses') {
         // Trigger weekly expenses data refresh
-        setLastPaymentMethodUsed((prev) => ({ ...prev, weeklyExpenses: "" }));
+        setLastPaymentMethodUsed((prev) => ({ ...prev, weeklyExpenses: '' }));
       }
     }, 0);
   };
 
   // Tab navigation component
   const TabNavigation = () => (
-    <div className="flex space-x-1 mb-6">
+    <div className="mb-6 flex space-x-1">
       <Button
-        variant={activeTab === "current" ? "default" : "outline"}
-        onClick={() => handleTabChange("current")}
+        variant={activeTab === 'current' ? 'default' : 'outline'}
+        onClick={() => handleTabChange('current')}
       >
         Vista Actual
       </Button>
       <Button
-        variant={activeTab === "period-comparison" ? "default" : "outline"}
-        onClick={() => handleTabChange("period-comparison")}
+        variant={activeTab === 'period-comparison' ? 'default' : 'outline'}
+        onClick={() => handleTabChange('period-comparison')}
       >
         Comparación por Períodos
       </Button>
       <Button
-        variant={activeTab === "weekly-cumulative" ? "default" : "outline"}
-        onClick={() => handleTabChange("weekly-cumulative")}
+        variant={activeTab === 'weekly-cumulative' ? 'default' : 'outline'}
+        onClick={() => handleTabChange('weekly-cumulative')}
       >
         Acumulado Semanal
       </Button>
       <Button
-        variant={activeTab === "weekly-expenses" ? "default" : "outline"}
-        onClick={() => handleTabChange("weekly-expenses")}
+        variant={activeTab === 'weekly-expenses' ? 'default' : 'outline'}
+        onClick={() => handleTabChange('weekly-expenses')}
       >
         Gastos por Semana
       </Button>
@@ -3447,12 +3491,12 @@ export default function GroupersChartPage() {
               </div>
               <div className="space-y-2">
                 <h3 className="text-lg font-semibold">Error al cargar datos</h3>
-                <p className="text-sm text-muted-foreground max-w-md">
+                <p className="max-w-md text-sm text-muted-foreground">
                   {mainDataError}
                 </p>
               </div>
               <Button onClick={retryMainDataLoad} variant="outline">
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="mr-2 h-4 w-4" />
                 Reintentar
               </Button>
             </div>
@@ -3494,18 +3538,18 @@ export default function GroupersChartPage() {
         <Card className="mb-6">
           <CardHeader>
             <CardTitle>
-              Total de {projectionMode ? "presupuesto" : "gastos"} por agrupador
-              {projectionMode && " (Simulación)"}
-              {paymentMethod !== "all" &&
-                ` (${paymentMethod === "cash" ? "Efectivo" : "Crédito"})`}
+              Total de {projectionMode ? 'presupuesto' : 'gastos'} por agrupador
+              {projectionMode && ' (Simulación)'}
+              {paymentMethod !== 'all' &&
+                ` (${paymentMethod === 'cash' ? 'Efectivo' : 'Crédito'})`}
               {activePeriod && ` - ${activePeriod.name}`}
             </CardTitle>
             {referenceLineData.length > 0 && periodIncomeData && (
-              <div className="mt-2 p-3 bg-muted/50 rounded-lg">
+              <div className="mt-2 rounded-lg bg-muted/50 p-3">
                 <p className="text-sm text-muted-foreground">
                   <strong>Líneas de referencia:</strong> Las líneas punteadas de
                   colores muestran el porcentaje del total de ingresos del
-                  período (${periodIncomeData.total_income.toLocaleString()}){" "}
+                  período (${periodIncomeData.total_income.toLocaleString()}){' '}
                   configurado para cada agrupador. Consulte la leyenda debajo
                   del gráfico para identificar cada línea.
                 </p>
@@ -3517,25 +3561,25 @@ export default function GroupersChartPage() {
               <EmptyState
                 title={
                   projectionMode
-                    ? "Sin datos de presupuesto"
-                    : "Sin datos de gastos"
+                    ? 'Sin datos de presupuesto'
+                    : 'Sin datos de gastos'
                 }
                 description={`No hay ${
                   projectionMode
-                    ? "presupuestos asignados"
-                    : "gastos registrados"
+                    ? 'presupuestos asignados'
+                    : 'gastos registrados'
                 } para ${
                   selectedGroupers.length === 1
-                    ? "el agrupador seleccionado"
-                    : "los agrupadores seleccionados"
-                } en este período${selectedEstudio ? " y estudio" : ""}${
-                  projectionMode && paymentMethod !== "all"
-                    ? " (los presupuestos no dependen del método de pago)"
-                    : paymentMethod !== "all"
-                    ? ` con el método de pago ${
-                        paymentMethod === "cash" ? "efectivo" : "crédito"
-                      }`
-                    : ""
+                    ? 'el agrupador seleccionado'
+                    : 'los agrupadores seleccionados'
+                } en este período${selectedEstudio ? ' y estudio' : ''}${
+                  projectionMode && paymentMethod !== 'all'
+                    ? ' (los presupuestos no dependen del método de pago)'
+                    : paymentMethod !== 'all'
+                      ? ` con el método de pago ${
+                          paymentMethod === 'cash' ? 'efectivo' : 'crédito'
+                        }`
+                      : ''
                 }.`}
                 icon={
                   <BarChart3 className="h-12 w-12 text-muted-foreground/50" />
@@ -3546,16 +3590,16 @@ export default function GroupersChartPage() {
                       {projectionMode
                         ? `Intenta cambiar los filtros${
                             selectedEstudio
-                              ? " de agrupadores"
-                              : " o seleccionar otro estudio"
+                              ? ' de agrupadores'
+                              : ' o seleccionar otro estudio'
                           } o asigna presupuestos para este período. Los presupuestos no dependen del método de pago.`
-                        : "Intenta cambiar los filtros o registra algunos gastos para este período."}
+                        : 'Intenta cambiar los filtros o registra algunos gastos para este período.'}
                     </p>
-                    {paymentMethod !== "all" && (
+                    {paymentMethod !== 'all' && (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handlePaymentMethodChange("all")}
+                        onClick={() => handlePaymentMethodChange('all')}
                       >
                         Ver todos los métodos de pago
                       </Button>
@@ -3564,7 +3608,7 @@ export default function GroupersChartPage() {
                 }
               />
             ) : (
-              <div className="w-full h-[400px] mt-4">
+              <div className="mt-4 h-[400px] w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={grouperData.map((item) => ({
@@ -3613,12 +3657,12 @@ export default function GroupersChartPage() {
                           strokeWidth={2}
                           label={{
                             value: `${refData.percentage}%`,
-                            position: "top",
+                            position: 'top',
                             offset: 5,
                             style: {
-                              fontSize: "11px",
+                              fontSize: '11px',
                               fill: color,
-                              fontWeight: "bold",
+                              fontWeight: 'bold',
                             },
                           }}
                         />
@@ -3644,7 +3688,7 @@ export default function GroupersChartPage() {
 
                     <Bar
                       dataKey="amount"
-                      name={projectionMode ? "Presupuesto" : "Gastos"}
+                      name={projectionMode ? 'Presupuesto' : 'Gastos'}
                       onClick={handleGrouperClick}
                       cursor="pointer"
                     >
@@ -3653,7 +3697,7 @@ export default function GroupersChartPage() {
                           key={`main-cell-${index}`}
                           fill={
                             selectedGrouper?.grouper_id === entry.grouper_id
-                              ? "#ff6361"
+                              ? '#ff6361'
                               : chartColors[index % chartColors.length]
                           }
                         />
@@ -3667,13 +3711,13 @@ export default function GroupersChartPage() {
         </Card>
 
         {/* Reference lines legend - moved outside main card to prevent overlap */}
-        {activeTab === "current" && referenceLineData.length > 0 && (
+        {activeTab === 'current' && referenceLineData.length > 0 && (
           <Card className="mb-6">
             <CardContent className="pt-4">
-              <h4 className="text-sm font-semibold text-muted-foreground mb-3">
+              <h4 className="mb-3 text-sm font-semibold text-muted-foreground">
                 Líneas de Referencia (% del Total de Ingresos)
               </h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
                 {referenceLineData.map((refData, index) => {
                   const color =
                     referenceLineColors[index % referenceLineColors.length];
@@ -3685,14 +3729,14 @@ export default function GroupersChartPage() {
                     >
                       <div className="flex items-center space-x-1">
                         <div
-                          className="w-4 h-0.5 border-dashed border-t-2"
+                          className="h-0.5 w-4 border-t-2 border-dashed"
                           style={{ borderColor: color }}
                         ></div>
                         <span className="text-xs font-medium" style={{ color }}>
                           {refData.percentage}%
                         </span>
                       </div>
-                      <span className="text-xs text-muted-foreground truncate">
+                      <span className="truncate text-xs text-muted-foreground">
                         {refData.grouper_name}
                       </span>
                     </div>
@@ -3711,10 +3755,10 @@ export default function GroupersChartPage() {
             <Card className="mb-6">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <p className="text-muted-foreground mb-4">
-                    Ver categorías{" "}
+                  <p className="mb-4 text-muted-foreground">
+                    Ver categorías{' '}
                     {selectedGroupers.length === 1
-                      ? "del agrupador seleccionado"
+                      ? 'del agrupador seleccionado'
                       : `agregadas de los ${selectedGroupers.length} agrupadores seleccionados`}
                   </p>
                   <Button
@@ -3726,8 +3770,8 @@ export default function GroupersChartPage() {
                     }}
                   >
                     {selectedGroupers.length === 1
-                      ? "Mostrar Categorías"
-                      : "Mostrar Categorías Agregadas"}
+                      ? 'Mostrar Categorías'
+                      : 'Mostrar Categorías Agregadas'}
                   </Button>
                 </div>
               </CardContent>
@@ -3741,13 +3785,13 @@ export default function GroupersChartPage() {
                 {selectedGrouper
                   ? `Categorías en agrupador: ${selectedGrouper.grouper_name}`
                   : selectedGroupers.length === 1
-                  ? `Categorías en agrupador: ${
-                      allGroupers.find(
-                        (g) => g.grouper_id === selectedGroupers[0]
-                      )?.grouper_name || "Desconocido"
-                    }`
-                  : `Categorías agregadas (${selectedGroupers.length} agrupadores)`}
-                {projectionMode && " (Simulación)"}
+                    ? `Categorías en agrupador: ${
+                        allGroupers.find(
+                          (g) => g.grouper_id === selectedGroupers[0]
+                        )?.grouper_name || 'Desconocido'
+                      }`
+                    : `Categorías agregadas (${selectedGroupers.length} agrupadores)`}
+                {projectionMode && ' (Simulación)'}
               </CardTitle>
               <Button
                 variant="outline"
@@ -3755,8 +3799,8 @@ export default function GroupersChartPage() {
                 onClick={handleResetSelection}
               >
                 {selectedGrouper
-                  ? "Volver a vista de agrupadores"
-                  : "Ocultar categorías"}
+                  ? 'Volver a vista de agrupadores'
+                  : 'Ocultar categorías'}
               </Button>
             </CardHeader>
             <CardContent>
@@ -3764,49 +3808,49 @@ export default function GroupersChartPage() {
                 <EmptyState
                   title={
                     projectionMode
-                      ? "Sin datos de presupuesto por categorías"
-                      : "Sin datos de categorías"
+                      ? 'Sin datos de presupuesto por categorías'
+                      : 'Sin datos de categorías'
                   }
                   description={
                     selectedGrouper
                       ? `No hay ${
                           projectionMode
-                            ? "presupuestos asignados"
-                            : "gastos registrados"
+                            ? 'presupuestos asignados'
+                            : 'gastos registrados'
                         } en las categorías del agrupador "${
                           selectedGrouper.grouper_name
                         }" para este período${
-                          selectedEstudio ? " y estudio" : ""
+                          selectedEstudio ? ' y estudio' : ''
                         }${
-                          projectionMode && paymentMethod !== "all"
-                            ? " (los presupuestos no dependen del método de pago)"
-                            : ""
+                          projectionMode && paymentMethod !== 'all'
+                            ? ' (los presupuestos no dependen del método de pago)'
+                            : ''
                         }.`
                       : selectedGroupers.length === 1
-                      ? `No hay ${
-                          projectionMode
-                            ? "presupuestos asignados"
-                            : "gastos registrados"
-                        } en las categorías del agrupador seleccionado para este período${
-                          selectedEstudio ? " y estudio" : ""
-                        }${
-                          projectionMode && paymentMethod !== "all"
-                            ? " (los presupuestos no dependen del método de pago)"
-                            : ""
-                        }.`
-                      : `No hay ${
-                          projectionMode
-                            ? "presupuestos asignados"
-                            : "gastos registrados"
-                        } en las categorías de los ${
-                          selectedGroupers.length
-                        } agrupadores seleccionados para este período${
-                          selectedEstudio ? " y estudio" : ""
-                        }${
-                          projectionMode && paymentMethod !== "all"
-                            ? " (los presupuestos no dependen del método de pago)"
-                            : ""
-                        }.`
+                        ? `No hay ${
+                            projectionMode
+                              ? 'presupuestos asignados'
+                              : 'gastos registrados'
+                          } en las categorías del agrupador seleccionado para este período${
+                            selectedEstudio ? ' y estudio' : ''
+                          }${
+                            projectionMode && paymentMethod !== 'all'
+                              ? ' (los presupuestos no dependen del método de pago)'
+                              : ''
+                          }.`
+                        : `No hay ${
+                            projectionMode
+                              ? 'presupuestos asignados'
+                              : 'gastos registrados'
+                          } en las categorías de los ${
+                            selectedGroupers.length
+                          } agrupadores seleccionados para este período${
+                            selectedEstudio ? ' y estudio' : ''
+                          }${
+                            projectionMode && paymentMethod !== 'all'
+                              ? ' (los presupuestos no dependen del método de pago)'
+                              : ''
+                          }.`
                   }
                   icon={
                     <BarChart3 className="h-10 w-10 text-muted-foreground/50" />
@@ -3822,23 +3866,23 @@ export default function GroupersChartPage() {
                   }
                 />
               ) : (
-                <div className="w-full mt-4">
+                <div className="mt-4 w-full">
                   {/* Add scrolling container for large datasets */}
                   <div
                     className="overflow-y-auto"
                     style={{
-                      maxHeight: categoryData.length > 15 ? "600px" : "auto",
+                      maxHeight: categoryData.length > 15 ? '600px' : 'auto',
                       height:
                         categoryData.length <= 15
                           ? `${Math.max(400, categoryData.length * 35 + 60)}px`
-                          : "600px",
+                          : '600px',
                     }}
                   >
                     <ResponsiveContainer
                       width="100%"
                       height={
                         categoryData.length <= 15
-                          ? "100%"
+                          ? '100%'
                           : Math.max(600, categoryData.length * 35 + 60)
                       }
                     >
@@ -3925,13 +3969,13 @@ export default function GroupersChartPage() {
                               formatter={(value: number) =>
                                 value > 0
                                   ? `Presup: ${formatCurrency(value)}`
-                                  : ""
+                                  : ''
                               }
                               style={{
-                                fontSize: "11px",
-                                fill: "#475569",
-                                fontWeight: "600",
-                                fontStyle: "italic",
+                                fontSize: '11px',
+                                fill: '#475569',
+                                fontWeight: '600',
+                                fontStyle: 'italic',
                               }}
                             />
                           </Bar>
@@ -3940,7 +3984,7 @@ export default function GroupersChartPage() {
                         {/* Main data bars for categories - expenses or simulated budget data */}
                         <Bar
                           dataKey="amount"
-                          name={projectionMode ? "Presupuesto" : "Gastos"}
+                          name={projectionMode ? 'Presupuesto' : 'Gastos'}
                           opacity={projectionMode ? 0.7 : 1}
                         >
                           {categoryData.map((entry, index) => {
@@ -3976,10 +4020,10 @@ export default function GroupersChartPage() {
                                 : `Gastos: ${formatCurrency(value)}`
                             }
                             style={{
-                              fontSize: "11px",
-                              fontWeight: "600",
-                              fontStyle: projectionMode ? "italic" : "normal",
-                              fill: projectionMode ? "#6366f1" : "#374151",
+                              fontSize: '11px',
+                              fontWeight: '600',
+                              fontStyle: projectionMode ? 'italic' : 'normal',
+                              fill: projectionMode ? '#6366f1' : '#374151',
                             }}
                           />
                         </Bar>
@@ -4010,12 +4054,12 @@ export default function GroupersChartPage() {
                 <h3 className="text-lg font-semibold">
                   Error al cargar comparación por períodos
                 </h3>
-                <p className="text-sm text-muted-foreground max-w-md">
+                <p className="max-w-md text-sm text-muted-foreground">
                   {periodComparisonError}
                 </p>
               </div>
               <Button onClick={retryPeriodComparisonLoad} variant="outline">
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="mr-2 h-4 w-4" />
                 Reintentar
               </Button>
             </div>
@@ -4060,13 +4104,13 @@ export default function GroupersChartPage() {
         <CardHeader>
           <CardTitle>
             Comparación por Períodos
-            {paymentMethod !== "all" &&
+            {paymentMethod !== 'all' &&
               ` (${
-                paymentMethod === "cash"
-                  ? "Efectivo"
-                  : paymentMethod === "credit"
-                  ? "Crédito"
-                  : "Débito"
+                paymentMethod === 'cash'
+                  ? 'Efectivo'
+                  : paymentMethod === 'credit'
+                    ? 'Crédito'
+                    : 'Débito'
               })`}
           </CardTitle>
         </CardHeader>
@@ -4083,14 +4127,14 @@ export default function GroupersChartPage() {
               title="Sin datos de comparación"
               description={`No hay datos de gastos disponibles para comparar entre períodos${
                 selectedGroupers.length === 1
-                  ? " para el agrupador seleccionado"
+                  ? ' para el agrupador seleccionado'
                   : ` para los ${selectedGroupers.length} agrupadores seleccionados`
               }${
-                paymentMethod !== "all"
+                paymentMethod !== 'all'
                   ? ` con el método de pago ${
-                      paymentMethod === "cash" ? "efectivo" : "crédito"
+                      paymentMethod === 'cash' ? 'efectivo' : 'crédito'
                     }`
-                  : ""
+                  : ''
               }. Registra gastos en diferentes períodos para ver la evolución.`}
               icon={
                 <TrendingUp className="h-12 w-12 text-muted-foreground/50" />
@@ -4101,11 +4145,11 @@ export default function GroupersChartPage() {
                     Intenta cambiar los filtros o registra gastos en múltiples
                     períodos.
                   </p>
-                  {paymentMethod !== "all" && (
+                  {paymentMethod !== 'all' && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handlePaymentMethodChange("all")}
+                      onClick={() => handlePaymentMethodChange('all')}
                     >
                       Ver todos los métodos de pago
                     </Button>
@@ -4114,7 +4158,7 @@ export default function GroupersChartPage() {
               }
             />
           ) : (
-            <div className="w-full h-[500px] mt-4">
+            <div className="mt-4 h-[500px] w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart
                   data={transformedData}
@@ -4165,13 +4209,13 @@ export default function GroupersChartPage() {
                         strokeDasharray="8 4"
                         dot={{
                           r: 3,
-                          fill: "white",
+                          fill: 'white',
                           stroke: chartColors[index % chartColors.length],
                           strokeWidth: 2,
                         }}
                         activeDot={{
                           r: 5,
-                          fill: "white",
+                          fill: 'white',
                           stroke: chartColors[index % chartColors.length],
                           strokeWidth: 2,
                         }}
@@ -4201,12 +4245,12 @@ export default function GroupersChartPage() {
                 <h3 className="text-lg font-semibold">
                   Error al cargar acumulado semanal
                 </h3>
-                <p className="text-sm text-muted-foreground max-w-md">
+                <p className="max-w-md text-sm text-muted-foreground">
                   {weeklyCumulativeError}
                 </p>
               </div>
               <Button onClick={retryWeeklyCumulativeLoad} variant="outline">
-                <RefreshCw className="h-4 w-4 mr-2" />
+                <RefreshCw className="mr-2 h-4 w-4" />
                 Reintentar
               </Button>
             </div>
@@ -4251,13 +4295,13 @@ export default function GroupersChartPage() {
         <CardHeader>
           <CardTitle>
             Acumulado Semanal
-            {paymentMethod !== "all" &&
+            {paymentMethod !== 'all' &&
               ` (${
-                paymentMethod === "cash"
-                  ? "Efectivo"
-                  : paymentMethod === "credit"
-                  ? "Crédito"
-                  : "Débito"
+                paymentMethod === 'cash'
+                  ? 'Efectivo'
+                  : paymentMethod === 'credit'
+                    ? 'Crédito'
+                    : 'Débito'
               })`}
             {activePeriod && ` - ${activePeriod.name}`}
           </CardTitle>
@@ -4275,14 +4319,14 @@ export default function GroupersChartPage() {
               title="Sin datos semanales"
               description={`No hay gastos registrados para mostrar el acumulado semanal${
                 selectedGroupers.length === 1
-                  ? " del agrupador seleccionado"
+                  ? ' del agrupador seleccionado'
                   : ` de los ${selectedGroupers.length} agrupadores seleccionados`
-              } en el período "${activePeriod?.name || "actual"}"${
-                paymentMethod !== "all"
+              } en el período "${activePeriod?.name || 'actual'}"${
+                paymentMethod !== 'all'
                   ? ` con el método de pago ${
-                      paymentMethod === "cash" ? "efectivo" : "crédito"
+                      paymentMethod === 'cash' ? 'efectivo' : 'crédito'
                     }`
-                  : ""
+                  : ''
               }. Registra algunos gastos para ver la evolución semanal.`}
               icon={<Calendar className="h-12 w-12 text-muted-foreground/50" />}
               action={
@@ -4291,11 +4335,11 @@ export default function GroupersChartPage() {
                     Intenta cambiar los filtros o registra gastos en este
                     período.
                   </p>
-                  {paymentMethod !== "all" && (
+                  {paymentMethod !== 'all' && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handlePaymentMethodChange("all")}
+                      onClick={() => handlePaymentMethodChange('all')}
                     >
                       Ver todos los métodos de pago
                     </Button>
@@ -4305,13 +4349,13 @@ export default function GroupersChartPage() {
             />
           ) : (
             <div
-              className={`w-full h-[500px] mt-4 ${
-                transformedData.length > 8 ? "overflow-x-auto" : ""
+              className={`mt-4 h-[500px] w-full ${
+                transformedData.length > 8 ? 'overflow-x-auto' : ''
               }`}
             >
               <div
                 className={`${
-                  transformedData.length > 8 ? "min-w-[800px]" : "w-full"
+                  transformedData.length > 8 ? 'min-w-[800px]' : 'w-full'
                 } h-full`}
               >
                 <ResponsiveContainer width="100%" height={500}>
@@ -4413,20 +4457,21 @@ export default function GroupersChartPage() {
     }
 
     const transformedData = transformWeeklyExpensesData(weeklyExpensesData);
-    const uniqueGroupers = getUniqueGroupersFromWeeklyExpenses(weeklyExpensesData);
+    const uniqueGroupers =
+      getUniqueGroupersFromWeeklyExpenses(weeklyExpensesData);
 
     return (
       <Card>
         <CardHeader>
           <CardTitle>
             Gastos por Semana
-            {paymentMethod !== "all" &&
+            {paymentMethod !== 'all' &&
               ` (${
-                paymentMethod === "cash"
-                  ? "Efectivo"
-                  : paymentMethod === "credit"
-                  ? "Crédito"
-                  : "Débito"
+                paymentMethod === 'cash'
+                  ? 'Efectivo'
+                  : paymentMethod === 'credit'
+                    ? 'Crédito'
+                    : 'Débito'
               })`}
             {activePeriod && ` - ${activePeriod.name}`}
           </CardTitle>
@@ -4444,14 +4489,14 @@ export default function GroupersChartPage() {
               title="Sin datos semanales"
               description={`No hay gastos registrados para mostrar los gastos por semana${
                 selectedGroupers.length === 1
-                  ? " del agrupador seleccionado"
+                  ? ' del agrupador seleccionado'
                   : ` de los ${selectedGroupers.length} agrupadores seleccionados`
-              } en el período "${activePeriod?.name || "actual"}"${
-                paymentMethod !== "all"
+              } en el período "${activePeriod?.name || 'actual'}"${
+                paymentMethod !== 'all'
                   ? ` con el método de pago ${
-                      paymentMethod === "cash" ? "efectivo" : "crédito"
+                      paymentMethod === 'cash' ? 'efectivo' : 'crédito'
                     }`
-                  : ""
+                  : ''
               }. Registra algunos gastos para ver los gastos por semana.`}
               icon={<Calendar className="h-12 w-12 text-muted-foreground/50" />}
               action={
@@ -4460,11 +4505,11 @@ export default function GroupersChartPage() {
                     Intenta cambiar los filtros o registra gastos en este
                     período.
                   </p>
-                  {paymentMethod !== "all" && (
+                  {paymentMethod !== 'all' && (
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => handlePaymentMethodChange("all")}
+                      onClick={() => handlePaymentMethodChange('all')}
                     >
                       Ver todos los métodos de pago
                     </Button>
@@ -4474,13 +4519,13 @@ export default function GroupersChartPage() {
             />
           ) : (
             <div
-              className={`w-full h-[500px] mt-4 ${
-                transformedData.length > 8 ? "overflow-x-auto" : ""
+              className={`mt-4 h-[500px] w-full ${
+                transformedData.length > 8 ? 'overflow-x-auto' : ''
               }`}
             >
               <div
                 className={`${
-                  transformedData.length > 8 ? "min-w-[800px]" : "w-full"
+                  transformedData.length > 8 ? 'min-w-[800px]' : 'w-full'
                 } h-full`}
               >
                 <ResponsiveContainer width="100%" height={500}>
@@ -4516,20 +4561,23 @@ export default function GroupersChartPage() {
                         onClick={handleWeekBarClick}
                       >
                         {transformedData.map((entry, entryIndex) => (
-                          <Cell 
+                          <Cell
                             key={`cell-${grouper.grouper_id}-${entryIndex}`}
                             fill={
-                              selectedWeek && entry.week_label === selectedWeek.week_label
+                              selectedWeek &&
+                              entry.week_label === selectedWeek.week_label
                                 ? `${chartColors[index % chartColors.length]}CC` // Add transparency for selected
                                 : chartColors[index % chartColors.length]
                             }
                             stroke={
-                              selectedWeek && entry.week_label === selectedWeek.week_label
-                                ? "#ffffff"
-                                : "none"
+                              selectedWeek &&
+                              entry.week_label === selectedWeek.week_label
+                                ? '#ffffff'
+                                : 'none'
                             }
                             strokeWidth={
-                              selectedWeek && entry.week_label === selectedWeek.week_label
+                              selectedWeek &&
+                              entry.week_label === selectedWeek.week_label
                                 ? 2
                                 : 0
                             }
@@ -4568,7 +4616,11 @@ export default function GroupersChartPage() {
                   {weeklyCategoryError}
                 </p>
               </div>
-              <Button onClick={retryWeeklyCategories} variant="outline" size="sm">
+              <Button
+                onClick={retryWeeklyCategories}
+                variant="outline"
+                size="sm"
+              >
                 <RefreshCw className="mr-2 h-4 w-4" />
                 Intentar de nuevo
               </Button>
@@ -4599,14 +4651,10 @@ export default function GroupersChartPage() {
       return (
         <Card className="mt-6">
           <CardHeader>
-            <CardTitle className="flex justify-between items-center">
+            <CardTitle className="flex items-center justify-between">
               Gastos por Categorías - {selectedWeek.week_label}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={clearWeekSelection}
-              >
-                <X className="h-4 w-4 mr-1" />
+              <Button variant="outline" size="sm" onClick={clearWeekSelection}>
+                <X className="mr-1 h-4 w-4" />
                 Cerrar
               </Button>
             </CardTitle>
@@ -4615,18 +4663,21 @@ export default function GroupersChartPage() {
             <EmptyState
               title="Sin gastos en esta semana"
               description={`No hay gastos registrados en la ${selectedWeek.week_label} para las categorías de los agrupadores seleccionados${
-                paymentMethod !== "all" 
+                paymentMethod !== 'all'
                   ? ` con el método de pago ${
-                      paymentMethod === "cash" ? "efectivo" : 
-                      paymentMethod === "credit" ? "crédito" : "débito"
+                      paymentMethod === 'cash'
+                        ? 'efectivo'
+                        : paymentMethod === 'credit'
+                          ? 'crédito'
+                          : 'débito'
                     }`
-                  : ""
+                  : ''
               }.`}
               icon={<Calendar className="h-12 w-12 text-muted-foreground/50" />}
               action={
-                <Button 
-                  variant="outline" 
-                  size="sm" 
+                <Button
+                  variant="outline"
+                  size="sm"
                   onClick={clearWeekSelection}
                 >
                   Volver a vista semanal
@@ -4642,28 +4693,24 @@ export default function GroupersChartPage() {
     return (
       <Card className="mt-6">
         <CardHeader>
-          <CardTitle className="flex justify-between items-center">
+          <CardTitle className="flex items-center justify-between">
             Gastos por Categorías - {selectedWeek.week_label}
-            {paymentMethod !== "all" &&
+            {paymentMethod !== 'all' &&
               ` (${
-                paymentMethod === "cash"
-                  ? "Efectivo"
-                  : paymentMethod === "credit"
-                  ? "Crédito"
-                  : "Débito"
+                paymentMethod === 'cash'
+                  ? 'Efectivo'
+                  : paymentMethod === 'credit'
+                    ? 'Crédito'
+                    : 'Débito'
               })`}
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={clearWeekSelection}
-            >
-              <X className="h-4 w-4 mr-1" />
+            <Button variant="outline" size="sm" onClick={clearWeekSelection}>
+              <X className="mr-1 h-4 w-4" />
               Cerrar
             </Button>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="w-full h-[500px] mt-4">
+          <div className="mt-4 h-[500px] w-full">
             <ResponsiveContainer width="100%" height={500}>
               <BarChart
                 data={weeklyCategoryData}
@@ -4671,7 +4718,7 @@ export default function GroupersChartPage() {
                 barCategoryGap={8}
               >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
+                <XAxis
                   dataKey="category_name"
                   angle={-45}
                   textAnchor="end"
@@ -4679,14 +4726,11 @@ export default function GroupersChartPage() {
                   interval={0}
                   tick={{ fontSize: 11, dy: 10 }}
                 />
-                <YAxis 
-                  tickFormatter={formatCurrency}
-                  tick={{ fontSize: 11 }}
-                />
-                <Tooltip 
+                <YAxis tickFormatter={formatCurrency} tick={{ fontSize: 11 }} />
+                <Tooltip
                   formatter={(value: number, name: string, props: any) => [
-                    formatCurrency(value), 
-                    `Gasto (${props.payload?.percentage || 0}%)`
+                    formatCurrency(value),
+                    `Gasto (${props.payload?.percentage || 0}%)`,
                   ]}
                   labelFormatter={(label) => `Categoría: ${label}`}
                   contentStyle={{
@@ -4695,21 +4739,21 @@ export default function GroupersChartPage() {
                     borderRadius: '8px',
                     color: '#ffffff',
                     fontSize: '14px',
-                    fontWeight: '500'
+                    fontWeight: '500',
                   }}
                   labelStyle={{
                     color: '#ffffff',
-                    fontWeight: '600'
+                    fontWeight: '600',
                   }}
                 />
-                <Bar 
-                  dataKey="total_amount" 
+                <Bar
+                  dataKey="total_amount"
                   fill="#8884d8"
                   radius={[4, 4, 0, 0]}
                   name="Gasto"
                 >
                   {weeklyCategoryData.map((entry, index) => (
-                    <Cell 
+                    <Cell
                       key={`category-cell-${index}`}
                       fill={chartColors[index % chartColors.length]}
                     />
@@ -4720,27 +4764,35 @@ export default function GroupersChartPage() {
           </div>
 
           {/* Show total and percentage summary */}
-          <div className="mt-4 pt-4 border-t">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+          <div className="mt-4 border-t pt-4">
+            <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-3">
               <div>
-                <span className="text-muted-foreground">Total de categorías:</span>
-                <span className="ml-2 font-medium">{weeklyCategoryData.length}</span>
+                <span className="text-muted-foreground">
+                  Total de categorías:
+                </span>
+                <span className="ml-2 font-medium">
+                  {weeklyCategoryData.length}
+                </span>
               </div>
               <div>
                 <span className="text-muted-foreground">Gasto total:</span>
                 <span className="ml-2 font-medium">
                   {formatCurrency(
-                    weeklyCategoryData.reduce((sum, category) => sum + category.total_amount, 0)
+                    weeklyCategoryData.reduce(
+                      (sum, category) => sum + category.total_amount,
+                      0
+                    )
                   )}
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground">Categoría principal:</span>
+                <span className="text-muted-foreground">
+                  Categoría principal:
+                </span>
                 <span className="ml-2 font-medium">
-                  {weeklyCategoryData[0]?.category_name || "N/A"}
-                  {weeklyCategoryData[0] && 
-                    ` (${weeklyCategoryData[0].percentage.toFixed(1)}%)`
-                  }
+                  {weeklyCategoryData[0]?.category_name || 'N/A'}
+                  {weeklyCategoryData[0] &&
+                    ` (${weeklyCategoryData[0].percentage.toFixed(1)}%)`}
                 </span>
               </div>
             </div>
@@ -4754,14 +4806,14 @@ export default function GroupersChartPage() {
     <div className="container mx-auto py-6">
       <Button
         variant="outline"
-        onClick={() => router.push("/")}
+        onClick={() => router.push('/')}
         className="mb-6"
       >
         <ArrowLeft className="mr-2 h-4 w-4" />
         Volver al Dashboard
       </Button>
 
-      <div className="flex justify-between items-center mb-6">
+      <div className="mb-6 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Dashboard de Agrupadores</h1>
 
         <div className="flex items-center gap-4">
@@ -4783,7 +4835,7 @@ export default function GroupersChartPage() {
       </div>
 
       {/* Filter Controls */}
-      <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-muted/50 rounded-lg">
+      <div className="mb-6 flex flex-wrap items-center gap-4 rounded-lg bg-muted/50 p-4">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-muted-foreground">
             Filtros:
@@ -4811,7 +4863,7 @@ export default function GroupersChartPage() {
         />
 
         {/* Budget toggle is only available for current and period comparison views */}
-        {(activeTab === "current" || activeTab === "period-comparison") && (
+        {(activeTab === 'current' || activeTab === 'period-comparison') && (
           <BudgetToggle
             showBudgets={showBudgets}
             onToggle={handleBudgetToggle}
@@ -4838,25 +4890,25 @@ export default function GroupersChartPage() {
         />
 
         {/* Simulate mode checkbox - only available for Vista Actual */}
-        {activeTab === "current" && (
+        {activeTab === 'current' && (
           <div className="flex items-center space-x-2">
             <Checkbox
               id="simulate-mode"
               checked={projectionMode}
               onCheckedChange={handleSimulateModeToggle}
-              disabled={activeTab !== "current"}
+              disabled={activeTab !== 'current'}
               aria-label="Activar modo simulación para mostrar datos de presupuesto"
             />
             <Label
               htmlFor="simulate-mode"
-              className={`text-sm font-medium cursor-pointer ${
-                projectionMode ? "text-blue-600 dark:text-blue-400" : ""
+              className={`cursor-pointer text-sm font-medium ${
+                projectionMode ? 'text-blue-600 dark:text-blue-400' : ''
               }`}
             >
               Proyectar
             </Label>
             {projectionMode && (
-              <div className="text-xs text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/20 px-2 py-1 rounded">
+              <div className="rounded bg-blue-50 px-2 py-1 text-xs text-blue-600 dark:bg-blue-950/20 dark:text-blue-400">
                 Modo activo
               </div>
             )}
@@ -4864,18 +4916,18 @@ export default function GroupersChartPage() {
         )}
 
         {(selectedEstudio === null || selectedGroupers.length === 0) && (
-          <div className="text-sm text-amber-600 bg-amber-50 dark:bg-amber-950/20 px-3 py-1 rounded-md">
+          <div className="rounded-md bg-amber-50 px-3 py-1 text-sm text-amber-600 dark:bg-amber-950/20">
             {selectedEstudio === null
-              ? "Selecciona un estudio para ver los datos"
-              : "Selecciona al menos un agrupador para ver los datos"}
+              ? 'Selecciona un estudio para ver los datos'
+              : 'Selecciona al menos un agrupador para ver los datos'}
           </div>
         )}
 
         {/* Information about projection mode and payment method interaction */}
         {projectionMode &&
-          paymentMethod !== "all" &&
-          activeTab === "current" && (
-            <div className="text-sm text-blue-600 bg-blue-50 dark:bg-blue-950/20 px-3 py-1 rounded-md">
+          paymentMethod !== 'all' &&
+          activeTab === 'current' && (
+            <div className="rounded-md bg-blue-50 px-3 py-1 text-sm text-blue-600 dark:bg-blue-950/20">
               ℹ️ En modo simulación, se muestran todos los presupuestos
               (independiente del método de pago seleccionado)
             </div>
@@ -4886,7 +4938,7 @@ export default function GroupersChartPage() {
       <TabNavigation />
 
       {/* Conditional rendering based on active tab */}
-      {activeTab === "current" &&
+      {activeTab === 'current' &&
         (isLoading ? (
           <Card>
             <CardHeader>
@@ -4901,9 +4953,9 @@ export default function GroupersChartPage() {
         ) : (
           renderCurrentView()
         ))}
-      {activeTab === "period-comparison" && renderPeriodComparisonView()}
-      {activeTab === "weekly-cumulative" && renderWeeklyCumulativeView()}
-      {activeTab === "weekly-expenses" && (
+      {activeTab === 'period-comparison' && renderPeriodComparisonView()}
+      {activeTab === 'weekly-cumulative' && renderWeeklyCumulativeView()}
+      {activeTab === 'weekly-expenses' && (
         <>
           {renderWeeklyExpensesView()}
           {renderWeeklyCategoryChart()}

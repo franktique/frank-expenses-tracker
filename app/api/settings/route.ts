@@ -1,6 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { AppSettings, CreateSettingsRequest, UpdateSettingsRequest } from "@/types/settings";
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import {
+  AppSettings,
+  CreateSettingsRequest,
+  UpdateSettingsRequest,
+} from '@/types/settings';
 
 export async function GET() {
   try {
@@ -30,7 +34,7 @@ export async function GET() {
       settings,
     });
   } catch (error) {
-    console.error("Error fetching settings:", error);
+    console.error('Error fetching settings:', error);
     return NextResponse.json(
       { success: false, error: (error as Error).message },
       { status: 500 }
@@ -51,7 +55,7 @@ export async function POST(request: NextRequest) {
 
       if (fundCheck.length === 0) {
         return NextResponse.json(
-          { success: false, error: "El fondo especificado no existe" },
+          { success: false, error: 'El fondo especificado no existe' },
           { status: 400 }
         );
       }
@@ -85,7 +89,7 @@ export async function POST(request: NextRequest) {
       settings,
     });
   } catch (error) {
-    console.error("Error creating/updating settings:", error);
+    console.error('Error creating/updating settings:', error);
     return NextResponse.json(
       { success: false, error: (error as Error).message },
       { status: 500 }
@@ -106,7 +110,7 @@ export async function PUT(request: NextRequest) {
 
       if (fundCheck.length === 0) {
         return NextResponse.json(
-          { success: false, error: "El fondo especificado no existe" },
+          { success: false, error: 'El fondo especificado no existe' },
           { status: 400 }
         );
       }
@@ -117,7 +121,10 @@ export async function PUT(request: NextRequest) {
 
     if (settingsResult.length === 0) {
       return NextResponse.json(
-        { success: false, error: "No se encontraron configuraciones para actualizar" },
+        {
+          success: false,
+          error: 'No se encontraron configuraciones para actualizar',
+        },
         { status: 404 }
       );
     }
@@ -136,7 +143,7 @@ export async function PUT(request: NextRequest) {
       settings,
     });
   } catch (error) {
-    console.error("Error updating settings:", error);
+    console.error('Error updating settings:', error);
     return NextResponse.json(
       { success: false, error: (error as Error).message },
       { status: 500 }

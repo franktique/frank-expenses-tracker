@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { PaymentMethodSelector } from "./payment-method-selector";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from 'react';
+import { PaymentMethodSelector } from './payment-method-selector';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export function PaymentMethodSelectorExample() {
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
@@ -14,15 +14,15 @@ export function PaymentMethodSelectorExample() {
   };
 
   const handleSelectAll = () => {
-    setSelectedMethods(["cash", "credit", "debit"]);
+    setSelectedMethods(['cash', 'credit', 'debit']);
   };
 
   const handleSelectCashOnly = () => {
-    setSelectedMethods(["cash"]);
+    setSelectedMethods(['cash']);
   };
 
   return (
-    <div className="space-y-6 p-6 max-w-md mx-auto">
+    <div className="mx-auto max-w-md space-y-6 p-6">
       <Card>
         <CardHeader>
           <CardTitle>Payment Method Selector Example</CardTitle>
@@ -39,8 +39,8 @@ export function PaymentMethodSelectorExample() {
             <p className="text-sm font-medium">Current Selection:</p>
             <p className="text-sm text-muted-foreground">
               {selectedMethods.length === 0
-                ? "All methods (no specific selection)"
-                : `Selected: ${selectedMethods.join(", ")}`}
+                ? 'All methods (no specific selection)'
+                : `Selected: ${selectedMethods.join(', ')}`}
             </p>
           </div>
 
@@ -59,7 +59,7 @@ export function PaymentMethodSelectorExample() {
               variant="outline"
               size="sm"
             >
-              {isDisabled ? "Enable" : "Disable"}
+              {isDisabled ? 'Enable' : 'Disable'}
             </Button>
           </div>
         </CardContent>

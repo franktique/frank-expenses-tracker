@@ -1,11 +1,11 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   validateSimulationBudgets,
   checkSimulationDataConsistency,
   getValidationFeedback,
   checkDataLossRisks,
-} from "@/lib/simulation-validation";
+} from '@/lib/simulation-validation';
 
 // GET /api/simulations/[id]/budgets - Get simulation budgets
 export async function GET(
@@ -20,8 +20,8 @@ export async function GET(
     if (isNaN(simulationId) || simulationId <= 0) {
       return NextResponse.json(
         {
-          error: "ID de simulación inválido",
-          code: "INVALID_SIMULATION_ID",
+          error: 'ID de simulación inválido',
+          code: 'INVALID_SIMULATION_ID',
         },
         { status: 400 }
       );
@@ -35,8 +35,8 @@ export async function GET(
     if (!simulation) {
       return NextResponse.json(
         {
-          error: "Simulación no encontrada",
-          code: "SIMULATION_NOT_FOUND",
+          error: 'Simulación no encontrada',
+          code: 'SIMULATION_NOT_FOUND',
           simulation_id: simulationId,
         },
         { status: 404 }
@@ -85,14 +85,14 @@ export async function GET(
       configured_categories: budgets.length,
     });
   } catch (error) {
-    console.error("Error fetching simulation budgets:", error);
+    console.error('Error fetching simulation budgets:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -102,8 +102,8 @@ export async function GET(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al cargar presupuestos",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al cargar presupuestos',
+        code: 'INTERNAL_SERVER_ERROR',
         retryable: true,
       },
       { status: 500 }
@@ -124,8 +124,8 @@ export async function PUT(
     if (isNaN(simulationId) || simulationId <= 0) {
       return NextResponse.json(
         {
-          error: "ID de simulación inválido",
-          code: "INVALID_SIMULATION_ID",
+          error: 'ID de simulación inválido',
+          code: 'INVALID_SIMULATION_ID',
         },
         { status: 400 }
       );
@@ -134,11 +134,11 @@ export async function PUT(
     const body = await request.json();
 
     // Validate request body structure
-    if (!body || typeof body !== "object") {
+    if (!body || typeof body !== 'object') {
       return NextResponse.json(
         {
-          error: "Cuerpo de solicitud inválido",
-          code: "INVALID_REQUEST_BODY",
+          error: 'Cuerpo de solicitud inválido',
+          code: 'INVALID_REQUEST_BODY',
         },
         { status: 400 }
       );
@@ -162,6 +162,16 @@ export async function PUT(
 
     const validatedBudgets = validation.data;
 
+    if (!validatedBudgets) {
+      return NextResponse.json(
+        {
+          error: 'Validación fallida: no se pudieron validar los presupuestos',
+          code: 'VALIDATION_FAILED',
+        },
+        { status: 400 }
+      );
+    }
+
     // Check if simulation exists
     const [simulation] = await sql`
       SELECT id, name FROM simulations WHERE id = ${simulationId}
@@ -170,8 +180,8 @@ export async function PUT(
     if (!simulation) {
       return NextResponse.json(
         {
-          error: "Simulación no encontrada",
-          code: "SIMULATION_NOT_FOUND",
+          error: 'Simulación no encontrada',
+          code: 'SIMULATION_NOT_FOUND',
           simulation_id: simulationId,
         },
         { status: 404 }
@@ -190,8 +200,8 @@ export async function PUT(
     const categoryIds = validatedBudgets.map((b) => b.category_id);
 
     // Handle both numeric and UUID category IDs
-    const numericIds = categoryIds.filter((id) => typeof id === "number");
-    const stringIds = categoryIds.filter((id) => typeof id === "string");
+    const numericIds = categoryIds.filter((id) => typeof id === 'number');
+    const stringIds = categoryIds.filter((id) => typeof id === 'string');
 
     let categories = [];
 
@@ -218,9 +228,9 @@ export async function PUT(
       return NextResponse.json(
         {
           error: `Las siguientes categorías no existen: ${missingCategoryIds.join(
-            ", "
+            ', '
           )}`,
-          code: "INVALID_CATEGORIES",
+          code: 'INVALID_CATEGORIES',
           missing_category_ids: missingCategoryIds,
         },
         { status: 400 }
@@ -301,8 +311,8 @@ export async function PUT(
       if (errors.length > 0) {
         return NextResponse.json(
           {
-            error: "Algunos presupuestos no pudieron ser actualizados",
-            code: "PARTIAL_UPDATE_FAILURE",
+            error: 'Algunos presupuestos no pudieron ser actualizados',
+            code: 'PARTIAL_UPDATE_FAILURE',
             budget_errors: errors,
             successful_updates: results.length,
           },
@@ -339,7 +349,7 @@ export async function PUT(
 
       return NextResponse.json({
         success: true,
-        message: "Presupuestos de simulación actualizados exitosamente",
+        message: 'Presupuestos de simulación actualizados exitosamente',
         updated_count: results.length,
         data_loss_risk: dataLossRisk,
         consistency_check: finalConsistencyCheck,
@@ -350,49 +360,49 @@ export async function PUT(
       });
     } catch (transactionError) {
       console.error(
-        "Transaction error during budget update:",
+        'Transaction error during budget update:',
         transactionError
       );
       throw transactionError;
     }
   } catch (error) {
-    console.error("Error updating simulation budgets:", error);
+    console.error('Error updating simulation budgets:', error);
 
     if (error instanceof Error) {
       if (
-        error.message.includes("foreign key") ||
-        error.message.includes("constraint")
+        error.message.includes('foreign key') ||
+        error.message.includes('constraint')
       ) {
         return NextResponse.json(
           {
-            error: "Error de integridad de datos al actualizar presupuestos",
-            code: "FOREIGN_KEY_CONSTRAINT",
-            details: "Algunos datos relacionados no son válidos",
+            error: 'Error de integridad de datos al actualizar presupuestos',
+            code: 'FOREIGN_KEY_CONSTRAINT',
+            details: 'Algunos datos relacionados no son válidos',
           },
           { status: 409 }
         );
       }
 
       if (
-        error.message.includes("connection") ||
-        error.message.includes("timeout")
+        error.message.includes('connection') ||
+        error.message.includes('timeout')
       ) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
         );
       }
 
-      if (error.message.includes("duplicate key")) {
+      if (error.message.includes('duplicate key')) {
         return NextResponse.json(
           {
-            error: "Error de duplicación de datos",
-            code: "DUPLICATE_BUDGET",
-            details: "Ya existe un presupuesto para una de las categorías",
+            error: 'Error de duplicación de datos',
+            code: 'DUPLICATE_BUDGET',
+            details: 'Ya existe un presupuesto para una de las categorías',
           },
           { status: 409 }
         );
@@ -401,8 +411,8 @@ export async function PUT(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al actualizar presupuestos",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al actualizar presupuestos',
+        code: 'INTERNAL_SERVER_ERROR',
         retryable: true,
       },
       { status: 500 }

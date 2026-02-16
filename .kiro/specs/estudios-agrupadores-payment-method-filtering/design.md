@@ -49,9 +49,9 @@ interface PaymentMethodSelectorProps {
 }
 
 const PAYMENT_METHODS = [
-  { value: "cash", label: "Efectivo" },
-  { value: "credit", label: "Crédito" },
-  { value: "debit", label: "Débito" },
+  { value: 'cash', label: 'Efectivo' },
+  { value: 'credit', label: 'Crédito' },
+  { value: 'debit', label: 'Débito' },
 ];
 ```
 

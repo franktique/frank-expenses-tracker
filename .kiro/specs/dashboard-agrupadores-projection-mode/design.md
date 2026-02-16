@@ -146,13 +146,11 @@ type ProjectionState = {
 ### Projection-Specific Error Cases
 
 1. **No Budget Data Available**:
-
    - Display zero values with informative tooltips
    - Show message: "No hay datos de presupuesto disponibles"
    - Maintain chart structure with empty bars
 
 2. **Partial Budget Data**:
-
    - Show available budget data
    - Display zero for missing budget entries
    - Tooltip indicates "Sin presupuesto asignado"
@@ -167,16 +165,16 @@ type ProjectionState = {
 ```typescript
 const handleProjectionError = (error: Error) => {
   // Log error for debugging
-  console.error("Projection mode error:", error);
+  console.error('Projection mode error:', error);
 
   // Fallback to actual data
   setProjectionMode(false);
 
   // Show user-friendly message
   toast({
-    title: "Error en modo proyección",
-    description: "Mostrando datos reales en su lugar",
-    variant: "destructive",
+    title: 'Error en modo proyección',
+    description: 'Mostrando datos reales en su lugar',
+    variant: 'destructive',
   });
 };
 ```
@@ -186,13 +184,11 @@ const handleProjectionError = (error: Error) => {
 ### Unit Tests
 
 1. **Projection Mode State Management**:
-
    - Test checkbox toggle functionality
    - Verify state persistence in session storage
    - Test state restoration on page reload
 
 2. **Data Transformation**:
-
    - Test budget data processing
    - Verify chart data transformation for projection
    - Test fallback behavior for missing budget data
@@ -205,13 +201,11 @@ const handleProjectionError = (error: Error) => {
 ### Integration Tests
 
 1. **API Integration**:
-
    - Test API calls with `includeBudgets=true` parameter
    - Verify data fetching with different filter combinations
    - Test error handling for API failures
 
 2. **Chart Rendering**:
-
    - Test chart updates when toggling projection mode
    - Verify category drill-down in projection mode
    - Test chart styling and legend updates
@@ -224,7 +218,6 @@ const handleProjectionError = (error: Error) => {
 ### End-to-End Tests
 
 1. **User Workflow Tests**:
-
    - Complete user journey from enabling projection mode to viewing charts
    - Test navigation between tabs with projection mode enabled
    - Test session persistence across page refreshes

@@ -2,20 +2,20 @@
  * @jest-environment jsdom
  */
 
-import React from "react";
-import { render, waitFor, act } from "@testing-library/react";
-import { BudgetProvider, useBudget } from "../../context/budget-context";
-import { ActivePeriodStorage } from "../active-period-storage";
-import { Period } from "../../types/funds";
+import React from 'react';
+import { render, waitFor, act } from '@testing-library/react';
+import { BudgetProvider, useBudget } from '../../context/budget-context';
+import { ActivePeriodStorage } from '../active-period-storage';
+import { Period } from '../../types/funds';
 
 // Mock the active period storage
-jest.mock("../active-period-storage");
+jest.mock('../active-period-storage');
 const mockActiveStorage = ActivePeriodStorage as jest.Mocked<
   typeof ActivePeriodStorage
 >;
 
 // Mock the active period service
-jest.mock("../active-period-service");
+jest.mock('../active-period-service');
 
 // Mock fetch
 global.fetch = jest.fn();
@@ -28,9 +28,9 @@ const TestComponent = () => {
   return (
     <div>
       <div data-testid="active-period">
-        {activePeriod ? activePeriod.name : "No active period"}
+        {activePeriod ? activePeriod.name : 'No active period'}
       </div>
-      <div data-testid="loading">{isLoading ? "Loading" : "Not loading"}</div>
+      <div data-testid="loading">{isLoading ? 'Loading' : 'Not loading'}</div>
       <button
         data-testid="validate-cache"
         onClick={() => validateActivePeriodCache()}
@@ -41,10 +41,10 @@ const TestComponent = () => {
   );
 };
 
-describe("Budget Context Session Storage Integration", () => {
+describe('Budget Context Session Storage Integration', () => {
   const mockPeriod: Period = {
-    id: "1",
-    name: "Test Period",
+    id: '1',
+    name: 'Test Period',
     month: 1,
     year: 2024,
     is_open: true,
@@ -56,7 +56,7 @@ describe("Budget Context Session Storage Integration", () => {
 
     // Mock successful database status check
     mockFetch.mockImplementation((url) => {
-      if (url === "/api/check-db-status") {
+      if (url === '/api/check-db-status') {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({ connected: true, initialized: true }),
@@ -75,7 +75,7 @@ describe("Budget Context Session Storage Integration", () => {
     jest.restoreAllMocks();
   });
 
-  it("should load cached active period on startup", async () => {
+  it('should load cached active period on startup', async () => {
     // Setup: Mock cached period exists
     mockActiveStorage.loadActivePeriod.mockReturnValue(mockPeriod);
 
@@ -86,13 +86,13 @@ describe("Budget Context Session Storage Integration", () => {
     );
 
     // Should immediately show cached period
-    expect(getByTestId("active-period")).toHaveTextContent("Test Period");
+    expect(getByTestId('active-period')).toHaveTextContent('Test Period');
 
     // Verify storage was called
     expect(mockActiveStorage.loadActivePeriod).toHaveBeenCalled();
   });
 
-  it("should handle missing cached period gracefully", async () => {
+  it('should handle missing cached period gracefully', async () => {
     // Setup: No cached period
     mockActiveStorage.loadActivePeriod.mockReturnValue(null);
 
@@ -103,16 +103,16 @@ describe("Budget Context Session Storage Integration", () => {
     );
 
     // Should show no active period initially
-    expect(getByTestId("active-period")).toHaveTextContent("No active period");
+    expect(getByTestId('active-period')).toHaveTextContent('No active period');
 
     // Verify storage was called
     expect(mockActiveStorage.loadActivePeriod).toHaveBeenCalled();
   });
 
-  it("should handle storage errors gracefully", async () => {
+  it('should handle storage errors gracefully', async () => {
     // Setup: Storage throws error
     mockActiveStorage.loadActivePeriod.mockImplementation(() => {
-      throw new Error("Storage error");
+      throw new Error('Storage error');
     });
 
     const { getByTestId } = render(
@@ -122,13 +122,13 @@ describe("Budget Context Session Storage Integration", () => {
     );
 
     // Should handle error gracefully
-    expect(getByTestId("active-period")).toHaveTextContent("No active period");
+    expect(getByTestId('active-period')).toHaveTextContent('No active period');
 
     // Should clear corrupted cache
     expect(mockActiveStorage.clearActivePeriod).toHaveBeenCalled();
   });
 
-  it("should provide validateActivePeriodCache function", async () => {
+  it('should provide validateActivePeriodCache function', async () => {
     mockActiveStorage.loadActivePeriod.mockReturnValue(null);
     mockActiveStorage.isActivePeriodCached.mockReturnValue(false);
 
@@ -139,20 +139,20 @@ describe("Budget Context Session Storage Integration", () => {
     );
 
     // Should have the validate cache button
-    expect(getByTestId("validate-cache")).toBeInTheDocument();
+    expect(getByTestId('validate-cache')).toBeInTheDocument();
   });
 
-  it("should synchronize with server data during refresh", async () => {
+  it('should synchronize with server data during refresh', async () => {
     // Setup: Mock server response with active period
     mockFetch.mockImplementation((url) => {
-      if (url === "/api/check-db-status") {
+      if (url === '/api/check-db-status') {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve({ connected: true, initialized: true }),
         } as Response);
       }
 
-      if (url === "/api/periods") {
+      if (url === '/api/periods') {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve([mockPeriod]),
@@ -176,7 +176,7 @@ describe("Budget Context Session Storage Integration", () => {
 
     // Wait for data to load
     await waitFor(() => {
-      expect(getByTestId("loading")).toHaveTextContent("Not loading");
+      expect(getByTestId('loading')).toHaveTextContent('Not loading');
     });
 
     // Should save period to storage after loading from server

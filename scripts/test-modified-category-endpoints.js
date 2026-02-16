@@ -3,16 +3,16 @@
  * Run this after starting the development server with: npm run dev
  */
 
-const BASE_URL = "http://localhost:3000";
+const BASE_URL = 'http://localhost:3000';
 
 async function testModifiedEndpoints() {
   console.log(
-    "🧪 Testing Modified Category Endpoints with Multiple Fund Support\n"
+    '🧪 Testing Modified Category Endpoints with Multiple Fund Support\n'
   );
 
   try {
     // Test 1: GET /api/categories - should include associated_funds array
-    console.log("1. Testing GET /api/categories with associated_funds...");
+    console.log('1. Testing GET /api/categories with associated_funds...');
     const categoriesResponse = await fetch(`${BASE_URL}/api/categories`);
     const categories = await categoriesResponse.json();
 
@@ -53,7 +53,7 @@ async function testModifiedEndpoints() {
     }
 
     if (categories.length === 0) {
-      console.log("❌ No categories found. Please create a category first.");
+      console.log('❌ No categories found. Please create a category first.');
       return;
     }
 
@@ -81,8 +81,8 @@ async function testModifiedEndpoints() {
       console.log(
         `   Associated funds count: ${category.associated_funds?.length || 0}`
       );
-      console.log(`   Legacy fund_id: ${category.fund_id || "null"}`);
-      console.log(`   Legacy fund_name: ${category.fund_name || "null"}`);
+      console.log(`   Legacy fund_id: ${category.fund_id || 'null'}`);
+      console.log(`   Legacy fund_name: ${category.fund_name || 'null'}`);
     } else {
       console.log(
         `❌ GET /api/categories/${testCategory.id} failed - Status: ${categoryResponse.status}`
@@ -90,12 +90,12 @@ async function testModifiedEndpoints() {
     }
 
     // Test 3: Get available funds for testing
-    console.log("\n3. Getting available funds for testing...");
+    console.log('\n3. Getting available funds for testing...');
     const fundsResponse = await fetch(`${BASE_URL}/api/funds`);
     const funds = await fundsResponse.json();
 
     if (!fundsResponse.ok || !funds || funds.length === 0) {
-      console.log("❌ No funds found. Please create funds first.");
+      console.log('❌ No funds found. Please create funds first.');
       return;
     }
 
@@ -103,16 +103,16 @@ async function testModifiedEndpoints() {
     const testFunds = funds.slice(0, Math.min(3, funds.length)); // Use up to 3 funds
 
     // Test 4: POST /api/categories with fund_ids array
-    console.log("\n4. Testing POST /api/categories with fund_ids array...");
+    console.log('\n4. Testing POST /api/categories with fund_ids array...');
     const newCategoryData = {
       name: `Test Category ${Date.now()}`,
       fund_ids: testFunds.slice(0, 2).map((f) => f.id), // Use first 2 funds
     };
 
     const createResponse = await fetch(`${BASE_URL}/api/categories`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(newCategoryData),
     });
@@ -155,9 +155,9 @@ async function testModifiedEndpoints() {
     const updateResponse = await fetch(
       `${BASE_URL}/api/categories/${createdCategory.id}`,
       {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(updateData),
       }
@@ -190,7 +190,7 @@ async function testModifiedEndpoints() {
 
     // Test 6: Backward compatibility - POST with single fund_id
     console.log(
-      "\n6. Testing backward compatibility - POST with single fund_id..."
+      '\n6. Testing backward compatibility - POST with single fund_id...'
     );
     const backwardCompatData = {
       name: `Backward Compat Category ${Date.now()}`,
@@ -198,9 +198,9 @@ async function testModifiedEndpoints() {
     };
 
     const backwardCreateResponse = await fetch(`${BASE_URL}/api/categories`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(backwardCompatData),
     });
@@ -238,9 +238,9 @@ async function testModifiedEndpoints() {
       const backwardUpdateResponse = await fetch(
         `${BASE_URL}/api/categories/${backwardCreatedCategory.id}`,
         {
-          method: "PUT",
+          method: 'PUT',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify(backwardUpdateData),
         }
@@ -269,29 +269,29 @@ async function testModifiedEndpoints() {
       }
     }
 
-    console.log("\n🎉 All modified endpoint tests completed!");
+    console.log('\n🎉 All modified endpoint tests completed!');
   } catch (error) {
-    console.error("❌ Test failed with error:", error.message);
+    console.error('❌ Test failed with error:', error.message);
     console.error(error.stack);
   }
 }
 
 // Test error cases for modified endpoints
 async function testErrorCases() {
-  console.log("\n🧪 Testing Error Cases for Modified Endpoints\n");
+  console.log('\n🧪 Testing Error Cases for Modified Endpoints\n');
 
   try {
     // Test 1: POST with invalid fund_ids
-    console.log("1. Testing POST with invalid fund_ids...");
+    console.log('1. Testing POST with invalid fund_ids...');
     const invalidCreateData = {
       name: `Invalid Test Category ${Date.now()}`,
-      fund_ids: ["invalid-uuid", "00000000-0000-0000-0000-000000000000"],
+      fund_ids: ['invalid-uuid', '00000000-0000-0000-0000-000000000000'],
     };
 
     const invalidCreateResponse = await fetch(`${BASE_URL}/api/categories`, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify(invalidCreateData),
     });
@@ -299,29 +299,29 @@ async function testErrorCases() {
     const invalidCreateResult = await invalidCreateResponse.json();
 
     if (invalidCreateResponse.status === 400) {
-      console.log("✅ POST with invalid fund_ids returns 400 as expected");
+      console.log('✅ POST with invalid fund_ids returns 400 as expected');
       console.log(`   Error: ${invalidCreateResult.error}`);
     } else {
       console.log(`❌ Expected 400, got ${invalidCreateResponse.status}`);
     }
 
     // Test 2: PUT with invalid fund_ids
-    console.log("\n2. Testing PUT with invalid fund_ids...");
+    console.log('\n2. Testing PUT with invalid fund_ids...');
     const categoriesResponse = await fetch(`${BASE_URL}/api/categories`);
     const categories = await categoriesResponse.json();
 
     if (categories && categories.length > 0) {
       const testCategory = categories[0];
       const invalidUpdateData = {
-        fund_ids: ["invalid-uuid"],
+        fund_ids: ['invalid-uuid'],
       };
 
       const invalidUpdateResponse = await fetch(
         `${BASE_URL}/api/categories/${testCategory.id}`,
         {
-          method: "PUT",
+          method: 'PUT',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify(invalidUpdateData),
         }
@@ -330,16 +330,16 @@ async function testErrorCases() {
       const invalidUpdateResult = await invalidUpdateResponse.json();
 
       if (invalidUpdateResponse.status === 400) {
-        console.log("✅ PUT with invalid fund_ids returns 400 as expected");
+        console.log('✅ PUT with invalid fund_ids returns 400 as expected');
         console.log(`   Error: ${invalidUpdateResult.error}`);
       } else {
         console.log(`❌ Expected 400, got ${invalidUpdateResponse.status}`);
       }
     }
 
-    console.log("\n🎉 Error case tests completed!");
+    console.log('\n🎉 Error case tests completed!');
   } catch (error) {
-    console.error("❌ Error case test failed:", error.message);
+    console.error('❌ Error case test failed:', error.message);
   }
 }
 

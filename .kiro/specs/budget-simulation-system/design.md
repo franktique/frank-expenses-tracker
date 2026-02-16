@@ -128,7 +128,7 @@ type SimulationAnalyticsRequest = {
 type SimulationAnalyticsResponse = {
   historical_data: PeriodComparisonData;
   simulation_data: {
-    period_name: "Simulación";
+    period_name: 'Simulación';
     grouper_data: {
       grouper_id: number;
       grouper_name: string;
@@ -142,7 +142,7 @@ type SimulationAnalyticsResponse = {
     avg_historical: number;
     simulation_amount: number;
     variance_percentage: number;
-    trend: "increase" | "decrease" | "stable";
+    trend: 'increase' | 'decrease' | 'stable';
   }[];
 };
 ```
@@ -286,7 +286,6 @@ const simulationErrorHandling = {
 ### Database Optimization
 
 1. **Indexing Strategy**
-
    - Index on `simulation_budgets(simulation_id, category_id)`
    - Composite index for analytics queries
    - Consider materialized views for complex aggregations
@@ -299,7 +298,6 @@ const simulationErrorHandling = {
 ### Frontend Performance
 
 1. **Chart Rendering**
-
    - Reuse existing chart optimization patterns
    - Implement data memoization for simulation calculations
    - Use React.memo for expensive chart components
@@ -312,7 +310,6 @@ const simulationErrorHandling = {
 ### Memory Management
 
 1. **Data Loading**
-
    - Lazy load simulation analytics data
    - Implement cleanup for unused simulation data
    - Use pagination for large simulation lists

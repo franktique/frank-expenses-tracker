@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, { useRef, useEffect } from 'react';
 import {
@@ -33,7 +33,7 @@ export function TabContextMenu({
   onDuplicate,
   onCloseOthers,
   onCloseAll,
-  position
+  position,
 }: TabContextMenuProps) {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -46,14 +46,10 @@ export function TabContextMenu({
   };
 
   return (
-    <div
-      ref={menuRef}
-      style={menuStyle}
-      className="min-w-[200px]"
-    >
+    <div ref={menuRef} style={menuStyle} className="min-w-[200px]">
       <DropdownMenu defaultOpen>
         <DropdownMenuTrigger asChild>
-          <div className="w-0 h-0" />
+          <div className="h-0 w-0" />
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
@@ -105,9 +101,7 @@ export function TabContextMenu({
           <div className="px-2 py-1.5 text-sm text-muted-foreground">
             <div>Path: {tab.path}</div>
             <div>Created: {tab.createdAt.toLocaleTimeString()}</div>
-            {tab.isModified && (
-              <div className="text-amber-600">Modified</div>
-            )}
+            {tab.isModified && <div className="text-amber-600">Modified</div>}
           </div>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -155,7 +149,16 @@ export function TabContextMenuContainer({
 
   return (
     <div ref={menuRef}>
-      <TabContextMenu {...props} />
+      <TabContextMenu
+        tab={props.tab}
+        onClose={props.onClose}
+        onPin={props.onPin}
+        onUnpin={props.onUnpin}
+        onDuplicate={props.onDuplicate}
+        onCloseOthers={props.onCloseOthers}
+        onCloseAll={props.onCloseAll}
+        position={props.position}
+      />
     </div>
   );
 }
@@ -170,7 +173,7 @@ export function TabManagementPanel({
   onTabUnpin,
   onTabDuplicate,
   onCloseAll,
-  onCloseOthers
+  onCloseOthers,
 }: {
   tabs: any[];
   activeTabId: string | null;
@@ -183,14 +186,18 @@ export function TabManagementPanel({
   onCloseOthers: (tabId: string) => void;
 }) {
   return (
-    <div className="p-4 space-y-4">
+    <div className="space-y-4 p-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Tab Management</h3>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={onCloseAll}>
             Close All
           </Button>
-          <Button variant="outline" size="sm" onClick={() => activeTabId && onCloseOthers(activeTabId)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => activeTabId && onCloseOthers(activeTabId)}
+          >
             Close Others
           </Button>
         </div>
@@ -201,16 +208,18 @@ export function TabManagementPanel({
           <div
             key={tab.id}
             className={cn(
-              "flex items-center justify-between p-2 rounded-lg border",
-              tab.id === activeTabId && "bg-accent"
+              'flex items-center justify-between rounded-lg border p-2',
+              tab.id === activeTabId && 'bg-accent'
             )}
           >
             <div className="flex items-center gap-2">
               {tab.icon && <tab.icon className="h-4 w-4" />}
               <span className="text-sm font-medium">{tab.title}</span>
-              {tab.isPinned && <Pin className="h-3 w-3 text-muted-foreground" />}
+              {tab.isPinned && (
+                <Pin className="h-3 w-3 text-muted-foreground" />
+              )}
               {tab.isModified && (
-                <div className="w-2 h-2 rounded-full bg-amber-500" />
+                <div className="h-2 w-2 rounded-full bg-amber-500" />
               )}
             </div>
 
@@ -276,7 +285,7 @@ export function TabQuickActions({
   onNewTab,
   onCloseCurrentTab,
   onRestoreTab,
-  onToggleTabSystem
+  onToggleTabSystem,
 }: {
   onNewTab: () => void;
   onCloseCurrentTab: () => void;
@@ -284,7 +293,7 @@ export function TabQuickActions({
   onToggleTabSystem: () => void;
 }) {
   return (
-    <div className="flex items-center gap-2 p-2 bg-background border-b">
+    <div className="flex items-center gap-2 border-b bg-background p-2">
       <Button
         variant="ghost"
         size="sm"

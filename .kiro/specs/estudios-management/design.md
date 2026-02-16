@@ -11,7 +11,6 @@ The "Estudios" feature introduces a new organizational layer that allows users t
 The feature requires two new database tables:
 
 1. **estudios** table:
-
    - `id` (SERIAL PRIMARY KEY)
    - `name` (VARCHAR NOT NULL)
    - `created_at` (TIMESTAMP DEFAULT NOW())
@@ -29,14 +28,12 @@ The feature requires two new database tables:
 Following the existing RESTful API pattern:
 
 1. **Estudios Management**:
-
    - `GET /api/estudios` - List all estudios with grouper counts
    - `POST /api/estudios` - Create new estudio
    - `PUT /api/estudios/[id]` - Update estudio name
    - `DELETE /api/estudios/[id]` - Delete estudio
 
 2. **Estudio-Grouper Relationships**:
-
    - `GET /api/estudios/[id]/groupers` - Get groupers for specific estudio
    - `POST /api/estudios/[id]/groupers` - Add groupers to estudio
    - `DELETE /api/estudios/[id]/groupers/[grouperId]` - Remove grouper from estudio
@@ -50,14 +47,12 @@ Following the existing RESTful API pattern:
 ### New Components
 
 1. **EstudiosPage** (`app/estudios/page.tsx`):
-
    - Main estudios management interface
    - CRUD operations for estudios
    - Similar structure to existing agrupadores page
    - Table view with name, grouper count, and actions
 
 2. **EstudioGroupersPage** (`app/estudios/[id]/page.tsx`):
-
    - Manage groupers within a specific estudio
    - Add/remove groupers from estudio
    - Similar to category management in groupers
@@ -70,7 +65,6 @@ Following the existing RESTful API pattern:
 ### Modified Components
 
 1. **AppSidebar** (`components/app-sidebar.tsx`):
-
    - Add "Estudios" menu item between "Agrupadores" and "Dashboard Agrupadores"
    - Use appropriate icon (BookOpen or FolderOpen)
 
@@ -116,7 +110,6 @@ type EstudioWithGroupers = {
 ### Data Flow
 
 1. **Estudios Management**:
-
    - User creates/edits/deletes estudios
    - User assigns/removes groupers to/from estudios
    - Multiple groupers can belong to multiple estudios
@@ -132,13 +125,11 @@ type EstudioWithGroupers = {
 ### Validation Rules
 
 1. **Estudio Creation**:
-
    - Name is required and must be non-empty string
    - Name should be trimmed of whitespace
    - Duplicate names are allowed (business decision)
 
 2. **Grouper Assignment**:
-
    - Cannot assign non-existent grouper to estudio
    - Cannot create duplicate estudio-grouper relationships
    - Graceful handling of already-assigned groupers
@@ -160,7 +151,6 @@ type EstudioWithGroupers = {
 ### Unit Tests
 
 1. **API Endpoints**:
-
    - Test CRUD operations for estudios
    - Test grouper assignment/removal
    - Test error conditions and validation
@@ -174,7 +164,6 @@ type EstudioWithGroupers = {
 ### Integration Tests
 
 1. **End-to-End Workflows**:
-
    - Create estudio → Add groupers → View in dashboard
    - Delete estudio → Verify dashboard behavior
    - Filter persistence across dashboard tabs

@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import { Minus, Plus, HelpCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Minus, Plus, HelpCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { RATE_TYPES, type RateType } from "@/types/interest-rate-simulator";
+} from '@/components/ui/tooltip';
+import { RATE_TYPES, type RateType } from '@/types/interest-rate-simulator';
 
 export interface InterestRateFormData {
   inputRate: number; // As percentage (e.g., 12 for 12%)
@@ -34,7 +34,7 @@ export function InterestRateForm({ data, onChange }: InterestRateFormProps) {
     const numValue = parseFloat(value);
     if (!isNaN(numValue) && numValue >= 0 && numValue <= 1000) {
       onChange({ ...data, inputRate: numValue });
-    } else if (value === "" || value === ".") {
+    } else if (value === '' || value === '.') {
       onChange({ ...data, inputRate: 0 });
     }
   };
@@ -50,11 +50,11 @@ export function InterestRateForm({ data, onChange }: InterestRateFormProps) {
 
   const formatRateDisplay = (value: number): string => {
     // Format with up to 4 decimal places, removing trailing zeros
-    return value.toFixed(4).replace(/\.?0+$/, "");
+    return value.toFixed(4).replace(/\.?0+$/, '');
   };
 
   return (
-    <div className="space-y-6 p-6 bg-purple-50 dark:bg-purple-950/20 rounded-lg border border-purple-100 dark:border-purple-900">
+    <div className="space-y-6 rounded-lg border border-purple-100 bg-purple-50 p-6 dark:border-purple-900 dark:bg-purple-950/20">
       {/* Rate Input */}
       <div className="space-y-3">
         <div className="flex items-center gap-2">
@@ -62,27 +62,32 @@ export function InterestRateForm({ data, onChange }: InterestRateFormProps) {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                <HelpCircle className="h-4 w-4 cursor-help text-muted-foreground" />
               </TooltipTrigger>
               <TooltipContent className="max-w-xs">
-                <p>Ingresa la tasa de interés que deseas convertir. Puede ser cualquier valor entre 0% y 1000%.</p>
+                <p>
+                  Ingresa la tasa de interés que deseas convertir. Puede ser
+                  cualquier valor entre 0% y 1000%.
+                </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 flex-1">
+          <div className="flex flex-1 items-center gap-2">
             <Input
               type="number"
               value={formatRateDisplay(data.inputRate)}
               onChange={(e) => handleRateChange(e.target.value)}
-              className="text-3xl font-bold h-16 text-center bg-white dark:bg-gray-950 border-purple-200 dark:border-purple-800 focus:border-purple-500"
+              className="h-16 border-purple-200 bg-white text-center text-3xl font-bold focus:border-purple-500 dark:border-purple-800 dark:bg-gray-950"
               min={0}
               max={1000}
               step={0.01}
             />
-            <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">%</span>
+            <span className="text-3xl font-bold text-purple-600 dark:text-purple-400">
+              %
+            </span>
           </div>
 
           <div className="flex flex-col gap-1">
@@ -108,7 +113,7 @@ export function InterestRateForm({ data, onChange }: InterestRateFormProps) {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 text-xs px-2"
+              className="h-8 px-2 text-xs"
               onClick={() => incrementRate(0.1)}
             >
               +0.1
@@ -116,7 +121,7 @@ export function InterestRateForm({ data, onChange }: InterestRateFormProps) {
             <Button
               variant="outline"
               size="sm"
-              className="h-8 text-xs px-2"
+              className="h-8 px-2 text-xs"
               onClick={() => incrementRate(-0.1)}
             >
               -0.1
@@ -132,17 +137,21 @@ export function InterestRateForm({ data, onChange }: InterestRateFormProps) {
           <TooltipProvider>
             <Tooltip>
               <TooltipTrigger asChild>
-                <HelpCircle className="h-4 w-4 text-muted-foreground cursor-help" />
+                <HelpCircle className="h-4 w-4 cursor-help text-muted-foreground" />
               </TooltipTrigger>
               <TooltipContent className="max-w-sm">
-                <p>Selecciona el tipo de tasa que estás ingresando. La calculadora convertirá automáticamente a todos los demás tipos.</p>
+                <p>
+                  Selecciona el tipo de tasa que estás ingresando. La
+                  calculadora convertirá automáticamente a todos los demás
+                  tipos.
+                </p>
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
 
         <Select value={data.inputRateType} onValueChange={handleRateTypeChange}>
-          <SelectTrigger className="w-full h-12 text-base bg-white dark:bg-gray-950 border-purple-200 dark:border-purple-800">
+          <SelectTrigger className="h-12 w-full border-purple-200 bg-white text-base dark:border-purple-800 dark:bg-gray-950">
             <SelectValue placeholder="Selecciona el tipo de tasa" />
           </SelectTrigger>
           <SelectContent>
@@ -160,9 +169,11 @@ export function InterestRateForm({ data, onChange }: InterestRateFormProps) {
         </Select>
 
         {/* Selected type description */}
-        <div className="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-md">
+        <div className="rounded-md bg-purple-100 p-3 dark:bg-purple-900/30">
           <p className="text-sm text-purple-700 dark:text-purple-300">
-            <span className="font-semibold">{RATE_TYPES[data.inputRateType].label}:</span>{" "}
+            <span className="font-semibold">
+              {RATE_TYPES[data.inputRateType].label}:
+            </span>{' '}
             {RATE_TYPES[data.inputRateType].description}
           </p>
         </div>
@@ -175,12 +186,12 @@ export function InterestRateForm({ data, onChange }: InterestRateFormProps) {
           {[5, 8, 10, 12, 15, 18, 20, 24, 30].map((rate) => (
             <Button
               key={rate}
-              variant={data.inputRate === rate ? "default" : "outline"}
+              variant={data.inputRate === rate ? 'default' : 'outline'}
               size="sm"
               className={
                 data.inputRate === rate
-                  ? "bg-purple-600 hover:bg-purple-700"
-                  : "hover:bg-purple-50 dark:hover:bg-purple-950"
+                  ? 'bg-purple-600 hover:bg-purple-700'
+                  : 'hover:bg-purple-50 dark:hover:bg-purple-950'
               }
               onClick={() => onChange({ ...data, inputRate: rate })}
             >

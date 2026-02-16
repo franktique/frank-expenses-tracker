@@ -3,6 +3,7 @@
 ## Overview
 
 This plan details the implementation of splitting the current single "Ahorro Esperado" (Expected Savings) column into two separate columns:
+
 - **Ahorro Efectivo** - Savings from cash payments
 - **Ahorro Crédito** - Savings from credit payments
 
@@ -31,6 +32,7 @@ This change affects the simulation budget form table structure, calculations, va
 **Location**: New migration script `/scripts/add-ahorro-credito-migration.sql`
 
 **Tasks**:
+
 1. Create migration script to add two new columns:
    - `ahorro_efectivo_amount DECIMAL(10,2) DEFAULT 0 NOT NULL`
    - `ahorro_credito_amount DECIMAL(10,2) DEFAULT 0 NOT NULL`
@@ -56,24 +58,31 @@ This change affects the simulation budget form table structure, calculations, va
 **Location**: `/lib/simulation-validation.ts` and related type files
 
 **Tasks**:
+
 1. Update `SimulationBudgetSchema` in Zod:
+
    ```typescript
-   export const SimulationBudgetSchema = z.object({
-     category_id: z.union([z.number(), z.string().uuid()]),
-     efectivo_amount: SimulationBudgetAmountSchema,
-     credito_amount: SimulationBudgetAmountSchema,
-     // New fields
-     ahorro_efectivo_amount: SimulationBudgetAmountSchema.optional().default(0),
-     ahorro_credito_amount: SimulationBudgetAmountSchema.optional().default(0),
-     // Legacy - keep for backward compatibility
-     expected_savings: SimulationBudgetAmountSchema.optional().default(0),
-   }).refine(
-     (data) => data.ahorro_efectivo_amount <= data.efectivo_amount,
-     { message: "Ahorro efectivo no puede ser mayor al presupuesto en efectivo", path: ["ahorro_efectivo_amount"] }
-   ).refine(
-     (data) => data.ahorro_credito_amount <= data.credito_amount,
-     { message: "Ahorro crédito no puede ser mayor al presupuesto en crédito", path: ["ahorro_credito_amount"] }
-   );
+   export const SimulationBudgetSchema = z
+     .object({
+       category_id: z.union([z.number(), z.string().uuid()]),
+       efectivo_amount: SimulationBudgetAmountSchema,
+       credito_amount: SimulationBudgetAmountSchema,
+       // New fields
+       ahorro_efectivo_amount:
+         SimulationBudgetAmountSchema.optional().default(0),
+       ahorro_credito_amount:
+         SimulationBudgetAmountSchema.optional().default(0),
+       // Legacy - keep for backward compatibility
+       expected_savings: SimulationBudgetAmountSchema.optional().default(0),
+     })
+     .refine((data) => data.ahorro_efectivo_amount <= data.efectivo_amount, {
+       message: 'Ahorro efectivo no puede ser mayor al presupuesto en efectivo',
+       path: ['ahorro_efectivo_amount'],
+     })
+     .refine((data) => data.ahorro_credito_amount <= data.credito_amount, {
+       message: 'Ahorro crédito no puede ser mayor al presupuesto en crédito',
+       path: ['ahorro_credito_amount'],
+     });
    ```
 
 2. Update `CategoryBudgetData` type in `/lib/subgroup-calculations.ts`:
@@ -94,7 +103,9 @@ This change affects the simulation budget form table structure, calculations, va
 **Location**: `/app/api/simulations/[id]/budgets/route.ts`
 
 **Tasks**:
+
 1. Update GET query to include new columns:
+
    ```sql
    SELECT
      sb.category_id,
@@ -111,8 +122,15 @@ This change affects the simulation budget form table structure, calculations, va
    ```
 
 2. Update PUT handler to process new fields:
+
    ```typescript
-   const { category_id, efectivo_amount, credito_amount, ahorro_efectivo_amount = 0, ahorro_credito_amount = 0 } = budget;
+   const {
+     category_id,
+     efectivo_amount,
+     credito_amount,
+     ahorro_efectivo_amount = 0,
+     ahorro_credito_amount = 0,
+   } = budget;
    ```
 
 3. Update INSERT/UPSERT statement to include new columns:
@@ -135,18 +153,21 @@ This change affects the simulation budget form table structure, calculations, va
 **Location**: `/lib/subgroup-calculations.ts`
 
 **Tasks**:
+
 1. Update `Subtotals` type:
+
    ```typescript
    export type Subtotals = {
      efectivoAmount: number;
      creditoAmount: number;
-     ahorroEfectivoAmount: number;  // New
-     ahorroCreditoAmount: number;   // New
+     ahorroEfectivoAmount: number; // New
+     ahorroCreditoAmount: number; // New
      total: number;
    };
    ```
 
 2. Update `calculateSubgroupSubtotals()` function:
+
    ```typescript
    export function calculateSubgroupSubtotals(
      subgroup: Subgroup,
@@ -198,7 +219,9 @@ This change affects the simulation budget form table structure, calculations, va
 **Location**: `/components/subgroup-subtotal-row.tsx`
 
 **Tasks**:
+
 1. Update props to include separate savings values:
+
    ```typescript
    interface SubgroupSubtotalRowProps {
      subgroupId: string;
@@ -209,20 +232,25 @@ This change affects the simulation budget form table structure, calculations, va
    ```
 
 2. Update table cells to show two savings columns:
+
    ```tsx
-   {/* Ahorro Efectivo Subtotal */}
+   {
+     /* Ahorro Efectivo Subtotal */
+   }
    <TableCell className="text-right">
      <span className="font-semibold text-purple-600">
        {formatCurrency(subtotals.ahorroEfectivoAmount)}
      </span>
-   </TableCell>
+   </TableCell>;
 
-   {/* Ahorro Crédito Subtotal */}
+   {
+     /* Ahorro Crédito Subtotal */
+   }
    <TableCell className="text-right">
      <span className="font-semibold text-purple-600">
        {formatCurrency(subtotals.ahorroCreditoAmount)}
      </span>
-   </TableCell>
+   </TableCell>;
    ```
 
 ---
@@ -232,7 +260,9 @@ This change affects the simulation budget form table structure, calculations, va
 **Location**: `/components/simulation-budget-form.tsx` (lines ~2090-2097)
 
 **Tasks**:
+
 1. Replace single "Ahorro Esperado" header with two headers:
+
    ```tsx
    <TableHead className="text-right w-1/7">Efectivo</TableHead>
    <TableHead className="text-right w-1/7">Crédito</TableHead>
@@ -252,53 +282,77 @@ This change affects the simulation budget form table structure, calculations, va
 **Location**: `/components/simulation-budget-form.tsx` (lines ~2410-2460)
 
 **Tasks**:
+
 1. Replace single expected_savings input with two separate inputs:
+
    ```tsx
-   {/* Ahorro Efectivo Input */}
+   {
+     /* Ahorro Efectivo Input */
+   }
    <TableCell className="text-right">
      <div className="space-y-1">
        <Input
          type="number"
          min="0"
          step="0.01"
-         max={parseFloat(categoryData?.efectivo_amount || "0")}
-         value={categoryData?.ahorro_efectivo_amount || "0"}
+         max={parseFloat(categoryData?.efectivo_amount || '0')}
+         value={categoryData?.ahorro_efectivo_amount || '0'}
          onChange={(e) => {
-           handleInputChange(category.id, "ahorro_efectivo_amount", e.target.value);
+           handleInputChange(
+             category.id,
+             'ahorro_efectivo_amount',
+             e.target.value
+           );
          }}
          className={`w-full text-right ${
-           categoryErrors?.ahorro_efectivo ? "border-destructive" :
-           parseFloat(categoryData?.ahorro_efectivo_amount || "0") > 0 ? "text-purple-600 font-semibold" : ""
+           categoryErrors?.ahorro_efectivo
+             ? 'border-destructive'
+             : parseFloat(categoryData?.ahorro_efectivo_amount || '0') > 0
+               ? 'font-semibold text-purple-600'
+               : ''
          }`}
        />
        {categoryErrors?.ahorro_efectivo && (
-         <p className="text-xs text-destructive">{categoryErrors.ahorro_efectivo}</p>
+         <p className="text-xs text-destructive">
+           {categoryErrors.ahorro_efectivo}
+         </p>
        )}
      </div>
-   </TableCell>
+   </TableCell>;
 
-   {/* Ahorro Crédito Input */}
+   {
+     /* Ahorro Crédito Input */
+   }
    <TableCell className="text-right">
      <div className="space-y-1">
        <Input
          type="number"
          min="0"
          step="0.01"
-         max={parseFloat(categoryData?.credito_amount || "0")}
-         value={categoryData?.ahorro_credito_amount || "0"}
+         max={parseFloat(categoryData?.credito_amount || '0')}
+         value={categoryData?.ahorro_credito_amount || '0'}
          onChange={(e) => {
-           handleInputChange(category.id, "ahorro_credito_amount", e.target.value);
+           handleInputChange(
+             category.id,
+             'ahorro_credito_amount',
+             e.target.value
+           );
          }}
          className={`w-full text-right ${
-           categoryErrors?.ahorro_credito ? "border-destructive" :
-           parseFloat(categoryData?.ahorro_credito_amount || "0") > 0 ? "text-purple-600 font-semibold" : ""
+           categoryErrors?.ahorro_credito
+             ? 'border-destructive'
+             : parseFloat(categoryData?.ahorro_credito_amount || '0') > 0
+               ? 'font-semibold text-purple-600'
+               : ''
          }`}
        />
        {categoryErrors?.ahorro_credito && (
-         <p className="text-xs text-destructive">{categoryErrors.ahorro_credito}</p>
+         <p className="text-xs text-destructive">
+           {categoryErrors.ahorro_credito}
+         </p>
        )}
      </div>
-   </TableCell>
+   </TableCell>;
    ```
 
 ---
@@ -308,35 +362,37 @@ This change affects the simulation budget form table structure, calculations, va
 **Location**: `/components/simulation-budget-form.tsx`
 
 **Tasks**:
+
 1. Update `totals` calculation (lines ~1095-1114):
+
    ```typescript
    const totals = useMemo(() => {
      let totalEfectivo = 0;
      let totalCredito = 0;
-     let totalAhorroEfectivo = 0;   // New
-     let totalAhorroCredito = 0;    // New
+     let totalAhorroEfectivo = 0; // New
+     let totalAhorroCredito = 0; // New
      let totalGeneral = 0;
 
      Object.values(budgetData).forEach((data) => {
        const efectivo = parseFloat(data.efectivo_amount) || 0;
        const credito = parseFloat(data.credito_amount) || 0;
-       const ahorroEfectivo = parseFloat(data.ahorro_efectivo_amount) || 0;  // New
-       const ahorroCredito = parseFloat(data.ahorro_credito_amount) || 0;   // New
+       const ahorroEfectivo = parseFloat(data.ahorro_efectivo_amount) || 0; // New
+       const ahorroCredito = parseFloat(data.ahorro_credito_amount) || 0; // New
 
        totalEfectivo += efectivo;
        totalCredito += credito;
-       totalAhorroEfectivo += ahorroEfectivo;  // New
-       totalAhorroCredito += ahorroCredito;    // New
+       totalAhorroEfectivo += ahorroEfectivo; // New
+       totalAhorroCredito += ahorroCredito; // New
        totalGeneral += efectivo + credito - ahorroEfectivo - ahorroCredito;
      });
 
-     const totalNetSpend = totalEfectivo - totalAhorroEfectivo;  // Only efectivo savings affect balance
+     const totalNetSpend = totalEfectivo - totalAhorroEfectivo; // Only efectivo savings affect balance
 
      return {
        efectivo: totalEfectivo,
        credito: totalCredito,
-       ahorroEfectivo: totalAhorroEfectivo,  // New
-       ahorroCredito: totalAhorroCredito,    // New
+       ahorroEfectivo: totalAhorroEfectivo, // New
+       ahorroCredito: totalAhorroCredito, // New
        netSpend: totalNetSpend,
        general: totalGeneral,
      };
@@ -344,6 +400,7 @@ This change affects the simulation budget form table structure, calculations, va
    ```
 
 2. Update `getCategoryTotal` function (lines ~1117-1125):
+
    ```typescript
    const getCategoryTotal = (categoryId: string | number): number => {
      const data = budgetData[String(categoryId)];
@@ -362,7 +419,7 @@ This change affects the simulation budget form table structure, calculations, va
    // Calculate net spend: Efectivo - Ahorro Efectivo (only efectivo savings affect balance)
    const efectivoAmount = parseFloat(categoryData.efectivo_amount) || 0;
    const ahorroEfectivo = parseFloat(categoryData.ahorro_efectivo_amount) || 0;
-   const netSpend = efectivoAmount - ahorroEfectivo;  // Only efectivo savings
+   const netSpend = efectivoAmount - ahorroEfectivo; // Only efectivo savings
    ```
 
 ---
@@ -372,46 +429,56 @@ This change affects the simulation budget form table structure, calculations, va
 **Location**: `/lib/simulation-validation.ts`
 
 **Tasks**:
+
 1. Update `validateBudgetFormData` function to validate both new fields:
+
    ```typescript
    export function validateBudgetFormData(formData: {
      [categoryId: string]: {
        efectivo_amount: string;
        credito_amount: string;
-       ahorro_efectivo_amount?: string;  // New
-       ahorro_credito_amount?: string;   // New
+       ahorro_efectivo_amount?: string; // New
+       ahorro_credito_amount?: string; // New
      };
    }): {
      isValid: boolean;
-     errors: { [categoryId: string]: {
-       efectivo?: string;
-       credito?: string;
-       ahorro_efectivo?: string;  // New
-       ahorro_credito?: string;   // New
-     } };
+     errors: {
+       [categoryId: string]: {
+         efectivo?: string;
+         credito?: string;
+         ahorro_efectivo?: string; // New
+         ahorro_credito?: string; // New
+       };
+     };
      totalErrors: number;
    } {
      // ... existing validation ...
 
      // Validate ahorro_efectivo_amount
-     const ahorroEfectivo = data.ahorro_efectivo_amount ?? "0";
+     const ahorroEfectivo = data.ahorro_efectivo_amount ?? '0';
      const ahorroEfectivoValidation = validateBudgetAmountInput(ahorroEfectivo);
      if (!ahorroEfectivoValidation.isValid) {
        categoryErrors.ahorro_efectivo = ahorroEfectivoValidation.error;
        totalErrors++;
-     } else if (ahorroEfectivoValidation.numericValue > efectivoValidation.numericValue) {
-       categoryErrors.ahorro_efectivo = "El ahorro efectivo no puede ser mayor al presupuesto en efectivo";
+     } else if (
+       ahorroEfectivoValidation.numericValue > efectivoValidation.numericValue
+     ) {
+       categoryErrors.ahorro_efectivo =
+         'El ahorro efectivo no puede ser mayor al presupuesto en efectivo';
        totalErrors++;
      }
 
      // Validate ahorro_credito_amount
-     const ahorroCredito = data.ahorro_credito_amount ?? "0";
+     const ahorroCredito = data.ahorro_credito_amount ?? '0';
      const ahorroCreditoValidation = validateBudgetAmountInput(ahorroCredito);
      if (!ahorroCreditoValidation.isValid) {
        categoryErrors.ahorro_credito = ahorroCreditoValidation.error;
        totalErrors++;
-     } else if (ahorroCreditoValidation.numericValue > creditoValidation.numericValue) {
-       categoryErrors.ahorro_credito = "El ahorro crédito no puede ser mayor al presupuesto en crédito";
+     } else if (
+       ahorroCreditoValidation.numericValue > creditoValidation.numericValue
+     ) {
+       categoryErrors.ahorro_credito =
+         'El ahorro crédito no puede ser mayor al presupuesto en crédito';
        totalErrors++;
      }
    }
@@ -424,6 +491,7 @@ This change affects the simulation budget form table structure, calculations, va
 **Location**: `/app/api/simulations/[id]/copy/route.ts`
 
 **Tasks**:
+
 1. Update copy logic to include new columns when duplicating simulations
 2. Ensure `ahorro_efectivo_amount` and `ahorro_credito_amount` are copied to new simulation
 
@@ -434,6 +502,7 @@ This change affects the simulation budget form table structure, calculations, va
 **Location**: `/app/api/simulations/[id]/save-as-template/route.ts` and related
 
 **Tasks**:
+
 1. Update template save/load to include new fields
 2. Ensure templates preserve ahorro efectivo and ahorro credito values
 
@@ -444,6 +513,7 @@ This change affects the simulation budget form table structure, calculations, va
 **Location**: `/app/api/simulations/[id]/export/route.ts`
 
 **Tasks**:
+
 1. Update Excel export to include two separate columns for savings
 2. Replace "Ahorro Esperado" with "Ahorro Efectivo" and "Ahorro Crédito"
 
@@ -452,6 +522,7 @@ This change affects the simulation budget form table structure, calculations, va
 ### [ ] 13. Testing (PENDING)
 
 **Tasks**:
+
 1. Create migration test to verify database changes
 2. Test form validation with new fields
 3. Test calculation logic with both savings types
@@ -466,6 +537,7 @@ This change affects the simulation budget form table structure, calculations, va
 ### [x] 14. UI/UX Considerations
 
 **Tasks**:
+
 1. Ensure column widths are appropriate for new layout (6 columns now instead of 5)
 2. Consider adding a small badge or indicator when either savings value > 0
 3. Add tooltip or help text explaining the difference between efectivo and credito savings
@@ -476,17 +548,20 @@ This change affects the simulation budget form table structure, calculations, va
 ## Data Migration Strategy
 
 ### Phase 1: Add New Columns (Non-Breaking)
+
 1. Add `ahorro_efectivo_amount` and `ahorro_credito_amount` columns
 2. Migrate existing `expected_savings` → `ahorro_efectivo_amount`
 3. Keep `expected_savings` column for backward compatibility
 4. UI reads from new columns, writes to both
 
 ### Phase 2: Update UI and Validation
+
 1. Update form to show two separate inputs
 2. Update validation rules
 3. Update calculations
 
 ### Phase 3: Cleanup (Optional)
+
 1. Deprecate `expected_savings` column after verification
 2. Remove backward compatibility code
 
@@ -495,6 +570,7 @@ This change affects the simulation budget form table structure, calculations, va
 ## Rollback Plan
 
 If issues arise, the rollback script should:
+
 1. Drop new columns `ahorro_efectivo_amount` and `ahorro_credito_amount`
 2. Restore `expected_savings` column functionality
 3. Revert UI changes to single column display

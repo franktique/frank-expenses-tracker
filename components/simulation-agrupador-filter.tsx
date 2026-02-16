@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Check,
   ChevronDown,
   Filter,
   AlertCircle,
   RefreshCw,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/popover';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
 
 type GrouperData = {
   grouper_id: number;
@@ -94,28 +94,28 @@ export function SimulationAgrupadorFilter({
   // Get display text for the trigger button
   const getDisplayText = () => {
     if (isLoading) {
-      return "Cargando...";
+      return 'Cargando...';
     }
 
     if (error) {
-      return "Error al cargar";
+      return 'Error al cargar';
     }
 
     if (selectedGroupers.length === 0) {
       return simulationContext
-        ? "Seleccionar agrupadores para simulación"
-        : "Seleccionar agrupadores";
+        ? 'Seleccionar agrupadores para simulación'
+        : 'Seleccionar agrupadores';
     }
 
     if (isAllSelected) {
-      return "Todos los agrupadores";
+      return 'Todos los agrupadores';
     }
 
     if (selectedGroupers.length === 1) {
       const selectedGrouper = allGroupers.find(
         (g) => g.grouper_id === selectedGroupers[0]
       );
-      return selectedGrouper?.grouper_name || "1 agrupador";
+      return selectedGrouper?.grouper_name || '1 agrupador';
     }
 
     return `${selectedGroupers.length} agrupadores`;
@@ -123,9 +123,9 @@ export function SimulationAgrupadorFilter({
 
   // Format currency for display
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("es-CO", {
-      style: "currency",
-      currency: "COP",
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount);
@@ -139,9 +139,9 @@ export function SimulationAgrupadorFilter({
           role="combobox"
           aria-expanded={isOpen}
           className={cn(
-            "w-[280px] justify-between",
-            error && "border-destructive text-destructive",
-            simulationContext && "border-blue-200 bg-blue-50/50"
+            'w-[280px] justify-between',
+            error && 'border-destructive text-destructive',
+            simulationContext && 'border-blue-200 bg-blue-50/50'
           )}
           disabled={isLoading}
         >
@@ -150,7 +150,7 @@ export function SimulationAgrupadorFilter({
               <AlertCircle className="h-4 w-4" />
             ) : (
               <Filter
-                className={cn("h-4 w-4", simulationContext && "text-blue-600")}
+                className={cn('h-4 w-4', simulationContext && 'text-blue-600')}
               />
             )}
             <span className="truncate">{getDisplayText()}</span>
@@ -162,19 +162,19 @@ export function SimulationAgrupadorFilter({
         <div className="p-2">
           {/* Header with context indicator */}
           {simulationContext && (
-            <div className="px-2 py-2 text-xs text-blue-600 bg-blue-50 rounded-sm mb-2">
+            <div className="mb-2 rounded-sm bg-blue-50 px-2 py-2 text-xs text-blue-600">
               Filtros para análisis de simulación
             </div>
           )}
 
           {/* Select All option */}
-          <div className="flex items-center space-x-2 px-2 py-2 hover:bg-accent hover:text-accent-foreground rounded-sm cursor-pointer">
+          <div className="flex cursor-pointer items-center space-x-2 rounded-sm px-2 py-2 hover:bg-accent hover:text-accent-foreground">
             <Checkbox
               id="select-all"
               checked={isAllSelected}
               ref={(ref) => {
                 if (ref) {
-                  ref.indeterminate = isIndeterminate;
+                  (ref as any).indeterminate = isIndeterminate;
                 }
               }}
               onCheckedChange={handleSelectAll}
@@ -182,14 +182,14 @@ export function SimulationAgrupadorFilter({
             />
             <label
               htmlFor="select-all"
-              className="text-sm font-medium cursor-pointer flex-1"
+              className="flex-1 cursor-pointer text-sm font-medium"
             >
               Todos
             </label>
           </div>
 
           {/* Separator */}
-          <div className="h-px bg-border my-1" />
+          <div className="my-1 h-px bg-border" />
 
           {/* Individual grouper options */}
           <div className="max-h-[300px] overflow-y-auto">
@@ -207,7 +207,7 @@ export function SimulationAgrupadorFilter({
                         className="ml-2 h-6 px-2 text-xs"
                         disabled={isLoading}
                       >
-                        <RefreshCw className="h-3 w-3 mr-1" />
+                        <RefreshCw className="mr-1 h-3 w-3" />
                         Reintentar
                       </Button>
                     )}
@@ -215,14 +215,14 @@ export function SimulationAgrupadorFilter({
                 </Alert>
               </div>
             ) : isLoading ? (
-              <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+              <div className="px-2 py-4 text-center text-sm text-muted-foreground">
                 <div className="flex items-center justify-center gap-2">
                   <RefreshCw className="h-4 w-4 animate-spin" />
                   Cargando agrupadores...
                 </div>
               </div>
             ) : sortedGroupers.length === 0 ? (
-              <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+              <div className="px-2 py-4 text-center text-sm text-muted-foreground">
                 No hay agrupadores disponibles
               </div>
             ) : (
@@ -234,7 +234,7 @@ export function SimulationAgrupadorFilter({
                 return (
                   <div
                     key={grouper.grouper_id}
-                    className="flex items-center space-x-2 px-2 py-2 hover:bg-accent hover:text-accent-foreground rounded-sm cursor-pointer"
+                    className="flex cursor-pointer items-center space-x-2 rounded-sm px-2 py-2 hover:bg-accent hover:text-accent-foreground"
                     onClick={() => handleGrouperToggle(grouper.grouper_id)}
                   >
                     <Checkbox
@@ -245,10 +245,10 @@ export function SimulationAgrupadorFilter({
                       }
                       disabled={isLoading}
                     />
-                    <div className="flex-1 min-w-0">
+                    <div className="min-w-0 flex-1">
                       <label
                         htmlFor={`grouper-${grouper.grouper_id}`}
-                        className="text-sm cursor-pointer font-medium truncate block"
+                        className="block cursor-pointer truncate text-sm font-medium"
                         title={grouper.grouper_name}
                       >
                         {grouper.grouper_name}
@@ -256,15 +256,15 @@ export function SimulationAgrupadorFilter({
                       {showSimulationData &&
                         simulationContext &&
                         grouper.simulation_total !== undefined && (
-                          <div className="text-xs text-blue-600 mt-1">
-                            Simulación:{" "}
+                          <div className="mt-1 text-xs text-blue-600">
+                            Simulación:{' '}
                             {formatCurrency(grouper.simulation_total)}
                           </div>
                         )}
                       {showSimulationData &&
                         !simulationContext &&
                         grouper.total_amount !== undefined && (
-                          <div className="text-xs text-muted-foreground mt-1">
+                          <div className="mt-1 text-xs text-muted-foreground">
                             Total: {formatCurrency(grouper.total_amount)}
                           </div>
                         )}
@@ -279,11 +279,11 @@ export function SimulationAgrupadorFilter({
           {/* Footer with selection count */}
           {!isLoading && sortedGroupers.length > 0 && (
             <>
-              <div className="h-px bg-border my-1" />
+              <div className="my-1 h-px bg-border" />
               <div className="px-2 py-1 text-xs text-muted-foreground">
                 {selectedGroupers.length} de {allGroupers.length} seleccionados
                 {simulationContext && (
-                  <span className="text-blue-600 ml-1">(simulación)</span>
+                  <span className="ml-1 text-blue-600">(simulación)</span>
                 )}
               </div>
             </>

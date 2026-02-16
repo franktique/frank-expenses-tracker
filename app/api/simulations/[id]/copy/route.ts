@@ -3,8 +3,8 @@
  * POST: Create a complete copy of an existing simulation including all related data
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 interface CopySimulationRequest {
   name?: string;
@@ -48,8 +48,8 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "ID de simulación inválido",
-          code: "INVALID_SIMULATION_ID",
+          error: 'ID de simulación inválido',
+          code: 'INVALID_SIMULATION_ID',
         },
         { status: 400 }
       );
@@ -77,8 +77,8 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Simulación no encontrada",
-          code: "SIMULATION_NOT_FOUND",
+          error: 'Simulación no encontrada',
+          code: 'SIMULATION_NOT_FOUND',
         },
         { status: 404 }
       );
@@ -186,7 +186,7 @@ export async function POST(
       // Subgroup tables might not exist, which is fine
       // Log but don't fail the copy
       console.warn(
-        "Note: Could not copy subgroups (tables may not exist):",
+        'Note: Could not copy subgroups (tables may not exist):',
         subgroupError
       );
     }
@@ -209,15 +209,15 @@ export async function POST(
       { status: 201 }
     );
   } catch (error) {
-    console.error("Error copying simulation:", error);
+    console.error('Error copying simulation:', error);
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
             success: false,
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
           },
           { status: 503 }
         );
@@ -227,8 +227,8 @@ export async function POST(
     return NextResponse.json(
       {
         success: false,
-        error: "Error interno al copiar la simulación",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno al copiar la simulación',
+        code: 'INTERNAL_SERVER_ERROR',
       },
       { status: 500 }
     );

@@ -5,7 +5,7 @@
  * across tabs and navigation for simulation analytics.
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   SimulationFilterState,
   SimulationFilterOptions,
@@ -14,10 +14,9 @@ import {
   clearSimulationFilterState,
   getDefaultSimulationFilterState,
   useSimulationFilterState,
-} from "@/lib/simulation-filter-state";
+} from '@/lib/simulation-filter-state';
 
-export interface UseSimulationFilterSyncOptions
-  extends SimulationFilterOptions {
+export interface UseSimulationFilterSyncOptions extends SimulationFilterOptions {
   onStateChange?: (state: SimulationFilterState) => void;
   enableStorageSync?: boolean;
   enableTabSync?: boolean;
@@ -59,7 +58,9 @@ export function useSimulationFilterSync(
   } = options;
 
   // Create unique instance ID to prevent conflicts
-  const instanceIdRef = useRef(`hook-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`);
+  const instanceIdRef = useRef(
+    `hook-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  );
   const instanceId = instanceIdRef.current;
 
   // Initialize state with defaults only - we'll load from storage in useEffect
@@ -89,7 +90,7 @@ export function useSimulationFilterSync(
         setLastSyncTime(Date.now());
         setHasUnsavedChanges(false);
       } catch (error) {
-        console.error("Error saving simulation filter state:", error);
+        console.error('Error saving simulation filter state:', error);
       }
     },
     [enableStorageSync, filterOptions, instanceId]
@@ -102,7 +103,7 @@ export function useSimulationFilterSync(
     try {
       return loadSimulationFilterState(filterOptions);
     } catch (error) {
-      console.error("Error loading simulation filter state:", error);
+      console.error('Error loading simulation filter state:', error);
       return null;
     }
   }, [enableStorageSync, filterOptions]);
@@ -229,7 +230,7 @@ export function useSimulationFilterSync(
         });
       }
     } catch (error) {
-      console.error("Error syncing with storage:", error);
+      console.error('Error syncing with storage:', error);
     } finally {
       setIsLoading(false);
     }
@@ -262,7 +263,7 @@ export function useSimulationFilterSync(
             syncWithStorage();
           }
         } catch (error) {
-          console.error("Error parsing storage change event:", error);
+          console.error('Error parsing storage change event:', error);
           // Fallback: sync anyway in case of parsing error
           syncWithStorage();
         }
@@ -270,7 +271,7 @@ export function useSimulationFilterSync(
     };
 
     const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
+      if (document.visibilityState === 'visible') {
         // Check for updates when tab becomes visible
         const now = Date.now();
         if (now - lastStorageCheckRef.current > syncInterval) {
@@ -281,12 +282,12 @@ export function useSimulationFilterSync(
     };
 
     // Add event listeners
-    window.addEventListener("storage", handleStorageChange);
-    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener('storage', handleStorageChange);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener('storage', handleStorageChange);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [
     enableTabSync,
@@ -310,16 +311,22 @@ export function useSimulationFilterSync(
             ...currentState,
             ...savedState,
             // Preserve any initial state values that are newer
-            ...(initialState && currentState.lastUpdated > savedState.lastUpdated ? initialState : {}),
-            lastUpdated: Math.max(currentState.lastUpdated, savedState.lastUpdated),
+            ...(initialState &&
+            currentState.lastUpdated > savedState.lastUpdated
+              ? initialState
+              : {}),
+            lastUpdated: Math.max(
+              currentState.lastUpdated,
+              savedState.lastUpdated
+            ),
           };
-          
+
           onStateChange?.(mergedState);
           return mergedState;
         });
       }
     } catch (error) {
-      console.error("Error initializing simulation filter state:", error);
+      console.error('Error initializing simulation filter state:', error);
     } finally {
       setIsLoading(false);
     }
@@ -351,7 +358,7 @@ export function useSimulationFilterSync(
         try {
           saveToStorage(filterStateRef.current);
         } catch (error) {
-          console.error("Error saving state during cleanup:", error);
+          console.error('Error saving state during cleanup:', error);
         }
       }
     };
@@ -399,7 +406,7 @@ export function useSimulationTabSync(
     (state: SimulationFilterState) => {
       try {
         const broadcastData = {
-          type: "simulation-filter-state-change",
+          type: 'simulation-filter-state-change',
           simulationId,
           tabId: activeTabId,
           state,
@@ -407,7 +414,7 @@ export function useSimulationTabSync(
         };
 
         // Use BroadcastChannel if available, otherwise use localStorage
-        if (typeof BroadcastChannel !== "undefined") {
+        if (typeof BroadcastChannel !== 'undefined') {
           const channel = new BroadcastChannel(
             `simulation-${simulationId}-sync`
           );
@@ -421,7 +428,7 @@ export function useSimulationTabSync(
           localStorage.removeItem(key);
         }
       } catch (error) {
-        console.error("Error broadcasting state change:", error);
+        console.error('Error broadcasting state change:', error);
       }
     },
     [simulationId, activeTabId]
@@ -431,7 +438,7 @@ export function useSimulationTabSync(
   useEffect(() => {
     const handleBroadcastMessage = (event: MessageEvent) => {
       if (
-        event.data?.type === "simulation-filter-state-change" &&
+        event.data?.type === 'simulation-filter-state-change' &&
         event.data?.simulationId === simulationId &&
         event.data?.tabId !== activeTabId
       ) {
@@ -450,7 +457,7 @@ export function useSimulationTabSync(
         try {
           const data = JSON.parse(event.newValue);
           if (
-            data.type === "simulation-filter-state-change" &&
+            data.type === 'simulation-filter-state-change' &&
             data.simulationId === simulationId &&
             data.tabId !== activeTabId
           ) {
@@ -458,23 +465,23 @@ export function useSimulationTabSync(
             onTabStateChange?.(data.state);
           }
         } catch (error) {
-          console.error("Error parsing tab sync data:", error);
+          console.error('Error parsing tab sync data:', error);
         }
       }
     };
 
     // Set up listeners
-    if (typeof BroadcastChannel !== "undefined") {
+    if (typeof BroadcastChannel !== 'undefined') {
       const channel = new BroadcastChannel(`simulation-${simulationId}-sync`);
-      channel.addEventListener("message", handleBroadcastMessage);
+      channel.addEventListener('message', handleBroadcastMessage);
 
       return () => {
-        channel.removeEventListener("message", handleBroadcastMessage);
+        channel.removeEventListener('message', handleBroadcastMessage);
         channel.close();
       };
     } else {
-      window.addEventListener("storage", handleStorageChange);
-      return () => window.removeEventListener("storage", handleStorageChange);
+      window.addEventListener('storage', handleStorageChange);
+      return () => window.removeEventListener('storage', handleStorageChange);
     }
   }, [simulationId, activeTabId, onTabStateChange]);
 

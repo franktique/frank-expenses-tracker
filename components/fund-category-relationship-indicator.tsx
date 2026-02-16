@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from '@/components/ui/badge';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Info, CheckCircle2, AlertCircle, Users } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Fund } from "@/types/funds";
+} from '@/components/ui/tooltip';
+import { Info, CheckCircle2, AlertCircle, Users } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Fund } from '@/types/funds';
 
 interface FundCategoryRelationshipIndicatorProps {
   associatedFunds: Fund[];
   fallbackFundName?: string;
   showCount?: boolean;
   showTooltip?: boolean;
-  variant?: "default" | "compact" | "detailed";
+  variant?: 'default' | 'compact' | 'detailed';
   className?: string;
 }
 
@@ -25,7 +25,7 @@ export function FundCategoryRelationshipIndicator({
   fallbackFundName,
   showCount = true,
   showTooltip = true,
-  variant = "default",
+  variant = 'default',
   className,
 }: FundCategoryRelationshipIndicatorProps) {
   const hasSpecificFunds = associatedFunds && associatedFunds.length > 0;
@@ -34,21 +34,21 @@ export function FundCategoryRelationshipIndicator({
   const getStatusIcon = () => {
     if (hasSpecificFunds) {
       return fundCount === 1 ? (
-        <CheckCircle2 className="w-3 h-3 text-green-600" />
+        <CheckCircle2 className="h-3 w-3 text-green-600" />
       ) : (
-        <Users className="w-3 h-3 text-blue-600" />
+        <Users className="h-3 w-3 text-blue-600" />
       );
     }
-    return <AlertCircle className="w-3 h-3 text-amber-600" />;
+    return <AlertCircle className="h-3 w-3 text-amber-600" />;
   };
 
   const getStatusColor = () => {
     if (hasSpecificFunds) {
       return fundCount === 1
-        ? "text-green-700 bg-green-50 border-green-200"
-        : "text-blue-700 bg-blue-50 border-blue-200";
+        ? 'text-green-700 bg-green-50 border-green-200'
+        : 'text-blue-700 bg-blue-50 border-blue-200';
     }
-    return "text-amber-700 bg-amber-50 border-amber-200";
+    return 'text-amber-700 bg-amber-50 border-amber-200';
   };
 
   const getTooltipContent = () => {
@@ -59,15 +59,15 @@ export function FundCategoryRelationshipIndicator({
       return `Esta categoría está asociada con ${fundCount} fondos específicos: ${associatedFunds
         .map((f) => f.name)
         .join(
-          ", "
+          ', '
         )}. Los gastos pueden registrarse desde cualquiera de estos fondos.`;
     }
     return `Esta categoría no tiene fondos específicos asociados. Los gastos pueden registrarse desde cualquier fondo disponible.`;
   };
 
-  if (variant === "compact") {
+  if (variant === 'compact') {
     const indicator = (
-      <div className={cn("flex items-center gap-1", className)}>
+      <div className={cn('flex items-center gap-1', className)}>
         {getStatusIcon()}
         {showCount && hasSpecificFunds && (
           <span className="text-xs text-muted-foreground">{fundCount}</span>
@@ -91,13 +91,13 @@ export function FundCategoryRelationshipIndicator({
     return indicator;
   }
 
-  if (variant === "detailed") {
+  if (variant === 'detailed') {
     return (
-      <div className={cn("space-y-2", className)}>
+      <div className={cn('space-y-2', className)}>
         <div className="flex items-center gap-2">
           {getStatusIcon()}
           <span className="text-sm font-medium">
-            {hasSpecificFunds ? "Fondos específicos" : "Todos los fondos"}
+            {hasSpecificFunds ? 'Fondos específicos' : 'Todos los fondos'}
           </span>
         </div>
         <div className="flex flex-wrap gap-1">
@@ -109,7 +109,7 @@ export function FundCategoryRelationshipIndicator({
             ))
           ) : (
             <Badge variant="outline" className="text-xs">
-              {fallbackFundName || "Cualquier fondo"}
+              {fallbackFundName || 'Cualquier fondo'}
             </Badge>
           )}
         </div>
@@ -122,30 +122,30 @@ export function FundCategoryRelationshipIndicator({
 
   // Default variant
   const content = (
-    <div className={cn("flex flex-wrap items-center gap-1", className)}>
+    <div className={cn('flex flex-wrap items-center gap-1', className)}>
       {hasSpecificFunds ? (
         <>
           {associatedFunds.map((fund) => (
             <Badge
               key={fund.id}
               variant="secondary"
-              className="text-xs flex items-center gap-1"
+              className="flex items-center gap-1 text-xs"
             >
-              <div className="w-2 h-2 rounded-full bg-green-500" />
+              <div className="h-2 w-2 rounded-full bg-green-500" />
               {fund.name}
             </Badge>
           ))}
           {showCount && (
-            <div className="text-xs text-muted-foreground ml-1 flex items-center gap-1">
-              <Users className="w-3 h-3" />({fundCount} fondo
-              {fundCount !== 1 ? "s" : ""})
+            <div className="ml-1 flex items-center gap-1 text-xs text-muted-foreground">
+              <Users className="h-3 w-3" />({fundCount} fondo
+              {fundCount !== 1 ? 's' : ''})
             </div>
           )}
         </>
       ) : (
-        <Badge variant="outline" className="text-xs flex items-center gap-1">
-          <div className="w-2 h-2 rounded-full bg-blue-500" />
-          {fallbackFundName || "Todos los fondos"}
+        <Badge variant="outline" className="flex items-center gap-1 text-xs">
+          <div className="h-2 w-2 rounded-full bg-blue-500" />
+          {fallbackFundName || 'Todos los fondos'}
         </Badge>
       )}
     </div>
@@ -199,60 +199,60 @@ export function FundSelectionConstraintIndicator({
   const getStatusInfo = () => {
     if (availableFunds.length === 0) {
       return {
-        icon: <Info className="w-4 h-4 text-blue-500" />,
-        message: "Sin restricciones de fondo",
-        description: "Esta categoría acepta gastos desde cualquier fondo",
-        variant: "info" as const,
+        icon: <Info className="h-4 w-4 text-blue-500" />,
+        message: 'Sin restricciones de fondo',
+        description: 'Esta categoría acepta gastos desde cualquier fondo',
+        variant: 'info' as const,
       };
     }
 
     if (isFilterFundAvailable) {
       return {
-        icon: <CheckCircle2 className="w-4 h-4 text-green-500" />,
-        message: "Fondo del filtro disponible",
+        icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+        message: 'Fondo del filtro disponible',
         description: `El fondo actual del filtro (${currentFilterFund?.name}) está disponible para esta categoría`,
-        variant: "success" as const,
+        variant: 'success' as const,
       };
     }
 
     if (selectedFund && isSelectedFundValid) {
       return {
-        icon: <CheckCircle2 className="w-4 h-4 text-green-500" />,
-        message: "Fondo válido seleccionado",
+        icon: <CheckCircle2 className="h-4 w-4 text-green-500" />,
+        message: 'Fondo válido seleccionado',
         description: `El fondo seleccionado (${selectedFund.name}) es válido para esta categoría`,
-        variant: "success" as const,
+        variant: 'success' as const,
       };
     }
 
     return {
-      icon: <AlertCircle className="w-4 h-4 text-amber-500" />,
-      message: "Fondos restringidos",
+      icon: <AlertCircle className="h-4 w-4 text-amber-500" />,
+      message: 'Fondos restringidos',
       description: `Esta categoría solo acepta gastos desde: ${availableFunds
         .map((f) => f.name)
-        .join(", ")}`,
-      variant: "warning" as const,
+        .join(', ')}`,
+      variant: 'warning' as const,
     };
   };
 
   const status = getStatusInfo();
   const variantClasses = {
-    info: "text-blue-700 bg-blue-50 border-blue-200",
-    success: "text-green-700 bg-green-50 border-green-200",
-    warning: "text-amber-700 bg-amber-50 border-amber-200",
+    info: 'text-blue-700 bg-blue-50 border-blue-200',
+    success: 'text-green-700 bg-green-50 border-green-200',
+    warning: 'text-amber-700 bg-amber-50 border-amber-200',
   };
 
   return (
     <div
       className={cn(
-        "flex items-start gap-2 p-2 rounded-md border text-sm",
+        'flex items-start gap-2 rounded-md border p-2 text-sm',
         variantClasses[status.variant],
         className
       )}
     >
       {status.icon}
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="font-medium">{status.message}</p>
-        <p className="text-xs opacity-90 mt-1">{status.description}</p>
+        <p className="mt-1 text-xs opacity-90">{status.description}</p>
       </div>
     </div>
   );
@@ -274,7 +274,7 @@ export function FundAvailabilityBadge({
 }: FundAvailabilityBadgeProps) {
   if (!isAvailable) {
     return (
-      <Badge variant="outline" className={cn("text-xs opacity-50", className)}>
+      <Badge variant="outline" className={cn('text-xs opacity-50', className)}>
         No disponible
       </Badge>
     );
@@ -284,7 +284,7 @@ export function FundAvailabilityBadge({
     return (
       <Badge
         variant="default"
-        className={cn("text-xs bg-green-100 text-green-800", className)}
+        className={cn('bg-green-100 text-xs text-green-800', className)}
       >
         Recomendado
       </Badge>
@@ -292,7 +292,7 @@ export function FundAvailabilityBadge({
   }
 
   return (
-    <Badge variant="secondary" className={cn("text-xs", className)}>
+    <Badge variant="secondary" className={cn('text-xs', className)}>
       Disponible
     </Badge>
   );

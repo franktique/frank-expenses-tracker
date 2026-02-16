@@ -40,19 +40,16 @@
 ### Key Changes Made:
 
 1. **Enhanced Data Fetching**:
-
    - Modified query parameters to use "all" for payment method in projection mode
    - Added projection mode flag to API calls
    - Maintained Estudio and Agrupador filtering in projection mode
 
 2. **Improved Filter State Management**:
-
    - Enhanced `handleProjectionModeToggle` to maintain all filter states
    - Added proper data clearing when toggling projection mode
    - Preserved filter selections across mode changes
 
 3. **Better User Feedback**:
-
    - Enhanced empty state messages to explain filter interactions
    - Added visual indicators for active projection mode
    - Improved tooltips to show filter context in projection
@@ -73,7 +70,6 @@
 ## Verification Steps:
 
 1. **Test Estudio Filter**:
-
    - Select an Estudio
    - Enable projection mode
    - Verify budget data is filtered by Estudio
@@ -81,7 +77,6 @@
    - Verify data updates correctly
 
 2. **Test Agrupador Filter**:
-
    - Select specific Agrupadores
    - Enable projection mode
    - Verify only selected Agrupadores show budget data
@@ -89,14 +84,12 @@
    - Verify data updates correctly
 
 3. **Test Payment Method Filter**:
-
    - Select a specific payment method (Cash or Credit)
    - Enable projection mode
    - Verify all budget data is shown (not filtered by payment method)
    - Check UI notification about payment method behavior
 
 4. **Test Combined Filters**:
-
    - Apply multiple filters (Estudio + Agrupador + Payment Method)
    - Enable projection mode
    - Verify correct behavior with all filters

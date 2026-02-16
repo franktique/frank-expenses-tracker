@@ -1,10 +1,10 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   CreateRateComparisonSchema,
   INVEST_ERROR_MESSAGES,
   type RateComparison,
-} from "@/types/invest-simulator";
+} from '@/types/invest-simulator';
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -28,7 +28,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "NOT_FOUND",
+          code: 'NOT_FOUND',
         },
         { status: 404 }
       );
@@ -55,19 +55,23 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       totalCount: result.length,
     });
   } catch (error) {
-    console.error("Error fetching rate comparisons:", error);
+    console.error('Error fetching rate comparisons:', error);
 
     // Check if tables don't exist
     if (
       error instanceof Error &&
-      (error.message.includes('relation "investment_scenarios" does not exist') ||
-        error.message.includes('relation "investment_rate_comparisons" does not exist'))
+      (error.message.includes(
+        'relation "investment_scenarios" does not exist'
+      ) ||
+        error.message.includes(
+          'relation "investment_rate_comparisons" does not exist'
+        ))
     ) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.TABLES_NOT_FOUND,
-          code: "TABLES_NOT_FOUND",
-          migrationEndpoint: "/api/migrate-invest-simulator",
+          code: 'TABLES_NOT_FOUND',
+          migrationEndpoint: '/api/migrate-invest-simulator',
         },
         { status: 404 }
       );
@@ -75,8 +79,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(
       {
-        error: "Error al obtener comparaciones de tasas",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error al obtener comparaciones de tasas',
+        code: 'INTERNAL_SERVER_ERROR',
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
@@ -99,8 +103,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (!validation.success) {
       return NextResponse.json(
         {
-          error: "Datos de entrada inválidos",
-          code: "VALIDATION_ERROR",
+          error: 'Datos de entrada inválidos',
+          code: 'VALIDATION_ERROR',
           details: validation.error.errors,
         },
         { status: 400 }
@@ -118,7 +122,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "NOT_FOUND",
+          code: 'NOT_FOUND',
         },
         { status: 404 }
       );
@@ -129,8 +133,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (Math.abs(rate - baseRate) < 0.0001) {
       return NextResponse.json(
         {
-          error: "No puede agregar la tasa base como comparación",
-          code: "INVALID_RATE",
+          error: 'No puede agregar la tasa base como comparación',
+          code: 'INVALID_RATE',
         },
         { status: 400 }
       );
@@ -147,7 +151,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.DUPLICATE_RATE,
-          code: "DUPLICATE_RATE",
+          code: 'DUPLICATE_RATE',
         },
         { status: 409 }
       );
@@ -178,19 +182,23 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    console.error("Error creating rate comparison:", error);
+    console.error('Error creating rate comparison:', error);
 
     // Check if tables don't exist
     if (
       error instanceof Error &&
-      (error.message.includes('relation "investment_scenarios" does not exist') ||
-        error.message.includes('relation "investment_rate_comparisons" does not exist'))
+      (error.message.includes(
+        'relation "investment_scenarios" does not exist'
+      ) ||
+        error.message.includes(
+          'relation "investment_rate_comparisons" does not exist'
+        ))
     ) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.TABLES_NOT_FOUND,
-          code: "TABLES_NOT_FOUND",
-          migrationEndpoint: "/api/migrate-invest-simulator",
+          code: 'TABLES_NOT_FOUND',
+          migrationEndpoint: '/api/migrate-invest-simulator',
         },
         { status: 404 }
       );
@@ -199,13 +207,13 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     // Handle unique constraint violation
     if (
       error instanceof Error &&
-      (error.message.includes("unique constraint") ||
-        error.message.includes("duplicate key"))
+      (error.message.includes('unique constraint') ||
+        error.message.includes('duplicate key'))
     ) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.DUPLICATE_RATE,
-          code: "DUPLICATE_RATE",
+          code: 'DUPLICATE_RATE',
         },
         { status: 409 }
       );
@@ -213,8 +221,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(
       {
-        error: "Error al crear comparación de tasa",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error al crear comparación de tasa',
+        code: 'INTERNAL_SERVER_ERROR',
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
@@ -232,8 +240,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const searchParams = request.nextUrl.searchParams;
-    const rateParam = searchParams.get("rate");
-    const comparisonId = searchParams.get("comparisonId");
+    const rateParam = searchParams.get('rate');
+    const comparisonId = searchParams.get('comparisonId');
 
     // Check if scenario exists
     const [scenario] = await sql`
@@ -244,7 +252,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "NOT_FOUND",
+          code: 'NOT_FOUND',
         },
         { status: 404 }
       );
@@ -263,7 +271,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         return NextResponse.json(
           {
             error: INVEST_ERROR_MESSAGES.RATE_COMPARISON_NOT_FOUND,
-            code: "NOT_FOUND",
+            code: 'NOT_FOUND',
           },
           { status: 404 }
         );
@@ -281,8 +289,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       if (isNaN(rate)) {
         return NextResponse.json(
           {
-            error: "Valor de tasa inválido",
-            code: "INVALID_RATE",
+            error: 'Valor de tasa inválido',
+            code: 'INVALID_RATE',
           },
           { status: 400 }
         );
@@ -299,7 +307,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         return NextResponse.json(
           {
             error: INVEST_ERROR_MESSAGES.RATE_COMPARISON_NOT_FOUND,
-            code: "NOT_FOUND",
+            code: 'NOT_FOUND',
           },
           { status: 404 }
         );
@@ -325,19 +333,23 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       });
     }
   } catch (error) {
-    console.error("Error deleting rate comparison:", error);
+    console.error('Error deleting rate comparison:', error);
 
     // Check if tables don't exist
     if (
       error instanceof Error &&
-      (error.message.includes('relation "investment_scenarios" does not exist') ||
-        error.message.includes('relation "investment_rate_comparisons" does not exist'))
+      (error.message.includes(
+        'relation "investment_scenarios" does not exist'
+      ) ||
+        error.message.includes(
+          'relation "investment_rate_comparisons" does not exist'
+        ))
     ) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.TABLES_NOT_FOUND,
-          code: "TABLES_NOT_FOUND",
-          migrationEndpoint: "/api/migrate-invest-simulator",
+          code: 'TABLES_NOT_FOUND',
+          migrationEndpoint: '/api/migrate-invest-simulator',
         },
         { status: 404 }
       );
@@ -345,8 +357,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(
       {
-        error: "Error al eliminar comparación de tasa",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error al eliminar comparación de tasa',
+        code: 'INTERNAL_SERVER_ERROR',
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }

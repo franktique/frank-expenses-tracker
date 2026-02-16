@@ -3,6 +3,7 @@
 export interface TabState {
   // Store view-specific state to preserve when switching tabs
   scrollPosition?: number;
+  currentPath?: string;
   formData?: Record<string, any>;
   filters?: Record<string, any>;
   selectedItems?: string[];
@@ -35,7 +36,12 @@ export interface TabsContextType {
   activeTabId: string | null;
 
   // Tab operations
-  addTab: (path: string, title?: string, state?: TabState, options?: TabOptions) => string;
+  addTab: (
+    path: string,
+    title?: string,
+    state?: TabState,
+    options?: TabOptions
+  ) => string;
   removeTab: (tabId: string) => void;
   switchTab: (tabId: string) => void;
   updateTabState: (tabId: string, state: Partial<TabState>) => void;

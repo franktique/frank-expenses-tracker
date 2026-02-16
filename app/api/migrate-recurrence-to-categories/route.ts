@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { sql, testConnection } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql, testConnection } from '@/lib/db';
 
 /**
  * API endpoint to move recurrence settings from budgets to categories table
@@ -27,7 +27,7 @@ export async function GET() {
       return NextResponse.json(
         {
           success: false,
-          message: "Could not connect to the database: " + connectionTest.error,
+          message: 'Could not connect to the database: ' + connectionTest.error,
         },
         { status: 500 }
       );
@@ -56,7 +56,7 @@ export async function GET() {
         ALTER TABLE categories
         ADD COLUMN recurrence_frequency VARCHAR(20)
       `;
-      migratedSteps.push("Added recurrence_frequency column to categories");
+      migratedSteps.push('Added recurrence_frequency column to categories');
 
       // Add constraint
       try {
@@ -65,9 +65,11 @@ export async function GET() {
           ADD CONSTRAINT categories_recurrence_frequency_check
           CHECK (recurrence_frequency IS NULL OR recurrence_frequency IN ('weekly', 'bi-weekly'))
         `;
-        migratedSteps.push("Added check constraint for categories.recurrence_frequency");
+        migratedSteps.push(
+          'Added check constraint for categories.recurrence_frequency'
+        );
       } catch (constraintError) {
-        console.warn("Warning: Could not add constraint:", constraintError);
+        console.warn('Warning: Could not add constraint:', constraintError);
       }
 
       // Create index
@@ -77,12 +79,12 @@ export async function GET() {
           ON categories(recurrence_frequency)
           WHERE recurrence_frequency IS NOT NULL
         `;
-        migratedSteps.push("Created index on categories.recurrence_frequency");
+        migratedSteps.push('Created index on categories.recurrence_frequency');
       } catch (indexError) {
-        console.warn("Warning: Could not create index:", indexError);
+        console.warn('Warning: Could not create index:', indexError);
       }
     } else {
-      skippedSteps.push("recurrence_frequency already exists in categories");
+      skippedSteps.push('recurrence_frequency already exists in categories');
     }
 
     // Step 2: Migrate data from budgets to categories (if budgets table has recurrence columns)
@@ -95,7 +97,9 @@ export async function GET() {
     `;
 
     const budgetsHasRecurrence =
-      budgetsFrequencyCheck.length > 0 ? budgetsFrequencyCheck[0].exists : false;
+      budgetsFrequencyCheck.length > 0
+        ? budgetsFrequencyCheck[0].exists
+        : false;
 
     if (budgetsHasRecurrence) {
       // Migrate data from budgets to categories
@@ -115,24 +119,30 @@ export async function GET() {
             AND b.recurrence_frequency IS NOT NULL
         )
       `;
-      migratedSteps.push("Migrated recurrence_frequency from budgets to categories");
+      migratedSteps.push(
+        'Migrated recurrence_frequency from budgets to categories'
+      );
 
       // Drop column from budgets
       await sql`ALTER TABLE budgets DROP COLUMN IF EXISTS recurrence_frequency`;
-      migratedSteps.push("Removed recurrence_frequency column from budgets table");
+      migratedSteps.push(
+        'Removed recurrence_frequency column from budgets table'
+      );
 
       // Drop index
       await sql`DROP INDEX IF EXISTS idx_budgets_recurrence_frequency`;
-      migratedSteps.push("Removed index from budgets table");
+      migratedSteps.push('Removed index from budgets table');
     } else {
-      skippedSteps.push("Budgets table has no recurrence_frequency column to migrate");
+      skippedSteps.push(
+        'Budgets table has no recurrence_frequency column to migrate'
+      );
     }
 
     // Determine response based on migration status
     if (migratedSteps.length === 0) {
       return NextResponse.json({
         success: true,
-        message: "Migration already complete",
+        message: 'Migration already complete',
         skipped: true,
         details: {
           skipped_steps: skippedSteps,
@@ -142,7 +152,7 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: "Migration completed successfully",
+      message: 'Migration completed successfully',
       details: {
         migrated_steps: migratedSteps,
         skipped_steps: skippedSteps,
@@ -150,11 +160,11 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error("Migration failed:", error);
+    console.error('Migration failed:', error);
     return NextResponse.json(
       {
         success: false,
-        message: "Migration failed: " + (error as Error).message,
+        message: 'Migration failed: ' + (error as Error).message,
         error: error instanceof Error ? error.stack : String(error),
       },
       { status: 500 }

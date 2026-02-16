@@ -1,10 +1,10 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   validateCreateSimulation,
   checkSimulationDataConsistency,
   getValidationFeedback,
-} from "@/lib/simulation-validation";
+} from '@/lib/simulation-validation';
 
 // GET /api/simulations - List all simulations
 export async function GET() {
@@ -21,15 +21,15 @@ export async function GET() {
 
     return NextResponse.json(simulations);
   } catch (error) {
-    console.error("Error fetching simulations:", error);
+    console.error('Error fetching simulations:', error);
 
     // Enhanced error handling
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -39,8 +39,8 @@ export async function GET() {
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al cargar simulaciones",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al cargar simulaciones',
+        code: 'INTERNAL_SERVER_ERROR',
         retryable: true,
       },
       { status: 500 }
@@ -67,7 +67,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, description } = validation.data;
+    const { name, description } = validation.data ?? {
+      name: '',
+      description: null,
+    };
 
     // Check for duplicate names (case-insensitive)
     const existingSimulation = await sql`
@@ -79,8 +82,8 @@ export async function POST(request: NextRequest) {
     if (existingSimulation.length > 0) {
       return NextResponse.json(
         {
-          error: "Ya existe una simulación con este nombre",
-          code: "DUPLICATE_NAME",
+          error: 'Ya existe una simulación con este nombre',
+          code: 'DUPLICATE_NAME',
           existing_simulation: {
             id: existingSimulation[0].id,
             name: existingSimulation[0].name,
@@ -99,7 +102,7 @@ export async function POST(request: NextRequest) {
 
     // Verify the created simulation
     if (!newSimulation || !newSimulation.id) {
-      throw new Error("Failed to create simulation - no data returned");
+      throw new Error('Failed to create simulation - no data returned');
     }
 
     // Add budget_count for consistency with GET response
@@ -115,31 +118,31 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(simulationWithCount, { status: 201 });
   } catch (error) {
-    console.error("Error creating simulation:", error);
+    console.error('Error creating simulation:', error);
 
     // Handle specific database errors
     if (error instanceof Error) {
       if (
-        error.message.includes("duplicate key") ||
-        error.message.includes("unique constraint")
+        error.message.includes('duplicate key') ||
+        error.message.includes('unique constraint')
       ) {
         return NextResponse.json(
           {
-            error: "Ya existe una simulación con este nombre",
-            code: "DUPLICATE_NAME",
+            error: 'Ya existe una simulación con este nombre',
+            code: 'DUPLICATE_NAME',
           },
           { status: 409 }
         );
       }
 
       if (
-        error.message.includes("connection") ||
-        error.message.includes("timeout")
+        error.message.includes('connection') ||
+        error.message.includes('timeout')
       ) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -147,13 +150,13 @@ export async function POST(request: NextRequest) {
       }
 
       if (
-        error.message.includes("invalid input") ||
-        error.message.includes("constraint")
+        error.message.includes('invalid input') ||
+        error.message.includes('constraint')
       ) {
         return NextResponse.json(
           {
-            error: "Datos inválidos para crear la simulación",
-            code: "INVALID_DATA",
+            error: 'Datos inválidos para crear la simulación',
+            code: 'INVALID_DATA',
             details: error.message,
           },
           { status: 400 }
@@ -163,8 +166,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al crear la simulación",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al crear la simulación',
+        code: 'INTERNAL_SERVER_ERROR',
         retryable: true,
       },
       { status: 500 }

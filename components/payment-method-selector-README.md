@@ -17,7 +17,7 @@ A reusable React component for selecting multiple payment methods with support f
 ### Basic Usage
 
 ```tsx
-import { PaymentMethodSelector } from "@/components/payment-method-selector";
+import { PaymentMethodSelector } from '@/components/payment-method-selector';
 
 function MyComponent() {
   const [selectedMethods, setSelectedMethods] = useState<string[]>([]);
@@ -35,7 +35,7 @@ function MyComponent() {
 
 ```tsx
 <PaymentMethodSelector
-  selectedMethods={["cash", "credit"]}
+  selectedMethods={['cash', 'credit']}
   onSelectionChange={handleMethodChange}
   disabled={false}
   label="Métodos de Pago Permitidos"
@@ -56,7 +56,7 @@ function MyComponent() {
 ## Types
 
 ```typescript
-export type PaymentMethod = "cash" | "credit" | "debit";
+export type PaymentMethod = 'cash' | 'credit' | 'debit';
 
 export interface PaymentMethodSelectorProps {
   selectedMethods: string[];
@@ -71,9 +71,9 @@ export interface PaymentMethodSelectorProps {
 
 ```typescript
 export const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
-  { value: "cash", label: "Efectivo" },
-  { value: "credit", label: "Crédito" },
-  { value: "debit", label: "Débito" },
+  { value: 'cash', label: 'Efectivo' },
+  { value: 'credit', label: 'Crédito' },
+  { value: 'debit', label: 'Débito' },
 ];
 ```
 

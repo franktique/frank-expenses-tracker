@@ -19,19 +19,16 @@ The migration adds a `payment_methods` column to the `estudio_groupers` table th
 ### Schema Changes
 
 1. **New Column**: `payment_methods TEXT[]` added to `estudio_groupers` table
-
    - Stores array of payment method strings
    - `NULL` means all payment methods are included (default behavior)
    - Valid values: `['cash', 'credit', 'debit']`
 
 2. **Constraint**: `check_payment_methods` ensures data integrity
-
    - Only allows valid payment method values
    - Prevents empty arrays (use `NULL` instead)
    - Allows `NULL` for "all methods" behavior
 
 3. **Index**: GIN index `idx_estudio_groupers_payment_methods` for efficient array queries
-
    - Enables fast filtering when checking payment method containment
    - Optimizes dashboard queries with payment method filters
 
@@ -40,17 +37,14 @@ The migration adds a `payment_methods` column to the `estudio_groupers` table th
 ### Helper Functions
 
 1. **`validate_payment_methods(TEXT[])`**: Validates payment method arrays
-
    - Returns `TRUE` for valid arrays or `NULL`
    - Returns `FALSE` for invalid values or empty arrays
 
 2. **`get_payment_method_filter(INTEGER, INTEGER)`**: Gets configured payment methods
-
    - Takes estudio_id and grouper_id as parameters
    - Returns configured payment methods array or `NULL`
 
 3. **`expense_matches_payment_filter(TEXT, TEXT[])`**: Checks if expense matches filter
-
    - Takes expense payment method and filter array
    - Returns `TRUE` if expense should be included
 

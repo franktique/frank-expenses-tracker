@@ -1,4 +1,4 @@
-import { FUND_ERROR_MESSAGES } from "@/types/funds";
+import { FUND_ERROR_MESSAGES } from '@/types/funds';
 
 // Enhanced error types for fund operations
 export interface FundErrorDetails {
@@ -26,37 +26,37 @@ export interface FundOperationError {
 // Error codes for different types of fund errors
 export const FUND_ERROR_CODES = {
   // Validation errors
-  VALIDATION_FAILED: "VALIDATION_FAILED",
-  REQUIRED_FIELD_MISSING: "REQUIRED_FIELD_MISSING",
-  INVALID_FORMAT: "INVALID_FORMAT",
-  VALUE_OUT_OF_RANGE: "VALUE_OUT_OF_RANGE",
+  VALIDATION_FAILED: 'VALIDATION_FAILED',
+  REQUIRED_FIELD_MISSING: 'REQUIRED_FIELD_MISSING',
+  INVALID_FORMAT: 'INVALID_FORMAT',
+  VALUE_OUT_OF_RANGE: 'VALUE_OUT_OF_RANGE',
 
   // Business logic errors
-  FUND_NOT_FOUND: "FUND_NOT_FOUND",
-  DUPLICATE_FUND_NAME: "DUPLICATE_FUND_NAME",
-  REFERENTIAL_INTEGRITY_VIOLATION: "REFERENTIAL_INTEGRITY_VIOLATION",
-  INSUFFICIENT_BALANCE: "INSUFFICIENT_BALANCE",
-  INVALID_FUND_OPERATION: "INVALID_FUND_OPERATION",
+  FUND_NOT_FOUND: 'FUND_NOT_FOUND',
+  DUPLICATE_FUND_NAME: 'DUPLICATE_FUND_NAME',
+  REFERENTIAL_INTEGRITY_VIOLATION: 'REFERENTIAL_INTEGRITY_VIOLATION',
+  INSUFFICIENT_BALANCE: 'INSUFFICIENT_BALANCE',
+  INVALID_FUND_OPERATION: 'INVALID_FUND_OPERATION',
 
   // System errors
-  DATABASE_ERROR: "DATABASE_ERROR",
-  NETWORK_ERROR: "NETWORK_ERROR",
-  CALCULATION_ERROR: "CALCULATION_ERROR",
-  TIMEOUT_ERROR: "TIMEOUT_ERROR",
+  DATABASE_ERROR: 'DATABASE_ERROR',
+  NETWORK_ERROR: 'NETWORK_ERROR',
+  CALCULATION_ERROR: 'CALCULATION_ERROR',
+  TIMEOUT_ERROR: 'TIMEOUT_ERROR',
 
   // Permission errors
-  UNAUTHORIZED_OPERATION: "UNAUTHORIZED_OPERATION",
-  FORBIDDEN_OPERATION: "FORBIDDEN_OPERATION",
+  UNAUTHORIZED_OPERATION: 'UNAUTHORIZED_OPERATION',
+  FORBIDDEN_OPERATION: 'FORBIDDEN_OPERATION',
 } as const;
 
 // User-friendly error messages mapping
 export const USER_FRIENDLY_ERROR_MESSAGES: Record<string, string> = {
   [FUND_ERROR_CODES.VALIDATION_FAILED]:
-    "Los datos proporcionados no son válidos",
-  [FUND_ERROR_CODES.REQUIRED_FIELD_MISSING]: "Faltan campos obligatorios",
-  [FUND_ERROR_CODES.INVALID_FORMAT]: "El formato de los datos no es correcto",
+    'Los datos proporcionados no son válidos',
+  [FUND_ERROR_CODES.REQUIRED_FIELD_MISSING]: 'Faltan campos obligatorios',
+  [FUND_ERROR_CODES.INVALID_FORMAT]: 'El formato de los datos no es correcto',
   [FUND_ERROR_CODES.VALUE_OUT_OF_RANGE]:
-    "El valor está fuera del rango permitido",
+    'El valor está fuera del rango permitido',
 
   [FUND_ERROR_CODES.FUND_NOT_FOUND]: FUND_ERROR_MESSAGES.FUND_NOT_FOUND,
   [FUND_ERROR_CODES.DUPLICATE_FUND_NAME]:
@@ -64,79 +64,79 @@ export const USER_FRIENDLY_ERROR_MESSAGES: Record<string, string> = {
   [FUND_ERROR_CODES.REFERENTIAL_INTEGRITY_VIOLATION]:
     FUND_ERROR_MESSAGES.FUND_DELETE_RESTRICTED,
   [FUND_ERROR_CODES.INSUFFICIENT_BALANCE]:
-    "Balance insuficiente para realizar la operación",
-  [FUND_ERROR_CODES.INVALID_FUND_OPERATION]: "Operación de fondo no válida",
+    'Balance insuficiente para realizar la operación',
+  [FUND_ERROR_CODES.INVALID_FUND_OPERATION]: 'Operación de fondo no válida',
 
   [FUND_ERROR_CODES.DATABASE_ERROR]:
-    "Error en la base de datos. Por favor, inténtalo de nuevo",
+    'Error en la base de datos. Por favor, inténtalo de nuevo',
   [FUND_ERROR_CODES.NETWORK_ERROR]:
-    "Error de conexión. Verifica tu conexión a internet",
+    'Error de conexión. Verifica tu conexión a internet',
   [FUND_ERROR_CODES.CALCULATION_ERROR]:
     FUND_ERROR_MESSAGES.FUND_BALANCE_CALCULATION_ERROR,
   [FUND_ERROR_CODES.TIMEOUT_ERROR]:
-    "La operación tardó demasiado tiempo. Inténtalo de nuevo",
+    'La operación tardó demasiado tiempo. Inténtalo de nuevo',
 
   [FUND_ERROR_CODES.UNAUTHORIZED_OPERATION]:
-    "No tienes permisos para realizar esta operación",
-  [FUND_ERROR_CODES.FORBIDDEN_OPERATION]: "Esta operación no está permitida",
+    'No tienes permisos para realizar esta operación',
+  [FUND_ERROR_CODES.FORBIDDEN_OPERATION]: 'Esta operación no está permitida',
 };
 
 // Error recovery suggestions
 export const ERROR_RECOVERY_SUGGESTIONS: Record<string, string[]> = {
   [FUND_ERROR_CODES.VALIDATION_FAILED]: [
-    "Revisa los campos marcados en rojo",
-    "Asegúrate de completar todos los campos obligatorios",
-    "Verifica que los valores estén en el formato correcto",
+    'Revisa los campos marcados en rojo',
+    'Asegúrate de completar todos los campos obligatorios',
+    'Verifica que los valores estén en el formato correcto',
   ],
   [FUND_ERROR_CODES.FUND_NOT_FOUND]: [
-    "Verifica que el fondo aún existe",
-    "Actualiza la página para obtener los datos más recientes",
-    "Selecciona un fondo diferente",
+    'Verifica que el fondo aún existe',
+    'Actualiza la página para obtener los datos más recientes',
+    'Selecciona un fondo diferente',
   ],
   [FUND_ERROR_CODES.DUPLICATE_FUND_NAME]: [
-    "Elige un nombre diferente para el fondo",
-    "Verifica si ya existe un fondo con ese nombre",
-    "Agrega un sufijo o número al nombre",
+    'Elige un nombre diferente para el fondo',
+    'Verifica si ya existe un fondo con ese nombre',
+    'Agrega un sufijo o número al nombre',
   ],
   [FUND_ERROR_CODES.REFERENTIAL_INTEGRITY_VIOLATION]: [
-    "Elimina primero las categorías asociadas al fondo",
-    "Reasigna las transacciones a otro fondo",
-    "Considera desactivar el fondo en lugar de eliminarlo",
+    'Elimina primero las categorías asociadas al fondo',
+    'Reasigna las transacciones a otro fondo',
+    'Considera desactivar el fondo en lugar de eliminarlo',
   ],
   [FUND_ERROR_CODES.DATABASE_ERROR]: [
-    "Inténtalo de nuevo en unos momentos",
-    "Verifica tu conexión a internet",
-    "Si el problema persiste, contacta al soporte técnico",
+    'Inténtalo de nuevo en unos momentos',
+    'Verifica tu conexión a internet',
+    'Si el problema persiste, contacta al soporte técnico',
   ],
   [FUND_ERROR_CODES.NETWORK_ERROR]: [
-    "Verifica tu conexión a internet",
-    "Inténtalo de nuevo",
-    "Recarga la página si es necesario",
+    'Verifica tu conexión a internet',
+    'Inténtalo de nuevo',
+    'Recarga la página si es necesario',
   ],
   [FUND_ERROR_CODES.CALCULATION_ERROR]: [
-    "Intenta recalcular el balance manualmente",
-    "Verifica que no haya transacciones duplicadas",
-    "Si el problema persiste, contacta al soporte técnico",
+    'Intenta recalcular el balance manualmente',
+    'Verifica que no haya transacciones duplicadas',
+    'Si el problema persiste, contacta al soporte técnico',
   ],
 };
 
 // Error classification helper
 export function classifyError(error: any): FundErrorDetails {
   // Handle Zod validation errors
-  if (error.name === "ZodError") {
+  if (error.name === 'ZodError') {
     return {
       code: FUND_ERROR_CODES.VALIDATION_FAILED,
-      message: "Datos de entrada no válidos",
+      message: 'Datos de entrada no válidos',
       details: error.errors
-        .map((e: any) => `${e.path.join(".")}: ${e.message}`)
-        .join(", "),
+        .map((e: any) => `${e.path.join('.')}: ${e.message}`)
+        .join(', '),
       recoverable: true,
       retryable: false,
     };
   }
 
   // Handle database constraint errors
-  if (error.code === "23505") {
+  if (error.code === '23505') {
     // PostgreSQL unique constraint violation
     return {
       code: FUND_ERROR_CODES.DUPLICATE_FUND_NAME,
@@ -147,7 +147,7 @@ export function classifyError(error: any): FundErrorDetails {
     };
   }
 
-  if (error.code === "23503") {
+  if (error.code === '23503') {
     // PostgreSQL foreign key constraint violation
     return {
       code: FUND_ERROR_CODES.REFERENTIAL_INTEGRITY_VIOLATION,
@@ -161,7 +161,7 @@ export function classifyError(error: any): FundErrorDetails {
   }
 
   // Handle network errors
-  if (error.name === "TypeError" && error.message.includes("fetch")) {
+  if (error.name === 'TypeError' && error.message.includes('fetch')) {
     return {
       code: FUND_ERROR_CODES.NETWORK_ERROR,
       message: USER_FRIENDLY_ERROR_MESSAGES[FUND_ERROR_CODES.NETWORK_ERROR],
@@ -171,7 +171,7 @@ export function classifyError(error: any): FundErrorDetails {
   }
 
   // Handle timeout errors
-  if (error.name === "AbortError" || error.message.includes("timeout")) {
+  if (error.name === 'AbortError' || error.message.includes('timeout')) {
     return {
       code: FUND_ERROR_CODES.TIMEOUT_ERROR,
       message: USER_FRIENDLY_ERROR_MESSAGES[FUND_ERROR_CODES.TIMEOUT_ERROR],
@@ -200,12 +200,12 @@ export function formatErrorForUser(error: FundErrorDetails): {
   canRetry: boolean;
 } {
   const suggestions = ERROR_RECOVERY_SUGGESTIONS[error.code] || [
-    "Inténtalo de nuevo",
-    "Si el problema persiste, contacta al soporte técnico",
+    'Inténtalo de nuevo',
+    'Si el problema persiste, contacta al soporte técnico',
   ];
 
   return {
-    title: "Error en la operación",
+    title: 'Error en la operación',
     message: error.message,
     suggestions,
     canRetry: error.retryable || false,
@@ -215,7 +215,7 @@ export function formatErrorForUser(error: FundErrorDetails): {
 // Validation error formatter for forms
 export function formatValidationErrors(errors: any[]): FundValidationError[] {
   return errors.map((error) => ({
-    field: error.path?.join(".") || "unknown",
+    field: error.path?.join('.') || 'unknown',
     message: error.message,
     code: error.code || FUND_ERROR_CODES.VALIDATION_FAILED,
   }));
@@ -235,7 +235,7 @@ export function logFundError(
     context,
   };
 
-  console.error("Fund operation error:", logEntry);
+  console.error('Fund operation error:', logEntry);
 
   // In a production environment, you might want to send this to a logging service
   // Example: sendToLoggingService(logEntry);
@@ -312,7 +312,7 @@ export function validateFundForm(
       data: validatedData,
     };
   } catch (error: any) {
-    if (error.name === "ZodError") {
+    if (error.name === 'ZodError') {
       return {
         isValid: false,
         errors: formatValidationErrors(error.errors),
@@ -323,8 +323,8 @@ export function validateFundForm(
       isValid: false,
       errors: [
         {
-          field: "general",
-          message: error.message || "Error de validación desconocido",
+          field: 'general',
+          message: error.message || 'Error de validación desconocido',
           code: FUND_ERROR_CODES.VALIDATION_FAILED,
         },
       ],

@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { sql, testConnection } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql, testConnection } from '@/lib/db';
 
 export async function POST() {
   try {
@@ -10,7 +10,7 @@ export async function POST() {
       return NextResponse.json(
         {
           success: false,
-          message: "Could not connect to the database: " + connectionTest.error,
+          message: 'Could not connect to the database: ' + connectionTest.error,
         },
         { status: 500 }
       );
@@ -26,7 +26,7 @@ export async function POST() {
           updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
       `;
-      console.log("Estudios table created or already exists");
+      console.log('Estudios table created or already exists');
 
       // Create estudio_groupers junction table
       await sql`
@@ -38,36 +38,36 @@ export async function POST() {
           UNIQUE(estudio_id, grouper_id)
         )
       `;
-      console.log("Estudio_groupers table created or already exists");
+      console.log('Estudio_groupers table created or already exists');
 
       // Create indexes for faster lookups
       await sql`
         CREATE INDEX IF NOT EXISTS idx_estudio_groupers_estudio_id ON estudio_groupers(estudio_id)
       `;
-      console.log("Index on estudio_id created or already exists");
+      console.log('Index on estudio_id created or already exists');
 
       await sql`
         CREATE INDEX IF NOT EXISTS idx_estudio_groupers_grouper_id ON estudio_groupers(grouper_id)
       `;
-      console.log("Index on grouper_id created or already exists");
+      console.log('Index on grouper_id created or already exists');
 
       return NextResponse.json({
         success: true,
-        message: "Estudios database schema created successfully",
+        message: 'Estudios database schema created successfully',
       });
     } catch (error) {
-      console.error("Error creating estudios schema:", error);
+      console.error('Error creating estudios schema:', error);
       return NextResponse.json(
         {
           success: false,
           message:
-            "Error creating estudios schema: " + (error as Error).message,
+            'Error creating estudios schema: ' + (error as Error).message,
         },
         { status: 500 }
       );
     }
   } catch (error) {
-    console.error("Error in estudios migration:", error);
+    console.error('Error in estudios migration:', error);
     return NextResponse.json(
       {
         success: false,

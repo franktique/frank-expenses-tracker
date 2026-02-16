@@ -1,7 +1,7 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { UpdateExpenseSchema, SOURCE_FUND_ERROR_MESSAGES } from "@/types/funds";
-import { validateSourceFundUpdate } from "@/lib/source-fund-validation";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { UpdateExpenseSchema, SOURCE_FUND_ERROR_MESSAGES } from '@/types/funds';
+import { validateSourceFundUpdate } from '@/lib/source-fund-validation';
 
 export async function GET(
   request: NextRequest,
@@ -29,7 +29,7 @@ export async function GET(
     `;
 
     if (!expense) {
-      return NextResponse.json({ error: "Expense not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
     }
 
     // Transform the response to include credit card info in the expected format
@@ -50,7 +50,7 @@ export async function GET(
 
     return NextResponse.json(transformedExpense);
   } catch (error) {
-    console.error("Error fetching expense:", error);
+    console.error('Error fetching expense:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -70,7 +70,7 @@ export async function PUT(
     const validationResult = UpdateExpenseSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: validationResult.error.errors },
+        { error: 'Validation failed', details: validationResult.error.errors },
         { status: 400 }
       );
     }
@@ -83,7 +83,7 @@ export async function PUT(
     `;
 
     if (!existingExpense) {
-      return NextResponse.json({ error: "Expense not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
     }
 
     let {
@@ -133,7 +133,7 @@ export async function PUT(
     if (!validation.isValid) {
       return NextResponse.json(
         {
-          error: "Validation failed",
+          error: 'Validation failed',
           details: validation.errors,
           warnings: validation.warnings,
         },
@@ -143,7 +143,7 @@ export async function PUT(
 
     // Log warnings if any
     if (validation.warnings.length > 0) {
-      console.warn("Expense update warnings:", validation.warnings);
+      console.warn('Expense update warnings:', validation.warnings);
     }
 
     // Revert old fund balance changes
@@ -188,7 +188,7 @@ export async function PUT(
     `;
 
     if (!updatedExpense) {
-      return NextResponse.json({ error: "Expense not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
     }
 
     // Apply new fund balance changes
@@ -246,7 +246,7 @@ export async function PUT(
 
     return NextResponse.json(transformedExpense);
   } catch (error) {
-    console.error("Error updating expense:", error);
+    console.error('Error updating expense:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -269,7 +269,7 @@ export async function DELETE(
     `;
 
     if (!expenseToDelete) {
-      return NextResponse.json({ error: "Expense not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
     }
 
     const [deletedExpense] = await sql`
@@ -279,7 +279,7 @@ export async function DELETE(
     `;
 
     if (!deletedExpense) {
-      return NextResponse.json({ error: "Expense not found" }, { status: 404 });
+      return NextResponse.json({ error: 'Expense not found' }, { status: 404 });
     }
 
     // Revert fund balance changes
@@ -303,7 +303,7 @@ export async function DELETE(
 
     return NextResponse.json(deletedExpense);
   } catch (error) {
-    console.error("Error deleting expense:", error);
+    console.error('Error deleting expense:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

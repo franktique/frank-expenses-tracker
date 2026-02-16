@@ -43,8 +43,8 @@ interface CreditCardSelectorProps {
 ### Basic Usage
 
 ```tsx
-import { CreditCardSelector } from "@/components/credit-card-selector";
-import { CreditCard } from "@/types/credit-cards";
+import { CreditCardSelector } from '@/components/credit-card-selector';
+import { CreditCard } from '@/types/credit-cards';
 
 function ExpenseForm() {
   const [selectedCard, setSelectedCard] = useState<CreditCard | null>(null);
@@ -93,18 +93,18 @@ function ExpenseForm() {
 ### With Form Integration
 
 ```tsx
-import { useForm } from "react-hook-form";
-import { CreditCardSelector } from "@/components/credit-card-selector";
+import { useForm } from 'react-hook-form';
+import { CreditCardSelector } from '@/components/credit-card-selector';
 
 function ExpenseForm() {
   const { control, watch, setValue } = useForm();
-  const selectedCard = watch("creditCard");
+  const selectedCard = watch('creditCard');
 
   return (
     <div className="space-y-4">
       <CreditCardSelector
         selectedCreditCard={selectedCard}
-        onCreditCardChange={(card) => setValue("creditCard", card)}
+        onCreditCardChange={(card) => setValue('creditCard', card)}
         placeholder="Seleccionar tarjeta (opcional)"
       />
     </div>
@@ -127,7 +127,7 @@ Examples:
 The component includes a validation utility function:
 
 ```typescript
-import { validateCreditCard } from "@/components/credit-card-selector";
+import { validateCreditCard } from '@/components/credit-card-selector';
 
 const validation = validateCreditCard(selectedCard, required);
 if (!validation.isValid) {

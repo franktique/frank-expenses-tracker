@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import type { BudgetDetail, BudgetExecutionViewMode } from "@/types/funds";
-import { Card } from "@/components/ui/card";
-import { format, parseISO } from "date-fns";
-import { es } from "date-fns/locale";
+import type { BudgetDetail, BudgetExecutionViewMode } from '@/types/funds';
+import { Card } from '@/components/ui/card';
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 interface BudgetDetailTableProps {
   budgets: BudgetDetail[];
@@ -31,7 +31,7 @@ export function BudgetDetailTable({
 
   // Format the header date/week display
   const getHeaderText = () => {
-    if (viewMode === "weekly" && weekStart && weekEnd) {
+    if (viewMode === 'weekly' && weekStart && weekEnd) {
       const start = parseISO(weekStart);
       const end = parseISO(weekEnd);
       return `Semana ${format(start, "d 'de' MMMM", { locale: es })} - ${format(end, "d 'de' MMMM 'de' yyyy", { locale: es })}`;
@@ -43,9 +43,9 @@ export function BudgetDetailTable({
 
   // Format currency
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat("es-MX", {
-      style: "currency",
-      currency: "MXN",
+    return new Intl.NumberFormat('es-MX', {
+      style: 'currency',
+      currency: 'MXN',
     }).format(amount);
   };
 
@@ -53,20 +53,20 @@ export function BudgetDetailTable({
   const total = sortedBudgets.reduce((sum, budget) => sum + budget.amount, 0);
 
   return (
-    <Card className="p-6 mt-6 animate-in fade-in-50 duration-300">
+    <Card className="mt-6 p-6 duration-300 animate-in fade-in-50">
       {/* Header */}
       <div className="mb-4">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
           Detalle de Presupuestos
         </h3>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
           {getHeaderText()}
         </p>
       </div>
 
       {/* Empty state */}
       {sortedBudgets.length === 0 ? (
-        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+        <div className="py-8 text-center text-gray-500 dark:text-gray-400">
           <p>No hay presupuestos programados para este período.</p>
         </div>
       ) : (
@@ -76,15 +76,15 @@ export function BudgetDetailTable({
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200 dark:border-gray-700">
-                  <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700 dark:text-gray-300">
+                  <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Categoría
                   </th>
-                  {viewMode === "weekly" && (
-                    <th className="text-left py-3 px-4 font-semibold text-sm text-gray-700 dark:text-gray-300">
+                  {viewMode === 'weekly' && (
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700 dark:text-gray-300">
                       Fecha
                     </th>
                   )}
-                  <th className="text-right py-3 px-4 font-semibold text-sm text-gray-700 dark:text-gray-300">
+                  <th className="px-4 py-3 text-right text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Monto
                   </th>
                 </tr>
@@ -93,17 +93,19 @@ export function BudgetDetailTable({
                 {sortedBudgets.map((budget, index) => (
                   <tr
                     key={`${budget.budgetId}-${budget.date}-${index}`}
-                    className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                    className="border-b border-gray-100 transition-colors hover:bg-gray-50 dark:border-gray-800 dark:hover:bg-gray-800/50"
                   >
-                    <td className="py-3 px-4 text-sm text-gray-900 dark:text-gray-100">
+                    <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
                       {budget.categoryName}
                     </td>
-                    {viewMode === "weekly" && (
-                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400">
-                        {format(parseISO(budget.date), "d 'de' MMM", { locale: es })}
+                    {viewMode === 'weekly' && (
+                      <td className="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
+                        {format(parseISO(budget.date), "d 'de' MMM", {
+                          locale: es,
+                        })}
                       </td>
                     )}
-                    <td className="py-3 px-4 text-sm text-right font-medium text-gray-900 dark:text-gray-100">
+                    <td className="px-4 py-3 text-right text-sm font-medium text-gray-900 dark:text-gray-100">
                       {formatCurrency(budget.amount)}
                     </td>
                   </tr>
@@ -111,12 +113,12 @@ export function BudgetDetailTable({
               </tbody>
               {/* Total row */}
               <tfoot>
-                <tr className="border-t-2 border-gray-300 dark:border-gray-600 font-semibold">
-                  <td className="py-3 px-4 text-sm text-gray-900 dark:text-gray-100">
+                <tr className="border-t-2 border-gray-300 font-semibold dark:border-gray-600">
+                  <td className="px-4 py-3 text-sm text-gray-900 dark:text-gray-100">
                     Total
                   </td>
-                  {viewMode === "weekly" && <td></td>}
-                  <td className="py-3 px-4 text-sm text-right text-gray-900 dark:text-gray-100">
+                  {viewMode === 'weekly' && <td></td>}
+                  <td className="px-4 py-3 text-right text-sm text-gray-900 dark:text-gray-100">
                     {formatCurrency(total)}
                   </td>
                 </tr>
@@ -126,7 +128,8 @@ export function BudgetDetailTable({
 
           {/* Budget count */}
           <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
-            {sortedBudgets.length} {sortedBudgets.length === 1 ? "presupuesto" : "presupuestos"}
+            {sortedBudgets.length}{' '}
+            {sortedBudgets.length === 1 ? 'presupuesto' : 'presupuestos'}
           </div>
         </>
       )}

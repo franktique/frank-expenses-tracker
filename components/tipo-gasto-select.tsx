@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import {
   Select,
@@ -6,9 +6,9 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { TIPO_GASTO_VALUES, TIPO_GASTO_LABELS, TipoGasto } from "@/types/funds";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/select';
+import { TIPO_GASTO_VALUES, TIPO_GASTO_LABELS, TipoGasto } from '@/types/funds';
+import { Label } from '@/components/ui/label';
 
 interface TipoGastoSelectProps {
   value?: TipoGasto;
@@ -22,8 +22,8 @@ interface TipoGastoSelectProps {
 export function TipoGastoSelect({
   value,
   onValueChange,
-  label = "Tipo de Gasto",
-  placeholder = "Selecciona el tipo de gasto",
+  label = 'Tipo de Gasto',
+  placeholder = 'Selecciona el tipo de gasto',
   disabled = false,
   required = false,
 }: TipoGastoSelectProps) {
@@ -32,10 +32,14 @@ export function TipoGastoSelect({
       {label && (
         <Label>
           {label}
-          {required && <span className="text-red-500 ml-1">*</span>}
+          {required && <span className="ml-1 text-red-500">*</span>}
         </Label>
       )}
-      <Select value={value || ""} onValueChange={(val) => onValueChange(val as TipoGasto)} disabled={disabled}>
+      <Select
+        value={value || ''}
+        onValueChange={(val) => onValueChange(val as TipoGasto)}
+        disabled={disabled}
+      >
         <SelectTrigger>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>

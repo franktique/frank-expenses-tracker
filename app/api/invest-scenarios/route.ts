@@ -1,12 +1,12 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   CreateInvestmentScenarioSchema,
   INVEST_ERROR_MESSAGES,
   type InvestmentScenario,
   type InvestmentScenarioListResponse,
-} from "@/types/invest-simulator";
-import { calculateInvestmentSummary } from "@/lib/invest-calculations";
+} from '@/types/invest-simulator';
+import { calculateInvestmentSummary } from '@/lib/invest-calculations';
 
 /**
  * GET /api/invest-scenarios
@@ -70,7 +70,7 @@ export async function GET() {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("Error fetching investment scenarios:", error);
+    console.error('Error fetching investment scenarios:', error);
 
     // Check if tables don't exist
     if (
@@ -80,8 +80,8 @@ export async function GET() {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.TABLES_NOT_FOUND,
-          code: "TABLES_NOT_FOUND",
-          migrationEndpoint: "/api/migrate-invest-simulator",
+          code: 'TABLES_NOT_FOUND',
+          migrationEndpoint: '/api/migrate-invest-simulator',
         },
         { status: 404 }
       );
@@ -89,8 +89,8 @@ export async function GET() {
 
     return NextResponse.json(
       {
-        error: "Error al obtener escenarios de inversión",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error al obtener escenarios de inversión',
+        code: 'INTERNAL_SERVER_ERROR',
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }
@@ -112,8 +112,8 @@ export async function POST(request: NextRequest) {
     if (!validation.success) {
       return NextResponse.json(
         {
-          error: "Datos de entrada inválidos",
-          code: "VALIDATION_ERROR",
+          error: 'Datos de entrada inválidos',
+          code: 'VALIDATION_ERROR',
           details: validation.error.errors,
         },
         { status: 400 }
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.DUPLICATE_NAME,
-          code: "DUPLICATE_NAME",
+          code: 'DUPLICATE_NAME',
         },
         { status: 409 }
       );
@@ -199,7 +199,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(result, { status: 201 });
   } catch (error) {
-    console.error("Error creating investment scenario:", error);
+    console.error('Error creating investment scenario:', error);
 
     // Check if tables don't exist
     if (
@@ -209,8 +209,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.TABLES_NOT_FOUND,
-          code: "TABLES_NOT_FOUND",
-          migrationEndpoint: "/api/migrate-invest-simulator",
+          code: 'TABLES_NOT_FOUND',
+          migrationEndpoint: '/api/migrate-invest-simulator',
         },
         { status: 404 }
       );
@@ -219,13 +219,13 @@ export async function POST(request: NextRequest) {
     // Handle unique constraint violation
     if (
       error instanceof Error &&
-      (error.message.includes("unique constraint") ||
-        error.message.includes("duplicate key"))
+      (error.message.includes('unique constraint') ||
+        error.message.includes('duplicate key'))
     ) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.DUPLICATE_NAME,
-          code: "DUPLICATE_NAME",
+          code: 'DUPLICATE_NAME',
         },
         { status: 409 }
       );
@@ -233,8 +233,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: "Error al crear escenario de inversión",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error al crear escenario de inversión',
+        code: 'INTERNAL_SERVER_ERROR',
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }

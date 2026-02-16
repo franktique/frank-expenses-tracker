@@ -33,13 +33,13 @@ class BudgetDataCache {
   private generateKey(key: CacheKey): string {
     const parts = [
       `period:${key.periodId}`,
-      key.estudioId ? `estudio:${key.estudioId}` : "estudio:all",
+      key.estudioId ? `estudio:${key.estudioId}` : 'estudio:all',
       key.grouperIds?.length
-        ? `groupers:${key.grouperIds.sort().join(",")}`
-        : "groupers:all",
-      key.paymentMethod ? `payment:${key.paymentMethod}` : "payment:all",
+        ? `groupers:${key.grouperIds.sort().join(',')}`
+        : 'groupers:all',
+      key.paymentMethod ? `payment:${key.paymentMethod}` : 'payment:all',
     ];
-    return parts.join("|");
+    return parts.join('|');
   }
 
   /**
@@ -55,7 +55,7 @@ class BudgetDataCache {
   private evictLRU(): void {
     if (this.cache.size >= this.maxSize) {
       // Find the oldest entry
-      let oldestKey = "";
+      let oldestKey = '';
       let oldestTime = Date.now();
 
       for (const [key, entry] of this.cache.entries()) {
@@ -133,7 +133,7 @@ class BudgetDataCache {
       if (pattern.estudioId !== undefined) {
         const estudioPart = pattern.estudioId
           ? `estudio:${pattern.estudioId}`
-          : "estudio:all";
+          : 'estudio:all';
         if (!cacheKey.includes(estudioPart)) {
           shouldDelete = false;
         }
@@ -247,7 +247,7 @@ export async function preloadBudgetData(
     // All groupers for the period/estudio
     { periodId, estudioId },
     // All groupers with all payment methods
-    { periodId, estudioId, paymentMethod: "all" },
+    { periodId, estudioId, paymentMethod: 'all' },
   ];
 
   // Preload in parallel without waiting
@@ -260,7 +260,7 @@ export async function preloadBudgetData(
       }
     } catch (error) {
       // Silently fail preloading - it's just an optimization
-      console.warn("Budget data preload failed:", error);
+      console.warn('Budget data preload failed:', error);
     }
   });
 
@@ -307,7 +307,7 @@ export function handleMemoryPressure(): void {
 
   while (budgetDataCache.getStats().size > targetSize) {
     // The evictLRU method will remove the oldest entry
-    budgetDataCache["evictLRU"]();
+    budgetDataCache['evictLRU']();
   }
 }
 
@@ -324,13 +324,13 @@ export async function warmSimulateModeCache(
   // Pre-warm cache with simulate mode specific data
   const simulateModeKeys: CacheKey[] = [
     // Budget data for simulate mode
-    { periodId, estudioId, paymentMethod: "all" },
+    { periodId, estudioId, paymentMethod: 'all' },
     // Common grouper combinations
-    { periodId, estudioId, grouperIds: [], paymentMethod: "all" },
+    { periodId, estudioId, grouperIds: [], paymentMethod: 'all' },
     // Preload for different payment methods that might be used
-    { periodId, estudioId, paymentMethod: "credit" },
-    { periodId, estudioId, paymentMethod: "debit" },
-    { periodId, estudioId, paymentMethod: "cash" },
+    { periodId, estudioId, paymentMethod: 'credit' },
+    { periodId, estudioId, paymentMethod: 'debit' },
+    { periodId, estudioId, paymentMethod: 'cash' },
   ];
 
   // Warm cache in background with priority queue and intelligent batching
@@ -351,7 +351,7 @@ export async function warmSimulateModeCache(
         cachePrefetcher.recordAccess(key);
       }
     } catch (error) {
-      console.warn("Cache warming failed for key:", key, error);
+      console.warn('Cache warming failed for key:', key, error);
     }
   });
 
@@ -392,7 +392,7 @@ export class AdvancedBudgetCache extends BudgetDataCache {
           _originalSize: dataString.length,
         };
       } catch (error) {
-        console.warn("Data compression failed:", error);
+        console.warn('Data compression failed:', error);
         return data;
       }
     }
@@ -415,7 +415,7 @@ export class AdvancedBudgetCache extends BudgetDataCache {
   private optimizeJsonStructure(data: any): any {
     if (Array.isArray(data)) {
       // For arrays of objects, extract common keys
-      if (data.length > 0 && typeof data[0] === "object") {
+      if (data.length > 0 && typeof data[0] === 'object') {
         const keys = Object.keys(data[0]);
         const values = data.map((item) => keys.map((key) => item[key]));
         return { _keys: keys, _values: values };
@@ -525,8 +525,8 @@ export class IntelligentCachePrefetcher {
     }
 
     // If accessing specific payment method, prefetch "all"
-    if (key.paymentMethod && key.paymentMethod !== "all") {
-      related.push({ ...key, paymentMethod: "all" });
+    if (key.paymentMethod && key.paymentMethod !== 'all') {
+      related.push({ ...key, paymentMethod: 'all' });
     }
 
     return related;
@@ -542,7 +542,7 @@ export class IntelligentCachePrefetcher {
         this.prefetchQueue.delete(keyStr);
       }
     } catch (error) {
-      console.warn("Prefetch failed:", error);
+      console.warn('Prefetch failed:', error);
       this.prefetchQueue.delete(keyStr);
     }
   }
@@ -716,32 +716,32 @@ export class SimulateModePerformanceManager {
 
     if (metrics.cacheHitRate < 0.5) {
       recommendations.push(
-        "Consider increasing cache TTL or preloading more data"
+        'Consider increasing cache TTL or preloading more data'
       );
     }
 
     if (metrics.avgRenderTime > 150) {
       recommendations.push(
-        "Consider reducing data size or enabling performance mode"
+        'Consider reducing data size or enabling performance mode'
       );
     }
 
     if (metrics.avgMemoryUsage > 100 * 1024 * 1024) {
       // 100MB
       recommendations.push(
-        "High memory usage detected - consider enabling data compression"
+        'High memory usage detected - consider enabling data compression'
       );
     }
 
     if (metrics.avgAnimationTime > 20) {
       recommendations.push(
-        "Animations are running slowly - consider reducing animation complexity"
+        'Animations are running slowly - consider reducing animation complexity'
       );
     }
 
     if (metrics.apiCalls > 50) {
       recommendations.push(
-        "High number of API calls - consider more aggressive caching"
+        'High number of API calls - consider more aggressive caching'
       );
     }
 
@@ -772,7 +772,7 @@ export class SimulateModePerformanceManager {
   /**
    * Get performance grade
    */
-  getPerformanceGrade(): "A" | "B" | "C" | "D" | "F" {
+  getPerformanceGrade(): 'A' | 'B' | 'C' | 'D' | 'F' {
     const metrics = this.getMetrics();
     let score = 100;
 
@@ -783,11 +783,11 @@ export class SimulateModePerformanceManager {
     if (metrics.avgAnimationTime > 16.67) score -= 15;
     if (metrics.apiCalls > 30) score -= 20;
 
-    if (score >= 90) return "A";
-    if (score >= 80) return "B";
-    if (score >= 70) return "C";
-    if (score >= 60) return "D";
-    return "F";
+    if (score >= 90) return 'A';
+    if (score >= 80) return 'B';
+    if (score >= 70) return 'C';
+    if (score >= 60) return 'D';
+    return 'F';
   }
 }
 

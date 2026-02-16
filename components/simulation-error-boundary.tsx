@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React, { Component, ReactNode } from "react";
-import { AlertTriangle, RefreshCw, Home, AlertCircle, Bug } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import React, { Component, ReactNode } from 'react';
+import { AlertTriangle, RefreshCw, Home, AlertCircle, Bug } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface SimulationErrorBoundaryState {
   hasError: boolean;
@@ -13,12 +13,12 @@ interface SimulationErrorBoundaryState {
   errorInfo: React.ErrorInfo | null;
   errorId: string;
   errorType:
-    | "validation"
-    | "network"
-    | "server"
-    | "simulation_not_found"
-    | "data_consistency"
-    | "unknown";
+    | 'validation'
+    | 'network'
+    | 'server'
+    | 'simulation_not_found'
+    | 'data_consistency'
+    | 'unknown';
   retryCount: number;
 }
 
@@ -47,8 +47,8 @@ export class SimulationErrorBoundary extends Component<
       hasError: false,
       error: null,
       errorInfo: null,
-      errorId: "",
-      errorType: "unknown",
+      errorId: '',
+      errorType: 'unknown',
       retryCount: 0,
     };
   }
@@ -70,58 +70,58 @@ export class SimulationErrorBoundary extends Component<
   static categorizeError(
     error: Error
   ):
-    | "validation"
-    | "network"
-    | "server"
-    | "simulation_not_found"
-    | "data_consistency"
-    | "unknown" {
+    | 'validation'
+    | 'network'
+    | 'server'
+    | 'simulation_not_found'
+    | 'data_consistency'
+    | 'unknown' {
     const message = error.message.toLowerCase();
 
     if (
-      message.includes("simulation not found") ||
-      message.includes("simulación no encontrada")
+      message.includes('simulation not found') ||
+      message.includes('simulación no encontrada')
     ) {
-      return "simulation_not_found";
+      return 'simulation_not_found';
     }
 
     if (
-      message.includes("validation") ||
-      message.includes("invalid") ||
-      message.includes("required") ||
-      message.includes("debe ser un número positivo")
+      message.includes('validation') ||
+      message.includes('invalid') ||
+      message.includes('required') ||
+      message.includes('debe ser un número positivo')
     ) {
-      return "validation";
+      return 'validation';
     }
 
     if (
-      message.includes("fetch") ||
-      message.includes("network") ||
-      message.includes("connection") ||
-      message.includes("failed to fetch")
+      message.includes('fetch') ||
+      message.includes('network') ||
+      message.includes('connection') ||
+      message.includes('failed to fetch')
     ) {
-      return "network";
+      return 'network';
     }
 
     if (
-      message.includes("server") ||
-      message.includes("500") ||
-      message.includes("internal") ||
-      message.includes("database")
+      message.includes('server') ||
+      message.includes('500') ||
+      message.includes('internal') ||
+      message.includes('database')
     ) {
-      return "server";
+      return 'server';
     }
 
     if (
-      message.includes("consistency") ||
-      message.includes("category") ||
-      message.includes("budget") ||
-      message.includes("mismatch")
+      message.includes('consistency') ||
+      message.includes('category') ||
+      message.includes('budget') ||
+      message.includes('mismatch')
     ) {
-      return "data_consistency";
+      return 'data_consistency';
     }
 
-    return "unknown";
+    return 'unknown';
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
@@ -133,7 +133,7 @@ export class SimulationErrorBoundary extends Component<
     this.props.onError?.(error, errorInfo);
 
     // Log error with context for debugging
-    console.error("SimulationErrorBoundary caught an error:", {
+    console.error('SimulationErrorBoundary caught an error:', {
       error: error.message,
       stack: error.stack,
       componentStack: errorInfo.componentStack,
@@ -147,7 +147,7 @@ export class SimulationErrorBoundary extends Component<
 
     // Auto-retry for network errors after 3 seconds
     if (
-      this.state.errorType === "network" &&
+      this.state.errorType === 'network' &&
       this.state.retryCount < this.maxRetries
     ) {
       this.resetTimeoutId = window.setTimeout(() => {
@@ -168,8 +168,8 @@ export class SimulationErrorBoundary extends Component<
         hasError: false,
         error: null,
         errorInfo: null,
-        errorId: "",
-        errorType: "unknown",
+        errorId: '',
+        errorType: 'unknown',
         retryCount: 0,
       });
     }
@@ -192,8 +192,8 @@ export class SimulationErrorBoundary extends Component<
         hasError: false,
         error: null,
         errorInfo: null,
-        errorId: "",
-        errorType: "unknown",
+        errorId: '',
+        errorType: 'unknown',
         retryCount: prevState.retryCount + 1,
       }));
     }
@@ -204,8 +204,8 @@ export class SimulationErrorBoundary extends Component<
       hasError: false,
       error: null,
       errorInfo: null,
-      errorId: "",
-      errorType: "unknown",
+      errorId: '',
+      errorType: 'unknown',
       retryCount: 0,
     });
   };
@@ -215,64 +215,64 @@ export class SimulationErrorBoundary extends Component<
   };
 
   handleGoHome = () => {
-    window.location.href = "/";
+    window.location.href = '/';
   };
 
   handleGoToSimulations = () => {
-    window.location.href = "/simular";
+    window.location.href = '/simular';
   };
 
   getErrorTitle = (): string => {
     switch (this.state.errorType) {
-      case "simulation_not_found":
-        return "Simulación no encontrada";
-      case "validation":
-        return "Error de validación";
-      case "network":
-        return "Error de conexión";
-      case "server":
-        return "Error del servidor";
-      case "data_consistency":
-        return "Error de consistencia de datos";
+      case 'simulation_not_found':
+        return 'Simulación no encontrada';
+      case 'validation':
+        return 'Error de validación';
+      case 'network':
+        return 'Error de conexión';
+      case 'server':
+        return 'Error del servidor';
+      case 'data_consistency':
+        return 'Error de consistencia de datos';
       default:
-        return "Error en simulación";
+        return 'Error en simulación';
     }
   };
 
   getErrorDescription = (): string => {
     switch (this.state.errorType) {
-      case "simulation_not_found":
-        return "La simulación solicitada no existe o ha sido eliminada. Verifique que el ID de simulación sea correcto.";
-      case "validation":
-        return "Los datos ingresados no son válidos. Verifique los valores y vuelva a intentar.";
-      case "network":
-        return "No se pudo conectar con el servidor. Verificando conexión...";
-      case "server":
-        return "Ha ocurrido un error interno del servidor. El equipo técnico ha sido notificado.";
-      case "data_consistency":
-        return "Los datos de la simulación no son consistentes. Esto puede deberse a cambios en las categorías o configuración.";
+      case 'simulation_not_found':
+        return 'La simulación solicitada no existe o ha sido eliminada. Verifique que el ID de simulación sea correcto.';
+      case 'validation':
+        return 'Los datos ingresados no son válidos. Verifique los valores y vuelva a intentar.';
+      case 'network':
+        return 'No se pudo conectar con el servidor. Verificando conexión...';
+      case 'server':
+        return 'Ha ocurrido un error interno del servidor. El equipo técnico ha sido notificado.';
+      case 'data_consistency':
+        return 'Los datos de la simulación no son consistentes. Esto puede deberse a cambios en las categorías o configuración.';
       default:
-        return "Ha ocurrido un error inesperado en la simulación.";
+        return 'Ha ocurrido un error inesperado en la simulación.';
     }
   };
 
   getErrorIcon = () => {
     switch (this.state.errorType) {
-      case "simulation_not_found":
+      case 'simulation_not_found':
         return <AlertCircle className="h-5 w-5" />;
-      case "validation":
+      case 'validation':
         return <AlertCircle className="h-5 w-5" />;
-      case "network":
+      case 'network':
         return <RefreshCw className="h-5 w-5 animate-spin" />;
-      case "data_consistency":
+      case 'data_consistency':
         return <Bug className="h-5 w-5" />;
       default:
         return <AlertTriangle className="h-5 w-5" />;
     }
   };
 
-  getErrorVariant = (): "destructive" | "default" => {
-    return this.state.errorType === "validation" ? "default" : "destructive";
+  getErrorVariant = (): 'destructive' | 'default' => {
+    return this.state.errorType === 'validation' ? 'default' : 'destructive';
   };
 
   getActionButtons = () => {
@@ -281,7 +281,7 @@ export class SimulationErrorBoundary extends Component<
     // Retry button for retryable errors
     if (
       this.state.retryCount < this.maxRetries &&
-      ["network", "server", "data_consistency"].includes(this.state.errorType)
+      ['network', 'server', 'data_consistency'].includes(this.state.errorType)
     ) {
       buttons.push(
         <Button
@@ -290,15 +290,15 @@ export class SimulationErrorBoundary extends Component<
           size="sm"
           onClick={this.handleRetry}
           className="flex items-center gap-2"
-          disabled={this.state.errorType === "network"}
+          disabled={this.state.errorType === 'network'}
         >
           <RefreshCw
             className={`h-4 w-4 ${
-              this.state.errorType === "network" ? "animate-spin" : ""
+              this.state.errorType === 'network' ? 'animate-spin' : ''
             }`}
           />
-          {this.state.errorType === "network"
-            ? "Reintentando..."
+          {this.state.errorType === 'network'
+            ? 'Reintentando...'
             : `Reintentar (${this.state.retryCount + 1}/${this.maxRetries})`}
         </Button>
       );
@@ -321,7 +321,7 @@ export class SimulationErrorBoundary extends Component<
     }
 
     // Go to simulations list for simulation not found
-    if (this.state.errorType === "simulation_not_found") {
+    if (this.state.errorType === 'simulation_not_found') {
       buttons.push(
         <Button
           key="simulations"
@@ -338,7 +338,7 @@ export class SimulationErrorBoundary extends Component<
 
     // Reload page button
     if (
-      !["validation", "simulation_not_found"].includes(this.state.errorType)
+      !['validation', 'simulation_not_found'].includes(this.state.errorType)
     ) {
       buttons.push(
         <Button
@@ -381,18 +381,18 @@ export class SimulationErrorBoundary extends Component<
       // Default error UI
       return (
         <Card
-          className={`w-full max-w-2xl mx-auto border-${
-            this.getErrorVariant() === "destructive" ? "destructive" : "amber"
+          className={`mx-auto w-full max-w-2xl border-${
+            this.getErrorVariant() === 'destructive' ? 'destructive' : 'amber'
           }/20 bg-${
-            this.getErrorVariant() === "destructive" ? "destructive" : "amber"
+            this.getErrorVariant() === 'destructive' ? 'destructive' : 'amber'
           }/5`}
         >
           <CardHeader>
             <CardTitle
               className={`flex items-center gap-2 text-${
-                this.getErrorVariant() === "destructive"
-                  ? "destructive"
-                  : "amber-700"
+                this.getErrorVariant() === 'destructive'
+                  ? 'destructive'
+                  : 'amber-700'
               }`}
             >
               {this.getErrorIcon()}
@@ -408,7 +408,7 @@ export class SimulationErrorBoundary extends Component<
                   ` (Simulación #${this.props.simulationId})`}
               </p>
 
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline" className="text-xs">
                   ID: {this.state.errorId}
                 </Badge>
@@ -425,7 +425,7 @@ export class SimulationErrorBoundary extends Component<
             </div>
 
             {/* Network error auto-retry indicator */}
-            {this.state.errorType === "network" &&
+            {this.state.errorType === 'network' &&
               this.state.retryCount < this.maxRetries && (
                 <Alert>
                   <RefreshCw className="h-4 w-4 animate-spin" />
@@ -436,7 +436,7 @@ export class SimulationErrorBoundary extends Component<
               )}
 
             {/* Validation error details */}
-            {this.state.errorType === "validation" && this.state.error && (
+            {this.state.errorType === 'validation' && this.state.error && (
               <Alert variant="default">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
@@ -446,12 +446,12 @@ export class SimulationErrorBoundary extends Component<
             )}
 
             {/* Data consistency error guidance */}
-            {this.state.errorType === "data_consistency" && (
+            {this.state.errorType === 'data_consistency' && (
               <Alert variant="default">
                 <Bug className="h-4 w-4" />
                 <AlertDescription>
                   <strong>Posibles causas:</strong>
-                  <ul className="list-disc list-inside mt-1 text-xs">
+                  <ul className="mt-1 list-inside list-disc text-xs">
                     <li>Categorías eliminadas o modificadas</li>
                     <li>Configuración de presupuestos inconsistente</li>
                     <li>Datos de simulación corruptos</li>
@@ -468,8 +468,8 @@ export class SimulationErrorBoundary extends Component<
                     <h4 className="text-sm font-medium">
                       Información técnica:
                     </h4>
-                    <div className="text-xs font-mono bg-muted p-2 rounded overflow-auto max-h-32">
-                      <div className="text-destructive font-semibold">
+                    <div className="max-h-32 overflow-auto rounded bg-muted p-2 font-mono text-xs">
+                      <div className="font-semibold text-destructive">
                         {this.state.error.name}: {this.state.error.message}
                       </div>
                       {this.state.error.stack && (
@@ -489,33 +489,33 @@ export class SimulationErrorBoundary extends Component<
               </Card>
             )}
 
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex flex-wrap gap-2">
               {this.getActionButtons()}
             </div>
 
             <div className="text-xs text-muted-foreground">
-              {this.state.errorType === "server" && (
+              {this.state.errorType === 'server' && (
                 <>
                   Si el problema persiste, contacte al soporte técnico con el ID
                   del error.
                 </>
               )}
-              {this.state.errorType === "validation" && (
+              {this.state.errorType === 'validation' && (
                 <>
                   Verifique que todos los campos tengan valores válidos y
                   positivos.
                 </>
               )}
-              {this.state.errorType === "network" && (
+              {this.state.errorType === 'network' && (
                 <>Verifique su conexión a internet e intente nuevamente.</>
               )}
-              {this.state.errorType === "simulation_not_found" && (
+              {this.state.errorType === 'simulation_not_found' && (
                 <>
                   La simulación puede haber sido eliminada por otro usuario o
                   proceso.
                 </>
               )}
-              {this.state.errorType === "data_consistency" && (
+              {this.state.errorType === 'data_consistency' && (
                 <>
                   Intente recargar la página o crear una nueva simulación si el
                   problema persiste.
@@ -553,7 +553,7 @@ export function SimulationErrorWrapper({
 }: SimulationErrorWrapperProps) {
   const handleError = (error: Error, errorInfo: React.ErrorInfo) => {
     // Integration with error reporting services
-    console.error("Simulation Error:", {
+    console.error('Simulation Error:', {
       error: error.message,
       stack: error.stack,
       componentStack: errorInfo.componentStack,
@@ -594,7 +594,7 @@ export function useSimulationErrorHandler() {
     context?: string,
     simulationId?: number
   ) => {
-    console.error("Async Simulation Error:", {
+    console.error('Async Simulation Error:', {
       error: error.message,
       stack: error.stack,
       context,
@@ -672,47 +672,47 @@ export function SimulationErrorFallback({
   error,
   resetError,
   context,
-  type = "unknown",
+  type = 'unknown',
   simulationId,
 }: {
   error?: Error;
   resetError?: () => void;
   context?: string;
   type?:
-    | "validation"
-    | "network"
-    | "server"
-    | "simulation_not_found"
-    | "data_consistency"
-    | "unknown";
+    | 'validation'
+    | 'network'
+    | 'server'
+    | 'simulation_not_found'
+    | 'data_consistency'
+    | 'unknown';
   simulationId?: number;
 }) {
   const getErrorMessage = () => {
     switch (type) {
-      case "simulation_not_found":
-        return "Simulación no encontrada";
-      case "validation":
-        return "Error de validación en simulación";
-      case "network":
-        return "Error de conexión en simulación";
-      case "server":
-        return "Error del servidor en simulación";
-      case "data_consistency":
-        return "Error de consistencia de datos";
+      case 'simulation_not_found':
+        return 'Simulación no encontrada';
+      case 'validation':
+        return 'Error de validación en simulación';
+      case 'network':
+        return 'Error de conexión en simulación';
+      case 'server':
+        return 'Error del servidor en simulación';
+      case 'data_consistency':
+        return 'Error de consistencia de datos';
       default:
-        return "Error en simulación";
+        return 'Error en simulación';
     }
   };
 
   const getErrorIcon = () => {
     switch (type) {
-      case "simulation_not_found":
+      case 'simulation_not_found':
         return <AlertCircle className="h-12 w-12 text-amber-500" />;
-      case "validation":
+      case 'validation':
         return <AlertCircle className="h-12 w-12 text-amber-500" />;
-      case "network":
+      case 'network':
         return <RefreshCw className="h-12 w-12 text-blue-500" />;
-      case "data_consistency":
+      case 'data_consistency':
         return <Bug className="h-12 w-12 text-orange-500" />;
       default:
         return <AlertTriangle className="h-12 w-12 text-destructive" />;
@@ -721,33 +721,33 @@ export function SimulationErrorFallback({
 
   const getErrorDescription = () => {
     switch (type) {
-      case "simulation_not_found":
-        return "La simulación solicitada no existe o ha sido eliminada.";
-      case "validation":
-        return "Los datos de la simulación no son válidos.";
-      case "network":
-        return "No se pudo conectar con el servidor.";
-      case "server":
-        return "Ha ocurrido un error interno del servidor.";
-      case "data_consistency":
-        return "Los datos de la simulación no son consistentes.";
+      case 'simulation_not_found':
+        return 'La simulación solicitada no existe o ha sido eliminada.';
+      case 'validation':
+        return 'Los datos de la simulación no son válidos.';
+      case 'network':
+        return 'No se pudo conectar con el servidor.';
+      case 'server':
+        return 'Ha ocurrido un error interno del servidor.';
+      case 'data_consistency':
+        return 'Los datos de la simulación no son consistentes.';
       default:
-        return "Ha ocurrido un error inesperado.";
+        return 'Ha ocurrido un error inesperado.';
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-8 text-center space-y-4">
+    <div className="flex flex-col items-center justify-center space-y-4 p-8 text-center">
       {getErrorIcon()}
       <div className="space-y-2">
         <h3 className="text-lg font-semibold">{getErrorMessage()}</h3>
-        <p className="text-sm text-muted-foreground max-w-md">
+        <p className="max-w-md text-sm text-muted-foreground">
           {getErrorDescription()}
           {context && ` (${context})`}
           {simulationId && ` - Simulación #${simulationId}`}
         </p>
         {error && (
-          <p className="text-xs text-destructive font-mono bg-destructive/10 p-2 rounded max-w-md">
+          <p className="max-w-md rounded bg-destructive/10 p-2 font-mono text-xs text-destructive">
             {error.message}
           </p>
         )}
@@ -755,17 +755,17 @@ export function SimulationErrorFallback({
       <div className="flex gap-2">
         {resetError && (
           <Button variant="outline" size="sm" onClick={resetError}>
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className="mr-2 h-4 w-4" />
             Reintentar
           </Button>
         )}
-        {type === "simulation_not_found" && (
+        {type === 'simulation_not_found' && (
           <Button
             variant="outline"
             size="sm"
-            onClick={() => (window.location.href = "/simular")}
+            onClick={() => (window.location.href = '/simular')}
           >
-            <Home className="h-4 w-4 mr-2" />
+            <Home className="mr-2 h-4 w-4" />
             Ver Simulaciones
           </Button>
         )}
@@ -774,7 +774,7 @@ export function SimulationErrorFallback({
           size="sm"
           onClick={() => window.location.reload()}
         >
-          <RefreshCw className="h-4 w-4 mr-2" />
+          <RefreshCw className="mr-2 h-4 w-4" />
           Recargar
         </Button>
       </div>

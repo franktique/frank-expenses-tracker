@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from 'react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export interface MinimalPaymentMethodSelectorProps {
   selectedMethods: string[];
@@ -13,20 +13,20 @@ export interface MinimalPaymentMethodSelectorProps {
   className?: string;
 }
 
-export type PaymentMethod = "cash" | "credit" | "debit";
+export type PaymentMethod = 'cash' | 'credit' | 'debit';
 
 export const PAYMENT_METHODS: { value: PaymentMethod; label: string }[] = [
-  { value: "cash", label: "Efectivo" },
-  { value: "credit", label: "Crédito" },
-  { value: "debit", label: "Débito" },
+  { value: 'cash', label: 'Efectivo' },
+  { value: 'credit', label: 'Crédito' },
+  { value: 'debit', label: 'Débito' },
 ];
 
 export function MinimalPaymentMethodSelector({
   selectedMethods,
   onSelectionChange,
   disabled = false,
-  label = "Métodos de Pago",
-  className = "",
+  label = 'Métodos de Pago',
+  className = '',
 }: MinimalPaymentMethodSelectorProps) {
   const [isAllSelected, setIsAllSelected] = useState(false);
 
@@ -45,7 +45,7 @@ export function MinimalPaymentMethodSelector({
         onSelectionChange(PAYMENT_METHODS.map((method) => method.value));
       }
     } catch (error) {
-      console.error("Error handling all methods change:", error);
+      console.error('Error handling all methods change:', error);
     }
   };
 
@@ -65,7 +65,7 @@ export function MinimalPaymentMethodSelector({
 
       onSelectionChange(newMethods);
     } catch (error) {
-      console.error("Error handling method change:", error);
+      console.error('Error handling method change:', error);
     }
   };
 
@@ -92,7 +92,7 @@ export function MinimalPaymentMethodSelector({
           <Label
             htmlFor="all-methods"
             className={`text-sm ${
-              disabled ? "text-muted-foreground" : "cursor-pointer"
+              disabled ? 'text-muted-foreground' : 'cursor-pointer'
             }`}
           >
             Todos los métodos
@@ -100,7 +100,7 @@ export function MinimalPaymentMethodSelector({
         </div>
 
         {/* Individual Payment Methods */}
-        <div className="space-y-2 pl-4 border-l-2 border-muted">
+        <div className="space-y-2 border-l-2 border-muted pl-4">
           {PAYMENT_METHODS.map((method) => (
             <div key={method.value} className="flex items-center space-x-2">
               <Checkbox
@@ -115,8 +115,8 @@ export function MinimalPaymentMethodSelector({
                 htmlFor={`method-${method.value}`}
                 className={`text-sm ${
                   disabled || isAllSelected
-                    ? "text-muted-foreground"
-                    : "cursor-pointer"
+                    ? 'text-muted-foreground'
+                    : 'cursor-pointer'
                 }`}
               >
                 {method.label}
@@ -126,17 +126,17 @@ export function MinimalPaymentMethodSelector({
         </div>
 
         {/* Helper Text */}
-        <div className="space-y-1 mt-3 p-2 bg-muted/50 rounded-md">
+        <div className="mt-3 space-y-1 rounded-md bg-muted/50 p-2">
           <p className="text-xs text-muted-foreground">
             {isAllSelected
-              ? "Se incluirán gastos de todos los métodos de pago (efectivo, crédito y débito)"
+              ? 'Se incluirán gastos de todos los métodos de pago (efectivo, crédito y débito)'
               : selectedMethods.length > 0
-              ? `Se incluirán gastos de: ${selectedMethods
-                  .map(
-                    (m) => PAYMENT_METHODS.find((pm) => pm.value === m)?.label
-                  )
-                  .join(", ")}`
-              : "Todos los métodos (configuración por defecto)"}
+                ? `Se incluirán gastos de: ${selectedMethods
+                    .map(
+                      (m) => PAYMENT_METHODS.find((pm) => pm.value === m)?.label
+                    )
+                    .join(', ')}`
+                : 'Todos los métodos (configuración por defecto)'}
           </p>
           <p className="text-xs text-muted-foreground/80">
             💡 Tip: Selecciona "Todos los métodos" para incluir gastos de

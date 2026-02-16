@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import React, { Component, ReactNode } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw, Bug } from "lucide-react";
+import React, { Component, ReactNode } from 'react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { AlertTriangle, RefreshCw, Bug } from 'lucide-react';
 
 interface PaymentMethodErrorBoundaryState {
   hasError: boolean;
@@ -58,7 +58,7 @@ export class PaymentMethodErrorBoundary extends Component<
 
     // Log error for debugging
     console.error(
-      "PaymentMethodErrorBoundary caught an error:",
+      'PaymentMethodErrorBoundary caught an error:',
       error,
       errorInfo
     );
@@ -104,7 +104,7 @@ export class PaymentMethodErrorBoundary extends Component<
               </p>
 
               {this.state.error && (
-                <details className="text-xs bg-muted p-2 rounded">
+                <details className="rounded bg-muted p-2 text-xs">
                   <summary className="cursor-pointer font-medium">
                     Detalles técnicos
                   </summary>
@@ -114,7 +114,7 @@ export class PaymentMethodErrorBoundary extends Component<
                     </p>
                     {this.state.errorInfo && (
                       <p>
-                        <strong>Stack:</strong>{" "}
+                        <strong>Stack:</strong>{' '}
                         {this.state.errorInfo.componentStack}
                       </p>
                     )}
@@ -129,7 +129,7 @@ export class PaymentMethodErrorBoundary extends Component<
                     size="sm"
                     variant="outline"
                   >
-                    <RefreshCw className="h-3 w-3 mr-1" />
+                    <RefreshCw className="mr-1 h-3 w-3" />
                     Reintentar ({this.state.retryCount + 1}/{this.maxRetries})
                   </Button>
                 ) : (
@@ -138,7 +138,7 @@ export class PaymentMethodErrorBoundary extends Component<
                     size="sm"
                     variant="outline"
                   >
-                    <Bug className="h-3 w-3 mr-1" />
+                    <Bug className="mr-1 h-3 w-3" />
                     Restablecer
                   </Button>
                 )}
@@ -152,11 +152,11 @@ export class PaymentMethodErrorBoundary extends Component<
                 </Button>
               </div>
 
-              <div className="text-xs text-muted-foreground pt-2 border-t">
+              <div className="border-t pt-2 text-xs text-muted-foreground">
                 <p>
                   <strong>Soluciones sugeridas:</strong>
                 </p>
-                <ul className="list-disc list-inside space-y-1 mt-1">
+                <ul className="mt-1 list-inside list-disc space-y-1">
                   <li>
                     Verifica que los métodos de pago estén configurados
                     correctamente
@@ -189,7 +189,7 @@ export function usePaymentMethodErrorBoundary() {
 
   React.useEffect(() => {
     if (error) {
-      console.error("Payment method error captured:", error);
+      console.error('Payment method error captured:', error);
     }
   }, [error]);
 

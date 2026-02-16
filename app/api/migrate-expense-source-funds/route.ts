@@ -1,21 +1,21 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("Starting expense source fund migration...");
+    console.log('Starting expense source fund migration...');
 
     // Step 1: Add source_fund_id column if it doesn't exist
     await sql`
       ALTER TABLE expenses ADD COLUMN IF NOT EXISTS source_fund_id UUID REFERENCES funds(id)
     `;
-    console.log("✅ Added source_fund_id column to expenses table");
+    console.log('✅ Added source_fund_id column to expenses table');
 
     // Step 2: Create index for performance
     await sql`
       CREATE INDEX IF NOT EXISTS idx_expenses_source_fund_id ON expenses(source_fund_id)
     `;
-    console.log("✅ Created index on source_fund_id column");
+    console.log('✅ Created index on source_fund_id column');
 
     // Step 3: Create validation function
     await sql`
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
       END;
       $func$ LANGUAGE plpgsql
     `;
-    console.log("✅ Created validation function");
+    console.log('✅ Created validation function');
 
     // Step 4: Create helper function to get available source funds
     await sql`
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       END;
       $func$ LANGUAGE plpgsql
     `;
-    console.log("✅ Created helper function for getting category source funds");
+    console.log('✅ Created helper function for getting category source funds');
 
     // Step 5: Create migration status function
     await sql`
@@ -106,13 +106,13 @@ export async function POST(request: NextRequest) {
       END;
       $func$ LANGUAGE plpgsql
     `;
-    console.log("✅ Created migration status function");
+    console.log('✅ Created migration status function');
 
     // Step 6: Get pre-migration status
     const [preMigrationStatus] = await sql`
       SELECT * FROM check_expense_source_fund_migration_status()
     `;
-    console.log("📊 Pre-migration status:", preMigrationStatus);
+    console.log('📊 Pre-migration status:', preMigrationStatus);
 
     // Step 7: Migrate existing expenses with source fund data
     const migrationResult = await sql`
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
     const [postMigrationStatus] = await sql`
       SELECT * FROM check_expense_source_fund_migration_status()
     `;
-    console.log("📊 Post-migration status:", postMigrationStatus);
+    console.log('📊 Post-migration status:', postMigrationStatus);
 
     // Step 9: Check for expenses that couldn't be migrated
     const unmigrated = await sql`
@@ -184,11 +184,11 @@ export async function POST(request: NextRequest) {
       ORDER BY e.date DESC
       LIMIT 5
     `;
-    console.log("📋 Sample migrated expenses:", sampleMigrated);
+    console.log('📋 Sample migrated expenses:', sampleMigrated);
 
     return NextResponse.json({
       success: true,
-      message: "Expense source fund migration completed successfully",
+      message: 'Expense source fund migration completed successfully',
       results: {
         pre_migration: preMigrationStatus,
         post_migration: postMigrationStatus,
@@ -199,11 +199,11 @@ export async function POST(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Error during expense source fund migration:", error);
+    console.error('Error during expense source fund migration:', error);
     return NextResponse.json(
       {
         success: false,
-        error: "Migration failed",
+        error: 'Migration failed',
         details: (error as Error).message,
       },
       { status: 500 }
@@ -241,14 +241,14 @@ export async function GET() {
       migration_status: status,
       column_exists: columnExists.column_exists,
       functions_created: functions.length,
-      functions: functions.map((f) => f.routine_name),
+      functions: functions.map((f: { routine_name: string }) => f.routine_name),
       ready_for_migration: !columnExists.column_exists,
     });
   } catch (error) {
-    console.error("Error checking migration status:", error);
+    console.error('Error checking migration status:', error);
     return NextResponse.json(
       {
-        error: "Failed to check migration status",
+        error: 'Failed to check migration status',
         details: (error as Error).message,
       },
       { status: 500 }

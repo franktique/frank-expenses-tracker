@@ -1,9 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   validateCategoryFundDeletion,
   CATEGORY_FUND_ERROR_MESSAGES,
-} from "@/lib/category-fund-validation";
+} from '@/lib/category-fund-validation';
 
 export async function DELETE(
   request: NextRequest,
@@ -19,7 +19,7 @@ export async function DELETE(
     if (!validation.isValid) {
       return NextResponse.json(
         {
-          error: "Validation failed",
+          error: 'Validation failed',
           details: validation.errors,
         },
         { status: 400 }
@@ -28,13 +28,13 @@ export async function DELETE(
 
     // Check if user wants to force deletion despite warnings
     const url = new URL(request.url);
-    const forceDelete = url.searchParams.get("force") === "true";
+    const forceDelete = url.searchParams.get('force') === 'true';
 
     // If there are warnings and user hasn't confirmed, return conflict
     if (validation.warnings.length > 0 && !forceDelete) {
       return NextResponse.json(
         {
-          error: "Confirmation required",
+          error: 'Confirmation required',
           warnings: validation.warnings,
           validation_data: validation.data,
           can_force: true,
@@ -67,7 +67,7 @@ export async function DELETE(
     `;
 
     return NextResponse.json({
-      message: "Relación categoría-fondo eliminada exitosamente",
+      message: 'Relación categoría-fondo eliminada exitosamente',
       deleted_relationship: {
         category_id: deletedRelationship.category_id,
         category_name: category?.name,
@@ -78,7 +78,7 @@ export async function DELETE(
       validation_data: validation.data,
     });
   } catch (error) {
-    console.error("Error deleting category-fund relationship:", error);
+    console.error('Error deleting category-fund relationship:', error);
     return NextResponse.json(
       {
         error: CATEGORY_FUND_ERROR_MESSAGES.SERVER_ERROR,

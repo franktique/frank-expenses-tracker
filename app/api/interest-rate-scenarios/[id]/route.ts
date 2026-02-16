@@ -1,12 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   UpdateInterestRateScenarioSchema,
   INTEREST_RATE_ERROR_MESSAGES,
   type InterestRateScenarioWithConversions,
   type RateType,
-} from "@/types/interest-rate-simulator";
-import { convertRate } from "@/lib/interest-rate-calculations";
+} from '@/types/interest-rate-simulator';
+import { convertRate } from '@/lib/interest-rate-calculations';
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -37,7 +37,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INTEREST_RATE_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "NOT_FOUND",
+          code: 'NOT_FOUND',
         },
         { status: 404 }
       );
@@ -59,18 +59,20 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error getting interest rate scenario:", error);
+    console.error('Error getting interest rate scenario:', error);
 
     // Handle table not found
     if (
       error instanceof Error &&
-      error.message.includes('relation "interest_rate_scenarios" does not exist')
+      error.message.includes(
+        'relation "interest_rate_scenarios" does not exist'
+      )
     ) {
       return NextResponse.json(
         {
           error: INTEREST_RATE_ERROR_MESSAGES.TABLES_NOT_FOUND,
-          code: "TABLES_NOT_FOUND",
-          migrationEndpoint: "/api/migrate-interest-rate-simulator",
+          code: 'TABLES_NOT_FOUND',
+          migrationEndpoint: '/api/migrate-interest-rate-simulator',
         },
         { status: 404 }
       );
@@ -79,8 +81,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json(
       {
         error: INTEREST_RATE_ERROR_MESSAGES.INTERNAL_ERROR,
-        code: "INTERNAL_ERROR",
-        details: error instanceof Error ? error.message : "Unknown error",
+        code: 'INTERNAL_ERROR',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -102,7 +104,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INTEREST_RATE_ERROR_MESSAGES.VALIDATION_ERROR,
-          code: "VALIDATION_ERROR",
+          code: 'VALIDATION_ERROR',
           details: validation.error.errors,
         },
         { status: 400 }
@@ -120,7 +122,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INTEREST_RATE_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "NOT_FOUND",
+          code: 'NOT_FOUND',
         },
         { status: 404 }
       );
@@ -138,7 +140,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
         return NextResponse.json(
           {
             error: INTEREST_RATE_ERROR_MESSAGES.DUPLICATE_NAME,
-            code: "DUPLICATE_NAME",
+            code: 'DUPLICATE_NAME',
           },
           { status: 409 }
         );
@@ -185,18 +187,20 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(result);
   } catch (error) {
-    console.error("Error updating interest rate scenario:", error);
+    console.error('Error updating interest rate scenario:', error);
 
     // Handle table not found
     if (
       error instanceof Error &&
-      error.message.includes('relation "interest_rate_scenarios" does not exist')
+      error.message.includes(
+        'relation "interest_rate_scenarios" does not exist'
+      )
     ) {
       return NextResponse.json(
         {
           error: INTEREST_RATE_ERROR_MESSAGES.TABLES_NOT_FOUND,
-          code: "TABLES_NOT_FOUND",
-          migrationEndpoint: "/api/migrate-interest-rate-simulator",
+          code: 'TABLES_NOT_FOUND',
+          migrationEndpoint: '/api/migrate-interest-rate-simulator',
         },
         { status: 404 }
       );
@@ -205,12 +209,12 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     // Handle unique constraint violation
     if (
       error instanceof Error &&
-      error.message.includes("interest_rate_scenarios_name_unique")
+      error.message.includes('interest_rate_scenarios_name_unique')
     ) {
       return NextResponse.json(
         {
           error: INTEREST_RATE_ERROR_MESSAGES.DUPLICATE_NAME,
-          code: "DUPLICATE_NAME",
+          code: 'DUPLICATE_NAME',
         },
         { status: 409 }
       );
@@ -219,8 +223,8 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json(
       {
         error: INTEREST_RATE_ERROR_MESSAGES.INTERNAL_ERROR,
-        code: "INTERNAL_ERROR",
-        details: error instanceof Error ? error.message : "Unknown error",
+        code: 'INTERNAL_ERROR',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -245,7 +249,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INTEREST_RATE_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "NOT_FOUND",
+          code: 'NOT_FOUND',
         },
         { status: 404 }
       );
@@ -253,18 +257,20 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json({ success: true, id: deleted.id });
   } catch (error) {
-    console.error("Error deleting interest rate scenario:", error);
+    console.error('Error deleting interest rate scenario:', error);
 
     // Handle table not found
     if (
       error instanceof Error &&
-      error.message.includes('relation "interest_rate_scenarios" does not exist')
+      error.message.includes(
+        'relation "interest_rate_scenarios" does not exist'
+      )
     ) {
       return NextResponse.json(
         {
           error: INTEREST_RATE_ERROR_MESSAGES.TABLES_NOT_FOUND,
-          code: "TABLES_NOT_FOUND",
-          migrationEndpoint: "/api/migrate-interest-rate-simulator",
+          code: 'TABLES_NOT_FOUND',
+          migrationEndpoint: '/api/migrate-interest-rate-simulator',
         },
         { status: 404 }
       );
@@ -273,8 +279,8 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     return NextResponse.json(
       {
         error: INTEREST_RATE_ERROR_MESSAGES.INTERNAL_ERROR,
-        code: "INTERNAL_ERROR",
-        details: error instanceof Error ? error.message : "Unknown error",
+        code: 'INTERNAL_ERROR',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

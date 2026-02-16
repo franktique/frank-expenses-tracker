@@ -1,6 +1,6 @@
-import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-import { BudgetSummaryItem } from "@/types/dashboard";
+import { type ClassValue, clsx } from 'clsx';
+import { twMerge } from 'tailwind-merge';
+import { BudgetSummaryItem } from '@/types/dashboard';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -8,9 +8,9 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatCurrency(amount: number): string {
   // Format with COP currency code
-  const formatted = new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
+  const formatted = new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
     minimumFractionDigits: 0, // Colombian Pesos typically don't use decimal places
     maximumFractionDigits: 0,
   }).format(amount);
@@ -30,11 +30,11 @@ export function formatDate(
     dateObj = new Date(date.getTime()); // Copia para no modificar el original
   } else {
     // Si es un string de fecha ISO (con T y Z o +/-)
-    if (typeof date === "string" && date.includes("T")) {
+    if (typeof date === 'string' && date.includes('T')) {
       // Extraer solo la parte de la fecha (YYYY-MM-DD) ignorando la hora/zona
-      const datePart = date.split("T")[0];
+      const datePart = date.split('T')[0];
       // Crear una fecha usando solo la parte de fecha a medianoche UTC
-      dateObj = new Date(datePart + "T00:00:00Z");
+      dateObj = new Date(datePart + 'T00:00:00Z');
     } else {
       // Cualquier otro formato de fecha
       dateObj = new Date(date);
@@ -42,16 +42,16 @@ export function formatDate(
   }
 
   const defaultOptions: Intl.DateTimeFormatOptions = {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-    timeZone: "America/Bogota", // Usar específicamente la zona horaria de Colombia
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'America/Bogota', // Usar específicamente la zona horaria de Colombia
   };
 
   const mergedOptions = { ...defaultOptions, ...options };
 
   // Usar es-CO para formato colombiano
-  return new Intl.DateTimeFormat("es-CO", mergedOptions).format(dateObj);
+  return new Intl.DateTimeFormat('es-CO', mergedOptions).format(dateObj);
 }
 /**
  * Determines CSS classes for category name styling based on expense data
@@ -62,9 +62,9 @@ export function formatDate(
  */
 export function getCategoryNameStyle(item: BudgetSummaryItem): string {
   // Handle edge cases for null, undefined, and invalid values
-  if (!item || typeof item.total_amount !== "number") {
+  if (!item || typeof item.total_amount !== 'number') {
     // Default to active styling if data is invalid
-    return "";
+    return '';
   }
 
   // Category has no expenses if total_amount is 0
@@ -72,5 +72,5 @@ export function getCategoryNameStyle(item: BudgetSummaryItem): string {
   const hasNoExpenses = item.total_amount === 0;
 
   // Return appropriate Tailwind CSS classes
-  return hasNoExpenses ? "text-muted-foreground" : "";
+  return hasNoExpenses ? 'text-muted-foreground' : '';
 }

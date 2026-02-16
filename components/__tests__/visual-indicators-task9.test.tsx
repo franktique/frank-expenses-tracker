@@ -1,12 +1,12 @@
-import React from "react";
-import { render, screen, fireEvent } from "@testing-library/react";
-import "@testing-library/jest-dom";
-import { PaymentMethodBadges } from "../payment-method-badges";
-import { PaymentMethodTableSelector } from "../payment-method-table-selector";
-import { PaymentMethodSelector } from "../payment-method-selector";
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { PaymentMethodBadges } from '../payment-method-badges';
+import { PaymentMethodTableSelector } from '../payment-method-table-selector';
+import { PaymentMethodSelector } from '../payment-method-selector';
 
 // Mock the UI components
-jest.mock("@/components/ui/badge", () => ({
+jest.mock('@/components/ui/badge', () => ({
   Badge: ({ children, variant, className }: any) => (
     <span className={`badge ${variant} ${className}`} data-testid="badge">
       {children}
@@ -14,7 +14,7 @@ jest.mock("@/components/ui/badge", () => ({
   ),
 }));
 
-jest.mock("@/components/ui/button", () => ({
+jest.mock('@/components/ui/button', () => ({
   Button: ({ children, onClick, disabled, className, ...props }: any) => (
     <button
       onClick={onClick}
@@ -28,7 +28,7 @@ jest.mock("@/components/ui/button", () => ({
   ),
 }));
 
-jest.mock("@/components/ui/tooltip", () => ({
+jest.mock('@/components/ui/tooltip', () => ({
   Tooltip: ({ children }: any) => <div data-testid="tooltip">{children}</div>,
   TooltipTrigger: ({ children }: any) => (
     <div data-testid="tooltip-trigger">{children}</div>
@@ -41,7 +41,7 @@ jest.mock("@/components/ui/tooltip", () => ({
   ),
 }));
 
-jest.mock("@/components/ui/popover", () => ({
+jest.mock('@/components/ui/popover', () => ({
   Popover: ({ children, open, onOpenChange }: any) => (
     <div data-testid="popover" data-open={open}>
       {children}
@@ -55,7 +55,7 @@ jest.mock("@/components/ui/popover", () => ({
   ),
 }));
 
-jest.mock("@/components/ui/checkbox", () => ({
+jest.mock('@/components/ui/checkbox', () => ({
   Checkbox: ({ id, checked, onCheckedChange, disabled, ...props }: any) => (
     <input
       type="checkbox"
@@ -69,7 +69,7 @@ jest.mock("@/components/ui/checkbox", () => ({
   ),
 }));
 
-jest.mock("@/components/ui/label", () => ({
+jest.mock('@/components/ui/label', () => ({
   Label: ({ htmlFor, children, className, ...props }: any) => (
     <label htmlFor={htmlFor} className={className} {...props}>
       {children}
@@ -77,7 +77,7 @@ jest.mock("@/components/ui/label", () => ({
   ),
 }));
 
-jest.mock("@/components/ui/card", () => ({
+jest.mock('@/components/ui/card', () => ({
   Card: ({ children, className }: any) => (
     <div className={className} data-testid="payment-method-card">
       {children}
@@ -88,118 +88,118 @@ jest.mock("@/components/ui/card", () => ({
   CardTitle: ({ children }: any) => <h3>{children}</h3>,
 }));
 
-jest.mock("lucide-react", () => ({
+jest.mock('lucide-react', () => ({
   Edit3: () => <div data-testid="edit-icon" />,
   AlertCircle: () => <div data-testid="alert-icon" />,
   HelpCircle: () => <div data-testid="help-icon" />,
 }));
 
-describe("Task 9: Visual Indicators for Payment Methods", () => {
-  describe("PaymentMethodBadges Visual Indicators", () => {
+describe('Task 9: Visual Indicators for Payment Methods', () => {
+  describe('PaymentMethodBadges Visual Indicators', () => {
     it("displays 'Todos los métodos' badge when no methods selected", () => {
       render(<PaymentMethodBadges selectedMethods={[]} />);
 
-      expect(screen.getByText("Todos los métodos")).toBeInTheDocument();
-      expect(screen.getByTestId("badge")).toHaveClass("secondary");
+      expect(screen.getByText('Todos los métodos')).toBeInTheDocument();
+      expect(screen.getByTestId('badge')).toHaveClass('secondary');
     });
 
-    it("displays individual method badges when specific methods selected", () => {
-      render(<PaymentMethodBadges selectedMethods={["cash", "credit"]} />);
+    it('displays individual method badges when specific methods selected', () => {
+      render(<PaymentMethodBadges selectedMethods={['cash', 'credit']} />);
 
-      expect(screen.getByText("Efectivo")).toBeInTheDocument();
-      expect(screen.getByText("Crédito")).toBeInTheDocument();
-      expect(screen.getAllByTestId("badge")).toHaveLength(2);
+      expect(screen.getByText('Efectivo')).toBeInTheDocument();
+      expect(screen.getByText('Crédito')).toBeInTheDocument();
+      expect(screen.getAllByTestId('badge')).toHaveLength(2);
     });
 
-    it("shows help icon with tooltip for all methods", () => {
+    it('shows help icon with tooltip for all methods', () => {
       render(<PaymentMethodBadges selectedMethods={[]} />);
 
-      expect(screen.getByTestId("help-icon")).toBeInTheDocument();
-      expect(screen.getByTestId("tooltip-provider")).toBeInTheDocument();
+      expect(screen.getByTestId('help-icon')).toBeInTheDocument();
+      expect(screen.getByTestId('tooltip-provider')).toBeInTheDocument();
     });
 
-    it("shows help icon with tooltip for specific methods", () => {
-      render(<PaymentMethodBadges selectedMethods={["cash"]} />);
+    it('shows help icon with tooltip for specific methods', () => {
+      render(<PaymentMethodBadges selectedMethods={['cash']} />);
 
-      expect(screen.getByTestId("help-icon")).toBeInTheDocument();
-      expect(screen.getByTestId("tooltip-provider")).toBeInTheDocument();
+      expect(screen.getByTestId('help-icon')).toBeInTheDocument();
+      expect(screen.getByTestId('tooltip-provider')).toBeInTheDocument();
     });
 
-    it("can disable tooltip display", () => {
+    it('can disable tooltip display', () => {
       render(
-        <PaymentMethodBadges selectedMethods={["cash"]} showTooltip={false} />
+        <PaymentMethodBadges selectedMethods={['cash']} showTooltip={false} />
       );
 
-      expect(screen.queryByTestId("help-icon")).not.toBeInTheDocument();
-      expect(screen.queryByTestId("tooltip-provider")).not.toBeInTheDocument();
+      expect(screen.queryByTestId('help-icon')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('tooltip-provider')).not.toBeInTheDocument();
     });
   });
 
-  describe("PaymentMethodTableSelector Visual Indicators", () => {
+  describe('PaymentMethodTableSelector Visual Indicators', () => {
     const mockOnSelectionChange = jest.fn();
 
     beforeEach(() => {
       mockOnSelectionChange.mockClear();
     });
 
-    it("shows payment method badges and edit button", () => {
+    it('shows payment method badges and edit button', () => {
       render(
         <PaymentMethodTableSelector
-          selectedMethods={["cash", "credit"]}
+          selectedMethods={['cash', 'credit']}
           onSelectionChange={mockOnSelectionChange}
         />
       );
 
-      expect(screen.getByTestId("edit-icon")).toBeInTheDocument();
-      expect(screen.getAllByTestId("tooltip-provider")).toHaveLength(2); // One for badges, one for table selector
+      expect(screen.getByTestId('edit-icon')).toBeInTheDocument();
+      expect(screen.getAllByTestId('tooltip-provider')).toHaveLength(2); // One for badges, one for table selector
     });
 
-    it("shows unsaved changes indicator when hasUnsavedChanges is true", () => {
+    it('shows unsaved changes indicator when hasUnsavedChanges is true', () => {
       render(
         <PaymentMethodTableSelector
-          selectedMethods={["cash"]}
+          selectedMethods={['cash']}
           onSelectionChange={mockOnSelectionChange}
           hasUnsavedChanges={true}
         />
       );
 
-      expect(screen.getByTestId("alert-icon")).toBeInTheDocument();
+      expect(screen.getByTestId('alert-icon')).toBeInTheDocument();
     });
 
-    it("does not show unsaved changes indicator when hasUnsavedChanges is false", () => {
+    it('does not show unsaved changes indicator when hasUnsavedChanges is false', () => {
       render(
         <PaymentMethodTableSelector
-          selectedMethods={["cash"]}
+          selectedMethods={['cash']}
           onSelectionChange={mockOnSelectionChange}
           hasUnsavedChanges={false}
         />
       );
 
-      expect(screen.queryByTestId("alert-icon")).not.toBeInTheDocument();
+      expect(screen.queryByTestId('alert-icon')).not.toBeInTheDocument();
     });
 
-    it("applies orange styling to edit button when hasUnsavedChanges is true", () => {
+    it('applies orange styling to edit button when hasUnsavedChanges is true', () => {
       render(
         <PaymentMethodTableSelector
-          selectedMethods={["cash"]}
+          selectedMethods={['cash']}
           onSelectionChange={mockOnSelectionChange}
           hasUnsavedChanges={true}
         />
       );
 
-      const editButton = screen.getByTestId("edit-button");
-      expect(editButton).toHaveClass("text-orange-600");
+      const editButton = screen.getByTestId('edit-button');
+      expect(editButton).toHaveClass('text-orange-600');
     });
   });
 
-  describe("PaymentMethodSelector Enhanced Help Text", () => {
+  describe('PaymentMethodSelector Enhanced Help Text', () => {
     const mockOnSelectionChange = jest.fn();
 
     beforeEach(() => {
       mockOnSelectionChange.mockClear();
     });
 
-    it("displays enhanced help text for all methods", () => {
+    it('displays enhanced help text for all methods', () => {
       render(
         <PaymentMethodSelector
           selectedMethods={[]}
@@ -215,10 +215,10 @@ describe("Task 9: Visual Indicators for Payment Methods", () => {
       ).toBeInTheDocument();
     });
 
-    it("displays enhanced help text for specific methods", () => {
+    it('displays enhanced help text for specific methods', () => {
       render(
         <PaymentMethodSelector
-          selectedMethods={["cash", "credit"]}
+          selectedMethods={['cash', 'credit']}
           onSelectionChange={mockOnSelectionChange}
         />
       );
@@ -231,22 +231,22 @@ describe("Task 9: Visual Indicators for Payment Methods", () => {
       ).toBeInTheDocument();
     });
 
-    it("shows warning when no methods selected", () => {
+    it('shows warning when no methods selected', () => {
       render(
         <PaymentMethodSelector
-          selectedMethods={["cash"]}
+          selectedMethods={['cash']}
           onSelectionChange={mockOnSelectionChange}
         />
       );
 
       // Simulate deselecting all methods by clicking individual method
-      fireEvent.click(screen.getByTestId("method-cash"));
+      fireEvent.click(screen.getByTestId('method-cash'));
 
       // The component should show warning for no methods
       expect(mockOnSelectionChange).toHaveBeenCalledWith([]);
     });
 
-    it("displays help text in styled container", () => {
+    it('displays help text in styled container', () => {
       render(
         <PaymentMethodSelector
           selectedMethods={[]}
@@ -261,8 +261,8 @@ describe("Task 9: Visual Indicators for Payment Methods", () => {
     });
   });
 
-  describe("Integration: Complete Visual Indicator System", () => {
-    it("provides complete visual feedback system", () => {
+  describe('Integration: Complete Visual Indicator System', () => {
+    it('provides complete visual feedback system', () => {
       const mockOnSelectionChange = jest.fn();
 
       // Test the complete system with badges, tooltips, and help text
@@ -278,16 +278,16 @@ describe("Task 9: Visual Indicators for Payment Methods", () => {
       );
 
       // Should show "all methods" indicators
-      expect(screen.getAllByText("Todos los métodos")).toHaveLength(3); // Badge, table selector badge, and selector label
-      expect(screen.getAllByTestId("help-icon")).toHaveLength(2); // One for each badge component
-      expect(screen.queryByTestId("alert-icon")).not.toBeInTheDocument();
+      expect(screen.getAllByText('Todos los métodos')).toHaveLength(3); // Badge, table selector badge, and selector label
+      expect(screen.getAllByTestId('help-icon')).toHaveLength(2); // One for each badge component
+      expect(screen.queryByTestId('alert-icon')).not.toBeInTheDocument();
 
       // Test with specific methods and unsaved changes
       rerender(
         <div>
-          <PaymentMethodBadges selectedMethods={["cash", "credit"]} />
+          <PaymentMethodBadges selectedMethods={['cash', 'credit']} />
           <PaymentMethodTableSelector
-            selectedMethods={["cash", "credit"]}
+            selectedMethods={['cash', 'credit']}
             onSelectionChange={mockOnSelectionChange}
             hasUnsavedChanges={true}
           />
@@ -295,9 +295,9 @@ describe("Task 9: Visual Indicators for Payment Methods", () => {
       );
 
       // Should show specific method badges and unsaved changes indicator
-      expect(screen.getAllByText("Efectivo")).toHaveLength(3); // Badge, table selector badge, and selector label
-      expect(screen.getAllByText("Crédito")).toHaveLength(3); // Badge, table selector badge, and selector label
-      expect(screen.getByTestId("alert-icon")).toBeInTheDocument();
+      expect(screen.getAllByText('Efectivo')).toHaveLength(3); // Badge, table selector badge, and selector label
+      expect(screen.getAllByText('Crédito')).toHaveLength(3); // Badge, table selector badge, and selector label
+      expect(screen.getByTestId('alert-icon')).toBeInTheDocument();
     });
   });
 });

@@ -5,9 +5,11 @@
 **Related Feature:** Simulation Sub-Groups
 
 ## Overview
+
 Implement drag-and-drop functionality to reorder sub-groups and uncategorized categories in the simulation budget table. When a sub-group header is dragged, the entire group moves above/below other groups or individual categories. Reordering changes are persisted to browser localStorage (similar to existing category order persistence).
 
 ## Current Behavior
+
 - Sub-groups display in database `displayOrder` sequence
 - Uncategorized categories appear after all sub-groups
 - Users cannot reorder sub-groups relative to each other
@@ -15,6 +17,7 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 - No local persistence of custom sub-group order
 
 ## Desired Behavior
+
 - Users can drag sub-group headers to reorder them
 - Sub-groups can be moved above/below other sub-groups AND uncategorized categories
 - Dragging a sub-group moves the entire group (header + categories + subtotal) together
@@ -28,8 +31,10 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 ## Implementation Plan
 
 ### Task 1: Analyze Current Drag & Drop Implementation
+
 **File:** `/components/simulation-budget-form.tsx`
 **Status:** [x]
+
 - Review existing category-level drag & drop for reordering within tipo_gasto groups
 - Document drag event handler patterns (handleDragStart, handleDragOver, handleDrop, handleDragEnd)
 - Review localStorage persistence pattern for `simulation_${simulationId}_category_order`
@@ -37,8 +42,10 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 - **Deliverable:** Understanding of current implementation pattern
 
 ### Task 2: Design Sub-Group Reordering Data Structure
+
 **File:** `/components/simulation-budget-form.tsx`
 **Status:** [x]
+
 - Create `subgroupOrder` state to track custom sub-group ordering
   - Type: `(string)[]` - Array of sub-group IDs in custom order
   - Separate from database `displayOrder` field
@@ -52,8 +59,10 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 - **Deliverable:** State type definitions and initialization logic
 
 ### Task 3: Implement Sub-Group Drag Event Handlers
+
 **File:** `/components/simulation-budget-form.tsx`
 **Status:** [x]
+
 - Implement `handleSubgroupDragStart(subgroupId: string)`
   - Capture sub-group ID and type
   - Set drag effect to "move"
@@ -75,8 +84,10 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 - **Deliverable:** Four drag event handler functions
 
 ### Task 4: Update SubgroupHeaderRow Component
+
 **File:** `/components/subgroup-header-row.tsx`
 **Status:** [x]
+
 - Add props for drag operations:
   - `isDragging?: boolean` - Visual feedback when this row is being dragged
   - `isDragOver?: boolean` - Visual feedback for drop zone
@@ -97,8 +108,10 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 - **Deliverable:** Updated SubgroupHeaderRow with full drag support
 
 ### Task 5: Create Reordering Logic Function
+
 **File:** `/lib/subgroup-reordering-utils.ts` (new file)
 **Status:** [x]
+
 - Create `reorderSubgroups()` function
   - Takes: `subgroups[]`, `subgroupOrder[]`, `categoryOrder[]`
   - Returns: Reordered array of table rows
@@ -119,8 +132,10 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 - **Deliverable:** New utility file with reordering logic
 
 ### Task 6: Integrate Reordering into SimulationBudgetForm
+
 **File:** `/components/simulation-budget-form.tsx`
 **Status:** [x]
+
 - Add `subgroupOrder` state initialization
   - On component mount, load from localStorage: `simulation_${simulationId}_subgroup_order`
   - Fallback: use database `displayOrder` from fetched subgroups
@@ -142,8 +157,10 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 - **Deliverable:** Full integration with state management and localStorage
 
 ### Task 7: Add Drag & Drop Visual Feedback
+
 **File:** `/components/simulation-budget-form.tsx` and `/components/subgroup-header-row.tsx`
 **Status:** [x]
+
 - Implement visual states:
   - **Dragging row**: `opacity-50 bg-accent` - Makes clear which row is being dragged
   - **Drop zone active**: `bg-blue-50 dark:bg-blue-950` - Shows where drop will occur
@@ -157,8 +174,10 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 - **Deliverable:** Polished drag & drop UX
 
 ### Task 8: Handle Edge Cases & Validation
+
 **File:** `/components/simulation-budget-form.tsx`
 **Status:** [x]
+
 - Prevent dragging during:
   - Add mode for sub-group (disabled when in add mode)
   - Delete confirmation dialog
@@ -182,8 +201,10 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 - **Deliverable:** Robust error handling and edge case coverage
 
 ### Task 9: Update localStorage Persistence
+
 **File:** `/components/simulation-budget-form.tsx`
 **Status:** [x]
+
 - Save custom sub-group order:
   - Key: `simulation_${simulationId}_subgroup_order`
   - Value: JSON stringified array of sub-group IDs
@@ -206,8 +227,10 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 - **Deliverable:** Full localStorage persistence implementation
 
 ### Task 10: Test Core Functionality
+
 **File:** Manual testing in browser
 **Status:** [ ]
+
 - **Reordering Tests:**
   - [ ] Drag sub-group header to different position
   - [ ] Verify entire sub-group moves (header + categories + subtotal)
@@ -254,8 +277,10 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 - **Deliverable:** Test checklist completion with screenshots
 
 ### Task 11: Test Edge Cases
+
 **File:** Manual testing in browser
 **Status:** [ ]
+
 - **Collapsed Sub-Groups:**
   - [ ] Drag when collapsed - should move with categories
   - [ ] Expand after reordering - categories in new position
@@ -282,8 +307,10 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 - **Deliverable:** Test report for edge cases
 
 ### Task 12: Integration with Existing Features
+
 **File:** `/components/simulation-budget-form.tsx` and related
 **Status:** [ ]
+
 - Verify compatibility with:
   - [ ] Category-level drag & drop (within tipo_gasto groups)
   - [ ] Tipo gasto sorting toggle
@@ -297,8 +324,10 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 - **Deliverable:** Integration test results
 
 ### Task 13: Update Documentation
+
 **File:** `/CLAUDE.md`
 **Status:** [x]
+
 - Add section: "Simulation Sub-Groups - Drag & Drop Reordering"
 - Document:
   - [ ] How to drag sub-group headers to reorder
@@ -314,8 +343,10 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 - **Deliverable:** Updated documentation
 
 ### Task 14: Code Review & Cleanup
+
 **File:** All modified files
 **Status:** [x]
+
 - Review code for:
   - [ ] Proper error handling
   - [ ] TypeScript type safety
@@ -336,17 +367,20 @@ Implement drag-and-drop functionality to reorder sub-groups and uncategorized ca
 ## Implementation Details
 
 ### State Structure
+
 ```typescript
 // Add to SimulationBudgetForm component:
 
 // Custom ordering state
 const [subgroupOrder, setSubgroupOrder] = useState<string[]>([]);
-const [uncategorizedCategoryOrder, setUncategorizedCategoryOrder] = useState<(string | number)[]>([]);
+const [uncategorizedCategoryOrder, setUncategorizedCategoryOrder] = useState<
+  (string | number)[]
+>([]);
 
 // Drag state tracking
 const [subgroupDragState, setSubgroupDragState] = useState<{
   draggedItemId: string | null;
-  draggedItemType: "subgroup" | "uncategorized" | null;
+  draggedItemType: 'subgroup' | 'uncategorized' | null;
   dropZoneIndex: number | null;
 }>({
   draggedItemId: null,
@@ -356,30 +390,41 @@ const [subgroupDragState, setSubgroupDragState] = useState<{
 ```
 
 ### Drag Handler Pattern
+
 ```typescript
 const handleSubgroupDragStart = (e: React.DragEvent, subgroupId: string) => {
   setSubgroupDragState({
     draggedItemId: subgroupId,
-    draggedItemType: "subgroup",
+    draggedItemType: 'subgroup',
     dropZoneIndex: null,
   });
-  e.dataTransfer.effectAllowed = "move";
+  e.dataTransfer.effectAllowed = 'move';
 };
 
-const handleSubgroupDragOver = (e: React.DragEvent, targetSubgroupId: string | null) => {
+const handleSubgroupDragOver = (
+  e: React.DragEvent,
+  targetSubgroupId: string | null
+) => {
   e.preventDefault();
-  e.dataTransfer.dropEffect = "move";
+  e.dataTransfer.dropEffect = 'move';
   // Update drop zone visual indicator
-  setSubgroupDragState(prev => ({
+  setSubgroupDragState((prev) => ({
     ...prev,
     dropZoneIndex: calculateDropIndex(targetSubgroupId),
   }));
 };
 
-const handleSubgroupDrop = (e: React.DragEvent, targetSubgroupId: string | null, position: "before" | "after") => {
+const handleSubgroupDrop = (
+  e: React.DragEvent,
+  targetSubgroupId: string | null,
+  position: 'before' | 'after'
+) => {
   e.preventDefault();
 
-  if (subgroupDragState.draggedItemId && subgroupDragState.draggedItemType === "subgroup") {
+  if (
+    subgroupDragState.draggedItemId &&
+    subgroupDragState.draggedItemType === 'subgroup'
+  ) {
     const newOrder = moveSubgroupInOrder(
       subgroupOrder,
       subgroupDragState.draggedItemId,
@@ -406,6 +451,7 @@ const handleDragEnd = () => {
 ```
 
 ### localStorage Persistence Pattern
+
 ```typescript
 // Load on mount
 useEffect(() => {
@@ -417,10 +463,10 @@ useEffect(() => {
       setSubgroupOrder(parsed);
     } else if (subgroups.length > 0) {
       // Fallback to database order
-      setSubgroupOrder(subgroups.map(s => s.id));
+      setSubgroupOrder(subgroups.map((s) => s.id));
     }
   } catch (error) {
-    console.error("Error loading subgroup order from localStorage:", error);
+    console.error('Error loading subgroup order from localStorage:', error);
   }
 }, [simulationId, subgroups]);
 
@@ -430,7 +476,7 @@ useEffect(() => {
     const storageKey = `simulation_${simulationId}_subgroup_order`;
     localStorage.setItem(storageKey, JSON.stringify(subgroupOrder));
   } catch (error) {
-    console.error("Error saving subgroup order to localStorage:", error);
+    console.error('Error saving subgroup order to localStorage:', error);
   }
 }, [subgroupOrder, simulationId]);
 ```
@@ -438,10 +484,12 @@ useEffect(() => {
 ## Files to Modify/Create
 
 ### New Files
+
 1. `/lib/subgroup-reordering-utils.ts` - Reordering logic helpers
 2. (Optional) `/hooks/use-subgroup-order.ts` - Custom hook for subgroup ordering
 
 ### Modified Files
+
 1. `/components/simulation-budget-form.tsx` - Main implementation
 2. `/components/subgroup-header-row.tsx` - Drag support
 3. `/CLAUDE.md` - Documentation
@@ -570,6 +618,7 @@ useEffect(() => {
 All core implementation tasks (1-9) and documentation/review tasks (13-14) have been completed successfully. The project builds without errors and all core functionality is ready for testing.
 
 **Code Review Checklist (Task 14):**
+
 - [x] Proper error handling with try/catch blocks in localStorage operations
 - [x] TypeScript type safety with proper interfaces (SubgroupHeaderRowProps, drag state types)
 - [x] React best practices with useCallback memoization and proper dependencies
@@ -583,6 +632,7 @@ All core implementation tasks (1-9) and documentation/review tasks (13-14) have 
 - [x] Build completes successfully with no TypeScript errors
 
 **Implementation Statistics:**
+
 - 5 Modified Files:
   - `/components/simulation-budget-form.tsx` - Main implementation with handlers and integration
   - `/components/subgroup-header-row.tsx` - Drag support with visual feedback
@@ -591,9 +641,11 @@ All core implementation tasks (1-9) and documentation/review tasks (13-14) have 
   - `/docs/sub-groups-drag-drop-reorder-plan.md` - Updated plan with completion status
 
 **Files Created:**
+
 - `/lib/subgroup-reordering-utils.ts` - 175 lines of reordering logic
 
 **Key Features Implemented:**
+
 - [x] Sub-group drag-and-drop with visual feedback (opacity, colors, cursor)
 - [x] localStorage persistence per simulation with validation
 - [x] Drag handle icon (GripVertical) on hover
@@ -605,11 +657,13 @@ All core implementation tasks (1-9) and documentation/review tasks (13-14) have 
 
 **Testing Tasks (10-12) - Ready for Testing:**
 These tasks require manual browser testing and should be performed before merging to main:
+
 - [ ] Core functionality testing (reordering, persistence, visual feedback)
 - [ ] Edge case testing (collapsed groups, add mode blocking, empty states)
 - [ ] Integration testing (tipo_gasto sort, category drag-drop, auto-save)
 
 **Next Steps for Testing:**
+
 1. Start development server: `npm run dev`
 2. Navigate to simulation budget form
 3. Test dragging sub-group headers
@@ -620,11 +674,13 @@ These tasks require manual browser testing and should be performed before mergin
 ### Bug Fixes
 
 **Bug 1: Hydration Error (React Hydration Mismatch)**
+
 - **Issue:** Invalid `<div>` wrapper around `<TableRow>` causing "cannot be a child of <div>" error
 - **Fix:** Removed div wrapper and applied `group` class directly to `<TableRow>` component
 - **Result:** Valid HTML structure while maintaining group-hover functionality
 
 **Bug 2: New Subgroups Not Appearing After Creation**
+
 - **Issue:** When a new subgroup was created after page load, it wouldn't appear in the table because:
   1. The initialization effect only ran once when `subgroupOrder.length === 0`
   2. The `reorganizeTableRowsWithSubgroupOrder` function filtered out any subgroup not in the custom order
@@ -641,6 +697,7 @@ These tasks require manual browser testing and should be performed before mergin
 - **Result:** New subgroups now appear immediately after creation, positioned at the end while maintaining previous custom ordering
 
 **Testing the Fix:**
+
 1. Open simulation with existing subgroup order
 2. Create a new subgroup
 3. New subgroup should appear at the end of the list
@@ -648,6 +705,7 @@ These tasks require manual browser testing and should be performed before mergin
 5. Refresh page - order persists from localStorage
 
 **Bug 3: Balance Calculations Ignoring Sub-Group Order**
+
 - **Issue:** When reordering sub-groups, the running balance column didn't update to reflect the new order
   - Balance calculations were based on `getSortedCategories` (category sort only)
   - Sub-group reordering happened separately in the table rendering

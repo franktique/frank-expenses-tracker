@@ -16,7 +16,7 @@ The `SourceFundSelector` component provides a dropdown interface for selecting s
 ### Basic Usage
 
 ```tsx
-import { SourceFundSelector } from "@/components/source-fund-selector";
+import { SourceFundSelector } from '@/components/source-fund-selector';
 
 function ExpenseForm() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -35,8 +35,8 @@ function ExpenseForm() {
 ### With Fund Filter Integration
 
 ```tsx
-import { SourceFundSelector } from "@/components/source-fund-selector";
-import { useBudget } from "@/context/budget-context";
+import { SourceFundSelector } from '@/components/source-fund-selector';
+import { useBudget } from '@/context/budget-context';
 
 function ExpenseForm() {
   const { selectedFund } = useBudget(); // Current fund filter
@@ -60,7 +60,7 @@ function ExpenseForm() {
 import {
   SourceFundSelector,
   validateSourceFund,
-} from "@/components/source-fund-selector";
+} from '@/components/source-fund-selector';
 
 function ExpenseForm() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);

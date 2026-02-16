@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
     `;
 
     const scenariosExists = existingTables.some(
-      (t: { table_name: string }) => t.table_name === "interest_rate_scenarios"
+      (t: { table_name: string }) => t.table_name === 'interest_rate_scenarios'
     );
 
     const createdTables: string[] = [];
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
             CHECK (input_rate >= 0 AND input_rate <= 10)
         )
       `;
-      createdTables.push("interest_rate_scenarios");
+      createdTables.push('interest_rate_scenarios');
 
       // Create index for faster lookups
       await sql`
@@ -52,29 +52,34 @@ export async function POST(request: NextRequest) {
       AND table_name IN ('interest_rate_scenarios')
     `;
 
-    const verifiedTables = verification.map((t: { table_name: string }) => t.table_name);
+    const verifiedTables = verification.map(
+      (t: { table_name: string }) => t.table_name
+    );
 
     return NextResponse.json({
       success: true,
-      message: createdTables.length > 0
-        ? `Tablas creadas: ${createdTables.join(", ")}`
-        : "Las tablas ya existían",
+      message:
+        createdTables.length > 0
+          ? `Tablas creadas: ${createdTables.join(', ')}`
+          : 'Las tablas ya existían',
       tables: verifiedTables,
       created: {
-        interest_rate_scenarios: createdTables.includes("interest_rate_scenarios"),
+        interest_rate_scenarios: createdTables.includes(
+          'interest_rate_scenarios'
+        ),
       },
     });
   } catch (error) {
-    console.error("Error in interest rate simulator migration:", error);
+    console.error('Error in interest rate simulator migration:', error);
 
     // Handle specific error cases
     if (error instanceof Error) {
       // Table already exists (concurrent request)
-      if (error.message.includes("already exists")) {
+      if (error.message.includes('already exists')) {
         return NextResponse.json({
           success: true,
-          message: "Las tablas ya existían (creadas por otra solicitud)",
-          tables: ["interest_rate_scenarios"],
+          message: 'Las tablas ya existían (creadas por otra solicitud)',
+          tables: ['interest_rate_scenarios'],
           created: {
             interest_rate_scenarios: false,
           },
@@ -82,11 +87,11 @@ export async function POST(request: NextRequest) {
       }
 
       // Connection error
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
-            error: "Error de conexión a la base de datos",
-            code: "CONNECTION_ERROR",
+            error: 'Error de conexión a la base de datos',
+            code: 'CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -96,9 +101,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
-        error: "Error al ejecutar la migración",
-        code: "MIGRATION_ERROR",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: 'Error al ejecutar la migración',
+        code: 'MIGRATION_ERROR',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -115,8 +120,10 @@ export async function GET() {
       AND table_name IN ('interest_rate_scenarios')
     `;
 
-    const tableNames = existingTables.map((t: { table_name: string }) => t.table_name);
-    const scenariosExists = tableNames.includes("interest_rate_scenarios");
+    const tableNames = existingTables.map(
+      (t: { table_name: string }) => t.table_name
+    );
+    const scenariosExists = tableNames.includes('interest_rate_scenarios');
 
     // Get counts if tables exist
     let scenarioCount = 0;
@@ -129,11 +136,11 @@ export async function GET() {
     }
 
     // Determine migration status
-    let status: "fully_migrated" | "not_migrated" | "partially_migrated";
+    let status: 'fully_migrated' | 'not_migrated' | 'partially_migrated';
     if (scenariosExists) {
-      status = "fully_migrated";
+      status = 'fully_migrated';
     } else {
-      status = "not_migrated";
+      status = 'not_migrated';
     }
 
     return NextResponse.json({
@@ -143,27 +150,30 @@ export async function GET() {
         scenarios: scenarioCount,
       },
       status,
-      migrationEndpoint: "/api/migrate-interest-rate-simulator",
+      migrationEndpoint: '/api/migrate-interest-rate-simulator',
     });
   } catch (error) {
-    console.error("Error checking interest rate simulator migration status:", error);
+    console.error(
+      'Error checking interest rate simulator migration status:',
+      error
+    );
 
     // If tables don't exist, return not_migrated status
-    if (error instanceof Error && error.message.includes("does not exist")) {
+    if (error instanceof Error && error.message.includes('does not exist')) {
       return NextResponse.json({
         success: true,
         tables: [],
         counts: { scenarios: 0 },
-        status: "not_migrated",
-        migrationEndpoint: "/api/migrate-interest-rate-simulator",
+        status: 'not_migrated',
+        migrationEndpoint: '/api/migrate-interest-rate-simulator',
       });
     }
 
     return NextResponse.json(
       {
-        error: "Error al verificar estado de migración",
-        code: "CHECK_ERROR",
-        details: error instanceof Error ? error.message : "Unknown error",
+        error: 'Error al verificar estado de migración',
+        code: 'CHECK_ERROR',
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

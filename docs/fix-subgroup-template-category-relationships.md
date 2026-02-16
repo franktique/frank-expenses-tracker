@@ -1,6 +1,7 @@
 # Fix: Subgroup Template Category Relationships
 
 ## Branch
+
 `fix/clone-simulation` (main implementation branch for this feature)
 
 **Note**: This plan is being implemented on the `fix/clone-simulation` branch. The feature adds category relationship preservation to subgroup templates.
@@ -14,12 +15,14 @@ When saving simulation subgroups as a template and then applying that template t
 3. **Refresh Template**: Update category relationships in an existing template
 
 ### Current Behavior
+
 - Templates only save subgroup names and display order
 - Category assignments are lost when saving as template
 - Applied templates create empty subgroups (no categories)
 - Users must manually reassign categories after applying templates
 
 ### Expected Behavior
+
 - Templates preserve the full subgroup configuration including category assignments
 - Applied templates automatically create category associations
 - Users can refresh templates to update category relationships
@@ -29,6 +32,7 @@ When saving simulation subgroups as a template and then applying that template t
 ### Phase 1: Database Schema Updates
 
 #### Task 1: Add `template_categories` Junction Table
+
 - [x] Create migration script `/app/api/migrate-template-categories/route.ts`
 - [x] Add `template_categories` table to store category relationships in templates
 - [x] SQL Schema:
@@ -45,6 +49,7 @@ When saving simulation subgroups as a template and then applying that template t
 - [ ] Create rollback script in `/scripts/`
 
 #### Task 2: Update Type Definitions
+
 - [x] Update `/types/subgroup-templates.ts`:
   - Add `categoryIds: (string | number)[]` to `TemplateSubgroup` type
   - Add `TemplateCategory` interface for the junction table
@@ -54,6 +59,7 @@ When saving simulation subgroups as a template and then applying that template t
 ### Phase 2: Template Creation Updates
 
 #### Task 3: Update `save-as-template` API Endpoint
+
 - [x] Modify `/app/api/simulations/[id]/save-as-template/route.ts`:
   - Fetch category relationships when saving template (lines 79-84)
   - Save category IDs to `template_categories` table for each subgroup
@@ -62,6 +68,7 @@ When saving simulation subgroups as a template and then applying that template t
 - [x] Add error handling for category save failures
 
 #### Task 4: Update Template Creation UI
+
 - [x] Modify `/components/save-as-template-dialog.tsx`:
   - Remove or update warning message (lines 142-144)
   - Update success message to indicate categories were preserved
@@ -71,6 +78,7 @@ When saving simulation subgroups as a template and then applying that template t
 ### Phase 3: Template Application Updates
 
 #### Task 5: Update Template Application Logic
+
 - [x] Modify `/lib/subgroup-template-db-utils.ts`:
   - Update `applyTemplateToSimulation()` function (lines 460-487)
   - Add logic to create category associations when applying template
@@ -80,6 +88,7 @@ When saving simulation subgroups as a template and then applying that template t
 - [x] Add logging for category application results
 
 #### Task 6: Handle Category Matching Scenarios
+
 - [x] Implement category matching logic:
   - **Exact Match**: Category ID exists in target simulation
   - **Name Match**: Category name matches but ID differs (new simulation)
@@ -90,6 +99,7 @@ When saving simulation subgroups as a template and then applying that template t
 ### Phase 4: Template Refresh Feature
 
 #### Task 7: Add Refresh Template API Endpoint
+
 - [x] Create `/app/api/subgroup-templates/[templateId]/refresh/route.ts`:
   - Accept source simulation ID
   - Update template subgroups with current simulation structure
@@ -98,6 +108,7 @@ When saving simulation subgroups as a template and then applying that template t
 - [x] Add validation for template ownership
 
 #### Task 8: Add Refresh Template UI
+
 - [x] Create `/components/refresh-template-dialog.tsx`:
   - Show current template structure with category counts
   - Allow selecting source simulation
@@ -109,12 +120,14 @@ When saving simulation subgroups as a template and then applying that template t
 ### Phase 5: Template Management Enhancements
 
 #### Task 9: Update Template List API
+
 - [ ] Modify `/app/api/subgroup-templates/route.ts`:
   - Include category count in template responses
   - Add `category_count` field to each subgroup
 - [ ] Update `GET` endpoint to join with `template_categories` table
 
 #### Task 10: Update Template Detail API
+
 - [ ] Modify `/app/api/subgroup-templates/[templateId]/route.ts`:
   - Include full category details when fetching template
   - Add `categories` array to each subgroup
@@ -123,17 +136,20 @@ When saving simulation subgroups as a template and then applying that template t
 ### Phase 6: Testing & Documentation
 
 #### Task 11: Unit Tests
+
 - [ ] Test template creation with categories
 - [ ] Test template application with category matching
 - [ ] Test template refresh functionality
 - [ ] Test edge cases (missing categories, duplicate names, etc.)
 
 #### Task 12: Integration Tests
+
 - [ ] Test full workflow: create subgroups → save as template → apply to new simulation
 - [ ] Test refresh workflow: apply template → modify simulation → refresh template
 - [ ] Test concurrent template operations
 
 #### Task 13: Update Documentation
+
 - [ ] Update CLAUDE.md with new template functionality
 - [ ] Add API documentation for new endpoints
 - [ ] Update user-facing documentation if applicable
@@ -159,6 +175,7 @@ None - this is a pure enhancement. Existing templates without category data will
 ## Rollback Plan
 
 If issues arise:
+
 1. Drop `template_categories` table via rollback migration
 2. Revert API endpoint changes
 3. Revert type definition updates

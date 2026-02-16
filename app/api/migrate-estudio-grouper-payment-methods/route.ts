@@ -1,16 +1,16 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
-    console.log("Starting estudio grouper payment methods migration...");
+    console.log('Starting estudio grouper payment methods migration...');
 
     // Step 1: Add payment_methods column if it doesn't exist
     await sql`
       ALTER TABLE estudio_groupers 
       ADD COLUMN IF NOT EXISTS payment_methods TEXT[] DEFAULT NULL
     `;
-    console.log("✅ Added payment_methods column to estudio_groupers table");
+    console.log('✅ Added payment_methods column to estudio_groupers table');
 
     // Step 2: Add constraint validation for payment method values
     await sql`
@@ -21,20 +21,20 @@ export async function POST(request: NextRequest) {
         (payment_methods <@ ARRAY['cash', 'credit', 'debit']::text[] AND array_length(payment_methods, 1) > 0)
       )
     `;
-    console.log("✅ Added payment methods validation constraint");
+    console.log('✅ Added payment methods validation constraint');
 
     // Step 3: Create GIN index for efficient array querying
     await sql`
       CREATE INDEX IF NOT EXISTS idx_estudio_groupers_payment_methods 
       ON estudio_groupers USING GIN(payment_methods)
     `;
-    console.log("✅ Created GIN index for payment methods");
+    console.log('✅ Created GIN index for payment methods');
 
     // Step 4: Add column comment for documentation
     await sql`
       COMMENT ON COLUMN estudio_groupers.payment_methods IS 'Array of payment methods to include for this agrupador (cash, credit, debit). NULL means all methods are included.'
     `;
-    console.log("✅ Added column documentation");
+    console.log('✅ Added column documentation');
 
     // Step 5: Create helper function to validate payment method arrays
     await sql`
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
       END;
       $func$ LANGUAGE plpgsql
     `;
-    console.log("✅ Created payment methods validation function");
+    console.log('✅ Created payment methods validation function');
 
     // Step 6: Create function to get payment method filter for dashboard queries
     await sql`
@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
       END;
       $func$ LANGUAGE plpgsql
     `;
-    console.log("✅ Created payment method filter function");
+    console.log('✅ Created payment method filter function');
 
     // Step 7: Create function to check if expense matches payment method filter
     await sql`
@@ -107,7 +107,7 @@ export async function POST(request: NextRequest) {
       END;
       $func$ LANGUAGE plpgsql
     `;
-    console.log("✅ Created expense payment filter matching function");
+    console.log('✅ Created expense payment filter matching function');
 
     // Step 8: Create function to check migration status and validate data
     await sql`
@@ -149,13 +149,13 @@ export async function POST(request: NextRequest) {
       END;
       $func$ LANGUAGE plpgsql
     `;
-    console.log("✅ Created migration status function");
+    console.log('✅ Created migration status function');
 
     // Step 9: Get pre-migration status
     const [preMigrationStatus] = await sql`
       SELECT * FROM check_payment_methods_migration_status()
     `;
-    console.log("📊 Pre-migration status:", preMigrationStatus);
+    console.log('📊 Pre-migration status:', preMigrationStatus);
 
     // Step 10: Validate existing data integrity
     const invalidData = await sql`
@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
     const [postMigrationStatus] = await sql`
       SELECT * FROM check_payment_methods_migration_status()
     `;
-    console.log("📊 Post-migration status:", postMigrationStatus);
+    console.log('📊 Post-migration status:', postMigrationStatus);
 
     // Step 12: Sample of existing estudio-grouper relationships
     const sampleRelationships = await sql`
@@ -202,14 +202,14 @@ export async function POST(request: NextRequest) {
       LIMIT 5
     `;
     console.log(
-      "📋 Sample estudio-grouper relationships:",
+      '📋 Sample estudio-grouper relationships:',
       sampleRelationships
     );
 
     return NextResponse.json({
       success: true,
       message:
-        "Estudio grouper payment methods migration completed successfully",
+        'Estudio grouper payment methods migration completed successfully',
       results: {
         pre_migration: preMigrationStatus,
         post_migration: postMigrationStatus,
@@ -220,23 +220,23 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error(
-      "Error during estudio grouper payment methods migration:",
+      'Error during estudio grouper payment methods migration:',
       error
     );
 
     // Attempt rollback on error
     try {
-      console.log("Attempting rollback...");
+      console.log('Attempting rollback...');
       await rollbackMigration();
-      console.log("✅ Rollback completed successfully");
+      console.log('✅ Rollback completed successfully');
     } catch (rollbackError) {
-      console.error("❌ Rollback failed:", rollbackError);
+      console.error('❌ Rollback failed:', rollbackError);
     }
 
     return NextResponse.json(
       {
         success: false,
-        error: "Migration failed",
+        error: 'Migration failed',
         details: (error as Error).message,
         rollback_attempted: true,
       },
@@ -294,7 +294,7 @@ export async function GET() {
       constraint_exists: constraintExists.constraint_exists,
       index_exists: indexExists.index_exists,
       functions_created: functions.length,
-      functions: functions.map((f) => f.routine_name),
+      functions: functions.map((f: { routine_name: string }) => f.routine_name),
       ready_for_migration: !columnExists.column_exists,
       migration_complete:
         columnExists.column_exists &&
@@ -303,10 +303,10 @@ export async function GET() {
         functions.length === 4,
     });
   } catch (error) {
-    console.error("Error checking migration status:", error);
+    console.error('Error checking migration status:', error);
     return NextResponse.json(
       {
-        error: "Failed to check migration status",
+        error: 'Failed to check migration status',
         details: (error as Error).message,
       },
       { status: 500 }
@@ -317,24 +317,24 @@ export async function GET() {
 export async function DELETE() {
   try {
     console.log(
-      "Starting estudio grouper payment methods migration rollback..."
+      'Starting estudio grouper payment methods migration rollback...'
     );
 
     await rollbackMigration();
 
-    console.log("✅ Rollback completed successfully");
+    console.log('✅ Rollback completed successfully');
 
     return NextResponse.json({
       success: true,
       message:
-        "Estudio grouper payment methods migration rollback completed successfully",
+        'Estudio grouper payment methods migration rollback completed successfully',
     });
   } catch (error) {
-    console.error("Error during rollback:", error);
+    console.error('Error during rollback:', error);
     return NextResponse.json(
       {
         success: false,
-        error: "Rollback failed",
+        error: 'Rollback failed',
         details: (error as Error).message,
       },
       { status: 500 }
@@ -345,26 +345,26 @@ export async function DELETE() {
 async function rollbackMigration() {
   // Step 1: Drop helper functions
   await sql`DROP FUNCTION IF EXISTS validate_payment_methods(TEXT[])`;
-  console.log("✅ Dropped validate_payment_methods function");
+  console.log('✅ Dropped validate_payment_methods function');
 
   await sql`DROP FUNCTION IF EXISTS get_payment_method_filter(INTEGER, INTEGER)`;
-  console.log("✅ Dropped get_payment_method_filter function");
+  console.log('✅ Dropped get_payment_method_filter function');
 
   await sql`DROP FUNCTION IF EXISTS expense_matches_payment_filter(TEXT, TEXT[])`;
-  console.log("✅ Dropped expense_matches_payment_filter function");
+  console.log('✅ Dropped expense_matches_payment_filter function');
 
   await sql`DROP FUNCTION IF EXISTS check_payment_methods_migration_status()`;
-  console.log("✅ Dropped check_payment_methods_migration_status function");
+  console.log('✅ Dropped check_payment_methods_migration_status function');
 
   // Step 2: Drop the GIN index
   await sql`DROP INDEX IF EXISTS idx_estudio_groupers_payment_methods`;
-  console.log("✅ Dropped GIN index");
+  console.log('✅ Dropped GIN index');
 
   // Step 3: Drop the constraint
   await sql`ALTER TABLE estudio_groupers DROP CONSTRAINT IF EXISTS check_payment_methods`;
-  console.log("✅ Dropped payment methods constraint");
+  console.log('✅ Dropped payment methods constraint');
 
   // Step 4: Drop the payment_methods column
   await sql`ALTER TABLE estudio_groupers DROP COLUMN IF EXISTS payment_methods`;
-  console.log("✅ Dropped payment_methods column");
+  console.log('✅ Dropped payment_methods column');
 }

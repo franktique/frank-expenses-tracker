@@ -187,13 +187,11 @@ interface ExpenseFormState {
 ### Validation Rules
 
 1. **Category-Fund Relationship Deletion**
-
    - Verificar que no existan gastos con la combinación categoría-fondo antes de eliminar
    - Mostrar advertencia con conteo de gastos afectados
    - Permitir eliminación forzada con confirmación explícita
 
 2. **Fund Selection in Expenses**
-
    - Validar que el fondo seleccionado esté relacionado con la categoría
    - Fallback automático si el fondo no es válido
 
@@ -205,12 +203,12 @@ interface ExpenseFormState {
 
 ```typescript
 const CATEGORY_FUND_ERROR_MESSAGES = {
-  RELATIONSHIP_EXISTS: "La relación entre esta categoría y fondo ya existe",
+  RELATIONSHIP_EXISTS: 'La relación entre esta categoría y fondo ya existe',
   EXPENSES_EXIST:
-    "No se puede eliminar la relación porque existen {count} gastos registrados",
+    'No se puede eliminar la relación porque existen {count} gastos registrados',
   INVALID_FUND_FOR_CATEGORY:
-    "El fondo seleccionado no está asociado con esta categoría",
-  MIGRATION_FAILED: "Error durante la migración de relaciones categoría-fondo",
+    'El fondo seleccionado no está asociado con esta categoría',
+  MIGRATION_FAILED: 'Error durante la migración de relaciones categoría-fondo',
 };
 ```
 
@@ -219,13 +217,11 @@ const CATEGORY_FUND_ERROR_MESSAGES = {
 ### Unit Tests
 
 1. **Database Operations**
-
    - CRUD operations para `category_fund_relationships`
    - Validaciones de integridad referencial
    - Migración de datos existentes
 
 2. **API Endpoints**
-
    - Nuevos endpoints de relaciones categoría-fondo
    - Modificaciones en endpoints existentes
    - Validaciones de negocio
@@ -238,7 +234,6 @@ const CATEGORY_FUND_ERROR_MESSAGES = {
 ### Integration Tests
 
 1. **End-to-End Workflows**
-
    - Crear categoría con múltiples fondos
    - Registrar gasto con selección de fondo dinámico
    - Modificar relaciones y verificar impacto en gastos

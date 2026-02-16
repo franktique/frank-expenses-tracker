@@ -3,7 +3,9 @@
 ## Branch: `feat/loan-simulator`
 
 ## Overview
+
 Create a comprehensive loan simulator that allows users to:
+
 1. Calculate monthly payments for loans with principal amount, EA (Effective Annual) interest rate, and term
 2. View payment breakdowns differentiating between interest and capital
 3. Compare multiple interest rate scenarios side-by-side
@@ -13,6 +15,7 @@ Create a comprehensive loan simulator that allows users to:
 ## Feature Requirements
 
 ### Main Calculator View
+
 - Input fields:
   - Loan amount (principal)
   - EA interest rate (annual effective rate)
@@ -25,6 +28,7 @@ Create a comprehensive loan simulator that allows users to:
   - Payment breakdown per month (interest vs capital)
 
 ### Interest Rate Comparison
+
 - Ability to add multiple interest rate scenarios
 - Display comparison columns showing:
   - Different monthly payment amounts
@@ -32,6 +36,7 @@ Create a comprehensive loan simulator that allows users to:
   - Side-by-side comparison table
 
 ### Payment Schedule Tab
+
 - Detailed amortization table showing:
   - Payment number
   - Payment date
@@ -48,6 +53,7 @@ Create a comprehensive loan simulator that allows users to:
 ## Implementation Plan
 
 ### Phase 1: Database Schema & Types
+
 - [x] Create loan simulator types in `/types/loan-simulator.ts`
 - [x] Create database migration API endpoint `/api/migrate-loan-simulator`
 - [x] Design tables:
@@ -55,6 +61,7 @@ Create a comprehensive loan simulator that allows users to:
   - `loan_extra_payments` - Store extra payment simulations
 
 ### Phase 2: Core Calculation Utilities
+
 - [x] Create `/lib/loan-calculations.ts` with:
   - `calculateMonthlyPayment()` - PMT formula
   - `generateAmortizationSchedule()` - Full payment schedule
@@ -62,12 +69,14 @@ Create a comprehensive loan simulator that allows users to:
   - `compareInterestRates()` - Generate comparison data
 
 ### Phase 3: API Routes
+
 - [x] Create `/app/api/loan-scenarios/route.ts` - CRUD for loan scenarios
 - [x] Create `/app/api/loan-scenarios/[id]/route.ts` - Individual scenario operations
 - [x] Create `/app/api/loan-scenarios/[id]/schedule/route.ts` - Payment schedule generation
 - [x] Create `/app/api/loan-scenarios/[id]/extra-payments/route.ts` - Extra payments CRUD
 
 ### Phase 4: UI Components
+
 - [x] Create `/components/loan-simulator/loan-calculator-form.tsx` - Main form
 - [x] Create `/components/loan-simulator/loan-summary-cards.tsx` - KPI display
 - [x] Create `/components/loan-simulator/interest-rate-comparison.tsx` - Rate comparison
@@ -76,15 +85,18 @@ Create a comprehensive loan simulator that allows users to:
 - [x] Create `/components/loan-simulator/loan-projection-chart.tsx` - Visual chart
 
 ### Phase 5: Pages & Routing
+
 - [x] Create `/app/simular-prestamos/page.tsx` - List of loan simulations
 - [x] Create `/app/simular-prestamos/[id]/page.tsx` - Main calculator with tabs
 - [x] Create `/app/simular-prestamos/[id]/schedule/page.tsx` - Detailed schedule (optional separate route)
 
 ### Phase 6: Sidebar Integration
+
 - [x] Add "Simular Préstamos" menu item to `/components/app-sidebar.tsx`
 - [x] Use appropriate icon (e.g., `Calculator` or `Landmark` from lucide-react)
 
 ### Phase 7: Testing & Polish
+
 - [x] Add form validation with Zod schemas
 - [x] Test calculation accuracy
 - [x] Add loading states and error handling
@@ -147,6 +159,7 @@ export type LoanSummary = {
 ### Calculation Formulas
 
 **Monthly Payment (PMT):**
+
 ```
 M = P * [r(1 + r)^n] / [(1 + r)^n - 1]
 
@@ -158,22 +171,26 @@ n = Total number of payments (term in months)
 ```
 
 **Monthly Interest Rate from EA:**
+
 ```
 monthlyRate = (1 + EA)^(1/12) - 1
 ```
 
 **Amortization Schedule:**
 For each payment:
-- Interest portion = Remaining balance * monthlyRate
+
+- Interest portion = Remaining balance \* monthlyRate
 - Principal portion = Monthly payment - Interest portion
 - Remaining balance = Previous balance - Principal portion
 
 ### API Endpoints
 
 #### `POST /api/loan-scenarios`
+
 Create a new loan scenario
 
 **Request:**
+
 ```json
 {
   "name": "Home Loan 2024",
@@ -187,12 +204,15 @@ Create a new loan scenario
 **Response:** `LoanScenario`
 
 #### `GET /api/loan-scenarios/[id]/schedule`
+
 Generate payment schedule
 
 **Query Parameters:**
+
 - `includeExtraPayments` (boolean) - Include extra payments in calculation
 
 **Response:**
+
 ```json
 {
   "summary": { "monthlyPayment": 3845, "totalInterest": 884200, ... },
@@ -202,9 +222,11 @@ Generate payment schedule
 ```
 
 #### `POST /api/loan-scenarios/[id]/extra-payments`
+
 Add an extra payment
 
 **Request:**
+
 ```json
 {
   "paymentNumber": 12,
@@ -240,6 +262,7 @@ Add an extra payment
 ## Design Mockups
 
 ### Tab 1: Calculator
+
 ```
 +----------------------------------------------------------+
 |  Simular Préstamo: Home Loan 2024        [Save] [Delete] |
@@ -262,6 +285,7 @@ Add an extra payment
 ```
 
 ### Tab 2: Payment Schedule
+
 ```
 +----------------------------------------------------------+
 |  Payment Schedule - Home Loan 2024                        |
@@ -291,6 +315,7 @@ Add an extra payment
 ## Integration Points
 
 ### Existing Patterns to Follow
+
 1. **Simulation System** - Use similar CRUD patterns as `/app/simular/[id]`
 2. **Dashboard Tabs** - Use Radix UI Tabs like in simulation pages
 3. **Chart Components** - Use Recharts patterns from existing dashboards
@@ -300,6 +325,7 @@ Add an extra payment
 7. **localStorage** - Persist unsaved changes locally
 
 ### Dependencies
+
 - **Existing**: `@neondatabase/serverless`, `zod`, `recharts`, `radix-ui`
 - **Components**: Reuse existing UI components from `/components/ui/`
 - **Utilities**: Use `/lib/db.ts` for database connections
@@ -335,11 +361,13 @@ CREATE INDEX idx_loan_extra_payments_scenario ON loan_extra_payments(loan_scenar
 ```
 
 ## Timeline Considerations
+
 - No timeline estimates provided
 - Implementation will proceed incrementally
 - Each phase will be marked complete in this document
 
 ## Notes
+
 - EA (Effective Annual) rate requires conversion to monthly rate for calculations
 - Extra payments should reduce principal and recalculate future interest
 - Payment schedule should adjust dynamically when extra payments are added

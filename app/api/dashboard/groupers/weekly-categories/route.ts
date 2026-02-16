@@ -1,28 +1,28 @@
-import { NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const periodId = searchParams.get("periodId");
-    const weekStart = searchParams.get("weekStart");
-    const weekEnd = searchParams.get("weekEnd");
-    const paymentMethod = searchParams.get("paymentMethod"); // Legacy parameter for backward compatibility
-    const expensePaymentMethods = searchParams.get("expensePaymentMethods");
-    const grouperIdsParam = searchParams.get("grouperIds");
-    const estudioId = searchParams.get("estudioId");
+    const periodId = searchParams.get('periodId');
+    const weekStart = searchParams.get('weekStart');
+    const weekEnd = searchParams.get('weekEnd');
+    const paymentMethod = searchParams.get('paymentMethod'); // Legacy parameter for backward compatibility
+    const expensePaymentMethods = searchParams.get('expensePaymentMethods');
+    const grouperIdsParam = searchParams.get('grouperIds');
+    const estudioId = searchParams.get('estudioId');
 
     // Validate required parameters
     if (!periodId) {
       return NextResponse.json(
-        { error: "El parámetro periodId es requerido" },
+        { error: 'El parámetro periodId es requerido' },
         { status: 400 }
       );
     }
 
     if (!weekStart || !weekEnd) {
       return NextResponse.json(
-        { error: "Los parámetros weekStart y weekEnd son requeridos" },
+        { error: 'Los parámetros weekStart y weekEnd son requeridos' },
         { status: 400 }
       );
     }
@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     const weekEndDate = new Date(weekEnd);
     if (isNaN(weekStartDate.getTime()) || isNaN(weekEndDate.getTime())) {
       return NextResponse.json(
-        { error: "Formato de fecha inválido para weekStart o weekEnd" },
+        { error: 'Formato de fecha inválido para weekStart o weekEnd' },
         { status: 400 }
       );
     }
@@ -40,12 +40,12 @@ export async function GET(request: Request) {
     // Validate payment method parameter
     if (
       paymentMethod &&
-      !["all", "cash", "credit", "debit"].includes(paymentMethod)
+      !['all', 'cash', 'credit', 'debit'].includes(paymentMethod)
     ) {
       return NextResponse.json(
         {
           error:
-            "Método de pago inválido. Debe ser uno de: all, cash, credit, debit",
+            'Método de pago inválido. Debe ser uno de: all, cash, credit, debit',
         },
         { status: 400 }
       );
@@ -55,7 +55,7 @@ export async function GET(request: Request) {
     let grouperIds: number[] | null = null;
     if (grouperIdsParam) {
       try {
-        grouperIds = grouperIdsParam.split(",").map((id) => {
+        grouperIds = grouperIdsParam.split(',').map((id) => {
           const parsed = parseInt(id.trim());
           if (isNaN(parsed)) {
             throw new Error(`Invalid grouper ID: ${id}`);
@@ -66,7 +66,7 @@ export async function GET(request: Request) {
         return NextResponse.json(
           {
             error:
-              "Invalid grouperIds parameter. Must be comma-separated numbers.",
+              'Invalid grouperIds parameter. Must be comma-separated numbers.',
           },
           { status: 400 }
         );
@@ -80,10 +80,10 @@ export async function GET(request: Request) {
     if (expensePaymentMethods) {
       try {
         expensePaymentMethodsArray = expensePaymentMethods
-          .split(",")
+          .split(',')
           .map((method) => {
             const trimmed = method.trim();
-            if (!["cash", "credit", "debit"].includes(trimmed)) {
+            if (!['cash', 'credit', 'debit'].includes(trimmed)) {
               throw new Error(`Invalid expense payment method: ${trimmed}`);
             }
             return trimmed;
@@ -98,17 +98,21 @@ export async function GET(request: Request) {
           { status: 400 }
         );
       }
-    } else if (paymentMethod && paymentMethod !== "all") {
+    } else if (paymentMethod && paymentMethod !== 'all') {
       // Legacy backward compatibility
       expensePaymentMethodsArray = [paymentMethod];
     }
 
     // Build the query based on parameters
-    let queryParams: (string | number | string[] | number[])[] = [periodId, weekStart, weekEnd];
+    let queryParams: (string | number | string[] | number[])[] = [
+      periodId,
+      weekStart,
+      weekEnd,
+    ];
     let paramIndex = 4;
 
     // Build WHERE clause for grouper filtering
-    let grouperFilter = "";
+    let grouperFilter = '';
     if (grouperIds && grouperIds.length > 0) {
       grouperFilter = `AND g.id = ANY($${paramIndex}::int[])`;
       queryParams.push(grouperIds);
@@ -116,7 +120,7 @@ export async function GET(request: Request) {
     }
 
     // Build expense payment method filter
-    let expensePaymentMethodFilter = "";
+    let expensePaymentMethodFilter = '';
     if (expensePaymentMethodsArray && expensePaymentMethodsArray.length > 0) {
       expensePaymentMethodFilter = `AND e.payment_method = ANY($${paramIndex}::text[])`;
       queryParams.push(expensePaymentMethodsArray);
@@ -175,21 +179,21 @@ export async function GET(request: Request) {
 
     return NextResponse.json(structuredData);
   } catch (error) {
-    console.error("Error in weekly categories API:", error);
+    console.error('Error in weekly categories API:', error);
 
     // Provide more specific error messages
-    let errorMessage = "Error interno del servidor";
+    let errorMessage = 'Error interno del servidor';
     let statusCode = 500;
 
     if (error instanceof Error) {
-      if (error.message.includes("connection")) {
-        errorMessage = "Error de conexión a la base de datos";
-      } else if (error.message.includes("syntax")) {
-        errorMessage = "Error en la consulta de datos";
-      } else if (error.message.includes("timeout")) {
-        errorMessage = "La consulta tardó demasiado tiempo";
-      } else if (error.message.includes("does not exist")) {
-        errorMessage = "El período especificado no existe";
+      if (error.message.includes('connection')) {
+        errorMessage = 'Error de conexión a la base de datos';
+      } else if (error.message.includes('syntax')) {
+        errorMessage = 'Error en la consulta de datos';
+      } else if (error.message.includes('timeout')) {
+        errorMessage = 'La consulta tardó demasiado tiempo';
+      } else if (error.message.includes('does not exist')) {
+        errorMessage = 'El período especificado no existe';
         statusCode = 404;
       } else {
         errorMessage = error.message;

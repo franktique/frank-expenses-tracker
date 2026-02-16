@@ -1,21 +1,21 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import {
   PlusCircle,
   CreditCard as CreditCardIcon,
   AlertTriangle,
   Power,
   PowerOff,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Dialog,
   DialogContent,
@@ -24,7 +24,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -34,16 +34,16 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from '@/components/ui/alert-dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   Table,
   TableBody,
@@ -51,10 +51,10 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { useToast } from "@/components/ui/use-toast";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
+} from '@/components/ui/table';
+import { useToast } from '@/components/ui/use-toast';
+import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import {
   CreditCard,
   CreditCardFranchise,
@@ -62,7 +62,7 @@ import {
   UpdateCreditCardStatusSchema,
   CREDIT_CARD_FRANCHISE_LABELS,
   CREDIT_CARD_ERROR_MESSAGES,
-} from "@/types/credit-cards";
+} from '@/types/credit-cards';
 
 export function CreditCardsView() {
   const { toast } = useToast();
@@ -76,19 +76,19 @@ export function CreditCardsView() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
 
   // Form state for adding new credit card
-  const [newCardBankName, setNewCardBankName] = useState("");
+  const [newCardBankName, setNewCardBankName] = useState('');
   const [newCardFranchise, setNewCardFranchise] = useState<
-    CreditCardFranchise | ""
-  >("");
-  const [newCardLastFourDigits, setNewCardLastFourDigits] = useState("");
+    CreditCardFranchise | ''
+  >('');
+  const [newCardLastFourDigits, setNewCardLastFourDigits] = useState('');
 
   // Form state for editing credit card
   const [editCard, setEditCard] = useState<CreditCard | null>(null);
-  const [editCardBankName, setEditCardBankName] = useState("");
+  const [editCardBankName, setEditCardBankName] = useState('');
   const [editCardFranchise, setEditCardFranchise] = useState<
-    CreditCardFranchise | ""
-  >("");
-  const [editCardLastFourDigits, setEditCardLastFourDigits] = useState("");
+    CreditCardFranchise | ''
+  >('');
+  const [editCardLastFourDigits, setEditCardLastFourDigits] = useState('');
 
   // Delete state
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -108,18 +108,18 @@ export function CreditCardsView() {
   const loadCreditCards = async () => {
     try {
       setIsLoading(true);
-      const response = await fetch("/api/credit-cards");
+      const response = await fetch('/api/credit-cards');
       if (!response.ok) {
-        throw new Error("Failed to load credit cards");
+        throw new Error('Failed to load credit cards');
       }
       const data = await response.json();
       setCreditCards(data.credit_cards || []);
     } catch (error) {
-      console.error("Error loading credit cards:", error);
+      console.error('Error loading credit cards:', error);
       toast({
-        title: "Error",
-        description: "No se pudieron cargar las tarjetas de crédito",
-        variant: "destructive",
+        title: 'Error',
+        description: 'No se pudieron cargar las tarjetas de crédito',
+        variant: 'destructive',
       });
     } finally {
       setIsLoading(false);
@@ -127,16 +127,16 @@ export function CreditCardsView() {
   };
 
   const resetNewCardForm = () => {
-    setNewCardBankName("");
-    setNewCardFranchise("");
-    setNewCardLastFourDigits("");
+    setNewCardBankName('');
+    setNewCardFranchise('');
+    setNewCardLastFourDigits('');
   };
 
   const resetEditCardForm = () => {
     setEditCard(null);
-    setEditCardBankName("");
-    setEditCardFranchise("");
-    setEditCardLastFourDigits("");
+    setEditCardBankName('');
+    setEditCardFranchise('');
+    setEditCardLastFourDigits('');
   };
 
   const handleAddCreditCard = async () => {
@@ -151,26 +151,26 @@ export function CreditCardsView() {
       if (!validationResult.success) {
         const firstError = validationResult.error.errors[0];
         toast({
-          title: "Error de validación",
+          title: 'Error de validación',
           description: firstError.message,
-          variant: "destructive",
+          variant: 'destructive',
         });
         return;
       }
 
       setIsSubmitting(true);
 
-      const response = await fetch("/api/credit-cards", {
-        method: "POST",
+      const response = await fetch('/api/credit-cards', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(validationResult.data),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to create credit card");
+        throw new Error(errorData.error || 'Failed to create credit card');
       }
 
       await loadCreditCards();
@@ -178,17 +178,17 @@ export function CreditCardsView() {
       setIsAddOpen(false);
 
       toast({
-        title: "Tarjeta agregada",
+        title: 'Tarjeta agregada',
         description: CREDIT_CARD_ERROR_MESSAGES.CREDIT_CARD_CREATE_SUCCESS,
       });
     } catch (error) {
-      console.error("Error adding credit card:", error);
+      console.error('Error adding credit card:', error);
       toast({
-        title: "Error",
+        title: 'Error',
         description:
           (error as Error).message ||
-          "No se pudo agregar la tarjeta de crédito",
-        variant: "destructive",
+          'No se pudo agregar la tarjeta de crédito',
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -209,9 +209,9 @@ export function CreditCardsView() {
       if (!validationResult.success) {
         const firstError = validationResult.error.errors[0];
         toast({
-          title: "Error de validación",
+          title: 'Error de validación',
           description: firstError.message,
-          variant: "destructive",
+          variant: 'destructive',
         });
         return;
       }
@@ -219,16 +219,16 @@ export function CreditCardsView() {
       setIsSubmitting(true);
 
       const response = await fetch(`/api/credit-cards/${editCard.id}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(validationResult.data),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to update credit card");
+        throw new Error(errorData.error || 'Failed to update credit card');
       }
 
       await loadCreditCards();
@@ -236,17 +236,17 @@ export function CreditCardsView() {
       setIsEditOpen(false);
 
       toast({
-        title: "Tarjeta actualizada",
+        title: 'Tarjeta actualizada',
         description: CREDIT_CARD_ERROR_MESSAGES.CREDIT_CARD_UPDATE_SUCCESS,
       });
     } catch (error) {
-      console.error("Error updating credit card:", error);
+      console.error('Error updating credit card:', error);
       toast({
-        title: "Error",
+        title: 'Error',
         description:
           (error as Error).message ||
-          "No se pudo actualizar la tarjeta de crédito",
-        variant: "destructive",
+          'No se pudo actualizar la tarjeta de crédito',
+        variant: 'destructive',
       });
     } finally {
       setIsSubmitting(false);
@@ -274,7 +274,7 @@ export function CreditCardsView() {
         expenseCount: 0,
       };
     } catch (error) {
-      console.error("Error validating credit card deletion:", error);
+      console.error('Error validating credit card deletion:', error);
       return {
         hasExpenses: false,
         expenseCount: 0,
@@ -300,13 +300,13 @@ export function CreditCardsView() {
       // Proceed with deletion if no expenses
       await performCreditCardDeletion(deleteId);
     } catch (error) {
-      console.error("Error deleting credit card:", error);
+      console.error('Error deleting credit card:', error);
       toast({
-        title: "Error",
+        title: 'Error',
         description:
           (error as Error).message ||
-          "No se pudo eliminar la tarjeta de crédito",
-        variant: "destructive",
+          'No se pudo eliminar la tarjeta de crédito',
+        variant: 'destructive',
       });
     }
   };
@@ -319,25 +319,25 @@ export function CreditCardsView() {
       setIsDeleteConfirmOpen(false);
       setDeleteValidation(null);
     } catch (error) {
-      console.error("Error deleting credit card:", error);
+      console.error('Error deleting credit card:', error);
       toast({
-        title: "Error",
+        title: 'Error',
         description:
           (error as Error).message ||
-          "No se pudo eliminar la tarjeta de crédito",
-        variant: "destructive",
+          'No se pudo eliminar la tarjeta de crédito',
+        variant: 'destructive',
       });
     }
   };
 
   const performCreditCardDeletion = async (creditCardId: string) => {
     const response = await fetch(`/api/credit-cards/${creditCardId}`, {
-      method: "DELETE",
+      method: 'DELETE',
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || "Failed to delete credit card");
+      throw new Error(errorData.error || 'Failed to delete credit card');
     }
 
     await loadCreditCards();
@@ -345,7 +345,7 @@ export function CreditCardsView() {
     setIsDeleteOpen(false);
 
     toast({
-      title: "Tarjeta eliminada",
+      title: 'Tarjeta eliminada',
       description: CREDIT_CARD_ERROR_MESSAGES.CREDIT_CARD_DELETE_SUCCESS,
     });
   };
@@ -374,17 +374,17 @@ export function CreditCardsView() {
 
       if (!validationResult.success) {
         toast({
-          title: "Error de validación",
-          description: "Estado inválido",
-          variant: "destructive",
+          title: 'Error de validación',
+          description: 'Estado inválido',
+          variant: 'destructive',
         });
         return;
       }
 
       const response = await fetch(`/api/credit-cards/${creditCard.id}`, {
-        method: "PUT",
+        method: 'PUT',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify(validationResult.data),
       });
@@ -392,26 +392,26 @@ export function CreditCardsView() {
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(
-          errorData.error || "Failed to update credit card status"
+          errorData.error || 'Failed to update credit card status'
         );
       }
 
       await loadCreditCards();
 
       toast({
-        title: newStatus ? "Tarjeta activada" : "Tarjeta desactivada",
+        title: newStatus ? 'Tarjeta activada' : 'Tarjeta desactivada',
         description: newStatus
           ? CREDIT_CARD_ERROR_MESSAGES.CREDIT_CARD_ACTIVATED
           : CREDIT_CARD_ERROR_MESSAGES.CREDIT_CARD_DEACTIVATED,
       });
     } catch (error) {
-      console.error("Error updating credit card status:", error);
+      console.error('Error updating credit card status:', error);
       toast({
-        title: "Error",
+        title: 'Error',
         description:
           (error as Error).message ||
-          "No se pudo actualizar el estado de la tarjeta",
-        variant: "destructive",
+          'No se pudo actualizar el estado de la tarjeta',
+        variant: 'destructive',
       });
     }
   };
@@ -442,11 +442,11 @@ export function CreditCardsView() {
           <h1 className="text-3xl font-bold tracking-tight">
             Tarjetas de Crédito
           </h1>
-          <p className="text-muted-foreground mt-1">
-            {creditCards.length}{" "}
+          <p className="mt-1 text-muted-foreground">
+            {creditCards.length}{' '}
             {creditCards.length === 1
-              ? "tarjeta registrada"
-              : "tarjetas registradas"}
+              ? 'tarjeta registrada'
+              : 'tarjetas registradas'}
           </p>
         </div>
         <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
@@ -502,7 +502,7 @@ export function CreditCardsView() {
                   id="last-four-digits"
                   value={newCardLastFourDigits}
                   onChange={(e) => {
-                    const value = e.target.value.replace(/\D/g, "").slice(0, 4);
+                    const value = e.target.value.replace(/\D/g, '').slice(0, 4);
                     setNewCardLastFourDigits(value);
                   }}
                   placeholder="1234"
@@ -525,7 +525,7 @@ export function CreditCardsView() {
                 Cancelar
               </Button>
               <Button onClick={handleAddCreditCard} disabled={isSubmitting}>
-                {isSubmitting ? "Guardando..." : "Guardar"}
+                {isSubmitting ? 'Guardando...' : 'Guardar'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -544,9 +544,9 @@ export function CreditCardsView() {
         </CardHeader>
         <CardContent>
           {creditCards.length === 0 ? (
-            <div className="text-center py-8">
-              <CreditCardIcon className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-              <p className="text-muted-foreground mb-4">
+            <div className="py-8 text-center">
+              <CreditCardIcon className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+              <p className="mb-4 text-muted-foreground">
                 No tienes tarjetas de crédito registradas
               </p>
               <Button onClick={() => setIsAddOpen(true)}>
@@ -569,14 +569,14 @@ export function CreditCardsView() {
                 {creditCards
                   .slice()
                   .sort((a, b) =>
-                    a.bank_name.localeCompare(b.bank_name, "es", {
-                      sensitivity: "base",
+                    a.bank_name.localeCompare(b.bank_name, 'es', {
+                      sensitivity: 'base',
                     })
                   )
                   .map((creditCard) => (
                     <TableRow
                       key={creditCard.id}
-                      className={!creditCard.is_active ? "opacity-60" : ""}
+                      className={!creditCard.is_active ? 'opacity-60' : ''}
                     >
                       <TableCell className="font-medium">
                         {creditCard.bank_name}
@@ -591,15 +591,15 @@ export function CreditCardsView() {
                         <div className="flex items-center gap-2">
                           <Badge
                             variant={
-                              creditCard.is_active ? "default" : "secondary"
+                              creditCard.is_active ? 'default' : 'secondary'
                             }
                             className={
                               creditCard.is_active
-                                ? "bg-green-100 text-green-800 hover:bg-green-100"
-                                : ""
+                                ? 'bg-green-100 text-green-800 hover:bg-green-100'
+                                : ''
                             }
                           >
-                            {creditCard.is_active ? "Activa" : "Inactiva"}
+                            {creditCard.is_active ? 'Activa' : 'Inactiva'}
                           </Badge>
                           <Switch
                             checked={creditCard.is_active}
@@ -607,7 +607,7 @@ export function CreditCardsView() {
                               handleStatusToggle(creditCard)
                             }
                             aria-label={`${
-                              creditCard.is_active ? "Desactivar" : "Activar"
+                              creditCard.is_active ? 'Desactivar' : 'Activar'
                             } tarjeta`}
                           />
                         </div>
@@ -688,7 +688,7 @@ export function CreditCardsView() {
                 id="edit-last-four-digits"
                 value={editCardLastFourDigits}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/\D/g, "").slice(0, 4);
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 4);
                   setEditCardLastFourDigits(value);
                 }}
                 placeholder="1234"
@@ -708,7 +708,7 @@ export function CreditCardsView() {
               Cancelar
             </Button>
             <Button onClick={handleEditCreditCard} disabled={isSubmitting}>
-              {isSubmitting ? "Guardando..." : "Guardar"}
+              {isSubmitting ? 'Guardando...' : 'Guardar'}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -749,11 +749,11 @@ export function CreditCardsView() {
             <AlertDialogDescription asChild>
               <div className="space-y-2">
                 <p>
-                  Esta tarjeta de crédito tiene{" "}
+                  Esta tarjeta de crédito tiene{' '}
                   <strong>{deleteValidation?.expenseCount}</strong> gastos
                   asociados.
                 </p>
-                <p className="text-destructive font-medium">
+                <p className="font-medium text-destructive">
                   Al eliminar la tarjeta, se removerá la asociación con los
                   gastos existentes, pero los gastos se mantendrán. Esta acción
                   no se puede deshacer.

@@ -7,6 +7,7 @@ description: Refactor code following best practices and design patterns
 Refactor the following code: @$ARGUMENTS
 
 Guidelines:
+
 1. **Maintain functionality**: Ensure no breaking changes
 2. **Improve readability**: Make code more self-documenting
 3. **Extract common patterns**: Identify and extract reusable components

@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import React, { memo, useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Activity, BarChart3, Clock, Zap } from "lucide-react";
+import React, { memo, useState, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Activity, BarChart3, Clock, Zap } from 'lucide-react';
 
 interface PerformanceMetrics {
   renderCount: number;
@@ -41,21 +41,21 @@ export const PerformanceMonitor = memo<PerformanceMonitorProps>(
 
     const getGradeColor = (grade?: string) => {
       switch (grade) {
-        case "A":
-          return "bg-green-500";
-        case "B":
-          return "bg-blue-500";
-        case "C":
-          return "bg-yellow-500";
-        case "D":
-          return "bg-red-500";
+        case 'A':
+          return 'bg-green-500';
+        case 'B':
+          return 'bg-blue-500';
+        case 'C':
+          return 'bg-yellow-500';
+        case 'D':
+          return 'bg-red-500';
         default:
-          return "bg-gray-500";
+          return 'bg-gray-500';
       }
     };
 
     const formatTime = (ms: number) => {
-      if (ms < 1) return "<1ms";
+      if (ms < 1) return '<1ms';
       return `${ms.toFixed(1)}ms`;
     };
 
@@ -67,7 +67,7 @@ export const PerformanceMonitor = memo<PerformanceMonitorProps>(
       <Card className="fixed bottom-4 right-4 z-50 w-80 shadow-lg">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-sm flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 text-sm">
               <Activity className="h-4 w-4" />
               Performance Monitor
               {projectionMode && (
@@ -91,7 +91,7 @@ export const PerformanceMonitor = memo<PerformanceMonitorProps>(
                 size="sm"
                 onClick={() => setIsExpanded(!isExpanded)}
               >
-                {isExpanded ? "−" : "+"}
+                {isExpanded ? '−' : '+'}
               </Button>
               <Button variant="ghost" size="sm" onClick={onToggle}>
                 ×
@@ -103,7 +103,7 @@ export const PerformanceMonitor = memo<PerformanceMonitorProps>(
         <CardContent className="pt-0">
           <div className="space-y-2 text-sm">
             {/* Core metrics - always visible */}
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <span className="flex items-center gap-1">
                 <Clock className="h-3 w-3" />
                 Last Render:
@@ -113,7 +113,7 @@ export const PerformanceMonitor = memo<PerformanceMonitorProps>(
               </span>
             </div>
 
-            <div className="flex justify-between items-center">
+            <div className="flex items-center justify-between">
               <span className="flex items-center gap-1">
                 <BarChart3 className="h-3 w-3" />
                 Cache Hit Rate:
@@ -128,12 +128,12 @@ export const PerformanceMonitor = memo<PerformanceMonitorProps>(
               <>
                 <hr className="my-2" />
 
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <span>Render Count:</span>
                   <span className="font-mono">{metrics.renderCount}</span>
                 </div>
 
-                <div className="flex justify-between items-center">
+                <div className="flex items-center justify-between">
                   <span>Avg Render Time:</span>
                   <span className="font-mono">
                     {formatTime(metrics.averageRenderTime)}
@@ -141,7 +141,7 @@ export const PerformanceMonitor = memo<PerformanceMonitorProps>(
                 </div>
 
                 {metrics.memoryUsage !== undefined && (
-                  <div className="flex justify-between items-center">
+                  <div className="flex items-center justify-between">
                     <span>Memory Usage:</span>
                     <span className="font-mono">
                       {(metrics.memoryUsage / 1024 / 1024).toFixed(1)}MB
@@ -150,8 +150,8 @@ export const PerformanceMonitor = memo<PerformanceMonitorProps>(
                 )}
 
                 {/* Performance tips */}
-                <div className="mt-3 p-2 bg-muted rounded text-xs">
-                  <div className="flex items-center gap-1 mb-1">
+                <div className="mt-3 rounded bg-muted p-2 text-xs">
+                  <div className="mb-1 flex items-center gap-1">
                     <Zap className="h-3 w-3" />
                     <span className="font-medium">Tips:</span>
                   </div>
@@ -181,7 +181,7 @@ export const PerformanceMonitor = memo<PerformanceMonitorProps>(
   }
 );
 
-PerformanceMonitor.displayName = "PerformanceMonitor";
+PerformanceMonitor.displayName = 'PerformanceMonitor';
 
 /**
  * Hook for managing performance monitor visibility
@@ -192,7 +192,7 @@ export function usePerformanceMonitor() {
 
   useEffect(() => {
     // Only show in development or when explicitly enabled
-    setIsDevelopment(process.env.NODE_ENV === "development");
+    setIsDevelopment(process.env.NODE_ENV === 'development');
   }, []);
 
   const toggle = () => setIsVisible(!isVisible);

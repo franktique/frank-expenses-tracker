@@ -1,20 +1,20 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 // Credit Card franchise enum
 export type CreditCardFranchise =
-  | "visa"
-  | "mastercard"
-  | "american_express"
-  | "discover"
-  | "other";
+  | 'visa'
+  | 'mastercard'
+  | 'american_express'
+  | 'discover'
+  | 'other';
 
 // Credit Card franchise enum for Zod validation
 export const CreditCardFranchiseEnum = z.enum([
-  "visa",
-  "mastercard",
-  "american_express",
-  "discover",
-  "other",
+  'visa',
+  'mastercard',
+  'american_express',
+  'discover',
+  'other',
 ]);
 
 // Credit Card interface
@@ -33,12 +33,12 @@ export const CreditCardSchema = z.object({
   id: z.string().uuid(),
   bank_name: z
     .string()
-    .min(1, "El nombre del banco es obligatorio")
-    .max(255, "El nombre del banco es demasiado largo"),
+    .min(1, 'El nombre del banco es obligatorio')
+    .max(255, 'El nombre del banco es demasiado largo'),
   franchise: CreditCardFranchiseEnum,
   last_four_digits: z
     .string()
-    .regex(/^[0-9]{4}$/, "Deben ser exactamente 4 dígitos"),
+    .regex(/^[0-9]{4}$/, 'Deben ser exactamente 4 dígitos'),
   is_active: z.boolean(),
   created_at: z.string(),
   updated_at: z.string(),
@@ -48,12 +48,12 @@ export const CreditCardSchema = z.object({
 export const CreateCreditCardSchema = z.object({
   bank_name: z
     .string()
-    .min(1, "El nombre del banco es obligatorio")
-    .max(255, "El nombre del banco es demasiado largo"),
+    .min(1, 'El nombre del banco es obligatorio')
+    .max(255, 'El nombre del banco es demasiado largo'),
   franchise: CreditCardFranchiseEnum,
   last_four_digits: z
     .string()
-    .regex(/^[0-9]{4}$/, "Deben ser exactamente 4 dígitos"),
+    .regex(/^[0-9]{4}$/, 'Deben ser exactamente 4 dígitos'),
   is_active: z.boolean().optional().default(true),
 });
 
@@ -61,13 +61,13 @@ export const CreateCreditCardSchema = z.object({
 export const UpdateCreditCardSchema = z.object({
   bank_name: z
     .string()
-    .min(1, "El nombre del banco es obligatorio")
-    .max(255, "El nombre del banco es demasiado largo")
+    .min(1, 'El nombre del banco es obligatorio')
+    .max(255, 'El nombre del banco es demasiado largo')
     .optional(),
   franchise: CreditCardFranchiseEnum.optional(),
   last_four_digits: z
     .string()
-    .regex(/^[0-9]{4}$/, "Deben ser exactamente 4 dígitos")
+    .regex(/^[0-9]{4}$/, 'Deben ser exactamente 4 dígitos')
     .optional(),
   is_active: z.boolean().optional(),
 });
@@ -87,36 +87,36 @@ export interface CreditCardInfo {
 
 // Credit Card error messages
 export const CREDIT_CARD_ERROR_MESSAGES = {
-  CREDIT_CARD_NOT_FOUND: "La tarjeta de crédito especificada no existe",
-  BANK_NAME_REQUIRED: "El nombre del banco es obligatorio",
-  BANK_NAME_TOO_LONG: "El nombre del banco es demasiado largo",
-  FRANCHISE_REQUIRED: "La franquicia de la tarjeta es obligatoria",
-  FRANCHISE_INVALID: "La franquicia seleccionada no es válida",
-  LAST_FOUR_DIGITS_REQUIRED: "Los últimos 4 dígitos son obligatorios",
-  LAST_FOUR_DIGITS_INVALID: "Los últimos 4 dígitos deben ser números",
-  LAST_FOUR_DIGITS_LENGTH: "Deben ser exactamente 4 dígitos",
-  DUPLICATE_CREDIT_CARD: "Ya existe una tarjeta con estos datos",
+  CREDIT_CARD_NOT_FOUND: 'La tarjeta de crédito especificada no existe',
+  BANK_NAME_REQUIRED: 'El nombre del banco es obligatorio',
+  BANK_NAME_TOO_LONG: 'El nombre del banco es demasiado largo',
+  FRANCHISE_REQUIRED: 'La franquicia de la tarjeta es obligatoria',
+  FRANCHISE_INVALID: 'La franquicia seleccionada no es válida',
+  LAST_FOUR_DIGITS_REQUIRED: 'Los últimos 4 dígitos son obligatorios',
+  LAST_FOUR_DIGITS_INVALID: 'Los últimos 4 dígitos deben ser números',
+  LAST_FOUR_DIGITS_LENGTH: 'Deben ser exactamente 4 dígitos',
+  DUPLICATE_CREDIT_CARD: 'Ya existe una tarjeta con estos datos',
   CREDIT_CARD_IN_USE:
-    "No se puede eliminar la tarjeta porque está asociada a gastos",
+    'No se puede eliminar la tarjeta porque está asociada a gastos',
   CREDIT_CARD_DELETE_CONFIRMATION:
-    "¿Está seguro de que desea eliminar esta tarjeta de crédito?",
-  CREDIT_CARD_CREATE_SUCCESS: "Tarjeta de crédito creada exitosamente",
-  CREDIT_CARD_UPDATE_SUCCESS: "Tarjeta de crédito actualizada exitosamente",
-  CREDIT_CARD_DELETE_SUCCESS: "Tarjeta de crédito eliminada exitosamente",
+    '¿Está seguro de que desea eliminar esta tarjeta de crédito?',
+  CREDIT_CARD_CREATE_SUCCESS: 'Tarjeta de crédito creada exitosamente',
+  CREDIT_CARD_UPDATE_SUCCESS: 'Tarjeta de crédito actualizada exitosamente',
+  CREDIT_CARD_DELETE_SUCCESS: 'Tarjeta de crédito eliminada exitosamente',
   CREDIT_CARD_STATUS_UPDATE_SUCCESS:
-    "Estado de la tarjeta actualizado exitosamente",
-  CREDIT_CARD_ACTIVATED: "Tarjeta de crédito activada",
-  CREDIT_CARD_DEACTIVATED: "Tarjeta de crédito desactivada",
+    'Estado de la tarjeta actualizado exitosamente',
+  CREDIT_CARD_ACTIVATED: 'Tarjeta de crédito activada',
+  CREDIT_CARD_DEACTIVATED: 'Tarjeta de crédito desactivada',
 } as const;
 
 // Credit Card franchise labels for UI display
 export const CREDIT_CARD_FRANCHISE_LABELS: Record<CreditCardFranchise, string> =
   {
-    visa: "Visa",
-    mastercard: "Mastercard",
-    american_express: "American Express",
-    discover: "Discover",
-    other: "Otra",
+    visa: 'Visa',
+    mastercard: 'Mastercard',
+    american_express: 'American Express',
+    discover: 'Discover',
+    other: 'Otra',
   };
 
 // API response types

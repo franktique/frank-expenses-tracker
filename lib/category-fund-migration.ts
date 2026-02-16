@@ -1,4 +1,4 @@
-import { sql } from "@/lib/db";
+import { sql } from '@/lib/db';
 
 export interface MigrationResult {
   success: boolean;
@@ -78,8 +78,8 @@ export async function checkMigrationStatus(): Promise<MigrationStatus> {
       totalCategories,
     };
   } catch (error) {
-    console.error("Error checking migration status:", error);
-    throw new Error("Failed to check migration status");
+    console.error('Error checking migration status:', error);
+    throw new Error('Failed to check migration status');
   }
 }
 
@@ -95,7 +95,7 @@ export async function migrateCategoryFundRelationships(): Promise<MigrationResul
     // If table doesn't exist, create it first
     if (!status.isTableCreated) {
       await createCategoryFundRelationshipsTable();
-      warnings.push("Created category_fund_relationships table");
+      warnings.push('Created category_fund_relationships table');
     }
 
     // Migrate existing fund_id relationships
@@ -150,17 +150,17 @@ export async function migrateCategoryFundRelationships(): Promise<MigrationResul
       success: errors.length === 0,
       message:
         errors.length === 0
-          ? "Category fund relationships migration completed successfully"
-          : "Migration completed with errors",
+          ? 'Category fund relationships migration completed successfully'
+          : 'Migration completed with errors',
       migratedRelationships: migratedCount,
       errors: errors.length > 0 ? errors : undefined,
       warnings: warnings.length > 0 ? warnings : undefined,
     };
   } catch (error) {
-    console.error("Error during migration:", error);
+    console.error('Error during migration:', error);
     return {
       success: false,
-      message: "Migration failed",
+      message: 'Migration failed',
       errors: [(error as Error).message],
     };
   }
@@ -274,7 +274,7 @@ async function getDefaultFund(): Promise<{ id: string; name: string } | null> {
     `;
     return defaultFund || null;
   } catch (error) {
-    console.error("Error getting default fund:", error);
+    console.error('Error getting default fund:', error);
     return null;
   }
 }
@@ -298,7 +298,7 @@ async function validateMigrationIntegrity(): Promise<{
     `;
 
     if (parseInt(orphanedRelationships[0].count) > 0) {
-      errors.push("Found orphaned category-fund relationships");
+      errors.push('Found orphaned category-fund relationships');
     }
 
     // Check for categories with both legacy fund_id and new relationships
@@ -323,10 +323,10 @@ async function validateMigrationIntegrity(): Promise<{
       errors: errors.length > 0 ? errors : undefined,
     };
   } catch (error) {
-    console.error("Error validating migration integrity:", error);
+    console.error('Error validating migration integrity:', error);
     return {
       success: false,
-      errors: ["Failed to validate migration integrity"],
+      errors: ['Failed to validate migration integrity'],
     };
   }
 }
@@ -350,8 +350,8 @@ export async function convertCategoryToMultiFund(
       await sql`ROLLBACK`;
       return {
         success: false,
-        message: "Category not found",
-        errors: ["Category not found"],
+        message: 'Category not found',
+        errors: ['Category not found'],
       };
     }
 
@@ -365,8 +365,8 @@ export async function convertCategoryToMultiFund(
         await sql`ROLLBACK`;
         return {
           success: false,
-          message: "Some funds do not exist",
-          errors: ["Some specified funds do not exist"],
+          message: 'Some funds do not exist',
+          errors: ['Some specified funds do not exist'],
         };
       }
     }
@@ -411,10 +411,10 @@ export async function convertCategoryToMultiFund(
     };
   } catch (error) {
     await sql`ROLLBACK`;
-    console.error("Error converting category to multi-fund:", error);
+    console.error('Error converting category to multi-fund:', error);
     return {
       success: false,
-      message: "Failed to convert category",
+      message: 'Failed to convert category',
       errors: [(error as Error).message],
     };
   }
@@ -489,15 +489,15 @@ export async function ensureBackwardCompatibility(): Promise<MigrationResult> {
 
     return {
       success: true,
-      message: "Backward compatibility ensured successfully",
+      message: 'Backward compatibility ensured successfully',
       migratedRelationships: processedCategories,
       warnings: warnings.length > 0 ? warnings : undefined,
     };
   } catch (error) {
-    console.error("Error ensuring backward compatibility:", error);
+    console.error('Error ensuring backward compatibility:', error);
     return {
       success: false,
-      message: "Failed to ensure backward compatibility",
+      message: 'Failed to ensure backward compatibility',
       errors: [(error as Error).message],
     };
   }

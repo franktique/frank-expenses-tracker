@@ -11,6 +11,7 @@ When the "Configuración de Fondos" section is expanded in the expense form dial
 The `DialogContent` component in `/components/ui/dialog.tsx` uses `fixed` positioning with centered transform, but lacks overflow and max-height constraints. The form content in `/components/expense-form-dialog.tsx` is wrapped in a `div` with `grid gap-4 py-4` (line 337), but this container doesn't have scroll behavior defined.
 
 When the "Configuración de Fondos" collapsible section expands:
+
 - **Lines 389-448** in `expense-form-dialog.tsx` show the collapsible container
 - **Lines 406-446** contain the expanded content with 3 major components:
   - FundSelectionConstraintIndicator
@@ -38,6 +39,7 @@ Add scrolling capability to the dialog content area while maintaining the header
 ## Implementation Plan
 
 ### Task 1: Update Dialog Component for Scroll Support
+
 **File**: `/components/ui/dialog.tsx`
 
 - [x] Add max-height constraint to DialogContent (e.g., `max-h-[85vh]` or `max-h-[90vh]`)
@@ -46,6 +48,7 @@ Add scrolling capability to the dialog content area while maintaining the header
 - [x] Verify dark mode scrollbar styling
 
 **Expected Changes**:
+
 ```tsx
 // In DialogContent className (line 56-58)
 className={cn(
@@ -55,6 +58,7 @@ className={cn(
 ```
 
 ### Task 2: Verify Expense Form Layout
+
 **File**: `/components/expense-form-dialog.tsx`
 
 - [x] Test form with "Configuración de Fondos" collapsed
@@ -85,14 +89,17 @@ className={cn(
 ## Technical Details
 
 ### Affected Files
+
 1. `/components/ui/dialog.tsx` (lines 46-71) - DialogContent component
 2. `/components/expense-form-dialog.tsx` (lines 328-605) - Expense form dialog structure
 
 ### CSS Classes to Add
+
 - `max-h-[90vh]` - Maximum height constraint (90% of viewport height)
 - `overflow-y-auto` - Enable vertical scrolling when content exceeds max-height
 
 ### Scroll Behavior Specifications
+
 - **Trigger**: Content height exceeds max-height threshold
 - **Scroll Area**: Only the middle content area (between header and footer)
 - **Fixed Elements**: DialogHeader and DialogFooter should remain visible
@@ -101,6 +108,7 @@ className={cn(
 ## Testing Checklist
 
 ### Functional Tests
+
 - [ ] Dialog opens without scroll when content is short
 - [ ] Dialog shows scrollbar when "Configuración de Fondos" is expanded
 - [ ] All form fields are accessible via scrolling
@@ -109,6 +117,7 @@ className={cn(
 - [ ] Scroll position resets when dialog reopens
 
 ### Visual Tests
+
 - [ ] Scrollbar appears only when needed
 - [ ] Scrollbar styling matches theme (light/dark mode)
 - [ ] No layout shifts when scrollbar appears/disappears
@@ -116,6 +125,7 @@ className={cn(
 - [ ] Orange border on "Configuración de Fondos" displays correctly
 
 ### Edge Cases
+
 - [ ] Very long category lists with search
 - [ ] Multiple funds in source fund selector
 - [ ] Long fund constraint indicator messages
@@ -134,6 +144,7 @@ className={cn(
 ## Rollback Plan
 
 If issues arise:
+
 1. Revert changes to `/components/ui/dialog.tsx`
 2. Alternative solution: Add scroll only to the form content div in `expense-form-dialog.tsx`
 

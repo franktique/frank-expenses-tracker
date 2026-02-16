@@ -5,18 +5,22 @@
 **Status:** In Progress
 
 ## Overview
+
 Add functionality to the simulation configuration page to input simulated income values and display a running balance calculation for each category row. The balance should decrease only when "Efectivo" (cash) payment method is used.
 
 ## Requirements
 
 ### User Story
+
 As a user configuring budget simulations, I want to:
+
 1. Enter simulated income amounts before the budget table
 2. See a running balance that starts with the total income
 3. See the balance decrease only when I allocate "Efectivo" amounts to categories
 4. Understand how my cash flow will work throughout the budget period
 
 ### Acceptance Criteria
+
 - [ ] Income input section appears before the "Presupuestos por Categoría" table
 - [ ] Users can add multiple income entries with description and amount
 - [ ] Total income is calculated and displayed
@@ -30,6 +34,7 @@ As a user configuring budget simulations, I want to:
 ### Database Schema
 
 #### New Table: `simulation_incomes`
+
 ```sql
 CREATE TABLE simulation_incomes (
   id SERIAL PRIMARY KEY,
@@ -46,9 +51,11 @@ CREATE INDEX idx_simulation_incomes_simulation_id ON simulation_incomes(simulati
 ### API Endpoints
 
 #### 1. GET `/api/simulations/[id]/incomes`
+
 Fetch all income entries for a simulation.
 
 **Response:**
+
 ```json
 {
   "incomes": [
@@ -70,9 +77,11 @@ Fetch all income entries for a simulation.
 ```
 
 #### 2. POST `/api/simulations/[id]/incomes`
+
 Create a new income entry.
 
 **Request:**
+
 ```json
 {
   "description": "Salary",
@@ -81,9 +90,11 @@ Create a new income entry.
 ```
 
 #### 3. PUT `/api/simulations/[id]/incomes/[incomeId]`
+
 Update an existing income entry.
 
 #### 4. DELETE `/api/simulations/[id]/incomes/[incomeId]`
+
 Delete an income entry.
 
 ### TypeScript Types
@@ -108,14 +119,15 @@ export const SimulationIncomeSchema = z.object({
 });
 
 export const CreateSimulationIncomeSchema = z.object({
-  description: z.string().min(1, "Description is required").max(255),
-  amount: z.number().positive("Amount must be positive"),
+  description: z.string().min(1, 'Description is required').max(255),
+  amount: z.number().positive('Amount must be positive'),
 });
 ```
 
 ### Component Structure
 
 #### New Component: `SimulationIncomeInput`
+
 - Location: `/components/simulation-income-input.tsx`
 - Features:
   - List/table of income entries
@@ -127,11 +139,12 @@ export const CreateSimulationIncomeSchema = z.object({
   - Error handling
 
 #### Updated Component: `SimulationBudgetForm`
+
 - Add "Balance" column after "Total" column
 - Implement balance calculation:
   ```typescript
   let runningBalance = totalIncome;
-  categories.forEach(category => {
+  categories.forEach((category) => {
     const efectivoAmount = budgetData[category.id].efectivo_amount;
     runningBalance -= parseFloat(efectivoAmount) || 0;
     // Display runningBalance for this row
@@ -142,6 +155,7 @@ export const CreateSimulationIncomeSchema = z.object({
 ## Implementation Checklist
 
 ### Phase 1: Database & Backend
+
 - [x] Create migration API endpoint `/api/migrate-simulation-incomes/route.ts`
 - [x] Add TypeScript types to `/types/funds.ts` or new file
 - [x] Create Zod validation schemas
@@ -151,6 +165,7 @@ export const CreateSimulationIncomeSchema = z.object({
 - [x] Implement DELETE `/api/simulations/[id]/incomes/[incomeId]`
 
 ### Phase 2: Frontend Components
+
 - [x] Create `SimulationIncomeInput` component
   - [x] Income list/table UI
   - [x] Add income form
@@ -164,6 +179,7 @@ export const CreateSimulationIncomeSchema = z.object({
   - [x] Update table header
 
 ### Phase 3: Integration
+
 - [x] Update `/app/simular/[id]/page.tsx`
   - [x] Add income section before budget form
   - [x] Pass income data to budget form
@@ -173,6 +189,7 @@ export const CreateSimulationIncomeSchema = z.object({
 - [x] Add validation feedback
 
 ### Phase 4: Testing
+
 - [-] Test income CRUD operations
 - [-] Test balance calculation (Efectivo only)
 - [-] Test balance calculation (Crédito only)
@@ -199,7 +216,7 @@ const calculateBalance = (
     a.name.localeCompare(b.name)
   );
 
-  sortedCategories.forEach(category => {
+  sortedCategories.forEach((category) => {
     const categoryData = budgetData[String(category.id)];
     if (categoryData) {
       // Only decrease balance for Efectivo (cash) amounts
@@ -271,6 +288,7 @@ const calculateBalance = (
    - Verify data persisted
 
 ## Notes
+
 - Use existing patterns from `SimulationBudgetForm` for consistency
 - Follow the same auto-save on blur pattern
 - Use the same error handling and validation approach
@@ -278,6 +296,7 @@ const calculateBalance = (
 - Consider adding a warning when balance goes negative
 
 ## References
+
 - `/components/simulation-budget-form.tsx` - Pattern for auto-save and validation
 - `/app/api/simulations/[id]/budgets/route.ts` - Pattern for API endpoints
 - `/lib/simulation-validation.ts` - Pattern for validation utilities

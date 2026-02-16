@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
-import { Fund } from "@/types/funds";
-import { SOURCE_FUND_VALIDATION_MESSAGES } from "@/lib/source-fund-validation";
+import { useState, useEffect, useCallback } from 'react';
+import { Fund } from '@/types/funds';
+import { SOURCE_FUND_VALIDATION_MESSAGES } from '@/lib/source-fund-validation';
 
 interface ValidationResult {
   isValid: boolean;
@@ -23,7 +23,7 @@ export function useSourceFundValidation() {
     validation: null,
     availableFunds: [],
     hasRestrictions: false,
-    categoryName: "",
+    categoryName: '',
   });
 
   // Validate source fund for a specific category
@@ -43,11 +43,11 @@ export function useSourceFundValidation() {
         });
 
         if (destinationFundId) {
-          params.append("destination_fund_id", destinationFundId);
+          params.append('destination_fund_id', destinationFundId);
         }
 
         if (amount) {
-          params.append("amount", amount.toString());
+          params.append('amount', amount.toString());
         }
 
         const response = await fetch(
@@ -65,12 +65,12 @@ export function useSourceFundValidation() {
         setState((prev) => ({ ...prev, validation: result }));
         return result;
       } catch (error) {
-        console.error("Error validating source fund:", error);
+        console.error('Error validating source fund:', error);
         const result: ValidationResult = {
           isValid: false,
           errors: [SOURCE_FUND_VALIDATION_MESSAGES.SERVER_ERROR],
           warnings: [],
-          recommendations: ["Intente nuevamente o contacte al soporte técnico"],
+          recommendations: ['Intente nuevamente o contacte al soporte técnico'],
         };
 
         setState((prev) => ({ ...prev, validation: result }));
@@ -97,17 +97,17 @@ export function useSourceFundValidation() {
           ...prev,
           availableFunds: data.available_funds || [],
           hasRestrictions: data.has_restrictions || false,
-          categoryName: data.category_name || "",
+          categoryName: data.category_name || '',
         }));
 
         return data.available_funds || [];
       } catch (error) {
-        console.error("Error fetching available funds:", error);
+        console.error('Error fetching available funds:', error);
         setState((prev) => ({
           ...prev,
           availableFunds: [],
           hasRestrictions: false,
-          categoryName: "",
+          categoryName: '',
         }));
         return [];
       } finally {
@@ -129,10 +129,10 @@ export function useSourceFundValidation() {
       setState((prev) => ({ ...prev, isValidating: true }));
 
       try {
-        const response = await fetch("/api/expenses/validate-source-fund", {
-          method: "POST",
+        const response = await fetch('/api/expenses/validate-source-fund', {
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify(config),
         });
@@ -149,12 +149,12 @@ export function useSourceFundValidation() {
         setState((prev) => ({ ...prev, validation: result }));
         return result;
       } catch (error) {
-        console.error("Error validating expense configuration:", error);
+        console.error('Error validating expense configuration:', error);
         const result: ValidationResult = {
           isValid: false,
           errors: [SOURCE_FUND_VALIDATION_MESSAGES.SERVER_ERROR],
           warnings: [],
-          recommendations: ["Intente nuevamente o contacte al soporte técnico"],
+          recommendations: ['Intente nuevamente o contacte al soporte técnico'],
         };
 
         setState((prev) => ({ ...prev, validation: result }));
@@ -182,7 +182,7 @@ export function useSourceFundValidation() {
       if (required && !selectedSourceFund) {
         errors.push(SOURCE_FUND_VALIDATION_MESSAGES.SOURCE_FUND_REQUIRED);
         recommendations.push(
-          "Seleccione un fondo origen de la lista disponible"
+          'Seleccione un fondo origen de la lista disponible'
         );
       }
 
@@ -196,7 +196,7 @@ export function useSourceFundValidation() {
             SOURCE_FUND_VALIDATION_MESSAGES.SOURCE_FUND_INVALID_FOR_CATEGORY
           );
           recommendations.push(
-            "Seleccione un fondo que esté asociado con la categoría"
+            'Seleccione un fondo que esté asociado con la categoría'
           );
         }
       }
@@ -205,11 +205,11 @@ export function useSourceFundValidation() {
       if (selectedSourceFund && amount) {
         if (selectedSourceFund.current_balance <= 0) {
           warnings.push(SOURCE_FUND_VALIDATION_MESSAGES.ZERO_BALANCE);
-          recommendations.push("Considere usar un fondo con balance positivo");
+          recommendations.push('Considere usar un fondo con balance positivo');
         } else if (amount > selectedSourceFund.current_balance) {
           warnings.push(SOURCE_FUND_VALIDATION_MESSAGES.INSUFFICIENT_BALANCE);
           recommendations.push(
-            "Reduzca el monto o seleccione un fondo con mayor balance"
+            'Reduzca el monto o seleccione un fondo con mayor balance'
           );
         }
       }
@@ -242,7 +242,7 @@ export function useSourceFundValidation() {
       validation: null,
       availableFunds: [],
       hasRestrictions: false,
-      categoryName: "",
+      categoryName: '',
     });
   }, []);
 
@@ -347,7 +347,7 @@ export function useSourceFundFormValidation() {
 
       // Basic field validation
       if (!formData.category_id) {
-        errors.category_id = "La categoría es obligatoria";
+        errors.category_id = 'La categoría es obligatoria';
       }
 
       if (!formData.source_fund_id) {
@@ -356,11 +356,11 @@ export function useSourceFundFormValidation() {
       }
 
       if (!formData.description?.trim()) {
-        errors.description = "La descripción es obligatoria";
+        errors.description = 'La descripción es obligatoria';
       }
 
       if (!formData.amount || formData.amount <= 0) {
-        errors.amount = "El monto debe ser mayor a cero";
+        errors.amount = 'El monto debe ser mayor a cero';
       }
 
       // Source fund validation if both category and source fund are provided
@@ -373,7 +373,7 @@ export function useSourceFundFormValidation() {
         });
 
         if (!result.isValid) {
-          errors.source_fund_id = result.errors[0] || "Fondo origen no válido";
+          errors.source_fund_id = result.errors[0] || 'Fondo origen no válido';
         }
       }
 

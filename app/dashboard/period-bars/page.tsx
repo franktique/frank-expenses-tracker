@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useMemo, useEffect } from "react";
-import { useBudget } from "@/context/budget-context";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useState, useMemo, useEffect } from 'react';
+import { useBudget } from '@/context/budget-context';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import {
   Select,
   SelectTrigger,
   SelectContent,
   SelectItem,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   ResponsiveContainer,
   BarChart,
@@ -19,12 +19,12 @@ import {
   CartesianGrid,
   Tooltip,
   Cell,
-} from "recharts";
-import { ExpenseDetailTable } from "@/components/expense-detail-table";
+} from 'recharts';
+import { ExpenseDetailTable } from '@/components/expense-detail-table';
 
 export default function PeriodBarsDashboard() {
   const { categories, expenses, periods } = useBudget();
-  const [selectedCategoryId, setSelectedCategoryId] = useState<string>("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string>('');
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
 
   // Compute filtered and grouped data
@@ -89,9 +89,9 @@ export default function PeriodBarsDashboard() {
 
   // Get selected period name for display
   const selectedPeriodName = useMemo(() => {
-    if (!selectedPeriodId) return "";
+    if (!selectedPeriodId) return '';
     const period = periods.find((p) => p.id === selectedPeriodId);
-    return period?.name || "";
+    return period?.name || '';
   }, [periods, selectedPeriodId]);
 
   // Handle bar click to select/deselect a period
@@ -107,8 +107,8 @@ export default function PeriodBarsDashboard() {
 
   // Get bar color based on selection
   const getBarColor = (periodId: string) => {
-    if (periodId === selectedPeriodId) return "#3b82f6"; // Blue for selected
-    return "#22d3ee"; // Cyan for normal
+    if (periodId === selectedPeriodId) return '#3b82f6'; // Blue for selected
+    return '#22d3ee'; // Cyan for normal
   };
 
   // Default to first category if none selected
@@ -126,7 +126,7 @@ export default function PeriodBarsDashboard() {
   }
 
   return (
-    <div className="max-w-full w-full mx-auto py-10 px-4">
+    <div className="mx-auto w-full max-w-full px-4 py-10">
       <Card>
         <CardHeader>
           <CardTitle>Gastos por Periodo (por Categoría)</CardTitle>
@@ -159,7 +159,7 @@ export default function PeriodBarsDashboard() {
                   data={data}
                   margin={{ top: 16, right: 16, left: 16, bottom: 32 }}
                   onClick={handleBarClick}
-                  style={{ cursor: "pointer" }}
+                  style={{ cursor: 'pointer' }}
                 >
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis
@@ -177,18 +177,18 @@ export default function PeriodBarsDashboard() {
                       }
                       const item = payload[0].payload;
                       return (
-                        <div className="rounded-md bg-white dark:bg-zinc-900 p-3 shadow-lg border border-gray-200 dark:border-zinc-800">
-                          <div className="font-medium text-gray-900 dark:text-gray-100 text-base mb-1">
+                        <div className="rounded-md border border-gray-200 bg-white p-3 shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
+                          <div className="mb-1 text-base font-medium text-gray-900 dark:text-gray-100">
                             {item.period}
                           </div>
                           <div className="text-gray-900 dark:text-gray-100">
-                            Total:{" "}
-                            {Number(payload[0].value).toLocaleString("es-CO", {
-                              style: "currency",
-                              currency: "COP",
+                            Total:{' '}
+                            {Number(payload[0].value).toLocaleString('es-CO', {
+                              style: 'currency',
+                              currency: 'COP',
                             })}
                           </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                             Clic para ver detalles
                           </div>
                         </div>
@@ -198,7 +198,7 @@ export default function PeriodBarsDashboard() {
                   <Bar
                     dataKey="total"
                     name={
-                      selectedCategory ? selectedCategory.name : "Categoría"
+                      selectedCategory ? selectedCategory.name : 'Categoría'
                     }
                   >
                     {data.map((entry, index) => (
@@ -220,7 +220,7 @@ export default function PeriodBarsDashboard() {
         <ExpenseDetailTable
           expenses={filteredExpenses}
           periodName={selectedPeriodName}
-          categoryName={selectedCategory?.name || ""}
+          categoryName={selectedCategory?.name || ''}
         />
       )}
     </div>

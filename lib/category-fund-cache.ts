@@ -3,7 +3,7 @@
  * Implements efficient caching for category-fund relationships with TTL and invalidation
  */
 
-import { Fund, CategoryFundRelationship } from "@/types/funds";
+import { Fund, CategoryFundRelationship } from '@/types/funds';
 
 interface CategoryFundCacheEntry {
   funds: Fund[];
@@ -50,15 +50,15 @@ class CategoryFundCache {
 
     if (totalSize >= this.maxSize) {
       // Find the oldest entry across both caches
-      let oldestKey = "";
+      let oldestKey = '';
       let oldestTime = Date.now();
-      let oldestCache: "funds" | "relationships" = "funds";
+      let oldestCache: 'funds' | 'relationships' = 'funds';
 
       for (const [key, entry] of this.categoryFundsCache.entries()) {
         if (entry.timestamp < oldestTime) {
           oldestTime = entry.timestamp;
           oldestKey = key;
-          oldestCache = "funds";
+          oldestCache = 'funds';
         }
       }
 
@@ -66,12 +66,12 @@ class CategoryFundCache {
         if (entry.timestamp < oldestTime) {
           oldestTime = entry.timestamp;
           oldestKey = key;
-          oldestCache = "relationships";
+          oldestCache = 'relationships';
         }
       }
 
       if (oldestKey) {
-        if (oldestCache === "funds") {
+        if (oldestCache === 'funds') {
           this.categoryFundsCache.delete(oldestKey);
         } else {
           this.relationshipsCache.delete(oldestKey);
@@ -347,14 +347,14 @@ export const categoryFundCache = new CategoryFundCache();
  */
 export function withCategoryFundCache<T>(
   fetchFunction: (categoryId: string) => Promise<T>,
-  cacheKey: "funds" | "relationships",
+  cacheKey: 'funds' | 'relationships',
   customTTL?: number
 ) {
   return async (categoryId: string): Promise<T> => {
     // Try to get from cache first
     let cached: T | null = null;
 
-    if (cacheKey === "funds") {
+    if (cacheKey === 'funds') {
       cached = categoryFundCache.getCategoryFunds(categoryId) as T | null;
     } else {
       cached = categoryFundCache.getCategoryRelationships(
@@ -371,7 +371,7 @@ export function withCategoryFundCache<T>(
       const data = await fetchFunction(categoryId);
 
       // Cache the result
-      if (cacheKey === "funds") {
+      if (cacheKey === 'funds') {
         categoryFundCache.setCategoryFunds(
           categoryId,
           data as Fund[],

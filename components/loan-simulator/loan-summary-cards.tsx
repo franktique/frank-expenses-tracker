@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DollarSign, TrendingUp, Calendar, Percent } from "lucide-react";
-import type { LoanSummary, CurrencyCode } from "@/types/loan-simulator";
-import { formatCurrency, formatDate } from "@/lib/loan-calculations";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { DollarSign, TrendingUp, Calendar, Percent } from 'lucide-react';
+import type { LoanSummary, CurrencyCode } from '@/types/loan-simulator';
+import { formatCurrency, formatDate } from '@/lib/loan-calculations';
 
 interface LoanSummaryCardsProps {
   summary: LoanSummary;
@@ -18,7 +18,7 @@ export function LoanSummaryCards({
   originalSummary,
   monthsSaved,
   interestSaved,
-  currency = "USD",
+  currency = 'USD',
 }: LoanSummaryCardsProps) {
   const hasExtraPayments = originalSummary !== undefined;
 
@@ -27,9 +27,7 @@ export function LoanSummaryCards({
       {/* Monthly Payment */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Pago Mensual
-          </CardTitle>
+          <CardTitle className="text-sm font-medium">Pago Mensual</CardTitle>
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -37,7 +35,7 @@ export function LoanSummaryCards({
             {formatCurrency(summary.monthlyPayment, currency)}
           </div>
           {hasExtraPayments && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="mt-1 text-xs text-muted-foreground">
               Pago base (no cambia con pagos extra)
             </p>
           )}
@@ -47,16 +45,14 @@ export function LoanSummaryCards({
       {/* Total Principal */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Capital
-          </CardTitle>
+          <CardTitle className="text-sm font-medium">Capital</CardTitle>
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
             {formatCurrency(summary.totalPrincipal, currency)}
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="mt-1 text-xs text-muted-foreground">
             Monto del préstamo
           </p>
         </CardContent>
@@ -80,8 +76,9 @@ export function LoanSummaryCards({
             {formatCurrency(summary.totalInterest, currency)}
           </div>
           {hasExtraPayments && originalSummary && (
-            <p className="text-xs text-muted-foreground mt-1">
-              Original: {formatCurrency(originalSummary.totalInterest, currency)}
+            <p className="mt-1 text-xs text-muted-foreground">
+              Original:{' '}
+              {formatCurrency(originalSummary.totalInterest, currency)}
             </p>
           )}
         </CardContent>
@@ -90,9 +87,7 @@ export function LoanSummaryCards({
       {/* Total Payment */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Pago Total
-          </CardTitle>
+          <CardTitle className="text-sm font-medium">Pago Total</CardTitle>
           <DollarSign className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
@@ -100,7 +95,7 @@ export function LoanSummaryCards({
             {formatCurrency(summary.totalPayment, currency)}
           </div>
           {hasExtraPayments && originalSummary && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="mt-1 text-xs text-muted-foreground">
               Original: {formatCurrency(originalSummary.totalPayment, currency)}
             </p>
           )}
@@ -108,7 +103,13 @@ export function LoanSummaryCards({
       </Card>
 
       {/* Payoff Date */}
-      <Card className={hasExtraPayments && monthsSaved && monthsSaved > 0 ? "border-green-500 dark:border-green-700" : ""}>
+      <Card
+        className={
+          hasExtraPayments && monthsSaved && monthsSaved > 0
+            ? 'border-green-500 dark:border-green-700'
+            : ''
+        }
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium">
             Fecha Final
@@ -125,7 +126,7 @@ export function LoanSummaryCards({
             {formatDate(summary.payoffDate)}
           </div>
           {hasExtraPayments && originalSummary && (
-            <p className="text-xs text-muted-foreground mt-1">
+            <p className="mt-1 text-xs text-muted-foreground">
               Original: {formatDate(originalSummary.payoffDate)}
             </p>
           )}
@@ -147,10 +148,10 @@ export function LoanSummaryCards({
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {Math.floor(summary.termMonths / 12)} años,{" "}
+            {Math.floor(summary.termMonths / 12)} años,{' '}
             {summary.termMonths % 12} meses
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="mt-1 text-xs text-muted-foreground">
             {summary.termMonths} pagos
           </p>
         </CardContent>
@@ -159,16 +160,17 @@ export function LoanSummaryCards({
       {/* Interest Rate */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-          <CardTitle className="text-sm font-medium">
-            Tasa de Interés
-          </CardTitle>
+          <CardTitle className="text-sm font-medium">Tasa de Interés</CardTitle>
           <Percent className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold">
-            {((summary.totalInterest / summary.totalPrincipal) * 100).toFixed(1)}%
+            {((summary.totalInterest / summary.totalPrincipal) * 100).toFixed(
+              1
+            )}
+            %
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="mt-1 text-xs text-muted-foreground">
             Interés como % del capital
           </p>
         </CardContent>
@@ -186,7 +188,7 @@ export function LoanSummaryCards({
           <div className="text-2xl font-bold">
             {(summary.totalPayment / summary.totalPrincipal).toFixed(2)}x
           </div>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="mt-1 text-xs text-muted-foreground">
             Total pagado por cada $1 prestado
           </p>
         </CardContent>

@@ -1,17 +1,17 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from '@/components/ui/select';
 import {
   RotateCcw,
   Filter,
@@ -19,15 +19,15 @@ import {
   AlertCircle,
   RefreshCw,
   Zap,
-} from "lucide-react";
-import { toast } from "@/components/ui/use-toast";
-import { cn } from "@/lib/utils";
+} from 'lucide-react';
+import { toast } from '@/components/ui/use-toast';
+import { cn } from '@/lib/utils';
 
 // Import our enhanced filter components
-import { AgrupadorFilter } from "./agrupador-filter";
-import { EstudioFilter } from "./estudio-filter";
-import { PaymentMethodFilter } from "./payment-method-filter";
-import { SimulationSelectionFilter } from "./simulation-selection-filter";
+import { AgrupadorFilter } from './agrupador-filter';
+import { EstudioFilter } from './estudio-filter';
+import { PaymentMethodFilter } from './payment-method-filter';
+import { SimulationSelectionFilter } from './simulation-selection-filter';
 
 // Import filter state management
 import {
@@ -38,7 +38,7 @@ import {
   clearSimulationFilterState,
   getDefaultSimulationFilterState,
   createSimulationFilterStateHandler,
-} from "@/lib/simulation-filter-state";
+} from '@/lib/simulation-filter-state';
 
 // Types
 interface EstudioData {
@@ -180,9 +180,9 @@ export function SimulationFilterManager({
     }
 
     toast({
-      title: "Filtros restablecidos",
+      title: 'Filtros restablecidos',
       description:
-        "Se han restablecido todos los filtros a sus valores por defecto",
+        'Se han restablecido todos los filtros a sus valores por defecto',
     });
   }, [
     onEstudioChange,
@@ -319,15 +319,15 @@ export function SimulationFilterManager({
     ) {
       const methodLabels = selectedPaymentMethods.map((method) => {
         switch (method) {
-          case "efectivo":
-            return "Efectivo";
-          case "credito":
-            return "Crédito";
+          case 'efectivo':
+            return 'Efectivo';
+          case 'credito':
+            return 'Crédito';
           default:
             return method;
         }
       });
-      activeFilters.push(`Métodos: ${methodLabels.join(", ")}`);
+      activeFilters.push(`Métodos: ${methodLabels.join(', ')}`);
     }
 
     if (showSimulationSelector && selectedSimulation) {
@@ -357,14 +357,14 @@ export function SimulationFilterManager({
   return (
     <Card className="w-full border-blue-200 bg-blue-50/30">
       <CardHeader
-        className="pb-3 cursor-pointer hover:bg-blue-50 transition-colors"
+        className="cursor-pointer pb-3 transition-colors hover:bg-blue-50"
         onClick={() => setIsCollapsed(!isCollapsed)}
       >
-        <CardTitle className="text-lg font-medium flex items-center justify-between">
+        <CardTitle className="flex items-center justify-between text-lg font-medium">
           <div className="flex items-center gap-2">
             <Filter className="h-5 w-5 text-blue-600" />
             <span>Filtros de Simulación</span>
-            <Badge variant="outline" className="text-blue-600 border-blue-600">
+            <Badge variant="outline" className="border-blue-600 text-blue-600">
               Análisis
             </Badge>
           </div>
@@ -385,8 +385,8 @@ export function SimulationFilterManager({
             >
               <Settings
                 className={cn(
-                  "h-4 w-4 transition-transform",
-                  !isCollapsed && "rotate-90"
+                  'h-4 w-4 transition-transform',
+                  !isCollapsed && 'rotate-90'
                 )}
               />
             </Button>
@@ -398,7 +398,7 @@ export function SimulationFilterManager({
         <CardContent className="space-y-4 pt-0">
           {/* Filter summary */}
           {hasActiveFilters && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Zap className="h-4 w-4 text-blue-600" />
@@ -410,9 +410,9 @@ export function SimulationFilterManager({
                   variant="ghost"
                   size="sm"
                   onClick={handleResetFilters}
-                  className="h-6 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-100"
+                  className="h-6 text-xs text-blue-600 hover:bg-blue-100 hover:text-blue-700"
                 >
-                  <RotateCcw className="h-3 w-3 mr-1" />
+                  <RotateCcw className="mr-1 h-3 w-3" />
                   Restablecer
                 </Button>
               </div>
@@ -427,7 +427,7 @@ export function SimulationFilterManager({
           )}
 
           {/* Filter controls */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {/* Simulation selector */}
             {showSimulationSelector && (
               <div className="space-y-2">
@@ -501,7 +501,7 @@ export function SimulationFilterManager({
           {showComparisonPeriods && (
             <>
               <Separator className="bg-blue-200" />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-blue-900">
                     Períodos de Comparación
@@ -534,7 +534,7 @@ export function SimulationFilterManager({
                       onClick={handleResetFilters}
                       className="border-blue-200 text-blue-600 hover:bg-blue-50"
                     >
-                      <RotateCcw className="h-4 w-4 mr-2" />
+                      <RotateCcw className="mr-2 h-4 w-4" />
                       Restablecer
                     </Button>
                   </div>
@@ -544,13 +544,13 @@ export function SimulationFilterManager({
           )}
 
           {/* Status indicators */}
-          <div className="text-xs text-blue-600 bg-blue-50 p-2 rounded border border-blue-200">
+          <div className="rounded border border-blue-200 bg-blue-50 p-2 text-xs text-blue-600">
             <div className="flex items-center justify-between">
               <span>
-                Estado:{" "}
+                Estado:{' '}
                 {hasActiveFilters
                   ? `${filterSummary.length} filtros activos`
-                  : "Sin filtros activos"}
+                  : 'Sin filtros activos'}
               </span>
               {enableFilterPersistence && (
                 <span className="text-blue-500">

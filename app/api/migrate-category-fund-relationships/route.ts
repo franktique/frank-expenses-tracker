@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
-import { testConnection } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { testConnection } from '@/lib/db';
 import {
   migrateCategoryFundRelationships,
   checkMigrationStatus,
   ensureBackwardCompatibility,
-} from "@/lib/category-fund-migration";
+} from '@/lib/category-fund-migration';
 
 export async function GET() {
   try {
@@ -15,7 +15,7 @@ export async function GET() {
       return NextResponse.json(
         {
           success: false,
-          message: "Could not connect to the database: " + connectionTest.error,
+          message: 'Could not connect to the database: ' + connectionTest.error,
         },
         { status: 500 }
       );
@@ -27,10 +27,10 @@ export async function GET() {
     return NextResponse.json({
       success: true,
       status,
-      message: "Migration status retrieved successfully",
+      message: 'Migration status retrieved successfully',
     });
   } catch (error) {
-    console.error("Error checking migration status:", error);
+    console.error('Error checking migration status:', error);
     return NextResponse.json(
       {
         success: false,
@@ -50,7 +50,7 @@ export async function POST() {
       return NextResponse.json(
         {
           success: false,
-          message: "Could not connect to the database: " + connectionTest.error,
+          message: 'Could not connect to the database: ' + connectionTest.error,
         },
         { status: 500 }
       );
@@ -80,7 +80,7 @@ export async function POST() {
       status: migrationResult.success ? 200 : 500,
     });
   } catch (error) {
-    console.error("Error during category fund relationships migration:", error);
+    console.error('Error during category fund relationships migration:', error);
     return NextResponse.json(
       {
         success: false,
@@ -94,7 +94,7 @@ export async function POST() {
 // Rollback endpoint for migration (keeping existing functionality)
 export async function DELETE() {
   try {
-    const { sql } = await import("@/lib/db");
+    const { sql } = await import('@/lib/db');
 
     // First, test if we can connect to the database
     const connectionTest = await testConnection();
@@ -103,7 +103,7 @@ export async function DELETE() {
       return NextResponse.json(
         {
           success: false,
-          message: "Could not connect to the database: " + connectionTest.error,
+          message: 'Could not connect to the database: ' + connectionTest.error,
         },
         { status: 500 }
       );
@@ -123,7 +123,7 @@ export async function DELETE() {
       await sql`
         DROP FUNCTION IF EXISTS category_has_fund_restrictions(UUID)
       `;
-      console.log("Dropped validation functions");
+      console.log('Dropped validation functions');
 
       // Step 2: Drop indexes
       await sql`
@@ -132,13 +132,13 @@ export async function DELETE() {
       await sql`
         DROP INDEX IF EXISTS idx_category_fund_relationships_fund_id
       `;
-      console.log("Dropped category fund relationship indexes");
+      console.log('Dropped category fund relationship indexes');
 
       // Step 3: Drop the category_fund_relationships table
       await sql`
         DROP TABLE IF EXISTS category_fund_relationships CASCADE
       `;
-      console.log("Dropped category_fund_relationships table");
+      console.log('Dropped category_fund_relationships table');
 
       // Commit transaction
       await sql`COMMIT`;
@@ -146,7 +146,7 @@ export async function DELETE() {
       return NextResponse.json({
         success: true,
         message:
-          "Category fund relationships migration rollback completed successfully",
+          'Category fund relationships migration rollback completed successfully',
       });
     } catch (error) {
       // Rollback transaction on error
@@ -155,7 +155,7 @@ export async function DELETE() {
     }
   } catch (error) {
     console.error(
-      "Error during category fund relationships migration rollback:",
+      'Error during category fund relationships migration rollback:',
       error
     );
     return NextResponse.json(

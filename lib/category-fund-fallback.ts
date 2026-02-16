@@ -1,4 +1,4 @@
-import { Fund, Category } from "@/types/funds";
+import { Fund, Category } from '@/types/funds';
 
 /**
  * Enhanced fallback logic for categories without specific fund relationships
@@ -68,7 +68,7 @@ export class CategoryFundFallback {
     }
 
     // Priority 2: If fund filter is set and that fund is available, use it
-    if (fundFilter && fundFilter !== "all") {
+    if (fundFilter && fundFilter !== 'all') {
       const filterFund = availableFunds.find((f) => f.id === fundFilter);
       if (filterFund) {
         return filterFund;
@@ -90,14 +90,19 @@ export class CategoryFundFallback {
    * @param funds - Available funds
    * @param configuredDefaultFundId - Optional configured default fund ID from settings
    */
-  static getDefaultFund(funds: Fund[], configuredDefaultFundId?: string | null): Fund | null {
+  static getDefaultFund(
+    funds: Fund[],
+    configuredDefaultFundId?: string | null
+  ): Fund | null {
     if (!funds || funds.length === 0) {
       return null;
     }
 
     // Priority 1: Use configured default fund if provided and exists
     if (configuredDefaultFundId) {
-      const configuredFund = funds.find((fund) => fund.id === configuredDefaultFundId);
+      const configuredFund = funds.find(
+        (fund) => fund.id === configuredDefaultFundId
+      );
       if (configuredFund) {
         return configuredFund;
       }
@@ -105,7 +110,7 @@ export class CategoryFundFallback {
 
     // Priority 2: Look for "Disponible" fund (backward compatibility)
     const disponibleFund = funds.find(
-      (fund) => fund.name.toLowerCase() === "disponible"
+      (fund) => fund.name.toLowerCase() === 'disponible'
     );
     if (disponibleFund) {
       return disponibleFund;
@@ -113,7 +118,7 @@ export class CategoryFundFallback {
 
     // Priority 3: Look for any fund with "disponible" in the name
     const disponibleLikeFund = funds.find((fund) =>
-      fund.name.toLowerCase().includes("disponible")
+      fund.name.toLowerCase().includes('disponible')
     );
     if (disponibleLikeFund) {
       return disponibleLikeFund;
@@ -121,7 +126,7 @@ export class CategoryFundFallback {
 
     // Priority 4: Look for "default" fund
     const defaultFund = funds.find((fund) =>
-      fund.name.toLowerCase().includes("default")
+      fund.name.toLowerCase().includes('default')
     );
     if (defaultFund) {
       return defaultFund;
@@ -231,15 +236,15 @@ export class CategoryFundFallback {
       categories
     );
 
-    let selectedFundReason = "";
-    let message = "";
+    let selectedFundReason = '';
+    let message = '';
 
     if (!category) {
       return {
         hasRestrictions: false,
         availableFunds: [],
-        selectedFundReason: "Category not found",
-        message: "La categoría no fue encontrada",
+        selectedFundReason: 'Category not found',
+        message: 'La categoría no fue encontrada',
       };
     }
 
@@ -248,18 +253,18 @@ export class CategoryFundFallback {
         category.name
       }" está asociada con fondos específicos: ${availableFunds
         .map((f) => f.name)
-        .join(", ")}`;
+        .join(', ')}`;
 
       if (selectedFund) {
         if (availableFunds.some((f) => f.id === selectedFund.id)) {
-          selectedFundReason = "Fund is allowed for this category";
+          selectedFundReason = 'Fund is allowed for this category';
         } else {
-          selectedFundReason = "Fund is not allowed for this category";
+          selectedFundReason = 'Fund is not allowed for this category';
         }
       }
     } else {
       message = `La categoría "${category.name}" no tiene fondos específicos asociados, por lo que acepta gastos desde cualquier fondo`;
-      selectedFundReason = "Category accepts all funds";
+      selectedFundReason = 'Category accepts all funds';
     }
 
     return {

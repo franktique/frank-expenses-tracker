@@ -1,16 +1,18 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { z } from "zod";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { z } from 'zod';
 
 /**
  * Copy Period Data to Simulation Request Schema
  */
 const CopyFromPeriodSchema = z.object({
-  period_id: z.string().uuid("ID de período inválido"),
+  period_id: z.string().uuid('ID de período inválido'),
   mode: z
-    .enum(["merge", "replace"])
-    .default("merge")
-    .describe("Modo de copia: merge agrega a los datos existentes, replace los reemplaza"),
+    .enum(['merge', 'replace'])
+    .default('merge')
+    .describe(
+      'Modo de copia: merge agrega a los datos existentes, replace los reemplaza'
+    ),
 });
 
 /**
@@ -33,8 +35,8 @@ export async function POST(
     if (isNaN(simulationId) || simulationId <= 0) {
       return NextResponse.json(
         {
-          error: "ID de simulación inválido",
-          code: "INVALID_SIMULATION_ID",
+          error: 'ID de simulación inválido',
+          code: 'INVALID_SIMULATION_ID',
         },
         { status: 400 }
       );
@@ -47,8 +49,8 @@ export async function POST(
     if (!validation.success) {
       return NextResponse.json(
         {
-          error: "Datos de solicitud inválidos",
-          code: "INVALID_REQUEST_DATA",
+          error: 'Datos de solicitud inválidos',
+          code: 'INVALID_REQUEST_DATA',
           validation_errors: validation.error.errors,
         },
         { status: 400 }
@@ -65,8 +67,8 @@ export async function POST(
     if (!simulation) {
       return NextResponse.json(
         {
-          error: "Simulación no encontrada",
-          code: "SIMULATION_NOT_FOUND",
+          error: 'Simulación no encontrada',
+          code: 'SIMULATION_NOT_FOUND',
           simulation_id: simulationId,
         },
         { status: 404 }
@@ -81,8 +83,8 @@ export async function POST(
     if (!period) {
       return NextResponse.json(
         {
-          error: "Período no encontrado",
-          code: "PERIOD_NOT_FOUND",
+          error: 'Período no encontrado',
+          code: 'PERIOD_NOT_FOUND',
           period_id,
         },
         { status: 404 }
@@ -113,17 +115,19 @@ export async function POST(
     `;
 
     // Debug logging
-    console.log(`=== COPY: Period ${period_id} budgets query returned ${periodBudgets.length} categories ===`);
+    console.log(
+      `=== COPY: Period ${period_id} budgets query returned ${periodBudgets.length} categories ===`
+    );
     if (periodBudgets.length > 0) {
-      console.log("Sample budgets:", periodBudgets.slice(0, 3));
+      console.log('Sample budgets:', periodBudgets.slice(0, 3));
     }
 
     // Check if period has any data
     if (periodIncomes.length === 0 && periodBudgets.length === 0) {
       return NextResponse.json(
         {
-          error: "El período seleccionado no contiene datos para copiar",
-          code: "EMPTY_PERIOD",
+          error: 'El período seleccionado no contiene datos para copiar',
+          code: 'EMPTY_PERIOD',
           period: {
             id: period.id,
             name: period.name,
@@ -134,7 +138,7 @@ export async function POST(
     }
 
     // If mode is "replace", delete existing simulation data
-    if (mode === "replace") {
+    if (mode === 'replace') {
       await sql`DELETE FROM simulation_incomes WHERE simulation_id = ${simulationId}`;
       await sql`DELETE FROM simulation_budgets WHERE simulation_id = ${simulationId}`;
     }
@@ -171,7 +175,7 @@ export async function POST(
         if (!category) {
           budgetErrors.push({
             category_id: budget.category_id,
-            error: "Categoría no encontrada",
+            error: 'Categoría no encontrada',
           });
           continue;
         }
@@ -181,11 +185,13 @@ export async function POST(
 
         // Skip budgets with zero amounts
         if (efectivoAmount === 0 && creditoAmount === 0) {
-          console.log(`Skipping budget for category ${budget.category_id} - both amounts are 0`);
+          console.log(
+            `Skipping budget for category ${budget.category_id} - both amounts are 0`
+          );
           continue;
         }
 
-        if (mode === "merge") {
+        if (mode === 'merge') {
           // Merge mode: Use UPSERT to add to existing or create new
           await sql`
             INSERT INTO simulation_budgets (simulation_id, category_id, efectivo_amount, credito_amount)
@@ -220,7 +226,7 @@ export async function POST(
           error:
             budgetError instanceof Error
               ? budgetError.message
-              : "Error desconocido",
+              : 'Error desconocido',
         });
       }
     }
@@ -234,17 +240,20 @@ export async function POST(
 
     // Calculate totals for response
     const totalIncome = periodIncomes.reduce(
-      (sum, income) => sum + Number(income.total_amount),
+      (sum: number, income: { total_amount: string | number }) =>
+        sum + Number(income.total_amount),
       0
     );
 
     const totalBudgetEfectivo = periodBudgets.reduce(
-      (sum, budget) => sum + Number(budget.efectivo_amount),
+      (sum: number, budget: { efectivo_amount: string | number }) =>
+        sum + Number(budget.efectivo_amount),
       0
     );
 
     const totalBudgetCredito = periodBudgets.reduce(
-      (sum, budget) => sum + Number(budget.credito_amount),
+      (sum: number, budget: { credito_amount: string | number }) =>
+        sum + Number(budget.credito_amount),
       0
     );
 
@@ -258,9 +267,9 @@ export async function POST(
     const response: any = {
       success: true,
       message:
-        mode === "replace"
-          ? "Datos del período copiados exitosamente (reemplazando datos existentes)"
-          : "Datos del período copiados exitosamente (agregados a datos existentes)",
+        mode === 'replace'
+          ? 'Datos del período copiados exitosamente (reemplazando datos existentes)'
+          : 'Datos del período copiados exitosamente (agregados a datos existentes)',
       mode,
       copied: {
         incomes_count: copiedIncomesCount,
@@ -288,24 +297,23 @@ export async function POST(
     if (budgetErrors.length > 0) {
       response.partial_success = true;
       response.errors = budgetErrors;
-      response.message +=
-        ". Algunos presupuestos no pudieron ser copiados.";
+      response.message += '. Algunos presupuestos no pudieron ser copiados.';
     }
 
     return NextResponse.json(response, { status: 200 });
   } catch (error) {
-    console.error("Error copying period data to simulation:", error);
+    console.error('Error copying period data to simulation:', error);
 
     if (error instanceof Error) {
       // Database connection errors
       if (
-        error.message.includes("connection") ||
-        error.message.includes("timeout")
+        error.message.includes('connection') ||
+        error.message.includes('timeout')
       ) {
         return NextResponse.json(
           {
-            error: "Error de conexión con la base de datos",
-            code: "DATABASE_CONNECTION_ERROR",
+            error: 'Error de conexión con la base de datos',
+            code: 'DATABASE_CONNECTION_ERROR',
             retryable: true,
           },
           { status: 503 }
@@ -314,13 +322,13 @@ export async function POST(
 
       // Foreign key constraint errors
       if (
-        error.message.includes("foreign key") ||
-        error.message.includes("constraint")
+        error.message.includes('foreign key') ||
+        error.message.includes('constraint')
       ) {
         return NextResponse.json(
           {
-            error: "Error de integridad de datos al copiar",
-            code: "FOREIGN_KEY_CONSTRAINT",
+            error: 'Error de integridad de datos al copiar',
+            code: 'FOREIGN_KEY_CONSTRAINT',
             details: error.message,
           },
           { status: 409 }
@@ -330,8 +338,8 @@ export async function POST(
 
     return NextResponse.json(
       {
-        error: "Error interno del servidor al copiar datos del período",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error interno del servidor al copiar datos del período',
+        code: 'INTERNAL_SERVER_ERROR',
         retryable: true,
       },
       { status: 500 }

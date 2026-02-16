@@ -46,6 +46,7 @@ state updated → lastUpdated changes → cycle repeats
 **Status**: Partially Fixed
 
 **Original Problem**:
+
 ```typescript
 useEffect(() => {
   if (filterState.selectedEstudio !== null) {
@@ -59,6 +60,7 @@ useEffect(() => {
 - `lastUpdated` change triggered effect again
 
 **Fix Applied**:
+
 ```typescript
 useEffect(() => {
   if (filterState.selectedEstudio !== null) {
@@ -78,6 +80,7 @@ useEffect(() => {
 **Status**: Fixed
 
 **Original Problem**:
+
 ```typescript
 const fetchEstudios = useCallback(async () => {
   // ...
@@ -93,6 +96,7 @@ const fetchEstudios = useCallback(async () => {
 - **Result**: 189 API calls to `/api/estudios`
 
 **Fix Applied**:
+
 ```typescript
 const [isFilterInitialized, setIsFilterInitialized] = useState(false);
 const { updateEstudio, updateGroupers, updatePaymentMethods } = filterSync;
@@ -122,6 +126,7 @@ useEffect(() => {
 **Status**: Fixed
 
 **Original Problem**:
+
 ```typescript
 const fetchGroupers = useCallback(async () => {
   // ...
@@ -133,12 +138,16 @@ const fetchGroupers = useCallback(async () => {
 - Effects depending on `fetchGroupers` ran repeatedly
 
 **Fix Applied**:
+
 ```typescript
 const { updateGroupers } = filterSync;
 
-const fetchGroupers = useCallback(async (estudioId: number) => {
-  // ...
-}, [updateGroupers, toast]); // Stable extracted reference
+const fetchGroupers = useCallback(
+  async (estudioId: number) => {
+    // ...
+  },
+  [updateGroupers, toast]
+); // Stable extracted reference
 
 useEffect(() => {
   if (selectedEstudio) {
@@ -159,11 +168,15 @@ useEffect(() => {
 **Status**: Fixed but Component Disabled for Testing
 
 **Original Problem**:
+
 ```typescript
-const { currentSimulationId, simulationBudgetCount } = useMemo(() => ({
-  currentSimulationId: currentSimulation?.id || null,
-  simulationBudgetCount: currentSimulation?.budget_count || 0,
-}), [currentSimulation?.id, currentSimulation?.budget_count]);
+const { currentSimulationId, simulationBudgetCount } = useMemo(
+  () => ({
+    currentSimulationId: currentSimulation?.id || null,
+    simulationBudgetCount: currentSimulation?.budget_count || 0,
+  }),
+  [currentSimulation?.id, currentSimulation?.budget_count]
+);
 
 useEffect(() => {
   const loadNavigationContext = async () => {
@@ -174,23 +187,31 @@ useEffect(() => {
 ```
 
 **Issues**:
+
 1. `simulationBudgetCount` in dependencies caused effect to run when budget changes
 2. Parent component re-render changed `currentSimulation` reference
 3. Component lacked custom comparison in React.memo
 4. Workflow suggestions recalculated unnecessarily
 
 **Fix Applied**:
+
 ```typescript
 // Removed simulationBudgetCount memoization
-const { currentSimulationId } = useMemo(() => ({
-  currentSimulationId: currentSimulation?.id || null,
-}), [currentSimulation?.id]);
+const { currentSimulationId } = useMemo(
+  () => ({
+    currentSimulationId: currentSimulation?.id || null,
+  }),
+  [currentSimulation?.id]
+);
 
 useEffect(() => {
   const loadNavigationContext = async () => {
     // Use currentSimulation?.budget_count directly
     const suggestions = generateWorkflowSuggestions(
-      { id: currentSimulationId, budget_count: currentSimulation?.budget_count || 0 } as Simulation,
+      {
+        id: currentSimulationId,
+        budget_count: currentSimulation?.budget_count || 0,
+      } as Simulation,
       isAnalyticsPage,
       isConfigPage
     );
@@ -203,13 +224,15 @@ useEffect(() => {
 export default React.memo(SimulationQuickActions, (prevProps, nextProps) => {
   return (
     prevProps.currentSimulation?.id === nextProps.currentSimulation?.id &&
-    prevProps.currentSimulation?.budget_count === nextProps.currentSimulation?.budget_count &&
+    prevProps.currentSimulation?.budget_count ===
+      nextProps.currentSimulation?.budget_count &&
     prevProps.showWorkflowSuggestions === nextProps.showWorkflowSuggestions
   );
 });
 ```
 
 **Testing Result**:
+
 - Component fixed but error persisted
 - Disabled component for further testing (lines 518-526 of page.tsx)
 - Revealed additional infinite loop source in SimulationFilterManager
@@ -223,12 +246,14 @@ export default React.memo(SimulationQuickActions, (prevProps, nextProps) => {
 **Status**: Identified but Not Fixed
 
 **Problem Identified**:
+
 ```
 Error: Maximum update depth exceeded
   at SimulationFilterManager -> components/ui/select.tsx (19:3)
 ```
 
 **Root Cause (Suspected)**:
+
 1. Parent `SimulationAnalyticsDashboard` passes unstable props
 2. Props change reference on every render
 3. SimulationFilterManager re-renders
@@ -236,6 +261,7 @@ Error: Maximum update depth exceeded
 5. Cycle repeats
 
 **Specific Unstable Props (Lines 400-416 of analytics page)**:
+
 ```typescript
 <SimulationFilterManager
   estudios={estudios}           // Array - may change reference
@@ -253,6 +279,7 @@ Error: Maximum update depth exceeded
 ```
 
 **Required Fixes**:
+
 1. Memoize array props (`estudios`, `groupers`, `paymentMethods`)
 2. Use `useCallback` for all handler functions
 3. Add custom React.memo comparison to SimulationFilterManager
@@ -270,12 +297,14 @@ Error: Maximum update depth exceeded
 Parent component of SimulationFilterManager, likely source of unstable props.
 
 **Suspected Issues**:
+
 1. Props passed to children change reference on every render
 2. Callback functions recreated without `useCallback`
 3. Array/object props not memoized with `useMemo`
 4. Component may not use React.memo for optimization
 
 **Required Investigation**:
+
 - Read full component source code
 - Identify all props passed to SimulationFilterManager
 - Check for proper memoization
@@ -290,16 +319,19 @@ Parent component of SimulationFilterManager, likely source of unstable props.
 **Status**: Reduced but Not Optimal
 
 **Current Behavior**:
+
 - `/api/simulations` called 6 times per page load
 - Should be 0-1 calls (data should come from parent or be cached)
 
 **Suspected Sources**:
+
 1. SimulationQuickActions - loads all simulations for navigation (disabled)
 2. SimulationNavigation - may load simulations for breadcrumb
 3. SimulationBreadcrumb - may load simulation data
 4. Multiple useEffect blocks may be fetching independently
 
 **Required Investigation**:
+
 - Trace all API calls to `/api/simulations`
 - Implement shared data fetching or prop drilling from parent
 - Add proper caching mechanism
@@ -323,6 +355,7 @@ SimulationAnalyticsPage (page.tsx)
 ```
 
 **Re-render Cascade Flow**:
+
 1. Page renders with initial state
 2. SimulationFilterManager receives props
 3. Select component changes trigger state updates
@@ -337,26 +370,31 @@ SimulationAnalyticsPage (page.tsx)
 ## Test Results Summary
 
 ### Test 1: Initial State (Before Fixes)
+
 - **Error**: Maximum update depth exceeded
 - **Location**: useSimulationFilterSync hook
 - **API Calls**: 189 calls to `/api/estudios`, 6 calls to `/api/simulations`
 
 ### Test 2: After Filter Sync Fix
+
 - **Error**: Maximum update depth exceeded (persisted)
 - **Location**: SimulationQuickActions component
 - **API Calls**: 189 calls to `/api/estudios`, 6 calls to `/api/simulations`
 
 ### Test 3: After fetchEstudios Fix
+
 - **Error**: Maximum update depth exceeded (persisted)
 - **Location**: SimulationQuickActions component
 - **API Calls**: 1 call to `/api/estudios` ✅, 6 calls to `/api/simulations`
 
 ### Test 4: After SimulationQuickActions Fix
+
 - **Error**: Maximum update depth exceeded (persisted)
 - **Location**: SimulationQuickActions component (still)
 - **API Calls**: 1 call to `/api/estudios` ✅, 6 calls to `/api/simulations`
 
 ### Test 5: After Disabling SimulationQuickActions
+
 - **Error**: Maximum update depth exceeded (NEW SOURCE)
 - **Location**: SimulationFilterManager → Select component
 - **API Calls**: 1 call to `/api/estudios` ✅, 6 calls to `/api/simulations`
@@ -372,12 +410,14 @@ SimulationAnalyticsPage (page.tsx)
 **Goal**: Make page usable immediately
 
 **Actions**:
+
 1. Temporarily disable entire analytics dashboard section
 2. Replace with "Under Maintenance" or "Coming Soon" message
 3. Provide link back to configuration page
 4. Remove all problematic components from render tree
 
 **Implementation**:
+
 ```typescript
 // Replace lines 688+ in page.tsx
 <TabsContent value="analytics">
@@ -403,6 +443,7 @@ SimulationAnalyticsPage (page.tsx)
 ```
 
 **Benefits**:
+
 - Immediate resolution - page becomes usable
 - Prevents user frustration with loading errors
 - Provides time for proper systematic refactoring
@@ -416,11 +457,13 @@ SimulationAnalyticsPage (page.tsx)
 **Goal**: Fix shared infrastructure and hooks
 
 **Components to Fix**:
+
 1. ✅ useSimulationFilterSync hook (DONE)
 2. Stabilize all hook return values
 3. Add comprehensive memoization to hook
 
 **Actions**:
+
 - Ensure all returned functions use `useCallback`
 - Ensure all returned objects use `useMemo`
 - Add tests for hook stability
@@ -432,6 +475,7 @@ SimulationAnalyticsPage (page.tsx)
 **Goal**: Fix components from leaf nodes upward
 
 **Order of Operations**:
+
 1. **SimulationFilterManager** (Leaf component)
    - Add React.memo with custom comparison
    - Ensure internal state updates don't trigger parent renders
@@ -459,6 +503,7 @@ SimulationAnalyticsPage (page.tsx)
 **Goal**: Optimize performance and verify stability
 
 **Actions**:
+
 1. Reduce API calls to minimum required
 2. Implement shared data caching
 3. Add React DevTools Profiler measurements
@@ -472,6 +517,7 @@ SimulationAnalyticsPage (page.tsx)
 **Goal**: Return analytics to production with monitoring
 
 **Actions**:
+
 1. Re-enable analytics dashboard
 2. Add error boundary around analytics section
 3. Add performance monitoring
@@ -482,6 +528,7 @@ SimulationAnalyticsPage (page.tsx)
 ## Prevention Guidelines for Future Development
 
 ### 1. Hook Dependency Rules
+
 ```typescript
 // ❌ BAD - Unstable object dependency
 useEffect(() => {
@@ -496,6 +543,7 @@ useEffect(() => {
 ```
 
 ### 2. Callback Memoization
+
 ```typescript
 // ❌ BAD - Function recreated every render
 const handleClick = () => {
@@ -509,6 +557,7 @@ const handleClick = useCallback(() => {
 ```
 
 ### 3. Array/Object Props
+
 ```typescript
 // ❌ BAD - New array reference every render
 <Component items={data.map(d => d.value)} />
@@ -522,6 +571,7 @@ const processedItems = useMemo(
 ```
 
 ### 4. React.memo Usage
+
 ```typescript
 // ❌ BAD - Default shallow comparison
 export default React.memo(MyComponent);
@@ -537,6 +587,7 @@ export default React.memo(MyComponent, (prevProps, nextProps) => {
 ```
 
 ### 5. useEffect Best Practices
+
 ```typescript
 // ❌ BAD - Function in dependencies
 useEffect(() => {
@@ -559,6 +610,7 @@ useEffect(() => {
 ## Monitoring Recommendations
 
 ### Development Tools
+
 1. **React DevTools Profiler**
    - Measure component render frequency
    - Identify components rendering unnecessarily
@@ -575,6 +627,7 @@ useEffect(() => {
    - Measure request timing
 
 ### Production Monitoring
+
 1. **Error Tracking**
    - Track "Maximum update depth" errors
    - Monitor error rates per page
@@ -614,6 +667,7 @@ The infinite loop issue is not a single bug but a systemic architectural problem
 ## Appendix: Code Snippets
 
 ### A. Current Error Stack Trace
+
 ```
 Error: Maximum update depth exceeded. This can happen when a component
 calls setState inside useEffect, but useEffect either doesn't have a
@@ -624,6 +678,7 @@ at SelectPrimitive.Root (webpack-internal:///(app-pages-browser)/./node_modules/
 ```
 
 ### B. Network Request Pattern (Test 5)
+
 ```
 GET /api/estudios - 200 OK (1 call) ✅
 GET /api/simulations - 200 OK (6 calls) ⚠️
@@ -631,6 +686,7 @@ GET /api/simulations/123 - 200 OK (1 call) ✅
 ```
 
 ### C. Console Warning Pattern
+
 ```
 Warning: Cannot update a component (`SimulationAnalyticsPage`) while
 rendering a different component (`SimulationFilterManager`). To locate

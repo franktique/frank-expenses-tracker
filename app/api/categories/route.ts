@@ -1,6 +1,6 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { CreateCategorySchema, DEFAULT_FUND_NAME } from "@/types/funds";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { CreateCategorySchema, DEFAULT_FUND_NAME } from '@/types/funds';
 
 export async function GET() {
   try {
@@ -57,7 +57,7 @@ export async function GET() {
 
     return NextResponse.json(enhancedCategories);
   } catch (error) {
-    console.error("Error fetching categories:", error);
+    console.error('Error fetching categories:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -73,12 +73,13 @@ export async function POST(request: NextRequest) {
     const validationResult = CreateCategorySchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: validationResult.error.errors },
+        { error: 'Validation failed', details: validationResult.error.errors },
         { status: 400 }
       );
     }
 
-    const { name, fund_id, tipo_gasto, default_day, recurrence_frequency } = validationResult.data;
+    const { name, fund_id, tipo_gasto, default_day, recurrence_frequency } =
+      validationResult.data;
     const { fund_ids } = body; // Extract fund_ids from raw body
 
     // Determine which fund approach to use
@@ -95,7 +96,7 @@ export async function POST(request: NextRequest) {
         `;
         if (existingFunds.length !== fundsToAssociate.length) {
           return NextResponse.json(
-            { error: "Algunos fondos especificados no existen" },
+            { error: 'Algunos fondos especificados no existen' },
             { status: 400 }
           );
         }
@@ -105,7 +106,7 @@ export async function POST(request: NextRequest) {
       const [fund] = await sql`SELECT id FROM funds WHERE id = ${fund_id}`;
       if (!fund) {
         return NextResponse.json(
-          { error: "El fondo especificado no existe" },
+          { error: 'El fondo especificado no existe' },
           { status: 400 }
         );
       }
@@ -176,7 +177,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(enhancedCategory);
   } catch (error) {
-    console.error("Error creating category:", error);
+    console.error('Error creating category:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

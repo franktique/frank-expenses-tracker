@@ -1,14 +1,14 @@
-"use client";
+'use client';
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from '@/components/ui/badge';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { PAYMENT_METHODS } from "@/components/payment-method-selector";
-import { HelpCircle } from "lucide-react";
+} from '@/components/ui/tooltip';
+import { PAYMENT_METHODS } from '@/components/payment-method-selector';
+import { HelpCircle } from 'lucide-react';
 
 interface PaymentMethodBadgesProps {
   selectedMethods: string[];
@@ -18,12 +18,12 @@ interface PaymentMethodBadgesProps {
 
 export function PaymentMethodBadges({
   selectedMethods,
-  className = "",
+  className = '',
   showTooltip = true,
 }: PaymentMethodBadgesProps) {
   const getTooltipContent = () => {
     if (selectedMethods.length === 0) {
-      return "Este agrupador incluye gastos de todos los métodos de pago (efectivo, crédito y débito)";
+      return 'Este agrupador incluye gastos de todos los métodos de pago (efectivo, crédito y débito)';
     }
 
     const methodLabels = selectedMethods
@@ -31,7 +31,7 @@ export function PaymentMethodBadges({
         (method) =>
           PAYMENT_METHODS.find((m) => m.value === method)?.label || method
       )
-      .join(", ");
+      .join(', ');
 
     return `Este agrupador solo incluye gastos de: ${methodLabels}`;
   };

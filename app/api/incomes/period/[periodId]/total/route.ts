@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
@@ -7,11 +7,11 @@ export async function GET(
 ) {
   try {
     const { periodId } = await params;
-    
+
     // Don't parse as integer since periods might use UUIDs
     if (!periodId || periodId.trim() === '') {
       return NextResponse.json(
-        { error: "ID de período inválido" },
+        { error: 'ID de período inválido' },
         { status: 400 }
       );
     }
@@ -23,7 +23,7 @@ export async function GET(
 
     if (!period) {
       return NextResponse.json(
-        { error: "Período no encontrado" },
+        { error: 'Período no encontrado' },
         { status: 404 }
       );
     }
@@ -62,15 +62,14 @@ export async function GET(
       income_by_fund: incomeByFund.map((fund: FundIncomeRow) => ({
         fund_id: fund.fund_id,
         fund_name: fund.fund_name,
-        amount: parseFloat(fund.amount.toString())
-      }))
+        amount: parseFloat(fund.amount.toString()),
+      })),
     });
-
   } catch (error) {
     const { periodId } = await params;
     console.error(`Error fetching total income for period ${periodId}:`, error);
     return NextResponse.json(
-      { error: "Error interno del servidor. Intente nuevamente." },
+      { error: 'Error interno del servidor. Intente nuevamente.' },
       { status: 500 }
     );
   }

@@ -1,19 +1,19 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent } from '@testing-library/react';
 import {
   PaymentMethodSelector,
   PAYMENT_METHODS,
   PaymentMethod,
-} from "../payment-method-selector";
+} from '../payment-method-selector';
 
-describe("PaymentMethodSelector", () => {
+describe('PaymentMethodSelector', () => {
   const mockOnSelectionChange = jest.fn();
 
   beforeEach(() => {
     mockOnSelectionChange.mockClear();
   });
 
-  describe("Initial Rendering", () => {
-    it("renders with default label", () => {
+  describe('Initial Rendering', () => {
+    it('renders with default label', () => {
       render(
         <PaymentMethodSelector
           selectedMethods={[]}
@@ -21,10 +21,10 @@ describe("PaymentMethodSelector", () => {
         />
       );
 
-      expect(screen.getByText("Métodos de Pago")).toBeInTheDocument();
+      expect(screen.getByText('Métodos de Pago')).toBeInTheDocument();
     });
 
-    it("renders with custom label", () => {
+    it('renders with custom label', () => {
       render(
         <PaymentMethodSelector
           selectedMethods={[]}
@@ -33,10 +33,10 @@ describe("PaymentMethodSelector", () => {
         />
       );
 
-      expect(screen.getByText("Custom Payment Methods")).toBeInTheDocument();
+      expect(screen.getByText('Custom Payment Methods')).toBeInTheDocument();
     });
 
-    it("renders all payment method options", () => {
+    it('renders all payment method options', () => {
       render(
         <PaymentMethodSelector
           selectedMethods={[]}
@@ -44,14 +44,14 @@ describe("PaymentMethodSelector", () => {
         />
       );
 
-      expect(screen.getByText("Todos los métodos")).toBeInTheDocument();
-      expect(screen.getByText("Efectivo")).toBeInTheDocument();
-      expect(screen.getByText("Crédito")).toBeInTheDocument();
-      expect(screen.getByText("Débito")).toBeInTheDocument();
+      expect(screen.getByText('Todos los métodos')).toBeInTheDocument();
+      expect(screen.getByText('Efectivo')).toBeInTheDocument();
+      expect(screen.getByText('Crédito')).toBeInTheDocument();
+      expect(screen.getByText('Débito')).toBeInTheDocument();
     });
   });
 
-  describe("All Methods Selection", () => {
+  describe('All Methods Selection', () => {
     it('shows "All Methods" as checked when no specific methods are selected', () => {
       render(
         <PaymentMethodSelector
@@ -60,7 +60,7 @@ describe("PaymentMethodSelector", () => {
         />
       );
 
-      const allMethodsCheckbox = screen.getByRole("checkbox", {
+      const allMethodsCheckbox = screen.getByRole('checkbox', {
         name: /todos los métodos/i,
       });
       expect(allMethodsCheckbox).toBeChecked();
@@ -74,9 +74,9 @@ describe("PaymentMethodSelector", () => {
         />
       );
 
-      const cashCheckbox = screen.getByRole("checkbox", { name: /efectivo/i });
-      const creditCheckbox = screen.getByRole("checkbox", { name: /crédito/i });
-      const debitCheckbox = screen.getByRole("checkbox", { name: /débito/i });
+      const cashCheckbox = screen.getByRole('checkbox', { name: /efectivo/i });
+      const creditCheckbox = screen.getByRole('checkbox', { name: /crédito/i });
+      const debitCheckbox = screen.getByRole('checkbox', { name: /débito/i });
 
       expect(cashCheckbox).toBeDisabled();
       expect(creditCheckbox).toBeDisabled();
@@ -91,27 +91,27 @@ describe("PaymentMethodSelector", () => {
         />
       );
 
-      const allMethodsCheckbox = screen.getByRole("checkbox", {
+      const allMethodsCheckbox = screen.getByRole('checkbox', {
         name: /todos los métodos/i,
       });
       fireEvent.click(allMethodsCheckbox);
 
       expect(mockOnSelectionChange).toHaveBeenCalledWith([
-        "cash",
-        "credit",
-        "debit",
+        'cash',
+        'credit',
+        'debit',
       ]);
     });
 
     it('calls onSelectionChange with empty array when checking "All Methods"', () => {
       render(
         <PaymentMethodSelector
-          selectedMethods={["cash", "credit"]}
+          selectedMethods={['cash', 'credit']}
           onSelectionChange={mockOnSelectionChange}
         />
       );
 
-      const allMethodsCheckbox = screen.getByRole("checkbox", {
+      const allMethodsCheckbox = screen.getByRole('checkbox', {
         name: /todos los métodos/i,
       });
       fireEvent.click(allMethodsCheckbox);
@@ -120,18 +120,18 @@ describe("PaymentMethodSelector", () => {
     });
   });
 
-  describe("Individual Method Selection", () => {
-    it("shows specific methods as checked when they are in selectedMethods", () => {
+  describe('Individual Method Selection', () => {
+    it('shows specific methods as checked when they are in selectedMethods', () => {
       render(
         <PaymentMethodSelector
-          selectedMethods={["cash", "credit"]}
+          selectedMethods={['cash', 'credit']}
           onSelectionChange={mockOnSelectionChange}
         />
       );
 
-      const cashCheckbox = screen.getByRole("checkbox", { name: /efectivo/i });
-      const creditCheckbox = screen.getByRole("checkbox", { name: /crédito/i });
-      const debitCheckbox = screen.getByRole("checkbox", { name: /débito/i });
+      const cashCheckbox = screen.getByRole('checkbox', { name: /efectivo/i });
+      const creditCheckbox = screen.getByRole('checkbox', { name: /crédito/i });
+      const debitCheckbox = screen.getByRole('checkbox', { name: /débito/i });
 
       expect(cashCheckbox).toBeChecked();
       expect(creditCheckbox).toBeChecked();
@@ -141,76 +141,76 @@ describe("PaymentMethodSelector", () => {
     it('shows "All Methods" as unchecked when specific methods are selected', () => {
       render(
         <PaymentMethodSelector
-          selectedMethods={["cash"]}
+          selectedMethods={['cash']}
           onSelectionChange={mockOnSelectionChange}
         />
       );
 
-      const allMethodsCheckbox = screen.getByRole("checkbox", {
+      const allMethodsCheckbox = screen.getByRole('checkbox', {
         name: /todos los métodos/i,
       });
       expect(allMethodsCheckbox).not.toBeChecked();
     });
 
-    it("adds method to selection when checking an unchecked method", () => {
+    it('adds method to selection when checking an unchecked method', () => {
       render(
         <PaymentMethodSelector
-          selectedMethods={["cash"]}
+          selectedMethods={['cash']}
           onSelectionChange={mockOnSelectionChange}
         />
       );
 
-      const creditCheckbox = screen.getByRole("checkbox", { name: /crédito/i });
+      const creditCheckbox = screen.getByRole('checkbox', { name: /crédito/i });
       fireEvent.click(creditCheckbox);
 
-      expect(mockOnSelectionChange).toHaveBeenCalledWith(["cash", "credit"]);
+      expect(mockOnSelectionChange).toHaveBeenCalledWith(['cash', 'credit']);
     });
 
-    it("removes method from selection when unchecking a checked method", () => {
+    it('removes method from selection when unchecking a checked method', () => {
       render(
         <PaymentMethodSelector
-          selectedMethods={["cash", "credit"]}
+          selectedMethods={['cash', 'credit']}
           onSelectionChange={mockOnSelectionChange}
         />
       );
 
-      const cashCheckbox = screen.getByRole("checkbox", { name: /efectivo/i });
+      const cashCheckbox = screen.getByRole('checkbox', { name: /efectivo/i });
       fireEvent.click(cashCheckbox);
 
-      expect(mockOnSelectionChange).toHaveBeenCalledWith(["credit"]);
+      expect(mockOnSelectionChange).toHaveBeenCalledWith(['credit']);
     });
 
-    it("does not duplicate methods when checking an already selected method", () => {
+    it('does not duplicate methods when checking an already selected method', () => {
       render(
         <PaymentMethodSelector
-          selectedMethods={["cash"]}
+          selectedMethods={['cash']}
           onSelectionChange={mockOnSelectionChange}
         />
       );
 
-      const cashCheckbox = screen.getByRole("checkbox", { name: /efectivo/i });
+      const cashCheckbox = screen.getByRole('checkbox', { name: /efectivo/i });
       fireEvent.click(cashCheckbox);
 
       expect(mockOnSelectionChange).toHaveBeenCalledWith([]);
     });
   });
 
-  describe("Disabled State", () => {
-    it("disables all checkboxes when disabled prop is true", () => {
+  describe('Disabled State', () => {
+    it('disables all checkboxes when disabled prop is true', () => {
       render(
         <PaymentMethodSelector
-          selectedMethods={["cash"]}
+          selectedMethods={['cash']}
           onSelectionChange={mockOnSelectionChange}
           disabled={true}
         />
       );
 
-      const allMethodsCheckbox = screen.getByRole("checkbox", {
+      const allMethodsCheckbox = screen.getByRole('checkbox', {
         name: /todos los métodos/i,
       });
-      const cashCheckbox = screen.getByRole("checkbox", { name: /efectivo/i });
-      const creditCheckbox = screen.getByRole("checkbox", { name: /crédito/i });
-      const debitCheckbox = screen.getByRole("checkbox", { name: /débito/i });
+      const cashCheckbox = screen.getByRole('checkbox', { name: /efectivo/i });
+      const creditCheckbox = screen.getByRole('checkbox', { name: /crédito/i });
+      const debitCheckbox = screen.getByRole('checkbox', { name: /débito/i });
 
       expect(allMethodsCheckbox).toBeDisabled();
       expect(cashCheckbox).toBeDisabled();
@@ -218,7 +218,7 @@ describe("PaymentMethodSelector", () => {
       expect(debitCheckbox).toBeDisabled();
     });
 
-    it("does not call onSelectionChange when disabled", () => {
+    it('does not call onSelectionChange when disabled', () => {
       render(
         <PaymentMethodSelector
           selectedMethods={[]}
@@ -227,7 +227,7 @@ describe("PaymentMethodSelector", () => {
         />
       );
 
-      const allMethodsCheckbox = screen.getByRole("checkbox", {
+      const allMethodsCheckbox = screen.getByRole('checkbox', {
         name: /todos los métodos/i,
       });
       fireEvent.click(allMethodsCheckbox);
@@ -236,8 +236,8 @@ describe("PaymentMethodSelector", () => {
     });
   });
 
-  describe("Helper Text", () => {
-    it("shows correct helper text when all methods are selected", () => {
+  describe('Helper Text', () => {
+    it('shows correct helper text when all methods are selected', () => {
       render(
         <PaymentMethodSelector
           selectedMethods={[]}
@@ -250,20 +250,20 @@ describe("PaymentMethodSelector", () => {
       ).toBeInTheDocument();
     });
 
-    it("shows correct helper text when specific methods are selected", () => {
+    it('shows correct helper text when specific methods are selected', () => {
       render(
         <PaymentMethodSelector
-          selectedMethods={["cash", "credit"]}
+          selectedMethods={['cash', 'credit']}
           onSelectionChange={mockOnSelectionChange}
         />
       );
 
       expect(
-        screen.getByText("Se incluirán gastos de: Efectivo, Crédito")
+        screen.getByText('Se incluirán gastos de: Efectivo, Crédito')
       ).toBeInTheDocument();
     });
 
-    it("shows correct helper text when no methods are specifically selected but not all", () => {
+    it('shows correct helper text when no methods are specifically selected but not all', () => {
       render(
         <PaymentMethodSelector
           selectedMethods={[]}
@@ -277,7 +277,7 @@ describe("PaymentMethodSelector", () => {
       ).toBeInTheDocument();
     });
 
-    it("shows enhanced tip text", () => {
+    it('shows enhanced tip text', () => {
       render(
         <PaymentMethodSelector
           selectedMethods={[]}
@@ -291,9 +291,9 @@ describe("PaymentMethodSelector", () => {
     });
   });
 
-  describe("TypeScript Interfaces", () => {
-    it("accepts valid PaymentMethod values", () => {
-      const validMethods: PaymentMethod[] = ["cash", "credit", "debit"];
+  describe('TypeScript Interfaces', () => {
+    it('accepts valid PaymentMethod values', () => {
+      const validMethods: PaymentMethod[] = ['cash', 'credit', 'debit'];
 
       render(
         <PaymentMethodSelector
@@ -302,24 +302,24 @@ describe("PaymentMethodSelector", () => {
         />
       );
 
-      expect(screen.getByRole("checkbox", { name: /efectivo/i })).toBeChecked();
-      expect(screen.getByRole("checkbox", { name: /crédito/i })).toBeChecked();
-      expect(screen.getByRole("checkbox", { name: /débito/i })).toBeChecked();
+      expect(screen.getByRole('checkbox', { name: /efectivo/i })).toBeChecked();
+      expect(screen.getByRole('checkbox', { name: /crédito/i })).toBeChecked();
+      expect(screen.getByRole('checkbox', { name: /débito/i })).toBeChecked();
     });
   });
 
-  describe("PAYMENT_METHODS Constant", () => {
-    it("exports the correct payment methods", () => {
+  describe('PAYMENT_METHODS Constant', () => {
+    it('exports the correct payment methods', () => {
       expect(PAYMENT_METHODS).toEqual([
-        { value: "cash", label: "Efectivo" },
-        { value: "credit", label: "Crédito" },
-        { value: "debit", label: "Débito" },
+        { value: 'cash', label: 'Efectivo' },
+        { value: 'credit', label: 'Crédito' },
+        { value: 'debit', label: 'Débito' },
       ]);
     });
   });
 
-  describe("Edge Cases", () => {
-    it("handles empty selectedMethods array correctly", () => {
+  describe('Edge Cases', () => {
+    it('handles empty selectedMethods array correctly', () => {
       render(
         <PaymentMethodSelector
           selectedMethods={[]}
@@ -327,25 +327,25 @@ describe("PaymentMethodSelector", () => {
         />
       );
 
-      const allMethodsCheckbox = screen.getByRole("checkbox", {
+      const allMethodsCheckbox = screen.getByRole('checkbox', {
         name: /todos los métodos/i,
       });
       expect(allMethodsCheckbox).toBeChecked();
     });
 
-    it("handles invalid payment method values gracefully", () => {
+    it('handles invalid payment method values gracefully', () => {
       render(
         <PaymentMethodSelector
-          selectedMethods={["cash", "invalid-method" as PaymentMethod]}
+          selectedMethods={['cash', 'invalid-method' as PaymentMethod]}
           onSelectionChange={mockOnSelectionChange}
         />
       );
 
       // Should still render without crashing
-      expect(screen.getByRole("checkbox", { name: /efectivo/i })).toBeChecked();
+      expect(screen.getByRole('checkbox', { name: /efectivo/i })).toBeChecked();
     });
 
-    it("applies custom className", () => {
+    it('applies custom className', () => {
       const { container } = render(
         <PaymentMethodSelector
           selectedMethods={[]}
@@ -354,7 +354,7 @@ describe("PaymentMethodSelector", () => {
         />
       );
 
-      expect(container.firstChild).toHaveClass("custom-class");
+      expect(container.firstChild).toHaveClass('custom-class');
     });
   });
 });

@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { useState, useMemo, useEffect } from "react";
-import { useBudget } from "@/context/budget-context";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useState, useMemo, useEffect } from 'react';
+import { useBudget } from '@/context/budget-context';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import {
   ResponsiveContainer,
   BarChart,
@@ -13,24 +13,24 @@ import {
   CartesianGrid,
   Tooltip,
   Cell,
-} from "recharts";
-import { format, parseISO, getDaysInMonth } from "date-fns";
-import { es } from "date-fns/locale";
+} from 'recharts';
+import { format, parseISO, getDaysInMonth } from 'date-fns';
+import { es } from 'date-fns/locale';
 import type {
   BudgetExecutionViewMode,
   BudgetExecutionResponse,
-} from "@/types/funds";
+} from '@/types/funds';
 import {
   fetchBudgetExecutionData,
   formatChartData,
   formatCurrency,
   calculateBudgetStats,
-} from "@/lib/budget-execution-utils";
-import { BudgetDetailTable } from "@/components/budget-detail-table";
+} from '@/lib/budget-execution-utils';
+import { BudgetDetailTable } from '@/components/budget-detail-table';
 
 export default function ProjectedExecutionDashboard() {
   const { activePeriod } = useBudget();
-  const [viewMode, setViewMode] = useState<BudgetExecutionViewMode>("daily");
+  const [viewMode, setViewMode] = useState<BudgetExecutionViewMode>('daily');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [budgetExecutionData, setBudgetExecutionData] =
@@ -41,7 +41,7 @@ export default function ProjectedExecutionDashboard() {
   useEffect(() => {
     const fetchData = async () => {
       if (!activePeriod?.id) {
-        setError("No active period selected");
+        setError('No active period selected');
         setIsLoading(false);
         return;
       }
@@ -55,7 +55,7 @@ export default function ProjectedExecutionDashboard() {
         setBudgetExecutionData(data);
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to load budget data"
+          err instanceof Error ? err.message : 'Failed to load budget data'
         );
         setBudgetExecutionData(null);
       } finally {
@@ -94,7 +94,7 @@ export default function ProjectedExecutionDashboard() {
       item.amount > max.amount ? item : max
     );
 
-    if (viewMode === "daily") {
+    if (viewMode === 'daily') {
       const date = parseISO(peak.date);
       return {
         label: format(date, "dd 'de' MMMM", { locale: es }),
@@ -118,7 +118,7 @@ export default function ProjectedExecutionDashboard() {
   // Auto-switch to weekly if period is long
   useEffect(() => {
     if (daysInPeriod > 31) {
-      setViewMode("weekly");
+      setViewMode('weekly');
     }
   }, [daysInPeriod]);
 
@@ -138,15 +138,15 @@ export default function ProjectedExecutionDashboard() {
 
   // Get bar color based on selection and peak status
   const getBarColor = (date: string, amount: number) => {
-    if (date === selectedDate) return "#3b82f6"; // Blue for selected
-    if (amount === stats.peak) return "#f97316"; // Orange for peak
-    return "#6366f1"; // Indigo for normal
+    if (date === selectedDate) return '#3b82f6'; // Blue for selected
+    if (amount === stats.peak) return '#f97316'; // Orange for peak
+    return '#6366f1'; // Indigo for normal
   };
 
   if (!activePeriod) {
     return (
-      <div className="max-w-full w-full mx-auto py-10 px-4">
-        <Card className="border-yellow-200 dark:border-yellow-900 bg-yellow-50 dark:bg-yellow-950">
+      <div className="mx-auto w-full max-w-full px-4 py-10">
+        <Card className="border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-950">
           <CardContent className="pt-6">
             <p className="text-yellow-900 dark:text-yellow-100">
               Por favor, selecciona un período activo para ver la ejecución
@@ -159,29 +159,30 @@ export default function ProjectedExecutionDashboard() {
   }
 
   return (
-    <div className="max-w-full w-full mx-auto py-10 px-4">
+    <div className="mx-auto w-full max-w-full px-4 py-10">
       <div className="space-y-6">
         {/* Header Card */}
         <Card>
           <CardHeader>
             <CardTitle>Ejecución Proyectada del Presupuesto</CardTitle>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-              Período: <span className="font-semibold">{activePeriod.name}</span>
+            <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              Período:{' '}
+              <span className="font-semibold">{activePeriod.name}</span>
             </p>
           </CardHeader>
           <CardContent>
             {/* View Toggle Buttons */}
-            <div className="flex gap-2 mb-6">
+            <div className="mb-6 flex gap-2">
               <Button
-                variant={viewMode === "daily" ? "default" : "outline"}
-                onClick={() => setViewMode("daily")}
+                variant={viewMode === 'daily' ? 'default' : 'outline'}
+                onClick={() => setViewMode('daily')}
                 className="px-6"
               >
                 Diario
               </Button>
               <Button
-                variant={viewMode === "weekly" ? "default" : "outline"}
-                onClick={() => setViewMode("weekly")}
+                variant={viewMode === 'weekly' ? 'default' : 'outline'}
+                onClick={() => setViewMode('weekly')}
                 className="px-6"
               >
                 Semanal
@@ -190,42 +191,42 @@ export default function ProjectedExecutionDashboard() {
 
             {/* KPI Cards */}
             {!isLoading && !error && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-                <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-                  <div className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+              <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-4">
+                <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950">
+                  <div className="text-sm font-medium text-blue-600 dark:text-blue-400">
                     Presupuesto Total
                   </div>
-                  <div className="text-2xl font-bold text-blue-900 dark:text-blue-100 mt-2">
+                  <div className="mt-2 text-2xl font-bold text-blue-900 dark:text-blue-100">
                     {formatCurrency(stats.total)}
                   </div>
                 </div>
 
-                <div className="p-4 bg-green-50 dark:bg-green-950 rounded-lg border border-green-200 dark:border-green-800">
-                  <div className="text-sm text-green-600 dark:text-green-400 font-medium">
-                    Promedio {viewMode === "daily" ? "Diario" : "Semanal"}
+                <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950">
+                  <div className="text-sm font-medium text-green-600 dark:text-green-400">
+                    Promedio {viewMode === 'daily' ? 'Diario' : 'Semanal'}
                   </div>
-                  <div className="text-2xl font-bold text-green-900 dark:text-green-100 mt-2">
+                  <div className="mt-2 text-2xl font-bold text-green-900 dark:text-green-100">
                     {formatCurrency(stats.average)}
                   </div>
                 </div>
 
-                <div className="p-4 bg-purple-50 dark:bg-purple-950 rounded-lg border border-purple-200 dark:border-purple-800">
-                  <div className="text-sm text-purple-600 dark:text-purple-400 font-medium">
+                <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 dark:border-purple-800 dark:bg-purple-950">
+                  <div className="text-sm font-medium text-purple-600 dark:text-purple-400">
                     Presupuesto Máximo
                   </div>
-                  <div className="text-2xl font-bold text-purple-900 dark:text-purple-100 mt-2">
+                  <div className="mt-2 text-2xl font-bold text-purple-900 dark:text-purple-100">
                     {formatCurrency(stats.peak)}
                   </div>
                 </div>
 
-                <div className="p-4 bg-orange-50 dark:bg-orange-950 rounded-lg border border-orange-200 dark:border-orange-800">
-                  <div className="text-sm text-orange-600 dark:text-orange-400 font-medium">
+                <div className="rounded-lg border border-orange-200 bg-orange-50 p-4 dark:border-orange-800 dark:bg-orange-950">
+                  <div className="text-sm font-medium text-orange-600 dark:text-orange-400">
                     Pico
                   </div>
-                  <div className="text-lg font-bold text-orange-900 dark:text-orange-100 mt-2">
+                  <div className="mt-2 text-lg font-bold text-orange-900 dark:text-orange-100">
                     {peakInfo
                       ? `${peakInfo.label} - ${formatCurrency(peakInfo.amount)}`
-                      : "N/A"}
+                      : 'N/A'}
                   </div>
                 </div>
               </div>
@@ -237,18 +238,18 @@ export default function ProjectedExecutionDashboard() {
         <Card>
           <CardContent className="pt-6">
             {isLoading && (
-              <div className="h-80 flex items-center justify-center">
+              <div className="flex h-80 items-center justify-center">
                 <div className="text-gray-500 dark:text-gray-400">
-                  <div className="animate-spin inline-block mr-3">⏳</div>
+                  <div className="mr-3 inline-block animate-spin">⏳</div>
                   Cargando datos...
                 </div>
               </div>
             )}
 
             {error && (
-              <div className="h-80 flex items-center justify-center">
-                <div className="text-red-500 dark:text-red-400 text-center">
-                  <p className="font-medium mb-2">Error al cargar los datos</p>
+              <div className="flex h-80 items-center justify-center">
+                <div className="text-center text-red-500 dark:text-red-400">
+                  <p className="mb-2 font-medium">Error al cargar los datos</p>
                   <p className="text-sm">{error}</p>
                   <Button
                     onClick={() => window.location.reload()}
@@ -261,8 +262,8 @@ export default function ProjectedExecutionDashboard() {
             )}
 
             {!isLoading && !error && chartData.length === 0 && (
-              <div className="h-80 flex items-center justify-center">
-                <div className="text-gray-500 dark:text-gray-400 text-center">
+              <div className="flex h-80 items-center justify-center">
+                <div className="text-center text-gray-500 dark:text-gray-400">
                   <p>No hay presupuestos para mostrar en este período.</p>
                 </div>
               </div>
@@ -281,7 +282,7 @@ export default function ProjectedExecutionDashboard() {
                       data={chartData}
                       margin={{ top: 16, right: 32, left: 8, bottom: 60 }}
                       onClick={handleBarClick}
-                      style={{ cursor: "pointer" }}
+                      style={{ cursor: 'pointer' }}
                     >
                       <CartesianGrid strokeDasharray="3 3" />
                       <XAxis
@@ -308,15 +309,15 @@ export default function ProjectedExecutionDashboard() {
                           }
                           const data = payload[0].payload;
                           return (
-                            <div className="rounded-md bg-white dark:bg-zinc-900 p-3 shadow-lg border border-gray-200 dark:border-zinc-800">
-                              <div className="font-medium text-gray-900 dark:text-gray-100 text-base mb-1">
+                            <div className="rounded-md border border-gray-200 bg-white p-3 shadow-lg dark:border-zinc-800 dark:bg-zinc-900">
+                              <div className="mb-1 text-base font-medium text-gray-900 dark:text-gray-100">
                                 {data.fullDate || data.displayDate}
                               </div>
                               <div className="text-gray-900 dark:text-gray-100">
-                                Presupuesto:{" "}
+                                Presupuesto:{' '}
                                 {formatCurrency(payload[0].value as number)}
                               </div>
-                              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                              <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                                 Haz clic para ver detalles
                               </div>
                             </div>
@@ -346,12 +347,13 @@ export default function ProjectedExecutionDashboard() {
             selectedDate={selectedDate}
             viewMode={viewMode}
             weekStart={
-              viewMode === "weekly"
-                ? chartData.find((item) => item.date === selectedDate)?.weekStart
+              viewMode === 'weekly'
+                ? chartData.find((item) => item.date === selectedDate)
+                    ?.weekStart
                 : undefined
             }
             weekEnd={
-              viewMode === "weekly"
+              viewMode === 'weekly'
                 ? chartData.find((item) => item.date === selectedDate)?.weekEnd
                 : undefined
             }

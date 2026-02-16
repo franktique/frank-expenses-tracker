@@ -1,10 +1,10 @@
-import React from "react";
-import { render, screen } from "@testing-library/react";
-import "@testing-library/jest-dom";
-import { PaymentMethodBadges } from "../payment-method-badges";
+import React from 'react';
+import { render, screen } from '@testing-library/react';
+import '@testing-library/jest-dom';
+import { PaymentMethodBadges } from '../payment-method-badges';
 
 // Mock the UI components
-jest.mock("@/components/ui/badge", () => ({
+jest.mock('@/components/ui/badge', () => ({
   Badge: ({ children, variant, className }: any) => (
     <span className={`badge ${variant} ${className}`} data-testid="badge">
       {children}
@@ -12,7 +12,7 @@ jest.mock("@/components/ui/badge", () => ({
   ),
 }));
 
-jest.mock("@/components/ui/tooltip", () => ({
+jest.mock('@/components/ui/tooltip', () => ({
   Tooltip: ({ children }: any) => <div data-testid="tooltip">{children}</div>,
   TooltipTrigger: ({ children }: any) => (
     <div data-testid="tooltip-trigger">{children}</div>
@@ -25,85 +25,85 @@ jest.mock("@/components/ui/tooltip", () => ({
   ),
 }));
 
-jest.mock("lucide-react", () => ({
+jest.mock('lucide-react', () => ({
   HelpCircle: () => <div data-testid="help-icon" />,
 }));
 
-describe("PaymentMethodBadges", () => {
+describe('PaymentMethodBadges', () => {
   it('shows "Todos los métodos" when no methods selected', () => {
     render(<PaymentMethodBadges selectedMethods={[]} />);
 
-    expect(screen.getByText("Todos los métodos")).toBeInTheDocument();
-    expect(screen.getByTestId("badge")).toHaveClass("secondary");
+    expect(screen.getByText('Todos los métodos')).toBeInTheDocument();
+    expect(screen.getByTestId('badge')).toHaveClass('secondary');
   });
 
-  it("shows individual method badges when methods are selected", () => {
-    render(<PaymentMethodBadges selectedMethods={["cash", "credit"]} />);
+  it('shows individual method badges when methods are selected', () => {
+    render(<PaymentMethodBadges selectedMethods={['cash', 'credit']} />);
 
-    expect(screen.getByText("Efectivo")).toBeInTheDocument();
-    expect(screen.getByText("Crédito")).toBeInTheDocument();
-    expect(screen.getAllByTestId("badge")).toHaveLength(2);
+    expect(screen.getByText('Efectivo')).toBeInTheDocument();
+    expect(screen.getByText('Crédito')).toBeInTheDocument();
+    expect(screen.getAllByTestId('badge')).toHaveLength(2);
   });
 
-  it("shows correct labels for all payment methods", () => {
+  it('shows correct labels for all payment methods', () => {
     render(
-      <PaymentMethodBadges selectedMethods={["cash", "credit", "debit"]} />
+      <PaymentMethodBadges selectedMethods={['cash', 'credit', 'debit']} />
     );
 
-    expect(screen.getByText("Efectivo")).toBeInTheDocument();
-    expect(screen.getByText("Crédito")).toBeInTheDocument();
-    expect(screen.getByText("Débito")).toBeInTheDocument();
+    expect(screen.getByText('Efectivo')).toBeInTheDocument();
+    expect(screen.getByText('Crédito')).toBeInTheDocument();
+    expect(screen.getByText('Débito')).toBeInTheDocument();
   });
 
-  it("handles unknown payment method gracefully", () => {
-    render(<PaymentMethodBadges selectedMethods={["unknown"]} />);
+  it('handles unknown payment method gracefully', () => {
+    render(<PaymentMethodBadges selectedMethods={['unknown']} />);
 
-    expect(screen.getByText("unknown")).toBeInTheDocument();
+    expect(screen.getByText('unknown')).toBeInTheDocument();
   });
 
-  it("applies custom className", () => {
+  it('applies custom className', () => {
     render(
       <PaymentMethodBadges
-        selectedMethods={["cash"]}
+        selectedMethods={['cash']}
         className="custom-class"
       />
     );
 
-    expect(screen.getByText("Efectivo")).toBeInTheDocument();
+    expect(screen.getByText('Efectivo')).toBeInTheDocument();
   });
 
-  it("uses outline variant for individual method badges", () => {
-    render(<PaymentMethodBadges selectedMethods={["cash"]} />);
+  it('uses outline variant for individual method badges', () => {
+    render(<PaymentMethodBadges selectedMethods={['cash']} />);
 
-    const badge = screen.getByTestId("badge");
-    expect(badge).toHaveClass("outline");
+    const badge = screen.getByTestId('badge');
+    expect(badge).toHaveClass('outline');
   });
 
-  it("shows tooltip by default", () => {
-    render(<PaymentMethodBadges selectedMethods={["cash"]} />);
+  it('shows tooltip by default', () => {
+    render(<PaymentMethodBadges selectedMethods={['cash']} />);
 
-    expect(screen.getByTestId("tooltip-provider")).toBeInTheDocument();
-    expect(screen.getByTestId("help-icon")).toBeInTheDocument();
+    expect(screen.getByTestId('tooltip-provider')).toBeInTheDocument();
+    expect(screen.getByTestId('help-icon')).toBeInTheDocument();
   });
 
-  it("hides tooltip when showTooltip is false", () => {
+  it('hides tooltip when showTooltip is false', () => {
     render(
-      <PaymentMethodBadges selectedMethods={["cash"]} showTooltip={false} />
+      <PaymentMethodBadges selectedMethods={['cash']} showTooltip={false} />
     );
 
-    expect(screen.queryByTestId("tooltip-provider")).not.toBeInTheDocument();
-    expect(screen.queryByTestId("help-icon")).not.toBeInTheDocument();
+    expect(screen.queryByTestId('tooltip-provider')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('help-icon')).not.toBeInTheDocument();
   });
 
-  it("shows help icon for all methods", () => {
+  it('shows help icon for all methods', () => {
     render(<PaymentMethodBadges selectedMethods={[]} />);
 
-    expect(screen.getByTestId("help-icon")).toBeInTheDocument();
+    expect(screen.getByTestId('help-icon')).toBeInTheDocument();
   });
 
-  it("shows help icon for specific methods", () => {
-    render(<PaymentMethodBadges selectedMethods={["cash", "credit"]} />);
+  it('shows help icon for specific methods', () => {
+    render(<PaymentMethodBadges selectedMethods={['cash', 'credit']} />);
 
-    expect(screen.getByTestId("help-icon")).toBeInTheDocument();
+    expect(screen.getByTestId('help-icon')).toBeInTheDocument();
   });
 });

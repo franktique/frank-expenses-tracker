@@ -1,4 +1,4 @@
-import { sql } from "@/lib/db";
+import { sql } from '@/lib/db';
 
 /**
  * Rollback: Remove tipo_gasto column from categories table
@@ -9,7 +9,9 @@ import { sql } from "@/lib/db";
 
 export async function rollbackRemoveTipoGasto() {
   try {
-    console.log("Starting rollback: Remove tipo_gasto column from categories table");
+    console.log(
+      'Starting rollback: Remove tipo_gasto column from categories table'
+    );
 
     // Check if column exists
     const columnCheckResult = await sql`
@@ -23,8 +25,8 @@ export async function rollbackRemoveTipoGasto() {
     const columnExists = columnCheckResult[0]?.exists || false;
 
     if (!columnExists) {
-      console.log("Column tipo_gasto does not exist. Skipping rollback.");
-      return { success: true, message: "Column does not exist" };
+      console.log('Column tipo_gasto does not exist. Skipping rollback.');
+      return { success: true, message: 'Column does not exist' };
     }
 
     // First, drop the check constraint if it exists
@@ -33,9 +35,12 @@ export async function rollbackRemoveTipoGasto() {
         ALTER TABLE categories
         DROP CONSTRAINT IF EXISTS check_valid_tipo_gasto
       `;
-      console.log("✓ Successfully dropped check constraint");
+      console.log('✓ Successfully dropped check constraint');
     } catch (constraintError) {
-      console.warn("Warning: Could not drop constraint (may not exist):", constraintError);
+      console.warn(
+        'Warning: Could not drop constraint (may not exist):',
+        constraintError
+      );
     }
 
     // Drop the column
@@ -44,17 +49,19 @@ export async function rollbackRemoveTipoGasto() {
       DROP COLUMN tipo_gasto
     `;
 
-    console.log("✓ Successfully removed tipo_gasto column from categories table");
+    console.log(
+      '✓ Successfully removed tipo_gasto column from categories table'
+    );
 
     return {
       success: true,
-      message: "Rollback completed successfully",
+      message: 'Rollback completed successfully',
       details: {
-        column_removed: "tipo_gasto",
+        column_removed: 'tipo_gasto',
       },
     };
   } catch (error) {
-    console.error("Rollback failed:", error);
+    console.error('Rollback failed:', error);
     throw error;
   }
 }
@@ -63,11 +70,11 @@ export async function rollbackRemoveTipoGasto() {
 if (require.main === module) {
   rollbackRemoveTipoGasto()
     .then((result) => {
-      console.log("Rollback result:", result);
+      console.log('Rollback result:', result);
       process.exit(0);
     })
     .catch((error) => {
-      console.error("Rollback error:", error);
+      console.error('Rollback error:', error);
       process.exit(1);
     });
 }

@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { AlertCircle, Database, ExternalLink } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { useBudget } from "@/context/budget-context";
-import { useToast } from "@/components/ui/use-toast";
+import { useState } from 'react';
+import { AlertCircle, Database, ExternalLink } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { useBudget } from '@/context/budget-context';
+import { useToast } from '@/components/ui/use-toast';
 
 export function SetupDatabaseButton() {
   const {
@@ -25,18 +25,18 @@ export function SetupDatabaseButton() {
     try {
       await setupDatabase();
       toast({
-        title: "Base de datos configurada",
+        title: 'Base de datos configurada',
         description:
-          "Las tablas de la base de datos han sido creadas exitosamente.",
+          'Las tablas de la base de datos han sido creadas exitosamente.',
       });
     } catch (error) {
       setSetupError((error as Error).message);
       toast({
-        title: "Error",
+        title: 'Error',
         description: `Error al configurar la base de datos: ${
           (error as Error).message
         }`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setIsSettingUp(false);
@@ -64,8 +64,8 @@ export function SetupDatabaseButton() {
               de tu base de datos Neon.
             </p>
             {connectionErrorDetails && (
-              <div className="text-xs bg-destructive/10 p-2 rounded overflow-auto">
-                <p className="font-mono break-all whitespace-pre-wrap">
+              <div className="overflow-auto rounded bg-destructive/10 p-2 text-xs">
+                <p className="whitespace-pre-wrap break-all font-mono">
                   {connectionErrorDetails}
                 </p>
               </div>
@@ -79,7 +79,7 @@ export function SetupDatabaseButton() {
             className="w-full"
           >
             <Database className="mr-2 h-4 w-4" />
-            {isSettingUp ? "Intentando conectar..." : "Intentar conectar"}
+            {isSettingUp ? 'Intentando conectar...' : 'Intentar conectar'}
           </Button>
           <Button variant="outline" className="w-full" asChild>
             <a
@@ -98,7 +98,7 @@ export function SetupDatabaseButton() {
 
   if (isDbInitialized) {
     return (
-      <div className="text-green-600 dark:text-green-400 flex items-center">
+      <div className="flex items-center text-green-600 dark:text-green-400">
         <Database className="mr-2 h-4 w-4" />
         Base de datos ya configurada
       </div>
@@ -111,7 +111,7 @@ export function SetupDatabaseButton() {
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error al configurar la base de datos</AlertTitle>
-          <AlertDescription className="break-all whitespace-pre-wrap">
+          <AlertDescription className="whitespace-pre-wrap break-all">
             {setupError}
           </AlertDescription>
         </Alert>
@@ -122,7 +122,7 @@ export function SetupDatabaseButton() {
         className="w-full"
       >
         <Database className="mr-2 h-4 w-4" />
-        {isSettingUp ? "Configurando..." : "Configurar Base de Datos"}
+        {isSettingUp ? 'Configurando...' : 'Configurar Base de Datos'}
       </Button>
     </div>
   );

@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
@@ -11,7 +11,7 @@ export async function GET(
 
     if (isNaN(estudioId)) {
       return NextResponse.json(
-        { error: "Invalid estudio ID" },
+        { error: 'Invalid estudio ID' },
         { status: 400 }
       );
     }
@@ -65,7 +65,7 @@ export async function POST(
 
     if (isNaN(estudioId)) {
       return NextResponse.json(
-        { error: "ID de estudio inválido" },
+        { error: 'ID de estudio inválido' },
         { status: 400 }
       );
     }
@@ -74,14 +74,14 @@ export async function POST(
 
     if (!Array.isArray(grouperIds)) {
       return NextResponse.json(
-        { error: "Se requiere un array de IDs de agrupadores" },
+        { error: 'Se requiere un array de IDs de agrupadores' },
         { status: 400 }
       );
     }
 
     if (grouperIds.length === 0) {
       return NextResponse.json(
-        { error: "Debe seleccionar al menos un agrupador" },
+        { error: 'Debe seleccionar al menos un agrupador' },
         { status: 400 }
       );
     }
@@ -92,7 +92,7 @@ export async function POST(
     );
     if (invalidIds.length > 0) {
       return NextResponse.json(
-        { error: "Algunos IDs de agrupadores son inválidos" },
+        { error: 'Algunos IDs de agrupadores son inválidos' },
         { status: 400 }
       );
     }
@@ -104,7 +104,7 @@ export async function POST(
 
     if (!estudio) {
       return NextResponse.json(
-        { error: "Estudio no encontrado" },
+        { error: 'Estudio no encontrado' },
         { status: 404 }
       );
     }
@@ -116,9 +116,11 @@ export async function POST(
 
     if (existingGroupers.length !== grouperIds.length) {
       const existingIds = existingGroupers.map((g) => g.id);
-      const missingIds = grouperIds.filter((id: number) => !existingIds.includes(id));
+      const missingIds = grouperIds.filter(
+        (id: number) => !existingIds.includes(id)
+      );
       return NextResponse.json(
-        { error: `Agrupadores no encontrados: ${missingIds.join(", ")}` },
+        { error: `Agrupadores no encontrados: ${missingIds.join(', ')}` },
         { status: 404 }
       );
     }
@@ -138,7 +140,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Todos los agrupadores seleccionados ya están asignados a este estudio",
+            'Todos los agrupadores seleccionados ya están asignados a este estudio',
           alreadyAssigned: alreadyAssignedIds.length,
         },
         { status: 409 }
@@ -167,17 +169,17 @@ export async function POST(
 
     // Handle specific database errors
     if (error instanceof Error) {
-      if (error.message.includes("foreign key")) {
+      if (error.message.includes('foreign key')) {
         return NextResponse.json(
-          { error: "Error de integridad: algunos agrupadores no existen" },
+          { error: 'Error de integridad: algunos agrupadores no existen' },
           { status: 409 }
         );
       }
-      if (error.message.includes("connection")) {
+      if (error.message.includes('connection')) {
         return NextResponse.json(
           {
             error:
-              "Error de conexión con la base de datos. Intente nuevamente.",
+              'Error de conexión con la base de datos. Intente nuevamente.',
           },
           { status: 503 }
         );
@@ -185,7 +187,7 @@ export async function POST(
     }
 
     return NextResponse.json(
-      { error: "Error interno del servidor. Intente nuevamente." },
+      { error: 'Error interno del servidor. Intente nuevamente.' },
       { status: 500 }
     );
   }

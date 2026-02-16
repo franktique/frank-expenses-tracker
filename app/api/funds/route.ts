@@ -1,6 +1,6 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { CreateFundSchema, FUND_ERROR_MESSAGES } from "@/types/funds";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { CreateFundSchema, FUND_ERROR_MESSAGES } from '@/types/funds';
 
 export async function GET() {
   try {
@@ -51,7 +51,7 @@ export async function GET() {
 
     return NextResponse.json(funds);
   } catch (error) {
-    console.error("Error fetching funds:", error);
+    console.error('Error fetching funds:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -67,7 +67,7 @@ export async function POST(request: NextRequest) {
     const validationResult = CreateFundSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
-        { error: "Validation failed", details: validationResult.error.errors },
+        { error: 'Validation failed', details: validationResult.error.errors },
         { status: 400 }
       );
     }
@@ -103,14 +103,14 @@ export async function POST(request: NextRequest) {
     const [newFund] = await sql`
       INSERT INTO funds (name, description, initial_balance, current_balance, start_date)
       VALUES (${name}, ${
-      description || null
-    }, ${initial_balance}, ${initial_balance}, ${start_date})
+        description || null
+      }, ${initial_balance}, ${initial_balance}, ${start_date})
       RETURNING *
     `;
 
     return NextResponse.json(newFund, { status: 201 });
   } catch (error) {
-    console.error("Error creating fund:", error);
+    console.error('Error creating fund:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }

@@ -7,6 +7,7 @@
 ## Overview
 
 This plan adds three new KPI cards to the main dashboard:
+
 1. **Remainder Efectivo (Cash/Debit)**: Shows the remaining budget for cash/debit expenses (planned - actual)
 2. **Remainder Crédito (Credit)**: Shows the remaining budget for credit card expenses (planned - actual)
 3. **Total Efectivo**: Shows total actual expenses paid with cash/debit (currently we only have Total Crédito)
@@ -14,6 +15,7 @@ This plan adds three new KPI cards to the main dashboard:
 ## Current State Analysis
 
 ### Existing KPI Cards (dashboard-view.tsx:509-603)
+
 - ✅ Ingresos Totales (Total Income)
 - ✅ Gastos Totales (Total Expenses)
 - ✅ Balance (Surplus/Deficit)
@@ -22,7 +24,9 @@ This plan adds three new KPI cards to the main dashboard:
 - ✅ Dashboard Agrupadores (Link card)
 
 ### Available Data from API (`/api/dashboard`)
+
 From `BudgetSummaryItem` interface (`types/dashboard.ts:8-30`):
+
 - `credit_budget`: Sum of all credit budgets
 - `cash_debit_budget`: Sum of all cash/debit budgets
 - `credit_amount`: Credit card expenses (actual)
@@ -30,6 +34,7 @@ From `BudgetSummaryItem` interface (`types/dashboard.ts:8-30`):
 - `cash_amount`: Cash expenses (actual)
 
 ### Required Calculations
+
 1. **Total Efectivo (Cash/Debit actual)**: `sum(debit_amount + cash_amount)`
 2. **Remainder Efectivo**: `sum(cash_debit_budget) - sum(debit_amount + cash_amount)`
 3. **Remainder Crédito**: `sum(credit_budget) - sum(credit_amount)`
@@ -37,6 +42,7 @@ From `BudgetSummaryItem` interface (`types/dashboard.ts:8-30`):
 ## Implementation Tasks
 
 ### Phase 1: Data Preparation
+
 - [x] Add calculations for new KPI values in dashboard-view.tsx
   - [x] Create `totalCashDebitExpenses` calculation (similar to `totalCreditCardPurchases` at line 452)
   - [x] Create `remainderCashDebit` calculation
@@ -44,6 +50,7 @@ From `BudgetSummaryItem` interface (`types/dashboard.ts:8-30`):
   - [x] Use filtered budget summary (`filteredBudgetSummary` from line 131) to respect excluded categories
 
 ### Phase 2: UI Implementation
+
 - [x] Add KPI card for **Total Efectivo** (Cash/Debit Expenses)
   - [x] Position: After "Total Tarjeta Crédito" card (after line 578)
   - [x] Icon: Use `Wallet` icon from lucide-react (already imported)
@@ -65,6 +72,7 @@ From `BudgetSummaryItem` interface (`types/dashboard.ts:8-30`):
   - [x] Subtitle: "Presupuesto disponible" or similar
 
 ### Phase 3: Layout Adjustments
+
 - [x] Update grid layout to accommodate new cards
   - [x] Current: `grid gap-4 md:grid-cols-2 lg:grid-cols-6` (line 509)
   - [x] Selected Option 3: Use responsive breakpoints for optimal display
@@ -72,6 +80,7 @@ From `BudgetSummaryItem` interface (`types/dashboard.ts:8-30`):
   - [x] Ensure mobile responsiveness is maintained
 
 ### Phase 4: Type Safety & Validation
+
 - [x] Verify type definitions in `types/dashboard.ts`
   - [x] Confirm `BudgetSummaryItem` has all required fields (credit_budget, cash_debit_budget, credit_amount, debit_amount, cash_amount)
   - [x] Ensure `calculateBudgetTotals` utility includes needed aggregations (all fields present)
@@ -82,6 +91,7 @@ From `BudgetSummaryItem` interface (`types/dashboard.ts:8-30`):
   - [x] TypeScript will catch any type mismatches
 
 ### Phase 5: Testing & Verification
+
 **Note**: Ready for user testing. Run `npm run dev` to test the changes.
 
 - [ ] Manual testing
@@ -106,6 +116,7 @@ From `BudgetSummaryItem` interface (`types/dashboard.ts:8-30`):
 ## Technical Notes
 
 ### Calculation Logic
+
 ```typescript
 // Total Cash/Debit Expenses (actual)
 const totalCashDebitExpenses = filteredBudgetSummary.reduce(
@@ -115,7 +126,8 @@ const totalCashDebitExpenses = filteredBudgetSummary.reduce(
 
 // Remainder for Cash/Debit
 const remainderCashDebit = filteredBudgetSummary.reduce(
-  (sum, item) => sum + item.cash_debit_budget - (item.debit_amount + item.cash_amount),
+  (sum, item) =>
+    sum + item.cash_debit_budget - (item.debit_amount + item.cash_amount),
   0
 );
 
@@ -127,14 +139,17 @@ const remainderCredit = filteredBudgetSummary.reduce(
 ```
 
 ### Color Coding Logic
+
 ```typescript
 // For remainder cards
-const remainderColor = remainder >= 0
-  ? "text-green-600 dark:text-green-400"
-  : "text-red-600 dark:text-red-400";
+const remainderColor =
+  remainder >= 0
+    ? 'text-green-600 dark:text-green-400'
+    : 'text-red-600 dark:text-red-400';
 ```
 
 ### Layout Considerations
+
 - Current layout uses 6 columns on large screens
 - Adding 3 more cards = 9 total cards
 - Options:
@@ -144,6 +159,7 @@ const remainderColor = remainder >= 0
   4. Use `lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-9`
 
 **Recommended**: Use responsive breakpoints to maintain readability:
+
 ```typescript
 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 2xl:grid-cols-9">
 ```
@@ -182,6 +198,7 @@ const remainderColor = remainder >= 0
 ## Rollback Plan
 
 If issues arise:
+
 1. Remove the three new Card components
 2. Revert grid layout changes
 3. Remove calculation variables

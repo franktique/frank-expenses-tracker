@@ -1,37 +1,45 @@
-import { neon, neonConfig } from "@neondatabase/serverless"
+import { neon, neonConfig } from '@neondatabase/serverless';
 
 // Configure neon with more resilient settings
-neonConfig.fetchConnectionCache = true
+neonConfig.fetchConnectionCache = true;
 
 // currentConnectionString removed to avoid stale values before dotenv loads
 
 // Helper function to implement exponential backoff for retries
-async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay = 1000, factor = 2): Promise<T> {
-  let retries = 0
-  let delay = initialDelay
+async function withRetry<T>(
+  fn: () => Promise<T>,
+  maxRetries = 3,
+  initialDelay = 1000,
+  factor = 2
+): Promise<T> {
+  let retries = 0;
+  let delay = initialDelay;
 
   while (true) {
     try {
-      return await fn()
+      return await fn();
     } catch (error) {
-      retries++
+      retries++;
 
       // Check if we've hit the rate limit
       const isRateLimit =
         error instanceof Error &&
-        (error.message.includes("rate limit") || error.message.includes("exceeded the rate limit"))
+        (error.message.includes('rate limit') ||
+          error.message.includes('exceeded the rate limit'));
 
       // If we've exceeded max retries or it's not a rate limit error, throw
       if (retries > maxRetries || !isRateLimit) {
-        throw error
+        throw error;
       }
 
       // Wait with exponential backoff
-      console.log(`Rate limit hit, retrying in ${delay}ms (attempt ${retries}/${maxRetries})`)
-      await new Promise((resolve) => setTimeout(resolve, delay))
+      console.log(
+        `Rate limit hit, retrying in ${delay}ms (attempt ${retries}/${maxRetries})`
+      );
+      await new Promise((resolve) => setTimeout(resolve, delay));
 
       // Increase delay for next retry
-      delay = delay * factor
+      delay = delay * factor;
     }
   }
 }
@@ -40,18 +48,22 @@ async function withRetry<T>(fn: () => Promise<T>, maxRetries = 3, initialDelay =
 export function createSafeClient(connectionString?: string) {
   try {
     // Use provided connection string or fall back to process.env.DATABASE_URL_NEW
-    const dbUrl = connectionString || process.env.DATABASE_URL_NEW || "";
+    const dbUrl = connectionString || process.env.DATABASE_URL_NEW || '';
 
     // Validate that we have a connection string
     if (!dbUrl) {
-      console.error("Database connection string is not defined");
+      console.error('Database connection string is not defined');
       // Return a dummy client that reflects the error state
-      const dummySql = async () => { throw new Error("Database connection string is not defined"); };
-      (dummySql as any).query = async () => { throw new Error("Database connection string is not defined"); };
+      const dummySql = async () => {
+        throw new Error('Database connection string is not defined');
+      };
+      (dummySql as any).query = async () => {
+        throw new Error('Database connection string is not defined');
+      };
       return {
         sql: dummySql as any, // Cast to any to satisfy NeonQueryFunction type if needed
         connected: false,
-        error: "Database connection string is not defined",
+        error: 'Database connection string is not defined',
       };
     }
 
@@ -63,7 +75,7 @@ export function createSafeClient(connectionString?: string) {
       try {
         return await withRetry(() => client(...args));
       } catch (error) {
-        console.error("SQL tagged template query failed after retries:", error);
+        console.error('SQL tagged template query failed after retries:', error);
         throw error;
       }
     };
@@ -73,11 +85,11 @@ export function createSafeClient(connectionString?: string) {
       try {
         return await withRetry(() => client.query(queryText, values));
       } catch (error) {
-        console.error("SQL conventional query failed after retries:", error);
+        console.error('SQL conventional query failed after retries:', error);
         throw error;
       }
     };
-    
+
     // Assign the .query method to the tagged template function object
     // This makes the returned `sql` object behave like the original `neon` client
     const sql = Object.assign(sqlTaggedTemplate, { query: sqlQuery });
@@ -88,9 +100,13 @@ export function createSafeClient(connectionString?: string) {
       error: null,
     };
   } catch (error) {
-    console.error("Failed to initialize database client:", error);
-    const dummySql = async () => { throw error; };
-    (dummySql as any).query = async () => { throw error; };
+    console.error('Failed to initialize database client:', error);
+    const dummySql = async () => {
+      throw error;
+    };
+    (dummySql as any).query = async () => {
+      throw error;
+    };
     return {
       sql: dummySql as any,
       connected: false,
@@ -102,25 +118,25 @@ export function createSafeClient(connectionString?: string) {
 // Create a function to test the database connection
 export async function testConnection(connectionString?: string) {
   try {
-    const { sql, connected, error } = createSafeClient(connectionString)
+    const { sql, connected, error } = createSafeClient(connectionString);
 
     if (!connected) {
-      return { connected: false, error }
+      return { connected: false, error };
     }
 
     // Try a simple query with retry logic
     try {
       const result = await withRetry(async () => {
-        return await sql`SELECT 1 as test`
-      })
-      return { connected: true, error: null }
+        return await sql`SELECT 1 as test`;
+      });
+      return { connected: true, error: null };
     } catch (dbError) {
-      console.error("Database query failed:", dbError)
-      return { connected: false, error: (dbError as Error).message }
+      console.error('Database query failed:', dbError);
+      return { connected: false, error: (dbError as Error).message };
     }
   } catch (error) {
-    console.error("Database connection test failed:", error)
-    return { connected: false, error: (error as Error).message }
+    console.error('Database connection test failed:', error);
+    return { connected: false, error: (error as Error).message };
   }
 }
 
@@ -143,11 +159,14 @@ export async function reconfigureConnection(connectionString: string) {
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error reconfiguring connection",
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Unknown error reconfiguring connection',
     };
   }
 }
 
 // Export the SQL client
-const { sql, connected, error } = createSafeClient()
-export { sql, connected, error }
+const { sql, connected, error } = createSafeClient();
+export { sql, connected, error };

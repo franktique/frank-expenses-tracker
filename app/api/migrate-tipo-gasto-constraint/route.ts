@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
-import { sql, testConnection } from "@/lib/db";
+import { NextResponse } from 'next/server';
+import { sql, testConnection } from '@/lib/db';
 
 /**
  * API endpoint to update the tipo_gasto constraint to include "E" (Eventual)
@@ -19,7 +19,7 @@ export async function GET() {
       return NextResponse.json(
         {
           success: false,
-          message: "Could not connect to the database: " + connectionTest.error,
+          message: 'Could not connect to the database: ' + connectionTest.error,
         },
         { status: 500 }
       );
@@ -41,7 +41,7 @@ export async function GET() {
       return NextResponse.json({
         success: false,
         message:
-          "Column tipo_gasto does not exist. Run /api/migrate-tipo-gasto first.",
+          'Column tipo_gasto does not exist. Run /api/migrate-tipo-gasto first.',
         skipped: true,
       });
     }
@@ -59,7 +59,7 @@ export async function GET() {
     if (!constraintExists) {
       return NextResponse.json({
         success: true,
-        message: "Constraint does not exist or already updated",
+        message: 'Constraint does not exist or already updated',
         skipped: true,
       });
     }
@@ -71,9 +71,9 @@ export async function GET() {
         DROP CONSTRAINT check_valid_tipo_gasto
       `;
 
-      console.log("✓ Dropped old check constraint");
+      console.log('✓ Dropped old check constraint');
     } catch (dropError) {
-      console.error("Error dropping constraint:", dropError);
+      console.error('Error dropping constraint:', dropError);
       throw dropError;
     }
 
@@ -85,29 +85,29 @@ export async function GET() {
         CHECK (tipo_gasto IN ('F', 'V', 'SF', 'E'))
       `;
 
-      console.log("✓ Created updated check constraint with E (Eventual)");
+      console.log('✓ Created updated check constraint with E (Eventual)');
     } catch (createError) {
-      console.error("Error creating constraint:", createError);
+      console.error('Error creating constraint:', createError);
       throw createError;
     }
 
     return NextResponse.json({
       success: true,
-      message: "Constraint updated successfully",
+      message: 'Constraint updated successfully',
       details: {
-        constraint_updated: "check_valid_tipo_gasto",
-        old_values: ["F", "V", "SF"],
-        new_values: ["F", "V", "SF", "E"],
+        constraint_updated: 'check_valid_tipo_gasto',
+        old_values: ['F', 'V', 'SF'],
+        new_values: ['F', 'V', 'SF', 'E'],
         description:
-          "F = Fijo (Fixed), V = Variable, SF = Semi Fijo (Semi-Fixed), E = Eventual",
+          'F = Fijo (Fixed), V = Variable, SF = Semi Fijo (Semi-Fixed), E = Eventual',
       },
     });
   } catch (error) {
-    console.error("Migration failed:", error);
+    console.error('Migration failed:', error);
     return NextResponse.json(
       {
         success: false,
-        message: "Migration failed: " + (error as Error).message,
+        message: 'Migration failed: ' + (error as Error).message,
       },
       { status: 500 }
     );

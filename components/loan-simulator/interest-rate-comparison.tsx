@@ -1,14 +1,17 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Plus, X, TrendingUp } from "lucide-react";
-import type { LoanScenario } from "@/types/loan-simulator";
-import type { LoanComparison } from "@/types/loan-simulator";
-import { generateLoanComparisons, formatCurrency } from "@/lib/loan-calculations";
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Plus, X, TrendingUp } from 'lucide-react';
+import type { LoanScenario } from '@/types/loan-simulator';
+import type { LoanComparison } from '@/types/loan-simulator';
+import {
+  generateLoanComparisons,
+  formatCurrency,
+} from '@/lib/loan-calculations';
 
 interface InterestRateComparisonProps {
   scenario: LoanScenario;
@@ -21,7 +24,7 @@ export function InterestRateComparison({
   additionalRates = [],
   onRatesChange,
 }: InterestRateComparisonProps) {
-  const [newRate, setNewRate] = useState("");
+  const [newRate, setNewRate] = useState('');
   const [localRates, setLocalRates] = useState<number[]>(additionalRates);
 
   const comparisons = generateLoanComparisons(scenario, localRates);
@@ -34,7 +37,7 @@ export function InterestRateComparison({
 
     const updatedRates = [...localRates, rate].sort((a, b) => a - b);
     setLocalRates(updatedRates);
-    setNewRate("");
+    setNewRate('');
     onRatesChange?.(updatedRates);
   };
 
@@ -52,10 +55,18 @@ export function InterestRateComparison({
   };
 
   const getDifferenceFromBase = (rate: number, value: number) => {
-    const baseComparison = comparisons.find((c) => c.interestRate === scenario.interestRate);
+    const baseComparison = comparisons.find(
+      (c) => c.interestRate === scenario.interestRate
+    );
     if (!baseComparison || rate === scenario.interestRate) return null;
 
-    const diff = value - baseComparison[value === comparisons[0].monthlyPayment ? 'monthlyPayment' : 'totalInterest'];
+    const diff =
+      value -
+      baseComparison[
+        value === comparisons[0].monthlyPayment
+          ? 'monthlyPayment'
+          : 'totalInterest'
+      ];
     const percentage = ((diff / baseComparison.totalInterest) * 100).toFixed(1);
 
     return {
@@ -74,7 +85,7 @@ export function InterestRateComparison({
       </CardHeader>
       <CardContent>
         {/* Add Rate Input */}
-        <div className="flex gap-2 mb-4">
+        <div className="mb-4 flex gap-2">
           <div className="flex-1">
             <Label htmlFor="newRate" className="sr-only">
               Nueva Tasa
@@ -89,7 +100,7 @@ export function InterestRateComparison({
               value={newRate}
               onChange={(e) => setNewRate(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === 'Enter') {
                   e.preventDefault();
                   handleAddRate();
                 }
@@ -98,10 +109,12 @@ export function InterestRateComparison({
           </div>
           <Button
             onClick={handleAddRate}
-            disabled={!newRate || parseFloat(newRate) <= 0 || parseFloat(newRate) > 100}
+            disabled={
+              !newRate || parseFloat(newRate) <= 0 || parseFloat(newRate) > 100
+            }
             size="sm"
           >
-            <Plus className="h-4 w-4 mr-1" />
+            <Plus className="mr-1 h-4 w-4" />
             Agregar
           </Button>
         </div>
@@ -111,11 +124,11 @@ export function InterestRateComparison({
           <table className="w-full">
             <thead>
               <tr className="border-b">
-                <th className="text-left py-2 px-3">Tasa</th>
+                <th className="px-3 py-2 text-left">Tasa</th>
                 {comparisons.map((comparison) => (
                   <th
                     key={comparison.interestRate}
-                    className="text-right py-2 px-3"
+                    className="px-3 py-2 text-right"
                   >
                     {getRateLabel(comparison.interestRate)}
                   </th>
@@ -125,20 +138,23 @@ export function InterestRateComparison({
             <tbody>
               {/* Monthly Payment Row */}
               <tr className="border-b">
-                <td className="py-2 px-3 font-medium">Pago Mensual</td>
+                <td className="px-3 py-2 font-medium">Pago Mensual</td>
                 {comparisons.map((comparison) => (
                   <td
                     key={`monthly-${comparison.interestRate}`}
-                    className="text-right py-2 px-3"
+                    className="px-3 py-2 text-right"
                   >
-                    {formatCurrency(comparison.monthlyPayment, scenario.currency)}
+                    {formatCurrency(
+                      comparison.monthlyPayment,
+                      scenario.currency
+                    )}
                   </td>
                 ))}
               </tr>
 
               {/* Total Interest Row */}
               <tr className="border-b">
-                <td className="py-2 px-3 font-medium">Interés Total</td>
+                <td className="px-3 py-2 font-medium">Interés Total</td>
                 {comparisons.map((comparison) => {
                   const diff = getDifferenceFromBase(
                     comparison.interestRate,
@@ -148,19 +164,25 @@ export function InterestRateComparison({
                   return (
                     <td
                       key={`interest-${comparison.interestRate}`}
-                      className="text-right py-2 px-3"
+                      className="px-3 py-2 text-right"
                     >
-                      <div>{formatCurrency(comparison.totalInterest, scenario.currency)}</div>
+                      <div>
+                        {formatCurrency(
+                          comparison.totalInterest,
+                          scenario.currency
+                        )}
+                      </div>
                       {diff && (
                         <div
                           className={`text-xs ${
                             diff.amount > 0
-                              ? "text-red-600 dark:text-red-400"
-                              : "text-green-600 dark:text-green-400"
+                              ? 'text-red-600 dark:text-red-400'
+                              : 'text-green-600 dark:text-green-400'
                           }`}
                         >
-                          {diff.amount > 0 ? "+" : ""}
-                          {formatCurrency(diff.amount, scenario.currency)} ({diff.percentage}%)
+                          {diff.amount > 0 ? '+' : ''}
+                          {formatCurrency(diff.amount, scenario.currency)} (
+                          {diff.percentage}%)
                         </div>
                       )}
                     </td>
@@ -170,7 +192,7 @@ export function InterestRateComparison({
 
               {/* Total Payment Row */}
               <tr className="border-b">
-                <td className="py-2 px-3 font-medium">Pago Total</td>
+                <td className="px-3 py-2 font-medium">Pago Total</td>
                 {comparisons.map((comparison) => {
                   const diff = getDifferenceFromBase(
                     comparison.interestRate,
@@ -180,21 +202,27 @@ export function InterestRateComparison({
                   return (
                     <td
                       key={`total-${comparison.interestRate}`}
-                      className="text-right py-2 px-3"
+                      className="px-3 py-2 text-right"
                     >
-                      <div>{formatCurrency(comparison.totalPayment, scenario.currency)}</div>
-                      {diff && comparison.interestRate !== scenario.interestRate && (
-                        <div
-                          className={`text-xs ${
-                            diff.amount > 0
-                              ? "text-red-600 dark:text-red-400"
-                              : "text-green-600 dark:text-green-400"
-                          }`}
-                        >
-                          {diff.amount > 0 ? "+" : ""}
-                          {formatCurrency(diff.amount, scenario.currency)}
-                        </div>
-                      )}
+                      <div>
+                        {formatCurrency(
+                          comparison.totalPayment,
+                          scenario.currency
+                        )}
+                      </div>
+                      {diff &&
+                        comparison.interestRate !== scenario.interestRate && (
+                          <div
+                            className={`text-xs ${
+                              diff.amount > 0
+                                ? 'text-red-600 dark:text-red-400'
+                                : 'text-green-600 dark:text-green-400'
+                            }`}
+                          >
+                            {diff.amount > 0 ? '+' : ''}
+                            {formatCurrency(diff.amount, scenario.currency)}
+                          </div>
+                        )}
                     </td>
                   );
                 })}
@@ -207,7 +235,7 @@ export function InterestRateComparison({
                   {comparisons.map((comparison) => (
                     <td
                       key={`remove-${comparison.interestRate}`}
-                      className="text-right py-2 px-3"
+                      className="px-3 py-2 text-right"
                     >
                       {comparison.interestRate !== scenario.interestRate && (
                         <Button
@@ -218,7 +246,7 @@ export function InterestRateComparison({
                           }
                           className="h-6 px-2 text-xs"
                         >
-                          <X className="h-3 w-3 mr-1" />
+                          <X className="mr-1 h-3 w-3" />
                           Eliminar
                         </Button>
                       )}
@@ -231,7 +259,7 @@ export function InterestRateComparison({
         </div>
 
         {/* Help Text */}
-        <p className="text-xs text-muted-foreground mt-4">
+        <p className="mt-4 text-xs text-muted-foreground">
           Compara diferentes tasas de interés para ver cómo afectan tus pagos
           mensuales y el costo total del préstamo.
         </p>

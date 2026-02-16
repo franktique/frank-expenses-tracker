@@ -4,17 +4,17 @@
  * POST: Create a new sub-group
  */
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from 'next/server';
 import {
   getSubgroupsBySimulation,
   createSubgroup,
   ensureSubgroupTablesExist,
-} from "@/lib/subgroup-db-utils";
+} from '@/lib/subgroup-db-utils';
 import type {
   CreateSubgroupRequest,
   SubgroupsListResponse,
   SubgroupResponse,
-} from "@/types/simulation";
+} from '@/types/simulation';
 
 /**
  * GET /api/simulations/[id]/subgroups
@@ -32,7 +32,7 @@ export async function GET(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid simulation ID",
+          error: 'Invalid simulation ID',
           statusCode: 400,
         },
         { status: 400 }
@@ -53,9 +53,9 @@ export async function GET(
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error fetching sub-groups:", error);
+    console.error('Error fetching sub-groups:', error);
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to fetch sub-groups";
+      error instanceof Error ? error.message : 'Failed to fetch sub-groups';
 
     return NextResponse.json(
       {
@@ -84,7 +84,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid simulation ID",
+          error: 'Invalid simulation ID',
           statusCode: 400,
         },
         { status: 400 }
@@ -99,7 +99,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid request body",
+          error: 'Invalid request body',
           statusCode: 400,
         },
         { status: 400 }
@@ -107,11 +107,11 @@ export async function POST(
     }
 
     // Validate request body
-    if (!requestBody.name || typeof requestBody.name !== "string") {
+    if (!requestBody.name || typeof requestBody.name !== 'string') {
       return NextResponse.json(
         {
           success: false,
-          error: "Sub-group name is required and must be a string",
+          error: 'Sub-group name is required and must be a string',
           statusCode: 400,
         },
         { status: 400 }
@@ -122,7 +122,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "categoryIds must be an array",
+          error: 'categoryIds must be an array',
           statusCode: 400,
         },
         { status: 400 }
@@ -133,7 +133,7 @@ export async function POST(
       return NextResponse.json(
         {
           success: false,
-          error: "Sub-group must contain at least one category",
+          error: 'Sub-group must contain at least one category',
           statusCode: 400,
         },
         { status: 400 }
@@ -155,12 +155,12 @@ export async function POST(
       { status: 201 }
     );
   } catch (error) {
-    console.error("Error creating sub-group:", error);
+    console.error('Error creating sub-group:', error);
     const errorMessage =
-      error instanceof Error ? error.message : "Failed to create sub-group";
+      error instanceof Error ? error.message : 'Failed to create sub-group';
 
     // Check if it's a duplicate name error
-    if (errorMessage.includes("already exists")) {
+    if (errorMessage.includes('already exists')) {
       return NextResponse.json(
         {
           success: false,
@@ -173,8 +173,8 @@ export async function POST(
 
     // Check if it's a validation error
     if (
-      errorMessage.includes("cannot be empty") ||
-      errorMessage.includes("must contain")
+      errorMessage.includes('cannot be empty') ||
+      errorMessage.includes('must contain')
     ) {
       return NextResponse.json(
         {

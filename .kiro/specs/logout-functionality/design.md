@@ -94,17 +94,17 @@ type AuthContextType = {
 
 ```typescript
 // LogoutButton.test.tsx
-describe("LogoutButton", () => {
-  it("should call logout when clicked");
-  it("should show loading state during logout");
-  it("should display toast on successful logout");
-  it("should handle logout errors gracefully");
+describe('LogoutButton', () => {
+  it('should call logout when clicked');
+  it('should show loading state during logout');
+  it('should display toast on successful logout');
+  it('should handle logout errors gracefully');
 });
 
 // AppSidebar.test.tsx
-describe("AppSidebar with logout", () => {
-  it("should render logout button when authenticated");
-  it("should not render logout button when not authenticated");
+describe('AppSidebar with logout', () => {
+  it('should render logout button when authenticated');
+  it('should not render logout button when not authenticated');
 });
 ```
 

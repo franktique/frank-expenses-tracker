@@ -29,13 +29,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'Pending column added successfully to expenses table',
-        created: true
+        created: true,
       });
     } else {
       return NextResponse.json({
         success: true,
         message: 'Pending column already exists in expenses table',
-        created: false
+        created: false,
       });
     }
   } catch (error) {
@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       {
         success: false,
         error: 'Failed to add pending column to expenses table',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -79,13 +79,13 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'Pending column removed successfully from expenses table',
-        deleted: true
+        deleted: true,
       });
     } else {
       return NextResponse.json({
         success: true,
         message: 'Pending column does not exist in expenses table',
-        deleted: false
+        deleted: false,
       });
     }
   } catch (error) {
@@ -94,7 +94,7 @@ export async function DELETE(request: NextRequest) {
       {
         success: false,
         error: 'Failed to remove pending column from expenses table',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        details: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

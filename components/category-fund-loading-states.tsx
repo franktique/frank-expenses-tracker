@@ -1,32 +1,32 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { useState } from 'react';
+import { Loader2, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 interface LoadingStateProps {
   className?: string;
-  size?: "sm" | "md" | "lg";
+  size?: 'sm' | 'md' | 'lg';
   message?: string;
 }
 
 export function CategoryFundLoadingSpinner({
   className,
-  size = "md",
-  message = "Cargando...",
+  size = 'md',
+  message = 'Cargando...',
 }: LoadingStateProps) {
   const sizeClasses = {
-    sm: "h-4 w-4",
-    md: "h-6 w-6",
-    lg: "h-8 w-8",
+    sm: 'h-4 w-4',
+    md: 'h-6 w-6',
+    lg: 'h-8 w-8',
   };
 
   return (
-    <div className={cn("flex items-center gap-2", className)}>
-      <Loader2 className={cn("animate-spin", sizeClasses[size])} />
+    <div className={cn('flex items-center gap-2', className)}>
+      <Loader2 className={cn('animate-spin', sizeClasses[size])} />
       <span className="text-sm text-muted-foreground">{message}</span>
     </div>
   );
@@ -50,7 +50,7 @@ export function CategoryFundOperationLoading({
   className,
 }: OperationLoadingCardProps) {
   return (
-    <Card className={cn("w-full max-w-md", className)}>
+    <Card className={cn('w-full max-w-md', className)}>
       <CardContent className="pt-6">
         <div className="space-y-4">
           <div className="flex items-center gap-3">
@@ -69,9 +69,9 @@ export function CategoryFundOperationLoading({
                 <span>Progreso</span>
                 <span>{Math.round(progress)}%</span>
               </div>
-              <div className="w-full bg-secondary rounded-full h-2">
+              <div className="h-2 w-full rounded-full bg-secondary">
                 <div
-                  className="bg-primary h-2 rounded-full transition-all duration-300"
+                  className="h-2 rounded-full bg-primary transition-all duration-300"
                   style={{ width: `${progress}%` }}
                 />
               </div>
@@ -94,8 +94,8 @@ export function CategoryFundOperationLoading({
                     <span
                       className={cn(
                         index <= currentStep
-                          ? "text-foreground"
-                          : "text-muted-foreground"
+                          ? 'text-foreground'
+                          : 'text-muted-foreground'
                       )}
                     >
                       {step}
@@ -117,13 +117,13 @@ interface ButtonLoadingStateProps {
   loadingText?: string;
   disabled?: boolean;
   variant?:
-    | "default"
-    | "destructive"
-    | "outline"
-    | "secondary"
-    | "ghost"
-    | "link";
-  size?: "default" | "sm" | "lg" | "icon";
+    | 'default'
+    | 'destructive'
+    | 'outline'
+    | 'secondary'
+    | 'ghost'
+    | 'link';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
   onClick?: () => void;
 }
@@ -133,8 +133,8 @@ export function CategoryFundLoadingButton({
   children,
   loadingText,
   disabled,
-  variant = "default",
-  size = "default",
+  variant = 'default',
+  size = 'default',
   className,
   onClick,
 }: ButtonLoadingStateProps) {
@@ -147,13 +147,13 @@ export function CategoryFundLoadingButton({
       onClick={onClick}
     >
       {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-      {isLoading ? loadingText || "Cargando..." : children}
+      {isLoading ? loadingText || 'Cargando...' : children}
     </Button>
   );
 }
 
 interface ValidationStatusProps {
-  status: "idle" | "validating" | "valid" | "invalid" | "warning";
+  status: 'idle' | 'validating' | 'valid' | 'invalid' | 'warning';
   message?: string;
   className?: string;
 }
@@ -166,46 +166,46 @@ export function CategoryFundValidationStatus({
   const statusConfig = {
     idle: {
       icon: null,
-      color: "text-muted-foreground",
-      bgColor: "bg-muted/20",
-      borderColor: "border-muted",
+      color: 'text-muted-foreground',
+      bgColor: 'bg-muted/20',
+      borderColor: 'border-muted',
     },
     validating: {
       icon: <Loader2 className="h-4 w-4 animate-spin" />,
-      color: "text-primary",
-      bgColor: "bg-primary/10",
-      borderColor: "border-primary/20",
+      color: 'text-primary',
+      bgColor: 'bg-primary/10',
+      borderColor: 'border-primary/20',
     },
     valid: {
       icon: <CheckCircle2 className="h-4 w-4" />,
-      color: "text-green-600",
-      bgColor: "bg-green-50",
-      borderColor: "border-green-200",
+      color: 'text-green-600',
+      bgColor: 'bg-green-50',
+      borderColor: 'border-green-200',
     },
     invalid: {
       icon: <AlertCircle className="h-4 w-4" />,
-      color: "text-destructive",
-      bgColor: "bg-destructive/10",
-      borderColor: "border-destructive/20",
+      color: 'text-destructive',
+      bgColor: 'bg-destructive/10',
+      borderColor: 'border-destructive/20',
     },
     warning: {
       icon: <AlertCircle className="h-4 w-4" />,
-      color: "text-amber-600",
-      bgColor: "bg-amber-50",
-      borderColor: "border-amber-200",
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50',
+      borderColor: 'border-amber-200',
     },
   };
 
   const config = statusConfig[status];
 
-  if (status === "idle" && !message) {
+  if (status === 'idle' && !message) {
     return null;
   }
 
   return (
     <div
       className={cn(
-        "flex items-center gap-2 p-2 rounded-md border text-sm",
+        'flex items-center gap-2 rounded-md border p-2 text-sm',
         config.color,
         config.bgColor,
         config.borderColor,
@@ -224,7 +224,7 @@ export function useCategoryFundLoadingState() {
     {}
   );
   const [validationStates, setValidationStates] = useState<
-    Record<string, ValidationStatusProps["status"]>
+    Record<string, ValidationStatusProps['status']>
   >({});
   const [messages, setMessages] = useState<Record<string, string>>({});
 
@@ -237,7 +237,7 @@ export function useCategoryFundLoadingState() {
 
   const setValidation = (
     key: string,
-    status: ValidationStatusProps["status"],
+    status: ValidationStatusProps['status'],
     message?: string
   ) => {
     setValidationStates((prev) => ({ ...prev, [key]: status }));
@@ -247,7 +247,7 @@ export function useCategoryFundLoadingState() {
   };
 
   const isLoading = (key: string) => loadingStates[key] || false;
-  const getValidationStatus = (key: string) => validationStates[key] || "idle";
+  const getValidationStatus = (key: string) => validationStates[key] || 'idle';
   const getMessage = (key: string) => messages[key];
 
   const clearState = (key: string) => {

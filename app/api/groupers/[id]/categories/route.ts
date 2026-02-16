@@ -1,5 +1,5 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export async function GET(
   request: NextRequest,
@@ -10,7 +10,7 @@ export async function GET(
 
     if (isNaN(grouperId)) {
       return NextResponse.json(
-        { error: "Invalid grouper ID" },
+        { error: 'Invalid grouper ID' },
         { status: 400 }
       );
     }
@@ -43,7 +43,7 @@ export async function POST(
 
     if (isNaN(grouperId)) {
       return NextResponse.json(
-        { error: "Invalid grouper ID" },
+        { error: 'Invalid grouper ID' },
         { status: 400 }
       );
     }
@@ -53,7 +53,7 @@ export async function POST(
     // Support both single categoryId (backward compatibility) and batch categoryIds
     let categoryIds: string[];
 
-    if (body.categoryId && typeof body.categoryId === "string") {
+    if (body.categoryId && typeof body.categoryId === 'string') {
       // Backward compatibility: single category
       categoryIds = [body.categoryId];
     } else if (body.categoryIds && Array.isArray(body.categoryIds)) {
@@ -63,7 +63,7 @@ export async function POST(
       return NextResponse.json(
         {
           error:
-            "Valid categoryId (UUID string) or categoryIds (array of UUID strings) is required",
+            'Valid categoryId (UUID string) or categoryIds (array of UUID strings) is required',
         },
         { status: 400 }
       );
@@ -72,7 +72,7 @@ export async function POST(
     // Validate all category IDs
     if (categoryIds.length === 0) {
       return NextResponse.json(
-        { error: "At least one category ID is required" },
+        { error: 'At least one category ID is required' },
         { status: 400 }
       );
     }
@@ -80,12 +80,12 @@ export async function POST(
     for (const categoryId of categoryIds) {
       if (
         !categoryId ||
-        typeof categoryId !== "string" ||
-        categoryId.trim() === ""
+        typeof categoryId !== 'string' ||
+        categoryId.trim() === ''
       ) {
         return NextResponse.json(
           {
-            error: "All category IDs must be valid UUID strings",
+            error: 'All category IDs must be valid UUID strings',
           },
           { status: 400 }
         );
@@ -168,13 +168,13 @@ export async function POST(
         const errorMessage = (categoryError as Error).message;
 
         // Provide more specific error messages based on common database errors
-        if (errorMessage.includes("duplicate key")) {
+        if (errorMessage.includes('duplicate key')) {
           errors.push(
             `La categoría ${categoryId} ya está asignada a este agrupador`
           );
-        } else if (errorMessage.includes("foreign key")) {
+        } else if (errorMessage.includes('foreign key')) {
           errors.push(`Referencia inválida para la categoría ${categoryId}`);
-        } else if (errorMessage.includes("connection")) {
+        } else if (errorMessage.includes('connection')) {
           errors.push(
             `Error de conexión a la base de datos para la categoría ${categoryId}`
           );
@@ -192,7 +192,7 @@ export async function POST(
         return NextResponse.json(addedCategories[0]);
       } else if (skipped === 1) {
         return NextResponse.json(
-          { error: "Category is already assigned to this grouper" },
+          { error: 'Category is already assigned to this grouper' },
           { status: 400 }
         );
       } else if (errors.length > 0) {
@@ -236,22 +236,22 @@ export async function DELETE(
   try {
     const grouperId = parseInt(params.id);
     const url = new URL(request.url);
-    const categoryId = url.searchParams.get("categoryId");
+    const categoryId = url.searchParams.get('categoryId');
 
     if (isNaN(grouperId)) {
       return NextResponse.json(
-        { error: "ID de agrupador inválido. Debe ser un número." },
+        { error: 'ID de agrupador inválido. Debe ser un número.' },
         { status: 400 }
       );
     }
 
     if (
       !categoryId ||
-      typeof categoryId !== "string" ||
-      categoryId.trim() === ""
+      typeof categoryId !== 'string' ||
+      categoryId.trim() === ''
     ) {
       return NextResponse.json(
-        { error: "ID de categoría requerido. Debe ser un UUID válido." },
+        { error: 'ID de categoría requerido. Debe ser un UUID válido.' },
         { status: 400 }
       );
     }
@@ -315,7 +315,7 @@ export async function DELETE(
     // Verify deletion was successful
     if (!result || result.count === 0) {
       return NextResponse.json(
-        { error: "No se pudo eliminar la relación. Intente nuevamente." },
+        { error: 'No se pudo eliminar la relación. Intente nuevamente.' },
         { status: 500 }
       );
     }
@@ -328,17 +328,17 @@ export async function DELETE(
     console.error(`Error removing category from grouper ${params.id}:`, error);
 
     const errorMessage = (error as Error).message;
-    let userFriendlyMessage = "Error interno del servidor";
+    let userFriendlyMessage = 'Error interno del servidor';
 
     // Provide more specific error messages based on common database errors
-    if (errorMessage.includes("connection")) {
+    if (errorMessage.includes('connection')) {
       userFriendlyMessage =
-        "Error de conexión a la base de datos. Intente nuevamente.";
-    } else if (errorMessage.includes("timeout")) {
-      userFriendlyMessage = "La operación tardó demasiado. Intente nuevamente.";
-    } else if (errorMessage.includes("constraint")) {
+        'Error de conexión a la base de datos. Intente nuevamente.';
+    } else if (errorMessage.includes('timeout')) {
+      userFriendlyMessage = 'La operación tardó demasiado. Intente nuevamente.';
+    } else if (errorMessage.includes('constraint')) {
       userFriendlyMessage =
-        "Error de integridad de datos. Verifique que la relación sea válida.";
+        'Error de integridad de datos. Verifique que la relación sea válida.';
     }
 
     return NextResponse.json({ error: userFriendlyMessage }, { status: 500 });

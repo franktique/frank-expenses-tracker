@@ -1,16 +1,16 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 import {
   INVEST_ERROR_MESSAGES,
   type InvestmentProjectionResponse,
   type CompoundingFrequency,
-} from "@/types/invest-simulator";
+} from '@/types/invest-simulator';
 import {
   calculateInvestmentSummary,
   generateProjectionSchedule,
   generateMonthlySummarySchedule,
   compareRates,
-} from "@/lib/invest-calculations";
+} from '@/lib/invest-calculations';
 
 type RouteParams = {
   params: Promise<{ id: string }>;
@@ -34,8 +34,9 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const searchParams = request.nextUrl.searchParams;
-    const view = searchParams.get("view") || "monthly";
-    const includeComparisons = searchParams.get("includeComparisons") !== "false";
+    const view = searchParams.get('view') || 'monthly';
+    const includeComparisons =
+      searchParams.get('includeComparisons') !== 'false';
 
     // Get scenario from database
     const [scenario] = await sql`
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.SCENARIO_NOT_FOUND,
-          code: "NOT_FOUND",
+          code: 'NOT_FOUND',
         },
         { status: 404 }
       );
@@ -70,7 +71,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       monthlyContribution: parseFloat(scenario.monthly_contribution),
       termMonths: scenario.term_months as number,
       annualRate: parseFloat(scenario.annual_rate),
-      compoundingFrequency: scenario.compounding_frequency as CompoundingFrequency,
+      compoundingFrequency:
+        scenario.compounding_frequency as CompoundingFrequency,
     };
 
     // Calculate summary
@@ -78,7 +80,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // Generate schedule based on view preference
     const schedule =
-      view === "detailed"
+      view === 'detailed'
         ? generateProjectionSchedule(scenarioData)
         : generateMonthlySummarySchedule(scenarioData);
 
@@ -110,7 +112,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("Error calculating investment projection:", error);
+    console.error('Error calculating investment projection:', error);
 
     // Check if tables don't exist
     if (
@@ -120,8 +122,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json(
         {
           error: INVEST_ERROR_MESSAGES.TABLES_NOT_FOUND,
-          code: "TABLES_NOT_FOUND",
-          migrationEndpoint: "/api/migrate-invest-simulator",
+          code: 'TABLES_NOT_FOUND',
+          migrationEndpoint: '/api/migrate-invest-simulator',
         },
         { status: 404 }
       );
@@ -129,8 +131,8 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     return NextResponse.json(
       {
-        error: "Error al calcular proyección de inversión",
-        code: "INTERNAL_SERVER_ERROR",
+        error: 'Error al calcular proyección de inversión',
+        code: 'INTERNAL_SERVER_ERROR',
         details: error instanceof Error ? error.message : String(error),
       },
       { status: 500 }

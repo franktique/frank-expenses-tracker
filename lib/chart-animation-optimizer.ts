@@ -3,7 +3,7 @@
  * Handles animation timing, easing, and performance optimization
  */
 
-import React from "react";
+import React from 'react';
 
 interface AnimationConfig {
   duration: number;
@@ -15,7 +15,7 @@ interface AnimationConfig {
 interface ChartAnimationOptions {
   simulateMode: boolean;
   dataLength: number;
-  performanceMode: "auto" | "performance" | "quality";
+  performanceMode: 'auto' | 'performance' | 'quality';
   previousMode?: boolean;
   enableTransitions?: boolean;
 }
@@ -53,7 +53,7 @@ class ChartAnimationOptimizer {
     // Enhanced performance detection
     const isLowPerformanceDevice = this.detectLowPerformanceDevice();
     const shouldReduceAnimations =
-      performanceMode === "performance" ||
+      performanceMode === 'performance' ||
       dataLength > 50 ||
       isLowPerformanceDevice;
 
@@ -61,7 +61,7 @@ class ChartAnimationOptimizer {
       // High performance mode - minimal animations
       config = {
         duration: 0,
-        easing: "linear",
+        easing: 'linear',
         delay: 0,
         stagger: 0,
       };
@@ -72,7 +72,7 @@ class ChartAnimationOptimizer {
 
       config = {
         duration: adaptiveDuration,
-        easing: "cubic-bezier(0.4, 0, 0.2, 1)", // Material design easing
+        easing: 'cubic-bezier(0.4, 0, 0.2, 1)', // Material design easing
         delay: 0,
         stagger: Math.min(15, Math.max(5, 800 / dataLength)), // Adaptive stagger
       };
@@ -80,7 +80,7 @@ class ChartAnimationOptimizer {
       // Simulate mode - reduced animations for clarity with adaptive timing
       config = {
         duration: Math.max(100, 150 - dataLength * 1.5),
-        easing: "ease-out",
+        easing: 'ease-out',
         delay: 0,
         stagger: Math.max(5, 15 - dataLength * 0.2),
       };
@@ -89,7 +89,7 @@ class ChartAnimationOptimizer {
       const baseDuration = dataLength > 20 ? 180 : 280;
       config = {
         duration: Math.max(150, baseDuration - dataLength * 1.5),
-        easing: "ease-out",
+        easing: 'ease-out',
         delay: 0,
         stagger: Math.min(25, Math.max(8, 1200 / dataLength)),
       };
@@ -111,7 +111,7 @@ class ChartAnimationOptimizer {
    * Detect low performance devices for animation optimization
    */
   private detectLowPerformanceDevice(): boolean {
-    if (typeof navigator === "undefined") return false;
+    if (typeof navigator === 'undefined') return false;
 
     // Check for low-end device indicators
     const connection = (navigator as any).connection;
@@ -126,8 +126,8 @@ class ChartAnimationOptimizer {
     const isLowMemory = deviceMemory && deviceMemory < 4;
     const isSlowConnection =
       connection &&
-      (connection.effectiveType === "slow-2g" ||
-        connection.effectiveType === "2g");
+      (connection.effectiveType === 'slow-2g' ||
+        connection.effectiveType === '2g');
 
     return isLowCPU || isLowMemory || isSlowConnection;
   }
@@ -150,14 +150,14 @@ class ChartAnimationOptimizer {
 
     const exitAnimation: AnimationConfig = {
       duration: exitDuration,
-      easing: "ease-in",
+      easing: 'ease-in',
       delay: 0,
       stagger: 5,
     };
 
     const enterAnimation: AnimationConfig = {
       duration: enterDuration,
-      easing: "ease-out",
+      easing: 'ease-out',
       delay: exitDuration + gap,
       stagger: 8,
     };
@@ -204,7 +204,7 @@ class ChartAnimationOptimizer {
           setTimeout(resolve, 300); // Max animation duration
         });
       } catch (error) {
-        console.warn("Animation failed:", error);
+        console.warn('Animation failed:', error);
       }
     }
 
@@ -249,7 +249,7 @@ class ChartAnimationOptimizer {
       animationDuration: `${config.duration}ms`,
       animationTimingFunction: config.easing,
       animationDelay: `${config.delay + index * config.stagger}ms`,
-      animationFillMode: "both",
+      animationFillMode: 'both',
     };
   }
 
@@ -308,13 +308,13 @@ export function useChartAnimationOptimization(
   simulateMode: boolean,
   dataLength: number,
   options: {
-    performanceMode?: "auto" | "performance" | "quality";
+    performanceMode?: 'auto' | 'performance' | 'quality';
     enableTransitions?: boolean;
     onTransitionComplete?: () => void;
   } = {}
 ) {
   const {
-    performanceMode = "auto",
+    performanceMode = 'auto',
     enableTransitions = true,
     onTransitionComplete,
   } = options;

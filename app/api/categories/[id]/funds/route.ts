@@ -1,10 +1,10 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { sql } from "@/lib/db";
-import { UpdateCategoryFundsSchema } from "@/types/funds";
+import { type NextRequest, NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
+import { UpdateCategoryFundsSchema } from '@/types/funds';
 import {
   validateCategoryFundUpdate,
   CATEGORY_FUND_ERROR_MESSAGES,
-} from "@/lib/category-fund-validation";
+} from '@/lib/category-fund-validation';
 
 export async function GET(
   request: NextRequest,
@@ -20,7 +20,7 @@ export async function GET(
 
     if (!category) {
       return NextResponse.json(
-        { error: "Category not found" },
+        { error: 'Category not found' },
         { status: 404 }
       );
     }
@@ -44,7 +44,7 @@ export async function GET(
 
     return NextResponse.json({ funds });
   } catch (error) {
-    console.error("Error fetching category funds:", error);
+    console.error('Error fetching category funds:', error);
     return NextResponse.json(
       { error: (error as Error).message },
       { status: 500 }
@@ -65,7 +65,7 @@ export async function POST(
     if (!validationResult.success) {
       return NextResponse.json(
         {
-          error: "Validation failed",
+          error: 'Validation failed',
           details: validationResult.error.errors,
         },
         { status: 400 }
@@ -80,7 +80,7 @@ export async function POST(
     if (!validation.isValid) {
       return NextResponse.json(
         {
-          error: "Validation failed",
+          error: 'Validation failed',
           details: validation.errors,
         },
         { status: 400 }
@@ -89,13 +89,13 @@ export async function POST(
 
     // Check if user wants to proceed despite warnings
     const url = new URL(request.url);
-    const forceUpdate = url.searchParams.get("force") === "true";
+    const forceUpdate = url.searchParams.get('force') === 'true';
 
     // If there are warnings and user hasn't confirmed, return conflict
     if (validation.warnings.length > 0 && !forceUpdate) {
       return NextResponse.json(
         {
-          error: "Confirmation required",
+          error: 'Confirmation required',
           warnings: validation.warnings,
           validation_data: validation.data,
           can_force: true,
@@ -124,8 +124,8 @@ export async function POST(
         }
       }
     } catch (dbError) {
-      console.error("Database error updating relationships:", dbError);
-      throw new Error("Failed to update category-fund relationships");
+      console.error('Database error updating relationships:', dbError);
+      throw new Error('Failed to update category-fund relationships');
     }
 
     // Fetch and return updated relationships
@@ -146,13 +146,13 @@ export async function POST(
     `;
 
     return NextResponse.json({
-      message: "Relaciones categoría-fondo actualizadas exitosamente",
+      message: 'Relaciones categoría-fondo actualizadas exitosamente',
       funds: updatedFunds,
       warnings: validation.warnings,
       validation_data: validation.data,
     });
   } catch (error) {
-    console.error("Error updating category funds:", error);
+    console.error('Error updating category funds:', error);
     return NextResponse.json(
       {
         error: CATEGORY_FUND_ERROR_MESSAGES.SERVER_ERROR,

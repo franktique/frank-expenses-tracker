@@ -1,4 +1,4 @@
-import { toast } from "@/components/ui/use-toast";
+import { toast } from '@/components/ui/use-toast';
 
 export interface SimulationApiError {
   message: string;
@@ -6,12 +6,12 @@ export interface SimulationApiError {
   code?: string;
   retryable?: boolean;
   type:
-    | "validation"
-    | "network"
-    | "server"
-    | "simulation_not_found"
-    | "data_consistency"
-    | "unknown";
+    | 'validation'
+    | 'network'
+    | 'server'
+    | 'simulation_not_found'
+    | 'data_consistency'
+    | 'unknown';
   context?: string;
   simulationId?: number;
 }
@@ -101,8 +101,8 @@ export async function parseSimulationApiError(
   let errorData: any = {};
 
   try {
-    const contentType = response.headers.get("content-type");
-    if (contentType && contentType.includes("application/json")) {
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
       errorData = await response.json();
     } else {
       errorData = { message: await response.text() };
@@ -134,61 +134,61 @@ function categorizeSimulationError(
   message: string,
   status?: number
 ):
-  | "validation"
-  | "network"
-  | "server"
-  | "simulation_not_found"
-  | "data_consistency"
-  | "unknown" {
+  | 'validation'
+  | 'network'
+  | 'server'
+  | 'simulation_not_found'
+  | 'data_consistency'
+  | 'unknown' {
   const lowerMessage = message.toLowerCase();
 
   if (
     status === 404 ||
-    lowerMessage.includes("simulation not found") ||
-    lowerMessage.includes("simulación no encontrada")
+    lowerMessage.includes('simulation not found') ||
+    lowerMessage.includes('simulación no encontrada')
   ) {
-    return "simulation_not_found";
+    return 'simulation_not_found';
   }
 
   if (
-    lowerMessage.includes("validation") ||
-    lowerMessage.includes("invalid") ||
-    lowerMessage.includes("required") ||
-    lowerMessage.includes("debe ser un número positivo") ||
-    lowerMessage.includes("positive number")
+    lowerMessage.includes('validation') ||
+    lowerMessage.includes('invalid') ||
+    lowerMessage.includes('required') ||
+    lowerMessage.includes('debe ser un número positivo') ||
+    lowerMessage.includes('positive number')
   ) {
-    return "validation";
+    return 'validation';
   }
 
   if (
-    lowerMessage.includes("fetch") ||
-    lowerMessage.includes("network") ||
-    lowerMessage.includes("connection") ||
-    lowerMessage.includes("failed to fetch")
+    lowerMessage.includes('fetch') ||
+    lowerMessage.includes('network') ||
+    lowerMessage.includes('connection') ||
+    lowerMessage.includes('failed to fetch')
   ) {
-    return "network";
+    return 'network';
   }
 
   if (
-    lowerMessage.includes("server") ||
+    lowerMessage.includes('server') ||
     (status && status >= 500) ||
-    lowerMessage.includes("internal") ||
-    lowerMessage.includes("database")
+    lowerMessage.includes('internal') ||
+    lowerMessage.includes('database')
   ) {
-    return "server";
+    return 'server';
   }
 
   if (
-    lowerMessage.includes("consistency") ||
-    lowerMessage.includes("category") ||
-    lowerMessage.includes("budget") ||
-    lowerMessage.includes("mismatch") ||
-    lowerMessage.includes("conflict")
+    lowerMessage.includes('consistency') ||
+    lowerMessage.includes('category') ||
+    lowerMessage.includes('budget') ||
+    lowerMessage.includes('mismatch') ||
+    lowerMessage.includes('conflict')
   ) {
-    return "data_consistency";
+    return 'data_consistency';
   }
 
-  return "unknown";
+  return 'unknown';
 }
 
 /**
@@ -198,34 +198,34 @@ export function handleSimulationApiError(
   error: SimulationApiError,
   showToast: boolean = true
 ) {
-  let title = "Error en simulación";
+  let title = 'Error en simulación';
   let description = error.message;
 
   switch (error.type) {
-    case "simulation_not_found":
-      title = "Simulación no encontrada";
-      description = "La simulación solicitada no existe o ha sido eliminada.";
+    case 'simulation_not_found':
+      title = 'Simulación no encontrada';
+      description = 'La simulación solicitada no existe o ha sido eliminada.';
       break;
-    case "validation":
-      title = "Error de validación";
+    case 'validation':
+      title = 'Error de validación';
       description =
-        "Los datos ingresados no son válidos. Verifique los valores.";
+        'Los datos ingresados no son válidos. Verifique los valores.';
       break;
-    case "network":
-      title = "Error de conexión";
-      description = "Verifique su conexión a internet e intente nuevamente.";
+    case 'network':
+      title = 'Error de conexión';
+      description = 'Verifique su conexión a internet e intente nuevamente.';
       break;
-    case "server":
-      title = "Error del servidor";
-      description = "Ocurrió un error interno. Intente nuevamente.";
+    case 'server':
+      title = 'Error del servidor';
+      description = 'Ocurrió un error interno. Intente nuevamente.';
       break;
-    case "data_consistency":
-      title = "Error de consistencia";
+    case 'data_consistency':
+      title = 'Error de consistencia';
       description =
-        "Los datos de la simulación no son consistentes. Intente recargar.";
+        'Los datos de la simulación no son consistentes. Intente recargar.';
       break;
     default:
-      title = "Error inesperado";
+      title = 'Error inesperado';
       description = error.message;
   }
 
@@ -241,7 +241,7 @@ export function handleSimulationApiError(
     toast({
       title,
       description,
-      variant: "destructive",
+      variant: 'destructive',
     });
   }
 
@@ -258,24 +258,24 @@ export function validateSimulationName(name: string): {
   const trimmedName = name.trim();
 
   if (!trimmedName) {
-    return { valid: false, error: "El nombre de la simulación es requerido" };
+    return { valid: false, error: 'El nombre de la simulación es requerido' };
   }
 
   if (trimmedName.length > 255) {
-    return { valid: false, error: "El nombre no puede exceder 255 caracteres" };
+    return { valid: false, error: 'El nombre no puede exceder 255 caracteres' };
   }
 
   if (trimmedName.length < 2) {
     return {
       valid: false,
-      error: "El nombre debe tener al menos 2 caracteres",
+      error: 'El nombre debe tener al menos 2 caracteres',
     };
   }
 
   // Check for invalid characters
   const invalidChars = /[<>:"\/\\|?*\x00-\x1f]/;
   if (invalidChars.test(trimmedName)) {
-    return { valid: false, error: "El nombre contiene caracteres no válidos" };
+    return { valid: false, error: 'El nombre contiene caracteres no válidos' };
   }
 
   return { valid: true };
@@ -295,25 +295,25 @@ export function validateSimulationBudget(budget: {
   const errors: string[] = [];
 
   if (!Number.isInteger(budget.category_id) || budget.category_id <= 0) {
-    errors.push("ID de categoría inválido");
+    errors.push('ID de categoría inválido');
   }
 
   if (
-    typeof budget.efectivo_amount !== "number" ||
+    typeof budget.efectivo_amount !== 'number' ||
     isNaN(budget.efectivo_amount)
   ) {
-    errors.push("Monto de efectivo debe ser un número");
+    errors.push('Monto de efectivo debe ser un número');
   } else if (budget.efectivo_amount < 0) {
-    errors.push("Monto de efectivo debe ser positivo");
+    errors.push('Monto de efectivo debe ser positivo');
   }
 
   if (
-    typeof budget.credito_amount !== "number" ||
+    typeof budget.credito_amount !== 'number' ||
     isNaN(budget.credito_amount)
   ) {
-    errors.push("Monto de crédito debe ser un número");
+    errors.push('Monto de crédito debe ser un número');
   } else if (budget.credito_amount < 0) {
-    errors.push("Monto de crédito debe ser positivo");
+    errors.push('Monto de crédito debe ser positivo');
   }
 
   return {
@@ -334,12 +334,12 @@ export function validateSimulationBudgets(budgets: any[]): {
   const globalErrors: string[] = [];
 
   if (!Array.isArray(budgets)) {
-    globalErrors.push("Los presupuestos deben ser un array");
+    globalErrors.push('Los presupuestos deben ser un array');
     return { valid: false, errors, globalErrors };
   }
 
   if (budgets.length === 0) {
-    globalErrors.push("Debe incluir al menos un presupuesto");
+    globalErrors.push('Debe incluir al menos un presupuesto');
     return { valid: false, errors, globalErrors };
   }
 
@@ -357,7 +357,7 @@ export function validateSimulationBudgets(budgets: any[]): {
       if (!errors[budget.category_id]) {
         errors[budget.category_id] = [];
       }
-      errors[budget.category_id].push("Categoría duplicada");
+      errors[budget.category_id].push('Categoría duplicada');
     } else if (budget.category_id) {
       categoryIds.add(budget.category_id);
     }
@@ -383,16 +383,16 @@ export function validateSimulationDataConsistency(
   const issues: string[] = [];
 
   if (!simulationData) {
-    issues.push("Datos de simulación faltantes");
+    issues.push('Datos de simulación faltantes');
     return { valid: false, issues };
   }
 
   if (!simulationData.id) {
-    issues.push("ID de simulación faltante");
+    issues.push('ID de simulación faltante');
   }
 
-  if (!simulationData.name || simulationData.name.trim() === "") {
-    issues.push("Nombre de simulación faltante");
+  if (!simulationData.name || simulationData.name.trim() === '') {
+    issues.push('Nombre de simulación faltante');
   }
 
   // Check if simulation has budgets for non-existent categories
@@ -460,7 +460,7 @@ export function createSimulationLoadingManager() {
 export function getSimulationFallbackData(simulationId?: number) {
   return {
     id: simulationId || 0,
-    name: "Simulación sin nombre",
+    name: 'Simulación sin nombre',
     description: null,
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
@@ -475,7 +475,7 @@ export function getSimulationAnalyticsFallbackData(simulationId: number) {
   return {
     simulation_data: {
       simulation_id: simulationId,
-      simulation_name: "Simulación",
+      simulation_name: 'Simulación',
       grouper_data: [],
     },
     historical_data: [],

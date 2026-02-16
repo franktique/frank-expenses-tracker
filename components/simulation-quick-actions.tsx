@@ -1,22 +1,22 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useRouter, usePathname } from "next/navigation";
-import { Button } from "@/components/ui/button";
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Badge } from "@/components/ui/badge";
+} from '@/components/ui/tooltip';
+import { Badge } from '@/components/ui/badge';
 import {
   Settings,
   BarChart3,
@@ -28,7 +28,7 @@ import {
   Zap,
   Clock,
   TrendingUp,
-} from "lucide-react";
+} from 'lucide-react';
 
 // Types
 type Simulation = {
@@ -70,19 +70,26 @@ function SimulationQuickActions({
   const [prevSimulation, setPrevSimulation] = useState<Simulation | null>(null);
 
   // Determine current page context - memoized to prevent recalculation
-  const pageContext = useMemo(() => ({
-    isAnalyticsPage: pathname.includes("/analytics"),
-    isConfigPage: pathname.includes("/simular/") && !pathname.includes("/analytics"),
-    isListPage: pathname === "/simular",
-  }), [pathname]);
-  
+  const pageContext = useMemo(
+    () => ({
+      isAnalyticsPage: pathname.includes('/analytics'),
+      isConfigPage:
+        pathname.includes('/simular/') && !pathname.includes('/analytics'),
+      isListPage: pathname === '/simular',
+    }),
+    [pathname]
+  );
+
   const { isAnalyticsPage, isConfigPage, isListPage } = pageContext;
 
   // Memoize computed page context values to prevent unnecessary re-renders
-  const { currentSimulationId, simulationBudgetCount } = useMemo(() => ({
-    currentSimulationId: currentSimulation?.id || null,
-    simulationBudgetCount: currentSimulation?.budget_count || 0,
-  }), [currentSimulation?.id, currentSimulation?.budget_count]);
+  const { currentSimulationId, simulationBudgetCount } = useMemo(
+    () => ({
+      currentSimulationId: currentSimulation?.id || null,
+      simulationBudgetCount: currentSimulation?.budget_count || 0,
+    }),
+    [currentSimulation?.id, currentSimulation?.budget_count]
+  );
 
   // Load navigation context - fixed dependencies to prevent infinite loops
   useEffect(() => {
@@ -90,7 +97,7 @@ function SimulationQuickActions({
       if (!currentSimulationId) return;
 
       try {
-        const response = await fetch("/api/simulations");
+        const response = await fetch('/api/simulations');
         if (response.ok) {
           const simulations = await response.json();
           const currentIndex = simulations.findIndex(
@@ -107,14 +114,17 @@ function SimulationQuickActions({
 
           // Generate workflow suggestions - use current simulation budget count directly
           const suggestions = generateWorkflowSuggestions(
-            { id: currentSimulationId, budget_count: currentSimulation?.budget_count || 0 } as Simulation,
+            {
+              id: currentSimulationId,
+              budget_count: currentSimulation?.budget_count || 0,
+            } as Simulation,
             isAnalyticsPage,
             isConfigPage
           );
           setWorkflowSuggestions(suggestions);
         }
       } catch (error) {
-        console.error("Error loading navigation context:", error);
+        console.error('Error loading navigation context:', error);
       }
     };
 
@@ -123,30 +133,33 @@ function SimulationQuickActions({
   }, [currentSimulationId, isAnalyticsPage, isConfigPage]); // Removed simulationBudgetCount to prevent infinite loop
 
   // Generate workflow suggestions based on current context - memoized to prevent re-creation
-  const generateWorkflowSuggestions = useCallback((
-    simulation: Simulation,
-    isAnalytics: boolean,
-    isConfig: boolean
-  ): string[] => {
-    const suggestions: string[] = [];
+  const generateWorkflowSuggestions = useCallback(
+    (
+      simulation: Simulation,
+      isAnalytics: boolean,
+      isConfig: boolean
+    ): string[] => {
+      const suggestions: string[] = [];
 
-    if (isConfig) {
-      if (simulation.budget_count === 0) {
-        suggestions.push("Configura presupuestos para las categorías");
-      } else {
-        suggestions.push("Revisa el análisis de tu simulación");
-        suggestions.push("Compara con datos históricos");
+      if (isConfig) {
+        if (simulation.budget_count === 0) {
+          suggestions.push('Configura presupuestos para las categorías');
+        } else {
+          suggestions.push('Revisa el análisis de tu simulación');
+          suggestions.push('Compara con datos históricos');
+        }
       }
-    }
 
-    if (isAnalytics) {
-      suggestions.push("Ajusta presupuestos basado en el análisis");
-      suggestions.push("Exporta datos para reportes");
-      suggestions.push("Duplica para crear variaciones");
-    }
+      if (isAnalytics) {
+        suggestions.push('Ajusta presupuestos basado en el análisis');
+        suggestions.push('Exporta datos para reportes');
+        suggestions.push('Duplica para crear variaciones');
+      }
 
-    return suggestions;
-  }, []);
+      return suggestions;
+    },
+    []
+  );
 
   // Navigation handlers - memoized to prevent re-creation
   const handleNavigateToNext = useCallback(() => {
@@ -194,7 +207,7 @@ function SimulationQuickActions({
                     <TooltipContent>
                       {prevSimulation
                         ? `Anterior: ${prevSimulation.name}`
-                        : "No hay simulación anterior"}
+                        : 'No hay simulación anterior'}
                     </TooltipContent>
                   </Tooltip>
 
@@ -213,7 +226,7 @@ function SimulationQuickActions({
                     <TooltipContent>
                       {nextSimulation
                         ? `Siguiente: ${nextSimulation.name}`
-                        : "No hay simulación siguiente"}
+                        : 'No hay simulación siguiente'}
                     </TooltipContent>
                   </Tooltip>
                 </div>
@@ -340,7 +353,7 @@ function SimulationQuickActions({
         {showWorkflowSuggestions && workflowSuggestions.length > 0 && (
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-sm flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-sm">
                 <TrendingUp className="h-4 w-4 text-blue-600" />
                 Sugerencias de Flujo de Trabajo
               </CardTitle>
@@ -352,9 +365,9 @@ function SimulationQuickActions({
               {workflowSuggestions.map((suggestion, index) => (
                 <div
                   key={index}
-                  className="flex items-center gap-2 text-sm p-2 rounded-lg bg-blue-50 border border-blue-200"
+                  className="flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 p-2 text-sm"
                 >
-                  <Clock className="h-3 w-3 text-blue-600 flex-shrink-0" />
+                  <Clock className="h-3 w-3 flex-shrink-0 text-blue-600" />
                   <span className="text-blue-800">{suggestion}</span>
                 </div>
               ))}
@@ -396,7 +409,8 @@ export default React.memo(SimulationQuickActions, (prevProps, nextProps) => {
   // Only re-render if these specific values change
   return (
     prevProps.currentSimulation?.id === nextProps.currentSimulation?.id &&
-    prevProps.currentSimulation?.budget_count === nextProps.currentSimulation?.budget_count &&
+    prevProps.currentSimulation?.budget_count ===
+      nextProps.currentSimulation?.budget_count &&
     prevProps.showWorkflowSuggestions === nextProps.showWorkflowSuggestions
     // Ignore callback props as they're stable from useCallback in parent
   );

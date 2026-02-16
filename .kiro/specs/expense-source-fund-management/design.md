@@ -167,14 +167,14 @@ export interface Expense {
 export const CreateExpenseSchema = z.object({
   category_id: z.string().uuid(),
   period_id: z.string().uuid(),
-  date: z.string().refine((date) => !isNaN(Date.parse(date)), "Fecha inválida"),
-  event: z.string().max(255, "El evento es demasiado largo").optional(),
+  date: z.string().refine((date) => !isNaN(Date.parse(date)), 'Fecha inválida'),
+  event: z.string().max(255, 'El evento es demasiado largo').optional(),
   payment_method: PaymentMethodEnum,
   description: z
     .string()
-    .min(1, "La descripción es obligatoria")
-    .max(500, "La descripción es demasiado larga"),
-  amount: z.number().positive("El monto debe ser positivo"),
+    .min(1, 'La descripción es obligatoria')
+    .max(500, 'La descripción es demasiado larga'),
+  amount: z.number().positive('El monto debe ser positivo'),
   source_fund_id: z.string().uuid(), // new required field
   destination_fund_id: z.string().uuid().optional(),
 });
@@ -184,16 +184,16 @@ export const UpdateExpenseSchema = z.object({
   category_id: z.string().uuid().optional(),
   date: z
     .string()
-    .refine((date) => !isNaN(Date.parse(date)), "Fecha inválida")
+    .refine((date) => !isNaN(Date.parse(date)), 'Fecha inválida')
     .optional(),
-  event: z.string().max(255, "El evento es demasiado largo").optional(),
+  event: z.string().max(255, 'El evento es demasiado largo').optional(),
   payment_method: PaymentMethodEnum.optional(),
   description: z
     .string()
-    .min(1, "La descripción es obligatoria")
-    .max(500, "La descripción es demasiado larga")
+    .min(1, 'La descripción es obligatoria')
+    .max(500, 'La descripción es demasiado larga')
     .optional(),
-  amount: z.number().positive("El monto debe ser positivo").optional(),
+  amount: z.number().positive('El monto debe ser positivo').optional(),
   source_fund_id: z.string().uuid().optional(), // new optional field
   destination_fund_id: z.string().uuid().optional(),
 });
@@ -232,12 +232,12 @@ current_balance = initial_balance
 
 ```typescript
 export const SOURCE_FUND_ERROR_MESSAGES = {
-  SOURCE_FUND_REQUIRED: "Debe seleccionar un fondo origen para el gasto",
+  SOURCE_FUND_REQUIRED: 'Debe seleccionar un fondo origen para el gasto',
   SOURCE_FUND_INVALID_FOR_CATEGORY:
-    "El fondo origen seleccionado no está asociado con esta categoría",
-  SOURCE_FUND_NOT_FOUND: "El fondo origen especificado no existe",
+    'El fondo origen seleccionado no está asociado con esta categoría',
+  SOURCE_FUND_NOT_FOUND: 'El fondo origen especificado no existe',
   MIGRATION_SOURCE_FUND_MISSING:
-    "No se pudo determinar el fondo origen para el gasto",
+    'No se pudo determinar el fondo origen para el gasto',
 } as const;
 ```
 

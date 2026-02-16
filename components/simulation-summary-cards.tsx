@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import React, { memo, useMemo } from "react";
+import React, { memo, useMemo } from 'react';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   Target,
   TrendingUp,
@@ -22,8 +22,8 @@ import {
   Calendar,
   DollarSign,
   Percent,
-} from "lucide-react";
-import { formatCurrency } from "@/lib/utils";
+} from 'lucide-react';
+import { formatCurrency } from '@/lib/utils';
 
 // Types for simulation metrics
 interface SimulationMetrics {
@@ -36,7 +36,7 @@ interface SimulationMetrics {
   topVariations: Array<{
     grouper_name: string;
     variance_percentage: number;
-    trend: "increase" | "decrease" | "stable";
+    trend: 'increase' | 'decrease' | 'stable';
   }>;
   budgetDistribution: Array<{
     payment_method: string;
@@ -80,33 +80,33 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
       const isHighVariance = Math.abs(metrics.overallVariance) > 20;
 
       return {
-        configurationStatus: hasConfiguration ? "complete" : "incomplete",
-        varianceStatus: isHighVariance ? "high" : "normal",
-        trendStatus: isPositiveVariance ? "positive" : "negative",
+        configurationStatus: hasConfiguration ? 'complete' : 'incomplete',
+        varianceStatus: isHighVariance ? 'high' : 'normal',
+        trendStatus: isPositiveVariance ? 'positive' : 'negative',
         overallHealth:
-          hasConfiguration && !isHighVariance ? "good" : "attention",
+          hasConfiguration && !isHighVariance ? 'good' : 'attention',
       };
     }, [metrics]);
 
     // Format creation date
     const formattedDate = useMemo(() => {
-      return new Date(simulationInfo.created_at).toLocaleDateString("es-CO", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
+      return new Date(simulationInfo.created_at).toLocaleDateString('es-CO', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
       });
     }, [simulationInfo.created_at]);
 
     if (isLoading) {
       return (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {[...Array(4)].map((_, index) => (
             <Card key={index}>
               <CardContent className="p-4">
                 <div className="animate-pulse">
-                  <div className="h-4 bg-muted rounded w-3/4 mb-2"></div>
-                  <div className="h-8 bg-muted rounded w-1/2 mb-2"></div>
-                  <div className="h-3 bg-muted rounded w-full"></div>
+                  <div className="mb-2 h-4 w-3/4 rounded bg-muted"></div>
+                  <div className="mb-2 h-8 w-1/2 rounded bg-muted"></div>
+                  <div className="h-3 w-full rounded bg-muted"></div>
                 </div>
               </CardContent>
             </Card>
@@ -118,15 +118,15 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
     return (
       <div className="space-y-6">
         {/* Main metrics cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
           {/* Total Simulation Amount */}
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="mb-2 flex items-center gap-2">
                 <Target className="h-4 w-4 text-blue-600" />
                 <span className="text-sm font-medium">Total Simulación</span>
               </div>
-              <p className="text-2xl font-bold text-blue-600 mb-1">
+              <p className="mb-1 text-2xl font-bold text-blue-600">
                 {formatCurrency(metrics.totalSimulation)}
               </p>
               <p className="text-xs text-muted-foreground">
@@ -138,11 +138,11 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
           {/* Historical Average */}
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="mb-2 flex items-center gap-2">
                 <BarChart3 className="h-4 w-4 text-gray-600" />
                 <span className="text-sm font-medium">Promedio Histórico</span>
               </div>
-              <p className="text-2xl font-bold text-gray-600 mb-1">
+              <p className="mb-1 text-2xl font-bold text-gray-600">
                 {formatCurrency(metrics.totalHistoricalAvg)}
               </p>
               <p className="text-xs text-muted-foreground">
@@ -154,28 +154,28 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
           {/* Overall Variance */}
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="mb-2 flex items-center gap-2">
                 <TrendingUp
                   className={`h-4 w-4 ${
                     metrics.overallVariance > 0
-                      ? "text-green-600"
+                      ? 'text-green-600'
                       : metrics.overallVariance < 0
-                      ? "text-red-600"
-                      : "text-gray-600"
+                        ? 'text-red-600'
+                        : 'text-gray-600'
                   }`}
                 />
                 <span className="text-sm font-medium">Variación Total</span>
               </div>
               <p
-                className={`text-2xl font-bold mb-1 ${
+                className={`mb-1 text-2xl font-bold ${
                   metrics.overallVariance > 0
-                    ? "text-green-600"
+                    ? 'text-green-600'
                     : metrics.overallVariance < 0
-                    ? "text-red-600"
-                    : "text-gray-600"
+                      ? 'text-red-600'
+                      : 'text-gray-600'
                 }`}
               >
-                {metrics.overallVariance > 0 ? "+" : ""}
+                {metrics.overallVariance > 0 ? '+' : ''}
                 {metrics.overallVariance.toFixed(1)}%
               </p>
               <p className="text-xs text-muted-foreground">
@@ -187,27 +187,27 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
           {/* Significant Variations */}
           <Card>
             <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-2">
+              <div className="mb-2 flex items-center gap-2">
                 <Zap className="h-4 w-4 text-amber-600" />
                 <span className="text-sm font-medium">
                   Variaciones Significativas
                 </span>
               </div>
-              <p className="text-2xl font-bold text-amber-600 mb-1">
+              <p className="mb-1 text-2xl font-bold text-amber-600">
                 {metrics.significantVariations}
               </p>
-              <p className="text-xs text-muted-foreground">cambios {">"}10%</p>
+              <p className="text-xs text-muted-foreground">cambios {'>'}10%</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Status and info cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           {/* Configuration Status */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                {statusIndicators.configurationStatus === "complete" ? (
+              <CardTitle className="flex items-center gap-2 text-base">
+                {statusIndicators.configurationStatus === 'complete' ? (
                   <CheckCircle className="h-4 w-4 text-green-600" />
                 ) : (
                   <AlertTriangle className="h-4 w-4 text-amber-600" />
@@ -229,17 +229,17 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
                 </div>
                 <Badge
                   variant={
-                    statusIndicators.configurationStatus === "complete"
-                      ? "default"
-                      : "secondary"
+                    statusIndicators.configurationStatus === 'complete'
+                      ? 'default'
+                      : 'secondary'
                   }
                   className="w-full justify-center"
                 >
-                  {statusIndicators.configurationStatus === "complete"
-                    ? "Configuración Completa"
-                    : "Configuración Pendiente"}
+                  {statusIndicators.configurationStatus === 'complete'
+                    ? 'Configuración Completa'
+                    : 'Configuración Pendiente'}
                 </Badge>
-                {statusIndicators.configurationStatus !== "complete" && (
+                {statusIndicators.configurationStatus !== 'complete' && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -256,7 +256,7 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
           {/* Top Variations */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Activity className="h-4 w-4 text-blue-600" />
                 Principales Variaciones
               </CardTitle>
@@ -269,15 +269,15 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
                     className="flex items-center justify-between"
                   >
                     <div className="flex items-center gap-2">
-                      {variation.trend === "increase" ? (
+                      {variation.trend === 'increase' ? (
                         <TrendingUp className="h-3 w-3 text-green-600" />
-                      ) : variation.trend === "decrease" ? (
+                      ) : variation.trend === 'decrease' ? (
                         <TrendingDown className="h-3 w-3 text-red-600" />
                       ) : (
                         <div className="h-3 w-3 rounded-full bg-gray-400" />
                       )}
                       <span
-                        className="text-sm truncate max-w-[100px]"
+                        className="max-w-[100px] truncate text-sm"
                         title={variation.grouper_name}
                       >
                         {variation.grouper_name}
@@ -285,21 +285,21 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
                     </div>
                     <Badge
                       variant={
-                        variation.trend === "increase"
-                          ? "default"
-                          : variation.trend === "decrease"
-                          ? "destructive"
-                          : "secondary"
+                        variation.trend === 'increase'
+                          ? 'default'
+                          : variation.trend === 'decrease'
+                            ? 'destructive'
+                            : 'secondary'
                       }
                       className="text-xs"
                     >
-                      {variation.variance_percentage > 0 ? "+" : ""}
+                      {variation.variance_percentage > 0 ? '+' : ''}
                       {variation.variance_percentage.toFixed(1)}%
                     </Badge>
                   </div>
                 ))}
                 {metrics.topVariations.length === 0 && (
-                  <p className="text-sm text-muted-foreground italic">
+                  <p className="text-sm italic text-muted-foreground">
                     No hay variaciones significativas
                   </p>
                 )}
@@ -310,7 +310,7 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
           {/* Simulation Info */}
           <Card>
             <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <Calendar className="h-4 w-4 text-gray-600" />
                 Información de Simulación
               </CardTitle>
@@ -320,7 +320,7 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
                 <div>
                   <span className="text-muted-foreground">Nombre:</span>
                   <p
-                    className="font-medium truncate"
+                    className="truncate font-medium"
                     title={simulationInfo.name}
                   >
                     {simulationInfo.name}
@@ -330,7 +330,7 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
                   <div>
                     <span className="text-muted-foreground">Descripción:</span>
                     <p
-                      className="text-xs text-muted-foreground truncate"
+                      className="truncate text-xs text-muted-foreground"
                       title={simulationInfo.description}
                     >
                       {simulationInfo.description}
@@ -354,7 +354,7 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
         {metrics.budgetDistribution.length > 0 && (
           <Card>
             <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
+              <CardTitle className="flex items-center gap-2 text-base">
                 <DollarSign className="h-4 w-4 text-green-600" />
                 Distribución por Método de Pago
               </CardTitle>
@@ -363,18 +363,18 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {metrics.budgetDistribution.map((distribution, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-3 rounded-lg border"
+                    className="flex items-center justify-between rounded-lg border p-3"
                   >
                     <div className="flex items-center gap-2">
                       <div
                         className={`h-3 w-3 rounded-full ${
-                          distribution.payment_method === "efectivo"
-                            ? "bg-green-500"
-                            : "bg-blue-500"
+                          distribution.payment_method === 'efectivo'
+                            ? 'bg-green-500'
+                            : 'bg-blue-500'
                         }`}
                       />
                       <span className="font-medium capitalize">
@@ -399,15 +399,15 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
         {/* Action buttons */}
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" onClick={onRefresh}>
-            <Activity className="h-4 w-4 mr-2" />
+            <Activity className="mr-2 h-4 w-4" />
             Actualizar Métricas
           </Button>
           <Button variant="outline" onClick={onExportSummary}>
-            <BarChart3 className="h-4 w-4 mr-2" />
+            <BarChart3 className="mr-2 h-4 w-4" />
             Exportar Resumen
           </Button>
           <Button variant="outline" onClick={onNavigateToConfig}>
-            <Target className="h-4 w-4 mr-2" />
+            <Target className="mr-2 h-4 w-4" />
             Ir a Configuración
           </Button>
         </div>
@@ -416,4 +416,4 @@ export const SimulationSummaryCards = memo<SimulationSummaryCardsProps>(
   }
 );
 
-SimulationSummaryCards.displayName = "SimulationSummaryCards";
+SimulationSummaryCards.displayName = 'SimulationSummaryCards';

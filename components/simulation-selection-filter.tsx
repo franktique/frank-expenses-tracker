@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useState } from "react";
+import { useState } from 'react';
 import {
   Check,
   ChevronDown,
@@ -8,16 +8,16 @@ import {
   AlertCircle,
   RefreshCw,
   Plus,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@/components/ui/popover";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+} from '@/components/ui/popover';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 type SimulationData = {
   id: number;
@@ -67,11 +67,11 @@ export function SimulationSelectionFilter({
     if (persistSelection) {
       try {
         sessionStorage.setItem(
-          "analytics-selectedSimulationId",
+          'analytics-selectedSimulationId',
           simulationId.toString()
         );
       } catch (error) {
-        console.warn("Failed to persist simulation selection:", error);
+        console.warn('Failed to persist simulation selection:', error);
       }
     }
   };
@@ -83,9 +83,9 @@ export function SimulationSelectionFilter({
 
     if (persistSelection) {
       try {
-        sessionStorage.removeItem("analytics-selectedSimulationId");
+        sessionStorage.removeItem('analytics-selectedSimulationId');
       } catch (error) {
-        console.warn("Failed to clear persisted simulation selection:", error);
+        console.warn('Failed to clear persisted simulation selection:', error);
       }
     }
   };
@@ -108,24 +108,24 @@ export function SimulationSelectionFilter({
   // Get display text for the trigger button
   const getDisplayText = () => {
     if (isLoading) {
-      return "Cargando...";
+      return 'Cargando...';
     }
 
     if (error) {
-      return "Error al cargar";
+      return 'Error al cargar';
     }
 
     if (selectedSimulation === null) {
       if (allSimulations.length === 0) {
-        return "No hay simulaciones disponibles";
+        return 'No hay simulaciones disponibles';
       }
-      return "Seleccionar simulación para análisis";
+      return 'Seleccionar simulación para análisis';
     }
 
     const selectedSimulationData = allSimulations.find(
       (s) => s.id === selectedSimulation
     );
-    return selectedSimulationData?.name || "Simulación no encontrada";
+    return selectedSimulationData?.name || 'Simulación no encontrada';
   };
 
   // Get selected simulation data for display
@@ -135,10 +135,10 @@ export function SimulationSelectionFilter({
 
   // Format date for display
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("es-CO", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+    return new Date(dateString).toLocaleDateString('es-CO', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
     });
   };
 
@@ -150,9 +150,9 @@ export function SimulationSelectionFilter({
           role="combobox"
           aria-expanded={isOpen}
           className={cn(
-            "w-[320px] justify-between",
-            error && "border-destructive text-destructive",
-            "border-blue-200 bg-blue-50/50"
+            'w-[320px] justify-between',
+            error && 'border-destructive text-destructive',
+            'border-blue-200 bg-blue-50/50'
           )}
           disabled={isLoading}
         >
@@ -170,9 +170,9 @@ export function SimulationSelectionFilter({
       <PopoverContent className="w-[350px] p-0" align="start">
         <div className="p-2">
           {/* Header */}
-          <div className="px-2 py-2 text-sm font-medium text-muted-foreground border-b flex items-center justify-between">
+          <div className="flex items-center justify-between border-b px-2 py-2 text-sm font-medium text-muted-foreground">
             <span>Seleccionar Simulación</span>
-            <div className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">
+            <div className="rounded bg-blue-50 px-2 py-1 text-xs text-blue-600">
               Análisis
             </div>
           </div>
@@ -193,7 +193,7 @@ export function SimulationSelectionFilter({
                         className="ml-2 h-6 px-2 text-xs"
                         disabled={isLoading}
                       >
-                        <RefreshCw className="h-3 w-3 mr-1" />
+                        <RefreshCw className="mr-1 h-3 w-3" />
                         Reintentar
                       </Button>
                     )}
@@ -201,21 +201,21 @@ export function SimulationSelectionFilter({
                 </Alert>
               </div>
             ) : isLoading ? (
-              <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+              <div className="px-2 py-4 text-center text-sm text-muted-foreground">
                 <div className="flex items-center justify-center gap-2">
                   <RefreshCw className="h-4 w-4 animate-spin" />
                   Cargando simulaciones...
                 </div>
               </div>
             ) : sortedSimulations.length === 0 ? (
-              <div className="px-2 py-4 text-sm text-muted-foreground text-center">
+              <div className="px-2 py-4 text-center text-sm text-muted-foreground">
                 <div className="space-y-3">
-                  <Activity className="h-8 w-8 mx-auto opacity-50" />
+                  <Activity className="mx-auto h-8 w-8 opacity-50" />
                   <div>
                     <p className="font-medium">
                       No hay simulaciones disponibles
                     </p>
-                    <p className="text-xs mt-1">
+                    <p className="mt-1 text-xs">
                       Crea una simulación para comenzar el análisis
                     </p>
                   </div>
@@ -224,9 +224,9 @@ export function SimulationSelectionFilter({
                       variant="outline"
                       size="sm"
                       onClick={handleCreateNew}
-                      className="text-xs h-7"
+                      className="h-7 text-xs"
                     >
-                      <Plus className="h-3 w-3 mr-1" />
+                      <Plus className="mr-1 h-3 w-3" />
                       Crear Simulación
                     </Button>
                   )}
@@ -238,13 +238,13 @@ export function SimulationSelectionFilter({
                 {selectedSimulation !== null && (
                   <>
                     <div
-                      className="flex items-center space-x-2 px-2 py-2 hover:bg-accent hover:text-accent-foreground rounded-sm cursor-pointer text-muted-foreground"
+                      className="flex cursor-pointer items-center space-x-2 rounded-sm px-2 py-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
                       onClick={handleClearSelection}
                     >
                       <div className="h-4 w-4" /> {/* Spacer */}
                       <span className="text-sm italic">Limpiar selección</span>
                     </div>
-                    <div className="h-px bg-border my-1" />
+                    <div className="my-1 h-px bg-border" />
                   </>
                 )}
 
@@ -252,7 +252,7 @@ export function SimulationSelectionFilter({
                 {onCreateNew && (
                   <>
                     <div
-                      className="flex items-center space-x-2 px-2 py-2 hover:bg-blue-50 hover:text-blue-700 rounded-sm cursor-pointer text-blue-600"
+                      className="flex cursor-pointer items-center space-x-2 rounded-sm px-2 py-2 text-blue-600 hover:bg-blue-50 hover:text-blue-700"
                       onClick={handleCreateNew}
                     >
                       <Plus className="h-4 w-4" />
@@ -260,7 +260,7 @@ export function SimulationSelectionFilter({
                         Crear Nueva Simulación
                       </span>
                     </div>
-                    <div className="h-px bg-border my-1" />
+                    <div className="my-1 h-px bg-border" />
                   </>
                 )}
 
@@ -272,22 +272,22 @@ export function SimulationSelectionFilter({
                     <div
                       key={simulation.id}
                       className={cn(
-                        "flex items-start space-x-2 px-2 py-3 hover:bg-accent hover:text-accent-foreground rounded-sm cursor-pointer",
-                        isSelected && "bg-blue-50 border-l-2 border-blue-600"
+                        'flex cursor-pointer items-start space-x-2 rounded-sm px-2 py-3 hover:bg-accent hover:text-accent-foreground',
+                        isSelected && 'border-l-2 border-blue-600 bg-blue-50'
                       )}
                       onClick={() => handleSimulationSelect(simulation.id)}
                     >
                       <Activity
                         className={cn(
-                          "h-4 w-4 text-muted-foreground mt-0.5",
-                          isSelected && "text-blue-600"
+                          'mt-0.5 h-4 w-4 text-muted-foreground',
+                          isSelected && 'text-blue-600'
                         )}
                       />
-                      <div className="flex-1 min-w-0">
+                      <div className="min-w-0 flex-1">
                         <div
                           className={cn(
-                            "text-sm font-medium truncate",
-                            isSelected && "text-blue-900"
+                            'truncate text-sm font-medium',
+                            isSelected && 'text-blue-900'
                           )}
                           title={simulation.name}
                         >
@@ -296,18 +296,18 @@ export function SimulationSelectionFilter({
                         {simulation.description && (
                           <div
                             className={cn(
-                              "text-xs text-muted-foreground mt-1 line-clamp-2",
-                              isSelected && "text-blue-600"
+                              'mt-1 line-clamp-2 text-xs text-muted-foreground',
+                              isSelected && 'text-blue-600'
                             )}
                           >
                             {simulation.description}
                           </div>
                         )}
-                        <div className="flex items-center gap-2 mt-2">
+                        <div className="mt-2 flex items-center gap-2">
                           <div
                             className={cn(
-                              "text-xs text-muted-foreground",
-                              isSelected && "text-blue-600"
+                              'text-xs text-muted-foreground',
+                              isSelected && 'text-blue-600'
                             )}
                           >
                             {formatDate(simulation.created_at)}
@@ -316,17 +316,17 @@ export function SimulationSelectionFilter({
                             <Badge
                               variant={
                                 simulation.budget_count > 0
-                                  ? "default"
-                                  : "secondary"
+                                  ? 'default'
+                                  : 'secondary'
                               }
                               className={cn(
-                                "text-xs",
+                                'text-xs',
                                 isSelected &&
                                   simulation.budget_count > 0 &&
-                                  "bg-blue-600",
+                                  'bg-blue-600',
                                 isSelected &&
                                   simulation.budget_count === 0 &&
-                                  "bg-blue-200 text-blue-700"
+                                  'bg-blue-200 text-blue-700'
                               )}
                             >
                               {simulation.budget_count} categorías
@@ -335,7 +335,7 @@ export function SimulationSelectionFilter({
                         </div>
                       </div>
                       {isSelected && (
-                        <Check className="h-4 w-4 text-blue-600 mt-0.5" />
+                        <Check className="mt-0.5 h-4 w-4 text-blue-600" />
                       )}
                     </div>
                   );
@@ -349,7 +349,7 @@ export function SimulationSelectionFilter({
             sortedSimulations.length > 0 &&
             selectedSimulationData && (
               <>
-                <div className="h-px bg-border my-1" />
+                <div className="my-1 h-px bg-border" />
                 <div className="px-2 py-1 text-xs text-blue-600">
                   Seleccionada: {selectedSimulationData.name}
                   {showBudgetCount && (

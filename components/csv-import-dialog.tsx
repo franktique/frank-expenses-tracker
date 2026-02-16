@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import type React from "react";
+import type React from 'react';
 
-import { useState } from "react";
-import { AlertCircle, FileSpreadsheet, Upload } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
+import { AlertCircle, FileSpreadsheet, Upload } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -13,10 +13,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { useBudget, type PaymentMethod } from "@/context/budget-context";
-import { useToast } from "@/components/ui/use-toast";
+} from '@/components/ui/dialog';
+import { Progress } from '@/components/ui/progress';
+import { useBudget, type PaymentMethod } from '@/context/budget-context';
+import { useToast } from '@/components/ui/use-toast';
 
 type CSVExpense = {
   categoria: string;
@@ -41,7 +41,14 @@ export function CSVImportDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const { categories, periods, activePeriod, addExpense } = useBudget();
+  const {
+    categories,
+    periods,
+    activePeriod,
+    addExpense,
+    getDefaultFund,
+    funds,
+  } = useBudget();
   const { toast } = useToast();
 
   const [file, setFile] = useState<File | null>(null);
@@ -64,12 +71,12 @@ export function CSVImportDialog({
   };
 
   const parseCSV = (text: string): CSVExpense[] => {
-    const lines = text.split("\n");
+    const lines = text.split('\n');
     const result: CSVExpense[] = [];
 
     // Check if first line is a header
     const firstLine = lines[0].trim();
-    const startIndex = firstLine.toLowerCase().includes("categoria") ? 1 : 0;
+    const startIndex = firstLine.toLowerCase().includes('categoria') ? 1 : 0;
 
     for (let i = startIndex; i < lines.length; i++) {
       const line = lines[i].trim();
@@ -78,16 +85,16 @@ export function CSVImportDialog({
       // Split by comma, handling quoted values
       const values: string[] = [];
       let inQuotes = false;
-      let currentValue = "";
+      let currentValue = '';
 
       for (let j = 0; j < line.length; j++) {
         const char = line[j];
 
         if (char === '"') {
           inQuotes = !inQuotes;
-        } else if (char === "," && !inQuotes) {
+        } else if (char === ',' && !inQuotes) {
           values.push(currentValue.trim());
-          currentValue = "";
+          currentValue = '';
         } else {
           currentValue += char;
         }
@@ -173,7 +180,7 @@ export function CSVImportDialog({
             date = new Date(csvExpense.fecha);
             if (isNaN(date.getTime())) {
               // Try DD/MM/YYYY format
-              const parts = csvExpense.fecha.split("/");
+              const parts = csvExpense.fecha.split('/');
               if (parts.length === 3) {
                 date = new Date(
                   Number(parts[2]),
@@ -183,7 +190,7 @@ export function CSVImportDialog({
               }
 
               if (isNaN(date.getTime())) {
-                throw new Error("Formato de fecha inválido");
+                throw new Error('Formato de fecha inválido');
               }
             }
           } catch (error) {
@@ -194,14 +201,14 @@ export function CSVImportDialog({
           }
 
           // Validate payment method
-          let paymentMethod: PaymentMethod = "credit";
+          let paymentMethod: PaymentMethod = 'credit';
           const medio = csvExpense.medio.toLowerCase();
-          if (medio.includes("cred")) {
-            paymentMethod = "credit";
-          } else if (medio.includes("deb")) {
-            paymentMethod = "debit";
-          } else if (medio.includes("efec") || medio.includes("cash")) {
-            paymentMethod = "cash";
+          if (medio.includes('cred')) {
+            paymentMethod = 'credit';
+          } else if (medio.includes('deb')) {
+            paymentMethod = 'debit';
+          } else if (medio.includes('efec') || medio.includes('cash')) {
+            paymentMethod = 'cash';
           } else {
             result.errors.push(
               `Fila ${i + 1}: Medio de pago inválido "${
@@ -214,10 +221,10 @@ export function CSVImportDialog({
           let amount: number;
           try {
             // Remove currency symbol and thousands separators
-            const cleanAmount = csvExpense.monto.replace(/[^\d.-]/g, "");
+            const cleanAmount = csvExpense.monto.replace(/[^\d.-]/g, '');
             amount = Number(cleanAmount);
             if (isNaN(amount) || amount <= 0) {
-              throw new Error("Monto inválido");
+              throw new Error('Monto inválido');
             }
           } catch (error) {
             result.errors.push(
@@ -227,6 +234,8 @@ export function CSVImportDialog({
           }
 
           // Add expense
+          const defaultFund = getDefaultFund();
+          const sourceFundId = defaultFund?.id || funds[0]?.id || '';
           addExpense(
             category.id,
             periodId,
@@ -234,7 +243,8 @@ export function CSVImportDialog({
             csvExpense.evento,
             paymentMethod,
             csvExpense.descripcion,
-            amount
+            amount,
+            sourceFundId
           );
 
           result.imported++;
@@ -251,16 +261,16 @@ export function CSVImportDialog({
       setImportResult(result);
 
       toast({
-        title: "Importación completada",
+        title: 'Importación completada',
         description: `Se importaron ${result.imported} de ${result.total} gastos.`,
       });
     } catch (error) {
       toast({
-        title: "Error al importar",
+        title: 'Error al importar',
         description: `Ocurrió un error al procesar el archivo: ${
           (error as Error).message
         }`,
-        variant: "destructive",
+        variant: 'destructive',
       });
     } finally {
       setImporting(false);
@@ -313,7 +323,7 @@ export function CSVImportDialog({
                 <AlertTitle>Formato esperado</AlertTitle>
                 <AlertDescription className="text-xs">
                   El archivo CSV debe tener las siguientes columnas:
-                  <ul className="list-disc pl-4 mt-1">
+                  <ul className="mt-1 list-disc pl-4">
                     <li>
                       Categoria (debe coincidir con una categoría existente)
                     </li>
@@ -333,7 +343,7 @@ export function CSVImportDialog({
               {importing && (
                 <div className="space-y-2">
                   <Progress value={progress} className="h-2" />
-                  <p className="text-sm text-center text-muted-foreground">
+                  <p className="text-center text-sm text-muted-foreground">
                     Importando gastos... {progress}%
                   </p>
                 </div>
@@ -343,7 +353,7 @@ export function CSVImportDialog({
 
           {importResult && (
             <div className="space-y-4">
-              <div className="rounded-md bg-green-50 dark:bg-green-900/20 p-4">
+              <div className="rounded-md bg-green-50 p-4 dark:bg-green-900/20">
                 <div className="flex">
                   <div className="flex-shrink-0">
                     <Upload
@@ -357,7 +367,7 @@ export function CSVImportDialog({
                     </h3>
                     <div className="mt-2 text-sm text-green-700 dark:text-green-300">
                       <p>
-                        Se importaron {importResult.imported} de{" "}
+                        Se importaron {importResult.imported} de{' '}
                         {importResult.total} gastos.
                       </p>
                     </div>

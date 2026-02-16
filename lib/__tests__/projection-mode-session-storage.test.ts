@@ -9,7 +9,7 @@ import {
   beforeEach,
   afterEach,
   jest,
-} from "@jest/globals";
+} from '@jest/globals';
 
 // Mock the session storage functionality
 const mockSessionStorage = (() => {
@@ -30,7 +30,7 @@ const mockSessionStorage = (() => {
 })();
 
 // Mock window.sessionStorage
-Object.defineProperty(window, "sessionStorage", {
+Object.defineProperty(window, 'sessionStorage', {
   value: mockSessionStorage,
   writable: true,
 });
@@ -38,7 +38,7 @@ Object.defineProperty(window, "sessionStorage", {
 // Mock toast function (not needed for these tests)
 const mockToast = jest.fn();
 
-describe("Projection Mode Session Storage", () => {
+describe('Projection Mode Session Storage', () => {
   beforeEach(() => {
     // Clear all mocks and storage before each test
     jest.clearAllMocks();
@@ -50,41 +50,44 @@ describe("Projection Mode Session Storage", () => {
     jest.clearAllMocks();
   });
 
-  describe("Session Storage Utilities", () => {
+  describe('Session Storage Utilities', () => {
     // These functions would be extracted from the component for testing
     const saveProjectionModeToSession = (mode: boolean) => {
       try {
-        if (typeof window !== "undefined" && window.sessionStorage) {
+        if (typeof window !== 'undefined' && window.sessionStorage) {
           const projectionState = {
             projectionMode: mode,
             lastUpdated: Date.now(),
           };
           sessionStorage.setItem(
-            "dashboard-projection-mode",
+            'dashboard-projection-mode',
             JSON.stringify(projectionState)
           );
         }
       } catch (error) {
-        console.error("Error saving projection mode to session storage:", error);
+        console.error(
+          'Error saving projection mode to session storage:',
+          error
+        );
       }
     };
 
     const loadProjectionModeFromSession = (): boolean => {
       try {
-        if (typeof window !== "undefined" && window.sessionStorage) {
-          const saved = sessionStorage.getItem("dashboard-projection-mode");
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          const saved = sessionStorage.getItem('dashboard-projection-mode');
           if (saved) {
             const projectionState = JSON.parse(saved);
 
             // Handle legacy format (direct boolean) for backward compatibility
-            if (typeof projectionState === "boolean") {
+            if (typeof projectionState === 'boolean') {
               return projectionState;
             }
 
             // Handle new format with metadata
             if (
               projectionState &&
-              typeof projectionState.projectionMode === "boolean"
+              typeof projectionState.projectionMode === 'boolean'
             ) {
               // Check if the stored state is not too old (e.g., older than 24 hours)
               const maxAge = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
@@ -93,7 +96,7 @@ describe("Projection Mode Session Storage", () => {
                 Date.now() - projectionState.lastUpdated > maxAge;
 
               if (isExpired) {
-                sessionStorage.removeItem("dashboard-projection-mode");
+                sessionStorage.removeItem('dashboard-projection-mode');
                 return false;
               }
 
@@ -104,16 +107,16 @@ describe("Projection Mode Session Storage", () => {
         return false;
       } catch (error) {
         console.error(
-          "Error loading projection mode from session storage:",
+          'Error loading projection mode from session storage:',
           error
         );
         try {
-          if (typeof window !== "undefined" && window.sessionStorage) {
-            sessionStorage.removeItem("dashboard-projection-mode");
+          if (typeof window !== 'undefined' && window.sessionStorage) {
+            sessionStorage.removeItem('dashboard-projection-mode');
           }
         } catch (clearError) {
           console.error(
-            "Error clearing corrupted session storage:",
+            'Error clearing corrupted session storage:',
             clearError
           );
         }
@@ -123,12 +126,12 @@ describe("Projection Mode Session Storage", () => {
 
     const clearProjectionModeFromSession = () => {
       try {
-        if (typeof window !== "undefined" && window.sessionStorage) {
-          sessionStorage.removeItem("dashboard-projection-mode");
+        if (typeof window !== 'undefined' && window.sessionStorage) {
+          sessionStorage.removeItem('dashboard-projection-mode');
         }
       } catch (error) {
         console.error(
-          "Error clearing projection mode from session storage:",
+          'Error clearing projection mode from session storage:',
           error
         );
       }
@@ -136,38 +139,38 @@ describe("Projection Mode Session Storage", () => {
 
     const isSessionStorageAvailable = (): boolean => {
       try {
-        if (typeof window === "undefined" || !window.sessionStorage) {
+        if (typeof window === 'undefined' || !window.sessionStorage) {
           return false;
         }
 
         // Test if we can actually write to session storage
-        const testKey = "dashboard-storage-test";
-        sessionStorage.setItem(testKey, "test");
+        const testKey = 'dashboard-storage-test';
+        sessionStorage.setItem(testKey, 'test');
         sessionStorage.removeItem(testKey);
         return true;
       } catch (error) {
-        console.error("Session storage is not available:", error);
+        console.error('Session storage is not available:', error);
         return false;
       }
     };
 
-    it("should save projection mode to session storage", () => {
+    it('should save projection mode to session storage', () => {
       saveProjectionModeToSession(true);
 
       expect(mockSessionStorage.setItem).toHaveBeenCalledWith(
-        "dashboard-projection-mode",
+        'dashboard-projection-mode',
         expect.stringContaining('"projectionMode":true')
       );
     });
 
-    it("should load projection mode from session storage", () => {
+    it('should load projection mode from session storage', () => {
       // Set up mock data
       const projectionState = {
         projectionMode: true,
         lastUpdated: Date.now(),
       };
       mockSessionStorage.setItem(
-        "dashboard-projection-mode",
+        'dashboard-projection-mode',
         JSON.stringify(projectionState)
       );
 
@@ -175,27 +178,27 @@ describe("Projection Mode Session Storage", () => {
 
       expect(result).toBe(true);
       expect(mockSessionStorage.getItem).toHaveBeenCalledWith(
-        "dashboard-projection-mode"
+        'dashboard-projection-mode'
       );
     });
 
-    it("should handle legacy boolean format", () => {
+    it('should handle legacy boolean format', () => {
       // Set up legacy format (direct boolean)
-      mockSessionStorage.setItem("dashboard-projection-mode", "true");
+      mockSessionStorage.setItem('dashboard-projection-mode', 'true');
 
       const result = loadProjectionModeFromSession();
 
       expect(result).toBe(true);
     });
 
-    it("should handle expired state", () => {
+    it('should handle expired state', () => {
       // Set up expired state (older than 24 hours)
       const expiredState = {
         projectionMode: true,
         lastUpdated: Date.now() - 25 * 60 * 60 * 1000, // 25 hours ago
       };
       mockSessionStorage.setItem(
-        "dashboard-projection-mode",
+        'dashboard-projection-mode',
         JSON.stringify(expiredState)
       );
 
@@ -203,48 +206,48 @@ describe("Projection Mode Session Storage", () => {
 
       expect(result).toBe(false);
       expect(mockSessionStorage.removeItem).toHaveBeenCalledWith(
-        "dashboard-projection-mode"
+        'dashboard-projection-mode'
       );
     });
 
-    it("should return false for corrupted data", () => {
+    it('should return false for corrupted data', () => {
       // Set up corrupted data
-      mockSessionStorage.setItem("dashboard-projection-mode", "invalid-json");
+      mockSessionStorage.setItem('dashboard-projection-mode', 'invalid-json');
 
       const result = loadProjectionModeFromSession();
 
       expect(result).toBe(false);
       expect(mockSessionStorage.removeItem).toHaveBeenCalledWith(
-        "dashboard-projection-mode"
+        'dashboard-projection-mode'
       );
     });
 
-    it("should clear projection mode from session storage", () => {
+    it('should clear projection mode from session storage', () => {
       clearProjectionModeFromSession();
 
       expect(mockSessionStorage.removeItem).toHaveBeenCalledWith(
-        "dashboard-projection-mode"
+        'dashboard-projection-mode'
       );
     });
 
-    it("should validate session storage availability", () => {
+    it('should validate session storage availability', () => {
       const result = isSessionStorageAvailable();
 
       expect(result).toBe(true);
       expect(mockSessionStorage.setItem).toHaveBeenCalledWith(
-        "dashboard-storage-test",
-        "test"
+        'dashboard-storage-test',
+        'test'
       );
       expect(mockSessionStorage.removeItem).toHaveBeenCalledWith(
-        "dashboard-storage-test"
+        'dashboard-storage-test'
       );
     });
 
-    it("should handle session storage quota exceeded error", () => {
+    it('should handle session storage quota exceeded error', () => {
       // Mock quota exceeded error
       mockSessionStorage.setItem.mockImplementation(() => {
-        const error = new Error("QuotaExceededError");
-        error.name = "QuotaExceededError";
+        const error = new Error('QuotaExceededError');
+        error.name = 'QuotaExceededError';
         throw error;
       });
 
@@ -252,9 +255,9 @@ describe("Projection Mode Session Storage", () => {
       expect(() => saveProjectionModeToSession(true)).not.toThrow();
     });
 
-    it("should return false when session storage is not available", () => {
+    it('should return false when session storage is not available', () => {
       // Mock unavailable session storage
-      Object.defineProperty(window, "sessionStorage", {
+      Object.defineProperty(window, 'sessionStorage', {
         value: undefined,
         writable: true,
       });
@@ -263,24 +266,24 @@ describe("Projection Mode Session Storage", () => {
       expect(result).toBe(false);
 
       // Restore session storage
-      Object.defineProperty(window, "sessionStorage", {
+      Object.defineProperty(window, 'sessionStorage', {
         value: mockSessionStorage,
         writable: true,
       });
     });
   });
 
-  describe("Error Handling", () => {
-    it("should handle session storage errors gracefully", () => {
+  describe('Error Handling', () => {
+    it('should handle session storage errors gracefully', () => {
       // Mock session storage to throw an error
       mockSessionStorage.getItem.mockImplementation(() => {
-        throw new Error("Session storage error");
+        throw new Error('Session storage error');
       });
 
       const loadProjectionModeFromSession = (): boolean => {
         try {
-          if (typeof window !== "undefined" && window.sessionStorage) {
-            const saved = sessionStorage.getItem("dashboard-projection-mode");
+          if (typeof window !== 'undefined' && window.sessionStorage) {
+            const saved = sessionStorage.getItem('dashboard-projection-mode');
             if (saved) {
               return JSON.parse(saved).projectionMode || false;
             }
@@ -288,7 +291,7 @@ describe("Projection Mode Session Storage", () => {
           return false;
         } catch (error) {
           console.error(
-            "Error loading projection mode from session storage:",
+            'Error loading projection mode from session storage:',
             error
           );
           return false;

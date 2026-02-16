@@ -5,9 +5,11 @@
 **Feature:** Add "Expected Savings" (Ahorro Esperado) column to simulation budget configuration
 
 ## Overview
+
 Add a new "Expected Savings" column to the simulation budget table that allows users to specify how much they expect to save from each category's budget. The actual balance deduction will be: `Balance -= (Presupuesto - Ahorro Esperado)`.
 
 ### Example
+
 - Category budget (presupuesto): $250,000
 - Expected savings (ahorro esperado): $50,000
 - Actual balance deduction: $200,000 ($250,000 - $50,000)
@@ -16,6 +18,7 @@ Add a new "Expected Savings" column to the simulation budget table that allows u
 ## Technical Analysis
 
 ### Current Implementation
+
 - **Component:** `components/simulation-budget-form.tsx`
 - **API Route:** `app/api/simulations/[id]/budgets/route.ts`
 - **Database Table:** `simulation_budgets` (lines 47-59 in route.ts)
@@ -24,18 +27,20 @@ Add a new "Expected Savings" column to the simulation budget table that allows u
   - Does not account for expected savings
 
 ### Current Data Structure
+
 ```typescript
 type SimulationBudget = {
   category_id: string | number;
   category_name: string;
-  efectivo_amount: number;  // Efectivo (Cash)
-  credito_amount: number;   // Crédito (Credit)
-}
+  efectivo_amount: number; // Efectivo (Cash)
+  credito_amount: number; // Crédito (Credit)
+};
 ```
 
 ## Implementation Tasks
 
 ### Phase 1: Database Schema Update
+
 - [x] Create database migration to add `expected_savings` column to `simulation_budgets` table
   - Column type: `NUMERIC` or `DECIMAL(15,2)`
   - Default value: `0`
@@ -44,6 +49,7 @@ type SimulationBudget = {
 - [x] Create rollback script
 
 ### Phase 2: Type Definitions and Validation
+
 - [x] Update `SimulationBudget` type in `components/simulation-budget-form.tsx` (line 42-47)
   - Add `expected_savings: number` field
 - [x] Update `BudgetFormData` type (line 49-55)
@@ -54,6 +60,7 @@ type SimulationBudget = {
 - [x] Update Zod schemas if they exist for simulation budgets
 
 ### Phase 3: Backend API Updates
+
 - [x] Update GET endpoint in `app/api/simulations/[id]/budgets/route.ts` (lines 46-59)
   - Include `expected_savings` in SELECT query
 - [x] Update PUT endpoint validation (lines 110-375)
@@ -64,6 +71,7 @@ type SimulationBudget = {
 - [x] Test API endpoints with curl/Postman
 
 ### Phase 4: Frontend Form Updates
+
 - [x] Update state initialization in `simulation-budget-form.tsx` (lines 130-170)
   - Initialize `expected_savings` from API response
   - Default to "0" for new entries
@@ -86,6 +94,7 @@ type SimulationBudget = {
   - Show error if expected_savings > efectivo_amount
 
 ### Phase 5: Balance Calculation Update
+
 - [x] Update `categoryBalances` calculation (lines 464-487)
   - Current: `runningBalance -= efectivoAmount`
   - New: `runningBalance -= (efectivoAmount - expectedSavings)`
@@ -97,6 +106,7 @@ type SimulationBudget = {
 - [x] Test balance calculations with various scenarios
 
 ### Phase 6: Totals and Summary Updates
+
 - [x] Update totals calculation (lines 433-452)
   - Add totalExpectedSavings calculation
   - Add totalNetSpend (total - savings)
@@ -109,6 +119,7 @@ type SimulationBudget = {
   - Show: "Net Spend: $X (after $Y savings)"
 
 ### Phase 7: Excel Export Update
+
 - [ ] Update `lib/excel-export-utils.ts` export function
   - Add "Ahorro Esperado" column to Excel export
   - Add "Gasto Neto" column (Presupuesto - Ahorro Esperado)
@@ -117,12 +128,14 @@ type SimulationBudget = {
 - [ ] Test Excel export with sample data
 
 ### Phase 8: Data Migration for Existing Simulations
+
 - [ ] Create data migration script for existing simulations
   - Set expected_savings = 0 for all existing records
 - [ ] Test with production-like data
 - [ ] Document migration process
 
 ### Phase 9: UI/UX Polish
+
 - [ ] Add tooltip/help text for Expected Savings column
   - Text: "Cantidad que esperas ahorrar de este presupuesto. El balance se reducirá por (Presupuesto - Ahorro)"
 - [ ] Add visual indicator when expected_savings > 0
@@ -134,6 +147,7 @@ type SimulationBudget = {
   - Consider collapsing columns on small screens
 
 ### Phase 10: Testing and Validation
+
 - [ ] Write unit tests for balance calculation logic
   - Test: Normal case (savings = 0)
   - Test: Partial savings (0 < savings < budget)
@@ -155,6 +169,7 @@ type SimulationBudget = {
   - Chrome, Firefox, Safari, Edge
 
 ### Phase 11: Documentation
+
 - [ ] Update CLAUDE.md with new feature description
   - Document expected_savings field
   - Document balance calculation formula
@@ -165,6 +180,7 @@ type SimulationBudget = {
 ## Database Migration
 
 ### Migration Script
+
 ```sql
 -- Migration: Add expected_savings column to simulation_budgets
 ALTER TABLE simulation_budgets
@@ -180,6 +196,7 @@ UPDATE simulation_budgets SET expected_savings = 0 WHERE expected_savings IS NUL
 ```
 
 ### Rollback Script
+
 ```sql
 -- Rollback: Remove expected_savings column
 ALTER TABLE simulation_budgets DROP CONSTRAINT IF EXISTS check_expected_savings_valid;
@@ -189,26 +206,31 @@ ALTER TABLE simulation_budgets DROP COLUMN IF EXISTS expected_savings;
 ## Key Formula
 
 **Balance Calculation:**
+
 ```
 New Balance = Previous Balance - (Efectivo Amount - Expected Savings)
             = Previous Balance - Net Spend
 ```
 
 Where:
+
 - `Net Spend = Efectivo Amount - Expected Savings`
 - `Expected Savings` must be `0 <= Expected Savings <= Efectivo Amount`
 
 ## Risk Assessment
 
 ### High Risk
+
 - Balance calculation changes could break existing functionality
 - Data migration must not corrupt existing simulation data
 
 ### Medium Risk
+
 - UI layout changes may affect responsive design
 - Validation logic complexity increases
 
 ### Low Risk
+
 - Adding new column to database (backward compatible with default value)
 - Excel export changes (additive feature)
 

@@ -1,7 +1,7 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -9,26 +9,34 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from '@/components/ui/dialog';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/components/ui/use-toast";
-import { Loader2, Calendar, DollarSign, FolderOpen, AlertCircle, Info, CheckCircle2 } from "lucide-react";
+} from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useToast } from '@/components/ui/use-toast';
+import {
+  Loader2,
+  Calendar,
+  DollarSign,
+  FolderOpen,
+  AlertCircle,
+  Info,
+  CheckCircle2,
+} from 'lucide-react';
 import {
   type PeriodData,
   generateCopySummary,
   validatePeriodHasData,
   formatCurrencyDisplay,
-} from "@/lib/period-to-simulation-transform";
+} from '@/lib/period-to-simulation-transform';
 
 // Types
 type Period = {
@@ -44,7 +52,11 @@ interface PeriodSelectorDialogProps {
   onOpenChange: (open: boolean) => void;
   simulationId: number;
   simulationName: string;
-  onSuccess: (periodId: string, periodName: string, mode: "merge" | "replace") => void;
+  onSuccess: (
+    periodId: string,
+    periodName: string,
+    mode: 'merge' | 'replace'
+  ) => void;
   existingDataCount?: {
     incomes: number;
     budgets: number;
@@ -65,22 +77,23 @@ export function PeriodSelectorDialog({
   const [periods, setPeriods] = useState<Period[]>([]);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
   const [periodData, setPeriodData] = useState<PeriodData | null>(null);
-  const [copyMode, setCopyMode] = useState<"merge" | "replace">("merge");
+  const [copyMode, setCopyMode] = useState<'merge' | 'replace'>('merge');
   const [isLoadingPeriods, setIsLoadingPeriods] = useState(false);
   const [isLoadingPeriodData, setIsLoadingPeriodData] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
-  const [step, setStep] = useState<"select" | "confirm">("select");
+  const [step, setStep] = useState<'select' | 'confirm'>('select');
 
-  const hasExistingData = existingDataCount.incomes > 0 || existingDataCount.budgets > 0;
+  const hasExistingData =
+    existingDataCount.incomes > 0 || existingDataCount.budgets > 0;
 
   // Load periods when dialog opens
   useEffect(() => {
     if (open) {
       loadPeriods();
-      setStep("select");
+      setStep('select');
       setSelectedPeriodId(null);
       setPeriodData(null);
-      setCopyMode("merge");
+      setCopyMode('merge');
     }
   }, [open]);
 
@@ -88,18 +101,18 @@ export function PeriodSelectorDialog({
   const loadPeriods = async () => {
     setIsLoadingPeriods(true);
     try {
-      const response = await fetch("/api/periods");
+      const response = await fetch('/api/periods');
       if (!response.ok) {
-        throw new Error("Error al cargar períodos");
+        throw new Error('Error al cargar períodos');
       }
       const data = await response.json();
       setPeriods(data);
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
-          (error as Error).message || "No se pudieron cargar los períodos",
-        variant: "destructive",
+          (error as Error).message || 'No se pudieron cargar los períodos',
+        variant: 'destructive',
       });
     } finally {
       setIsLoadingPeriods(false);
@@ -113,7 +126,7 @@ export function PeriodSelectorDialog({
     try {
       const response = await fetch(`/api/periods/${periodId}/data`);
       if (!response.ok) {
-        throw new Error("Error al cargar datos del período");
+        throw new Error('Error al cargar datos del período');
       }
       const data = await response.json();
       setPeriodData(data);
@@ -122,9 +135,9 @@ export function PeriodSelectorDialog({
       const validation = validatePeriodHasData(data);
       if (!validation.valid) {
         toast({
-          title: "Período vacío",
+          title: 'Período vacío',
           description: validation.message,
-          variant: "destructive",
+          variant: 'destructive',
         });
         setSelectedPeriodId(null);
         return;
@@ -133,16 +146,17 @@ export function PeriodSelectorDialog({
       // Show warning if period has incomplete data
       if (validation.message) {
         toast({
-          title: "Advertencia",
+          title: 'Advertencia',
           description: validation.message,
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
+        title: 'Error',
         description:
-          (error as Error).message || "No se pudieron cargar los datos del período",
-        variant: "destructive",
+          (error as Error).message ||
+          'No se pudieron cargar los datos del período',
+        variant: 'destructive',
       });
       setSelectedPeriodId(null);
     } finally {
@@ -160,13 +174,13 @@ export function PeriodSelectorDialog({
   const handleProceedToConfirm = () => {
     if (!selectedPeriodId || !periodData) {
       toast({
-        title: "Error",
-        description: "Por favor selecciona un período",
-        variant: "destructive",
+        title: 'Error',
+        description: 'Por favor selecciona un período',
+        variant: 'destructive',
       });
       return;
     }
-    setStep("confirm");
+    setStep('confirm');
   };
 
   // Handle copy operation
@@ -178,9 +192,9 @@ export function PeriodSelectorDialog({
       const response = await fetch(
         `/api/simulations/${simulationId}/copy-from-period`,
         {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({
             period_id: selectedPeriodId,
@@ -191,17 +205,17 @@ export function PeriodSelectorDialog({
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Error al copiar datos");
+        throw new Error(errorData.error || 'Error al copiar datos');
       }
 
       const result = await response.json();
 
       // Get period name for success message
       const selectedPeriod = periods.find((p) => p.id === selectedPeriodId);
-      const periodName = selectedPeriod?.name || "Período";
+      const periodName = selectedPeriod?.name || 'Período';
 
       toast({
-        title: "Datos copiados exitosamente",
+        title: 'Datos copiados exitosamente',
         description: `${result.copied.incomes_count} ingresos y ${result.copied.budgets_count} presupuestos copiados desde ${periodName}`,
       });
 
@@ -212,10 +226,10 @@ export function PeriodSelectorDialog({
       onOpenChange(false);
     } catch (error) {
       toast({
-        title: "Error al copiar",
+        title: 'Error al copiar',
         description:
-          (error as Error).message || "No se pudieron copiar los datos",
-        variant: "destructive",
+          (error as Error).message || 'No se pudieron copiar los datos',
+        variant: 'destructive',
       });
     } finally {
       setIsCopying(false);
@@ -225,10 +239,20 @@ export function PeriodSelectorDialog({
   // Get month name
   const getMonthName = (month: number): string => {
     const monthNames = [
-      "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-      "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
+      'Enero',
+      'Febrero',
+      'Marzo',
+      'Abril',
+      'Mayo',
+      'Junio',
+      'Julio',
+      'Agosto',
+      'Septiembre',
+      'Octubre',
+      'Noviembre',
+      'Diciembre',
     ];
-    return monthNames[month] || "";
+    return monthNames[month] || '';
   };
 
   // Render period list (step 1)
@@ -237,20 +261,20 @@ export function PeriodSelectorDialog({
       <DialogHeader>
         <DialogTitle>Copiar datos desde un Período</DialogTitle>
         <DialogDescription>
-          Selecciona el período del cual deseas copiar ingresos y presupuestos a{" "}
+          Selecciona el período del cual deseas copiar ingresos y presupuestos a{' '}
           <span className="font-medium">{simulationName}</span>
         </DialogDescription>
       </DialogHeader>
 
-      <div className="py-4 space-y-4">
+      <div className="space-y-4 py-4">
         {/* Existing data warning */}
         {hasExistingData && (
           <Alert>
             <Info className="h-4 w-4" />
             <AlertDescription>
-              Esta simulación ya tiene datos (
-              {existingDataCount.incomes} ingresos, {existingDataCount.budgets} presupuestos).
-              Podrás elegir si agregar o reemplazar en el siguiente paso.
+              Esta simulación ya tiene datos ({existingDataCount.incomes}{' '}
+              ingresos, {existingDataCount.budgets} presupuestos). Podrás elegir
+              si agregar o reemplazar en el siguiente paso.
             </AlertDescription>
           </Alert>
         )}
@@ -258,7 +282,7 @@ export function PeriodSelectorDialog({
         {/* Periods list */}
         {isLoadingPeriods ? (
           <div className="flex items-center justify-center py-8">
-            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+            <Loader2 className="mr-2 h-6 w-6 animate-spin" />
             <span>Cargando períodos...</span>
           </div>
         ) : periods.length === 0 ? (
@@ -269,14 +293,14 @@ export function PeriodSelectorDialog({
             </AlertDescription>
           </Alert>
         ) : (
-          <div className="space-y-2 max-h-[400px] overflow-y-auto">
+          <div className="max-h-[400px] space-y-2 overflow-y-auto">
             {periods.map((period) => (
               <Card
                 key={period.id}
                 className={`cursor-pointer transition-colors hover:bg-accent ${
                   selectedPeriodId === period.id
-                    ? "border-primary bg-accent"
-                    : ""
+                    ? 'border-primary bg-accent'
+                    : ''
                 }`}
                 onClick={() => handlePeriodSelect(period.id)}
               >
@@ -305,7 +329,7 @@ export function PeriodSelectorDialog({
                   (isLoadingPeriodData ? (
                     <CardContent className="p-4 pt-0">
                       <div className="flex items-center text-sm text-muted-foreground">
-                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                         Cargando datos...
                       </div>
                     </CardContent>
@@ -314,20 +338,28 @@ export function PeriodSelectorDialog({
                       <div className="grid grid-cols-2 gap-2 text-sm">
                         <div className="flex items-center gap-1">
                           <DollarSign className="h-3 w-3 text-green-600" />
-                          <span className="text-muted-foreground">Ingresos:</span>
+                          <span className="text-muted-foreground">
+                            Ingresos:
+                          </span>
                           <span className="font-medium">
                             {periodData.incomes.length}
                           </span>
                         </div>
                         <div className="flex items-center gap-1">
                           <FolderOpen className="h-3 w-3 text-blue-600" />
-                          <span className="text-muted-foreground">Presupuestos:</span>
+                          <span className="text-muted-foreground">
+                            Presupuestos:
+                          </span>
                           <span className="font-medium">
                             {periodData.budgets.length}
                           </span>
                         </div>
-                        <div className="col-span-2 text-xs text-muted-foreground mt-1">
-                          Total: {formatCurrencyDisplay(periodData.totals.total_income + periodData.totals.total_budget)}
+                        <div className="col-span-2 mt-1 text-xs text-muted-foreground">
+                          Total:{' '}
+                          {formatCurrencyDisplay(
+                            periodData.totals.total_income +
+                              periodData.totals.total_budget
+                          )}
                         </div>
                       </div>
                     </CardContent>
@@ -363,11 +395,12 @@ export function PeriodSelectorDialog({
         <DialogHeader>
           <DialogTitle>Confirmar copia de datos</DialogTitle>
           <DialogDescription>
-            Revisa los datos que se copiarán y elige cómo manejar los datos existentes
+            Revisa los datos que se copiarán y elige cómo manejar los datos
+            existentes
           </DialogDescription>
         </DialogHeader>
 
-        <div className="py-4 space-y-4">
+        <div className="space-y-4 py-4">
           {/* Summary */}
           <Card>
             <CardHeader>
@@ -379,7 +412,9 @@ export function PeriodSelectorDialog({
             <CardContent className="space-y-2">
               <div className="flex justify-between text-sm">
                 <span>Ingresos:</span>
-                <span className="font-medium">{summary.income_entries} entradas</span>
+                <span className="font-medium">
+                  {summary.income_entries} entradas
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Total ingresos:</span>
@@ -389,7 +424,9 @@ export function PeriodSelectorDialog({
               </div>
               <div className="flex justify-between text-sm">
                 <span>Presupuestos:</span>
-                <span className="font-medium">{summary.budget_categories} categorías</span>
+                <span className="font-medium">
+                  {summary.budget_categories} categorías
+                </span>
               </div>
               <div className="flex justify-between text-sm">
                 <span>Total presupuestos:</span>
@@ -404,22 +441,35 @@ export function PeriodSelectorDialog({
           {hasExistingData && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">¿Cómo manejar datos existentes?</CardTitle>
+                <CardTitle className="text-base">
+                  ¿Cómo manejar datos existentes?
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <RadioGroup value={copyMode} onValueChange={(value) => setCopyMode(value as "merge" | "replace")}>
-                  <div className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-accent" onClick={() => setCopyMode("merge")}>
+                <RadioGroup
+                  value={copyMode}
+                  onValueChange={(value) =>
+                    setCopyMode(value as 'merge' | 'replace')
+                  }
+                >
+                  <div
+                    className="flex cursor-pointer items-center space-x-2 rounded-lg border p-3 hover:bg-accent"
+                    onClick={() => setCopyMode('merge')}
+                  >
                     <RadioGroupItem value="merge" id="merge" />
-                    <Label htmlFor="merge" className="cursor-pointer flex-1">
+                    <Label htmlFor="merge" className="flex-1 cursor-pointer">
                       <div className="font-medium">Agregar (Merge)</div>
                       <div className="text-xs text-muted-foreground">
                         Los nuevos datos se sumarán a los existentes
                       </div>
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2 p-3 border rounded-lg cursor-pointer hover:bg-accent mt-2" onClick={() => setCopyMode("replace")}>
+                  <div
+                    className="mt-2 flex cursor-pointer items-center space-x-2 rounded-lg border p-3 hover:bg-accent"
+                    onClick={() => setCopyMode('replace')}
+                  >
                     <RadioGroupItem value="replace" id="replace" />
-                    <Label htmlFor="replace" className="cursor-pointer flex-1">
+                    <Label htmlFor="replace" className="flex-1 cursor-pointer">
                       <div className="font-medium">Reemplazar (Replace)</div>
                       <div className="text-xs text-muted-foreground">
                         Los datos existentes serán eliminados y reemplazados
@@ -432,20 +482,21 @@ export function PeriodSelectorDialog({
           )}
 
           {/* Warning for replace mode */}
-          {copyMode === "replace" && hasExistingData && (
+          {copyMode === 'replace' && hasExistingData && (
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                <strong>Advertencia:</strong> Esta acción eliminará todos los datos existentes
-                de la simulación ({existingDataCount.incomes} ingresos y {existingDataCount.budgets} presupuestos).
-                Esta operación no se puede deshacer.
+                <strong>Advertencia:</strong> Esta acción eliminará todos los
+                datos existentes de la simulación ({existingDataCount.incomes}{' '}
+                ingresos y {existingDataCount.budgets} presupuestos). Esta
+                operación no se puede deshacer.
               </AlertDescription>
             </Alert>
           )}
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setStep("select")}>
+          <Button variant="outline" onClick={() => setStep('select')}>
             Atrás
           </Button>
           <Button onClick={handleCopy} disabled={isCopying}>
@@ -465,8 +516,8 @@ export function PeriodSelectorDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        {step === "select" ? renderPeriodSelection() : renderConfirmation()}
+      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
+        {step === 'select' ? renderPeriodSelection() : renderConfirmation()}
       </DialogContent>
     </Dialog>
   );

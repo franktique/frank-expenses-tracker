@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo } from 'react';
 import {
   AlertCircle,
   ArrowDown,
@@ -18,19 +18,19 @@ import {
   TrendingUp,
   Wallet,
   CreditCardIcon,
-} from "lucide-react";
-import { ExpenseFormDialog } from "@/components/expense-form-dialog";
-import { useAuth } from "@/lib/auth-context";
-import { ActivePeriodErrorHandler } from "@/components/active-period-error-handler";
-import { NoActivePeriodFallback } from "@/components/no-active-period-fallback";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+} from 'lucide-react';
+import { ExpenseFormDialog } from '@/components/expense-form-dialog';
+import { useAuth } from '@/lib/auth-context';
+import { ActivePeriodErrorHandler } from '@/components/active-period-error-handler';
+import { NoActivePeriodFallback } from '@/components/no-active-period-fallback';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -38,34 +38,34 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useBudget } from "@/context/budget-context";
-import { formatCurrency } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
+} from '@/components/ui/table';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useBudget } from '@/context/budget-context';
+import { formatCurrency } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 import {
   CategoryExpensesChart,
   CumulativeExpensesChart,
   DailyExpensesChart,
-} from "./dashboard-charts";
-import { useRouter } from "next/navigation";
-import { FundFilter } from "@/components/fund-filter";
-import { Fund } from "@/types/funds";
-import { Label } from "@/components/ui/label";
-import { CategoryExclusionFilter } from "@/components/category-exclusion-filter";
+} from './dashboard-charts';
+import { useRouter } from 'next/navigation';
+import { FundFilter } from '@/components/fund-filter';
+import { Fund } from '@/types/funds';
+import { Label } from '@/components/ui/label';
+import { CategoryExclusionFilter } from '@/components/category-exclusion-filter';
 import {
   loadExcludedCategories,
   saveExcludedCategories,
   cleanupInvalidCategories,
-} from "@/lib/excluded-categories-storage";
+} from '@/lib/excluded-categories-storage';
 import {
   DashboardData,
   BudgetSummaryItem,
   calculateBudgetTotals,
   verifyBudgetTotals,
-} from "@/types/dashboard";
-import { getCategoryNameStyle } from "@/lib/category-styling";
-import { ExportBudgetSummaryButton } from "@/components/export-budget-summary-button";
+} from '@/types/dashboard';
+import { getCategoryNameStyle } from '@/lib/category-styling';
+import { ExportBudgetSummaryButton } from '@/components/export-budget-summary-button';
 
 // DashboardData type is now imported from @/types/dashboard
 
@@ -149,8 +149,13 @@ export function DashboardView() {
 
   // Cleanup invalid category IDs when budgetSummary changes
   useEffect(() => {
-    if (dashboardData?.budgetSummary && dashboardData.budgetSummary.length > 0) {
-      const validCategoryIds = dashboardData.budgetSummary.map((item) => item.category_id);
+    if (
+      dashboardData?.budgetSummary &&
+      dashboardData.budgetSummary.length > 0
+    ) {
+      const validCategoryIds = dashboardData.budgetSummary.map(
+        (item) => item.category_id
+      );
       cleanupInvalidCategories(validCategoryIds);
 
       // Re-load excluded categories to reflect cleanup
@@ -171,19 +176,19 @@ export function DashboardView() {
       setIsLoadingData(true);
       try {
         // Build URL with fund filter parameter
-        const url = new URL("/api/dashboard", window.location.origin);
+        const url = new URL('/api/dashboard', window.location.origin);
         if (fundFilter) {
-          url.searchParams.set("fundId", fundFilter.id);
+          url.searchParams.set('fundId', fundFilter.id);
         }
 
         const response = await fetch(url.toString());
         if (!response.ok) {
-          throw new Error("Failed to fetch dashboard data");
+          throw new Error('Failed to fetch dashboard data');
         }
         const data = await response.json();
 
         // Debug log para identificar problemas con los valores
-        console.log("Dashboard data received:", {
+        console.log('Dashboard data received:', {
           totalIncome: data.totalIncome,
           totalIncome_type: typeof data.totalIncome,
           totalExpenses: data.totalExpenses,
@@ -210,8 +215,8 @@ export function DashboardView() {
         if (data.budgetSummary && Array.isArray(data.budgetSummary)) {
           data.budgetSummary = data.budgetSummary.map(
             (item: any): BudgetSummaryItem => ({
-              category_id: item.category_id || "",
-              category_name: item.category_name || "",
+              category_id: item.category_id || '',
+              category_name: item.category_name || '',
               default_day: item.default_day ?? null,
               credit_budget: isNaN(Number(item.credit_budget))
                 ? 0
@@ -250,7 +255,7 @@ export function DashboardView() {
           const verification = verifyBudgetTotals(data.budgetSummary);
           if (!verification.isValid) {
             console.warn(
-              "Budget totals verification failed for categories:",
+              'Budget totals verification failed for categories:',
               verification.discrepancies
             );
           }
@@ -258,7 +263,7 @@ export function DashboardView() {
 
         setDashboardData(data);
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        console.error('Error fetching dashboard data:', error);
       } finally {
         setIsLoadingData(false);
       }
@@ -279,8 +284,8 @@ export function DashboardView() {
 
   if (isLoading || isLoadingData) {
     return (
-      <div className="flex justify-center items-center h-[80vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      <div className="flex h-[80vh] items-center justify-center">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -300,8 +305,8 @@ export function DashboardView() {
               sean correctas.
             </p>
             {connectionErrorDetails && (
-              <div className="text-xs bg-destructive/10 p-2 rounded overflow-auto">
-                <p className="font-mono break-all whitespace-pre-wrap">
+              <div className="overflow-auto rounded bg-destructive/10 p-2 text-xs">
+                <p className="whitespace-pre-wrap break-all font-mono">
                   {connectionErrorDetails}
                 </p>
               </div>
@@ -334,7 +339,7 @@ export function DashboardView() {
               </p>
             </div>
             <div className="flex flex-col space-y-2">
-              <Button onClick={() => router.push("/setup")} className="w-full">
+              <Button onClick={() => router.push('/setup')} className="w-full">
                 <Database className="mr-2 h-4 w-4" />
                 Ir a Configuración
               </Button>
@@ -357,16 +362,16 @@ export function DashboardView() {
 
   if (!isDbInitialized) {
     return (
-      <div className="flex flex-col items-center justify-center h-[80vh] text-center">
-        <Database className="h-16 w-16 text-muted-foreground mb-4" />
-        <h2 className="text-2xl font-bold mb-2">
+      <div className="flex h-[80vh] flex-col items-center justify-center text-center">
+        <Database className="mb-4 h-16 w-16 text-muted-foreground" />
+        <h2 className="mb-2 text-2xl font-bold">
           Base de datos no configurada
         </h2>
-        <p className="text-muted-foreground max-w-md mb-4">
+        <p className="mb-4 max-w-md text-muted-foreground">
           Para comenzar a usar la aplicación, primero debes configurar la base
           de datos.
         </p>
-        <Button onClick={() => router.push("/setup")}>
+        <Button onClick={() => router.push('/setup')}>
           Ir a Configuración
         </Button>
       </div>
@@ -375,10 +380,10 @@ export function DashboardView() {
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center h-[80vh] text-center">
-        <h2 className="text-2xl font-bold mb-2">Error</h2>
-        <p className="text-muted-foreground max-w-md mb-4">{error}</p>
-        <Button onClick={() => router.push("/setup")}>
+      <div className="flex h-[80vh] flex-col items-center justify-center text-center">
+        <h2 className="mb-2 text-2xl font-bold">Error</h2>
+        <p className="mb-4 max-w-md text-muted-foreground">{error}</p>
+        <Button onClick={() => router.push('/setup')}>
           Ir a Configuración
         </Button>
       </div>
@@ -462,7 +467,8 @@ export function DashboardView() {
 
   // Calculate remainder for cash/debit (budget - actual)
   const remainderCashDebit = filteredBudgetSummary.reduce(
-    (sum, item) => sum + item.cash_debit_budget - (item.debit_amount + item.cash_amount),
+    (sum, item) =>
+      sum + item.cash_debit_budget - (item.debit_amount + item.cash_amount),
     0
   );
 
@@ -473,7 +479,7 @@ export function DashboardView() {
   );
 
   return (
-    <div className="space-y-6 w-full max-w-full">
+    <div className="w-full max-w-full space-y-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">
@@ -481,7 +487,9 @@ export function DashboardView() {
           {fundFilter && ` • Fondo: ${fundFilter.name}`}
           {excludedCategories.length > 0 &&
             ` • ${excludedCategories.length} ${
-              excludedCategories.length === 1 ? "categoría excluida" : "categorías excluidas"
+              excludedCategories.length === 1
+                ? 'categoría excluida'
+                : 'categorías excluidas'
             }`}
         </p>
       </div>
@@ -509,14 +517,14 @@ export function DashboardView() {
             <p className="text-sm text-muted-foreground">
               {fundFilter
                 ? `Mostrando datos del fondo "${fundFilter.name}"`
-                : "Mostrando datos combinados de todos los fondos"}
+                : 'Mostrando datos combinados de todos los fondos'}
             </p>
           </div>
         </CardContent>
       </Card>
 
       <Tabs defaultValue="summary" className="mt-6 w-full max-w-full">
-        <TabsList className="grid w-full grid-cols-4 max-w-full">
+        <TabsList className="grid w-full max-w-full grid-cols-4">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
           <TabsTrigger value="daily">Gastos Diarios</TabsTrigger>
           <TabsTrigger value="cumulative">Gastos Acumulados</TabsTrigger>
@@ -564,7 +572,7 @@ export function DashboardView() {
                   {formatCurrency(totalIncome - totalExpenses)}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {totalIncome > totalExpenses ? "Superávit" : "Déficit"}
+                  {totalIncome > totalExpenses ? 'Superávit' : 'Déficit'}
                 </p>
               </CardContent>
             </Card>
@@ -583,7 +591,7 @@ export function DashboardView() {
           </div>
 
           {/* Row 2: Payment Method Breakdown */}
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 mt-4">
+          <div className="mt-4 grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -622,11 +630,13 @@ export function DashboardView() {
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${
-                  remainderCashDebit >= 0
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-red-600 dark:text-red-400"
-                }`}>
+                <div
+                  className={`text-2xl font-bold ${
+                    remainderCashDebit >= 0
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}
+                >
                   {formatCurrency(remainderCashDebit)}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -643,11 +653,13 @@ export function DashboardView() {
                 <CreditCardIcon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className={`text-2xl font-bold ${
-                  remainderCredit >= 0
-                    ? "text-green-600 dark:text-green-400"
-                    : "text-red-600 dark:text-red-400"
-                }`}>
+                <div
+                  className={`text-2xl font-bold ${
+                    remainderCredit >= 0
+                      ? 'text-green-600 dark:text-green-400'
+                      : 'text-red-600 dark:text-red-400'
+                  }`}
+                >
                   {formatCurrency(remainderCredit)}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -657,8 +669,8 @@ export function DashboardView() {
             </Card>
 
             <Card
-              className="cursor-pointer hover:bg-accent/50 transition-colors"
-              onClick={() => router.push("/dashboard/groupers")}
+              className="cursor-pointer transition-colors hover:bg-accent/50"
+              onClick={() => router.push('/dashboard/groupers')}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -672,7 +684,7 @@ export function DashboardView() {
                   className="w-full"
                   onClick={(e) => {
                     e.stopPropagation();
-                    router.push("/dashboard/groupers");
+                    router.push('/dashboard/groupers');
                   }}
                 >
                   Ver gráficos
@@ -683,8 +695,8 @@ export function DashboardView() {
 
           <div className="grid gap-4 md:grid-cols-2">
             <Card
-              className="cursor-pointer hover:bg-accent/50 transition-colors"
-              onClick={() => router.push("/dashboard/remainder")}
+              className="cursor-pointer transition-colors hover:bg-accent/50"
+              onClick={() => router.push('/dashboard/remainder')}
             >
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">
@@ -698,19 +710,19 @@ export function DashboardView() {
                   className="w-full"
                   onClick={(e) => {
                     e.stopPropagation();
-                    router.push("/dashboard/remainder");
+                    router.push('/dashboard/remainder');
                   }}
                 >
                   Ver remanentes
                 </Button>
-                <p className="text-xs text-muted-foreground mt-2">
+                <p className="mt-2 text-xs text-muted-foreground">
                   Categorías con presupuesto disponible
                 </p>
               </CardContent>
             </Card>
 
             <Card className="flex items-center justify-center border-dashed">
-              <CardContent className="text-center py-6">
+              <CardContent className="py-6 text-center">
                 <p className="text-sm text-muted-foreground">
                   Más dashboards próximamente
                 </p>
@@ -722,7 +734,9 @@ export function DashboardView() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-lg">Resumen de Presupuesto</CardTitle>
+                  <CardTitle className="text-lg">
+                    Resumen de Presupuesto
+                  </CardTitle>
                   <CardDescription className="text-sm">
                     Gastos por categoría en el periodo actual
                   </CardDescription>
@@ -744,20 +758,21 @@ export function DashboardView() {
             </CardHeader>
             <CardContent className="p-0">
               <Table className="max-h-[60vh]">
-                <TableHeader className="sticky top-0 bg-muted z-10">
+                <TableHeader className="sticky top-0 z-10 bg-muted">
                   <TableRow>
                     <TableHead>Categoria</TableHead>
                     <TableHead
-                      className="text-center cursor-pointer hover:bg-accent transition-colors"
+                      className="cursor-pointer text-center transition-colors hover:bg-accent"
                       onClick={handleDefaultDaySort}
                     >
                       <div className="flex items-center justify-center gap-1">
                         Día por Defecto
-                        {sortBy === 'default_day' && (
-                          sortDirection === 'asc'
-                            ? <ArrowUp className="h-4 w-4" />
-                            : <ArrowDown className="h-4 w-4" />
-                        )}
+                        {sortBy === 'default_day' &&
+                          (sortDirection === 'asc' ? (
+                            <ArrowUp className="h-4 w-4" />
+                          ) : (
+                            <ArrowDown className="h-4 w-4" />
+                          ))}
                       </div>
                     </TableHead>
                     <TableHead className="text-right">
@@ -792,47 +807,59 @@ export function DashboardView() {
 
                       // Build className string
                       const categoryNameStyle = getCategoryNameStyle(item);
-                      let backgroundClass = "";
+                      let backgroundClass = '';
 
                       if (item.pending_amount > 0) {
-                        backgroundClass = "bg-purple-200 dark:bg-purple-900";
+                        backgroundClass = 'bg-purple-200 dark:bg-purple-900';
                       } else if (item.total_amount === 0) {
-                        backgroundClass = "bg-white dark:bg-gray-800";
+                        backgroundClass = 'bg-white dark:bg-gray-800';
                       } else if (item.remaining <= 0) {
-                        if (item.remaining < 0 && Math.abs(item.remaining) >= item.expected_amount * 0.3) {
-                          backgroundClass = "bg-red-100 dark:bg-red-950/50";
-                        } else if (item.remaining < 0 && Math.abs(item.remaining) > item.expected_amount * 0.1) {
-                          backgroundClass = "bg-yellow-100 dark:bg-yellow-950/50";
+                        if (
+                          item.remaining < 0 &&
+                          Math.abs(item.remaining) >= item.expected_amount * 0.3
+                        ) {
+                          backgroundClass = 'bg-red-100 dark:bg-red-950/50';
+                        } else if (
+                          item.remaining < 0 &&
+                          Math.abs(item.remaining) > item.expected_amount * 0.1
+                        ) {
+                          backgroundClass =
+                            'bg-yellow-100 dark:bg-yellow-950/50';
                         } else {
-                          backgroundClass = "bg-green-100 dark:bg-green-950/50";
+                          backgroundClass = 'bg-green-100 dark:bg-green-950/50';
                         }
                       }
 
                       const fullClassName = `font-medium ${categoryNameStyle} ${backgroundClass}`;
 
                       // Debug logging for Ayuno and Diezmo
-                      if (item.category_name === "Ayuno" || item.category_name === "Diezmo") {
-                        console.log(`[DEBUG ${new Date().toISOString()}] ${item.category_name}:`, {
-                          pending_amount: item.pending_amount,
-                          pending_amount_type: typeof item.pending_amount,
-                          total_amount: item.total_amount,
-                          remaining: item.remaining,
-                          condition_check: item.pending_amount > 0,
-                          backgroundClass: backgroundClass,
-                          fullClassName: fullClassName
-                        });
+                      if (
+                        item.category_name === 'Ayuno' ||
+                        item.category_name === 'Diezmo'
+                      ) {
+                        console.log(
+                          `[DEBUG ${new Date().toISOString()}] ${item.category_name}:`,
+                          {
+                            pending_amount: item.pending_amount,
+                            pending_amount_type: typeof item.pending_amount,
+                            total_amount: item.total_amount,
+                            remaining: item.remaining,
+                            condition_check: item.pending_amount > 0,
+                            backgroundClass: backgroundClass,
+                            fullClassName: fullClassName,
+                          }
+                        );
                       }
 
                       return (
                         <TableRow key={item.category_id} className="group">
                           <TableCell className={fullClassName}>
-
                             <div className="flex items-center gap-2">
                               <span>{item.category_name}</span>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-6 w-6 p-0 hover:bg-accent opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="h-6 w-6 p-0 opacity-0 transition-opacity hover:bg-accent group-hover:opacity-100"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setSelectedCategoryId(item.category_id);
@@ -867,14 +894,14 @@ export function DashboardView() {
                           </TableCell>
                           <TableCell
                             className={`text-right ${
-                              item.remaining < 0 ? "text-destructive" : ""
+                              item.remaining < 0 ? 'text-destructive' : ''
                             }`}
                           >
                             {formatCurrency(item.remaining)}
                           </TableCell>
                           <TableCell
                             className={`text-right ${
-                              runningBalance < 0 ? "text-destructive" : ""
+                              runningBalance < 0 ? 'text-destructive' : ''
                             }`}
                           >
                             {formatCurrency(runningBalance)}
@@ -893,21 +920,24 @@ export function DashboardView() {
                         <TableCell className="text-right">
                           {/* Sum of all credit budgets - Requirement 2.1 */}
                           {(() => {
-                            const totals = calculateBudgetTotals(sortedBudgetSummary);
+                            const totals =
+                              calculateBudgetTotals(sortedBudgetSummary);
                             return formatCurrency(totals.totalCreditBudget);
                           })()}
                         </TableCell>
                         <TableCell className="text-right">
                           {/* Sum of all cash/debit budgets - Requirement 2.2 */}
                           {(() => {
-                            const totals = calculateBudgetTotals(sortedBudgetSummary);
+                            const totals =
+                              calculateBudgetTotals(sortedBudgetSummary);
                             return formatCurrency(totals.totalCashDebitBudget);
                           })()}
                         </TableCell>
                         <TableCell className="text-right">
                           {(() => {
                             // Calculate totals using utility function - Requirement 2.3
-                            const totals = calculateBudgetTotals(sortedBudgetSummary);
+                            const totals =
+                              calculateBudgetTotals(sortedBudgetSummary);
 
                             // Verify that credit + cash/debit budgets equal total budget
                             const splitBudgetSum =
@@ -919,7 +949,7 @@ export function DashboardView() {
                               ) > 0.01
                             ) {
                               console.warn(
-                                "Budget totals verification failed:",
+                                'Budget totals verification failed:',
                                 {
                                   creditBudget: totals.totalCreditBudget,
                                   cashDebitBudget: totals.totalCashDebitBudget,
@@ -936,25 +966,29 @@ export function DashboardView() {
                         </TableCell>
                         <TableCell className="text-right">
                           {(() => {
-                            const totals = calculateBudgetTotals(sortedBudgetSummary);
+                            const totals =
+                              calculateBudgetTotals(sortedBudgetSummary);
                             return formatCurrency(totals.totalCreditAmount);
                           })()}
                         </TableCell>
                         <TableCell className="text-right">
                           {(() => {
-                            const totals = calculateBudgetTotals(sortedBudgetSummary);
+                            const totals =
+                              calculateBudgetTotals(sortedBudgetSummary);
                             return formatCurrency(totals.totalDebitAmount);
                           })()}
                         </TableCell>
                         <TableCell className="text-right">
                           {(() => {
-                            const totals = calculateBudgetTotals(sortedBudgetSummary);
+                            const totals =
+                              calculateBudgetTotals(sortedBudgetSummary);
                             return formatCurrency(totals.totalCashAmount);
                           })()}
                         </TableCell>
                         <TableCell className="text-right">
                           {(() => {
-                            const totals = calculateBudgetTotals(sortedBudgetSummary);
+                            const totals =
+                              calculateBudgetTotals(sortedBudgetSummary);
                             return formatCurrency(totals.totalRemaining);
                           })()}
                         </TableCell>
@@ -994,22 +1028,24 @@ export function DashboardView() {
                     </>
                   )}
 
-                  {filteredBudgetSummary.length === 0 && budgetSummary.length > 0 && (
-                    <TableRow>
-                      <TableCell
-                        colSpan={10}
-                        className="text-center py-4 text-muted-foreground"
-                      >
-                        Todas las categorías están excluidas. Selecciona algunas categorías para mostrar.
-                      </TableCell>
-                    </TableRow>
-                  )}
+                  {filteredBudgetSummary.length === 0 &&
+                    budgetSummary.length > 0 && (
+                      <TableRow>
+                        <TableCell
+                          colSpan={10}
+                          className="py-4 text-center text-muted-foreground"
+                        >
+                          Todas las categorías están excluidas. Selecciona
+                          algunas categorías para mostrar.
+                        </TableCell>
+                      </TableRow>
+                    )}
 
                   {budgetSummary.length === 0 && (
                     <TableRow>
                       <TableCell
                         colSpan={10}
-                        className="text-center py-4 text-muted-foreground"
+                        className="py-4 text-center text-muted-foreground"
                       >
                         No hay datos para mostrar. Agrega categorías y
                         presupuestos.

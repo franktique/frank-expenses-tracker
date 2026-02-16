@@ -17,8 +17,8 @@ A reusable multi-select component for fund selection with search functionality, 
 ## Basic Usage
 
 ```tsx
-import { MultiFundSelector } from "@/components/multi-fund-selector";
-import { Fund } from "@/types/funds";
+import { MultiFundSelector } from '@/components/multi-fund-selector';
+import { Fund } from '@/types/funds';
 
 function MyComponent() {
   const [selectedFunds, setSelectedFunds] = useState<Fund[]>([]);
@@ -48,7 +48,7 @@ function MyComponent() {
 ## Advanced Usage with Hook
 
 ```tsx
-import { useMultiFundSelection } from "@/components/multi-fund-selector";
+import { useMultiFundSelection } from '@/components/multi-fund-selector';
 
 function MyComponent() {
   const {
@@ -72,7 +72,7 @@ function MyComponent() {
       <p>Summary: {summary}</p>
 
       {!validation.isValid && (
-        <div className="text-red-500">{validation.errors.join(", ")}</div>
+        <div className="text-red-500">{validation.errors.join(', ')}</div>
       )}
 
       <button onClick={clearSelection}>Clear All</button>
@@ -90,7 +90,7 @@ Validates a fund selection against available funds and maximum selection limit.
 ```tsx
 const validation = validateFundSelection(selectedFunds, availableFunds, 3);
 if (!validation.isValid) {
-  console.log("Errors:", validation.errors);
+  console.log('Errors:', validation.errors);
 }
 ```
 

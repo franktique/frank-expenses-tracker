@@ -478,6 +478,21 @@ export function DashboardView() {
     0
   );
 
+  // Calculate filtered total expenses from filtered budget summary
+  // This ensures excluded categories are not counted
+  // Uses confirmed_amount to match API behavior (excludes pending expenses)
+  const filteredTotalExpenses = filteredBudgetSummary.reduce(
+    (sum, item) => sum + item.confirmed_amount,
+    0
+  );
+
+  // Calculate filtered balance using filtered expenses
+  // Income remains unfiltered as incomes table has no category association
+  const filteredBalance = totalIncome - filteredTotalExpenses;
+
+  // Count of visible (non-excluded) categories
+  const filteredCategoryCount = filteredBudgetSummary.length;
+
   return (
     <div className="w-full max-w-full space-y-6">
       <div>
@@ -557,7 +572,7 @@ export function DashboardView() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {formatCurrency(totalExpenses)}
+                  {formatCurrency(filteredTotalExpenses)}
                 </div>
               </CardContent>
             </Card>
@@ -569,10 +584,10 @@ export function DashboardView() {
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">
-                  {formatCurrency(totalIncome - totalExpenses)}
+                  {formatCurrency(filteredBalance)}
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  {totalIncome > totalExpenses ? 'Superávit' : 'Déficit'}
+                  {totalIncome > filteredTotalExpenses ? 'Superávit' : 'Déficit'}
                 </p>
               </CardContent>
             </Card>
@@ -585,7 +600,7 @@ export function DashboardView() {
                 <Wallet className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{budgetSummary.length}</div>
+                <div className="text-2xl font-bold">{filteredCategoryCount}</div>
               </CardContent>
             </Card>
           </div>

@@ -486,9 +486,16 @@ export function DashboardView() {
     0
   );
 
-  // Calculate filtered balance using filtered expenses
+  // Calculate filtered total cash/debit expenses for balance calculation
+  // Balance should only consider cash/debit expenses (matching the Saldo column)
+  const filteredTotalCashDebitExpenses = filteredBudgetSummary.reduce(
+    (sum, item) => sum + item.debit_amount + item.cash_amount,
+    0
+  );
+
+  // Calculate filtered balance using only cash/debit expenses
   // Income remains unfiltered as incomes table has no category association
-  const filteredBalance = totalIncome - filteredTotalExpenses;
+  const filteredBalance = totalIncome - filteredTotalCashDebitExpenses;
 
   // Count of visible (non-excluded) categories
   const filteredCategoryCount = filteredBudgetSummary.length;

@@ -14,6 +14,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { TabBarProps } from '@/types/tabs';
 import { Tab } from './tab';
+import { SplitViewButton } from '@/components/split-view-button';
 
 export function TabBar({
   tabs,
@@ -23,6 +24,8 @@ export function TabBar({
   onAddTab,
   onTabPin,
   onTabContextMenu,
+  splitPanelCount = 1,
+  onSplitChange,
 }: TabBarProps) {
   const [isOverflowing, setIsOverflowing] = useState(false);
   const [showScrollButtons, setShowScrollButtons] = useState(false);
@@ -234,11 +237,12 @@ export function TabBar({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Tab count indicator */}
-      {tabs.length > 0 && (
-        <div className="px-2 text-xs text-muted-foreground">
-          {tabs.length} {tabs.length === 1 ? 'tab' : 'tabs'}
-        </div>
+      {/* Split view button */}
+      {onSplitChange && (
+        <SplitViewButton
+          panelCount={splitPanelCount}
+          onSplitChange={onSplitChange}
+        />
       )}
     </div>
   );

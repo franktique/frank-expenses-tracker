@@ -1,17 +1,27 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
-import { AppSidebar } from '@/components/app-sidebar';
 import { SimpleTabLayout } from '@/components/simple-tab-layout';
 
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   // Don't show sidebar on login page or when not authenticated
   const isLoginPage = pathname === '/login';
   const showSidebar = isAuthenticated && !isLoginPage;
+  const isPanelMode = searchParams.get('_layout') === 'panel';
+
+  // Embedded panel mode: strip all chrome (sidebar, tab bar)
+  if (isPanelMode && showSidebar) {
+    return (
+      <div className="flex min-h-screen flex-col">
+        <div className="flex-1 overflow-auto p-6">{children}</div>
+      </div>
+    );
+  }
 
   // Use tab layout when authenticated, otherwise use regular layout
   if (showSidebar) {

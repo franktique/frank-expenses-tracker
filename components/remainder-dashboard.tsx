@@ -34,11 +34,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
-import { FundFilter } from '@/components/fund-filter';
 import { EstudioFilter } from '@/components/estudio-filter';
 import { AgrupadorFilter } from '@/components/agrupador-filter';
 import { formatCurrency } from '@/lib/utils';
-import { Fund } from '@/types/funds';
 import {
   RemainderDashboardData,
   RemainderCategoryItem,
@@ -95,7 +93,6 @@ export function RemainderDashboard() {
   const [dataError, setDataError] = useState<string | null>(null);
 
   // Filter states
-  const [fundFilter, setFundFilter] = useState<Fund | null>(null);
   const [estudioFilter, setEstudioFilter] = useState<number | null>(null);
   const [agrupadorFilter, setAgrupadorFilter] = useState<number[]>([]);
 
@@ -112,7 +109,6 @@ export function RemainderDashboard() {
 
   // Reset filters on mount
   useEffect(() => {
-    setFundFilter(null);
     setEstudioFilter(null);
     setAgrupadorFilter([]);
   }, []);
@@ -170,9 +166,6 @@ export function RemainderDashboard() {
       try {
         const url = new URL('/api/dashboard/remainder', window.location.origin);
 
-        if (fundFilter) {
-          url.searchParams.set('fundId', fundFilter.id);
-        }
         if (estudioFilter) {
           url.searchParams.set('estudioId', estudioFilter.toString());
         }
@@ -204,7 +197,6 @@ export function RemainderDashboard() {
     budgetLoading,
     isDbInitialized,
     dbConnectionError,
-    fundFilter,
     estudioFilter,
     agrupadorFilter,
   ]);
@@ -446,23 +438,11 @@ export function RemainderDashboard() {
         <CardHeader>
           <CardTitle>Filtros</CardTitle>
           <CardDescription>
-            Filtra las categorías por fondo, estudio y agrupadores
+            Filtra las categorías por estudio y agrupadores
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="space-y-2">
-              <Label>Fondo</Label>
-              <FundFilter
-                selectedFund={fundFilter}
-                onFundChange={setFundFilter}
-                placeholder="Todos los fondos"
-                includeAllFunds={true}
-                allFundsLabel="Todos los fondos"
-                className="w-full"
-              />
-            </div>
-
+          <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label>Estudio</Label>
               <EstudioFilter
@@ -580,7 +560,6 @@ export function RemainderDashboard() {
               <Button
                 variant="outline"
                 onClick={() => {
-                  setFundFilter(null);
                   setEstudioFilter(null);
                   setAgrupadorFilter([]);
                 }}

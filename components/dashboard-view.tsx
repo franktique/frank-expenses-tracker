@@ -49,8 +49,6 @@ import {
   DailyExpensesChart,
 } from './dashboard-charts';
 import { useRouter } from 'next/navigation';
-import { FundFilter } from '@/components/fund-filter';
-import { Fund } from '@/types/funds';
 import { Label } from '@/components/ui/label';
 import { CategoryExclusionFilter } from '@/components/category-exclusion-filter';
 import {
@@ -72,7 +70,6 @@ import { ExportBudgetSummaryButton } from '@/components/export-budget-summary-bu
 export function DashboardView() {
   const {
     activePeriod: budgetActivePeriod,
-    funds,
     isLoading,
     error,
     isDbInitialized,
@@ -90,7 +87,6 @@ export function DashboardView() {
     null
   );
   const [isLoadingData, setIsLoadingData] = useState(true);
-  const [fundFilter, setFundFilter] = useState<Fund | null>(null);
   const [excludedCategories, setExcludedCategories] = useState<string[]>([]);
   const router = useRouter();
 
@@ -136,11 +132,6 @@ export function DashboardView() {
     );
   }, [dashboardData?.budgetSummary, excludedCategories]);
 
-  // Reset fund filter to "All Funds" on page refresh
-  useEffect(() => {
-    setFundFilter(null);
-  }, []);
-
   // Load excluded categories from localStorage on mount
   useEffect(() => {
     const excluded = loadExcludedCategories();
@@ -175,11 +166,8 @@ export function DashboardView() {
 
       setIsLoadingData(true);
       try {
-        // Build URL with fund filter parameter
+        // Build URL without fund filter parameter
         const url = new URL('/api/dashboard', window.location.origin);
-        if (fundFilter) {
-          url.searchParams.set('fundId', fundFilter.id);
-        }
 
         const response = await fetch(url.toString());
         if (!response.ok) {
@@ -278,7 +266,6 @@ export function DashboardView() {
     authActivePeriod,
     isDbInitialized,
     dbConnectionError,
-    fundFilter,
     refreshTrigger,
   ]);
 
@@ -506,7 +493,6 @@ export function DashboardView() {
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">
           Periodo activo: {dashboardData.activePeriod.name}
-          {fundFilter && ` • Fondo: ${fundFilter.name}`}
           {excludedCategories.length > 0 &&
             ` • ${excludedCategories.length} ${
               excludedCategories.length === 1
@@ -515,35 +501,6 @@ export function DashboardView() {
             }`}
         </p>
       </div>
-
-      {/* Fund Filter */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtro de Fondo</CardTitle>
-          <CardDescription>
-            Filtra los datos del dashboard por fondo específico o muestra datos
-            combinados de todos los fondos
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <Label htmlFor="dashboard-fund-filter">Fondo:</Label>
-            <FundFilter
-              selectedFund={fundFilter}
-              onFundChange={setFundFilter}
-              placeholder="Todos los fondos"
-              includeAllFunds={true}
-              allFundsLabel="Todos los fondos"
-              className="w-[300px]"
-            />
-            <p className="text-sm text-muted-foreground">
-              {fundFilter
-                ? `Mostrando datos del fondo "${fundFilter.name}"`
-                : 'Mostrando datos combinados de todos los fondos'}
-            </p>
-          </div>
-        </CardContent>
-      </Card>
 
       <Tabs defaultValue="summary" className="mt-6 w-full max-w-full">
         <TabsList className="grid w-full max-w-full grid-cols-4">
@@ -772,7 +729,6 @@ export function DashboardView() {
                   <ExportBudgetSummaryButton
                     budgetSummary={budgetSummary}
                     totalIncome={totalIncome}
-                    fundFilter={fundFilter}
                     periodName={dashboardData.activePeriod.name}
                   />
                 </div>
@@ -1118,7 +1074,6 @@ export function DashboardView() {
           }
         }}
         preSelectedCategoryId={selectedCategoryId || undefined}
-        currentFundFilter={fundFilter}
         onSuccess={() => {
           // Refresh dashboard data after expense is added
           // Increment refreshTrigger to trigger useEffect refetch

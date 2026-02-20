@@ -46,20 +46,16 @@ import { useToast } from '@/components/ui/use-toast';
 import { useBudget, Income, Period } from '@/context/budget-context';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { FundFilter } from '@/components/fund-filter';
-import { Fund } from '@/types/funds';
+import { DEFAULT_FUND_ID } from '@/types/funds';
 
 export function IncomesView() {
   const {
     periods,
     incomes,
-    funds,
     activePeriod,
     addIncome,
     updateIncome,
     deleteIncome,
-    getFundById,
-    getDefaultFund,
   } = useBudget();
   const { toast } = useToast();
 
@@ -76,8 +72,6 @@ export function IncomesView() {
   const [newIncomeDescription, setNewIncomeDescription] = useState('');
   const [newIncomeAmount, setNewIncomeAmount] = useState('');
   const [newIncomeEvent, setNewIncomeEvent] = useState('');
-  const [newIncomeFund, setNewIncomeFund] = useState<Fund | null>(null);
-  const [defaultFundInitialized, setDefaultFundInitialized] = useState(false);
 
   const [editIncome, setEditIncome] = useState<{
     id: string;
@@ -86,9 +80,7 @@ export function IncomesView() {
     description: string;
     amount: string;
     event?: string;
-    fundId?: string;
   } | null>(null);
-  const [editIncomeFund, setEditIncomeFund] = useState<Fund | null>(null);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -99,24 +91,6 @@ export function IncomesView() {
       setNewIncomePeriod(activePeriod.id);
     }
   }, [activePeriod]);
-
-  // Set default fund when add dialog opens
-  useEffect(() => {
-    if (isAddOpen && funds && funds.length > 0 && !defaultFundInitialized) {
-      const defaultFund = getDefaultFund();
-      if (defaultFund) {
-        setNewIncomeFund(defaultFund);
-        setDefaultFundInitialized(true);
-      }
-    }
-  }, [isAddOpen, funds, defaultFundInitialized, getDefaultFund]);
-
-  // Reset default fund initialization when dialog closes
-  useEffect(() => {
-    if (!isAddOpen) {
-      setDefaultFundInitialized(false);
-    }
-  }, [isAddOpen]);
 
   const handleAddIncome = async () => {
     if (!newIncomeDate || !newIncomeDescription.trim() || !newIncomeAmount) {
@@ -149,7 +123,7 @@ export function IncomesView() {
         newIncomeDescription,
         amount,
         newIncomeEvent.trim() || undefined,
-        newIncomeFund?.id
+        DEFAULT_FUND_ID // Always use default fund 'Cta Ahorros'
       );
 
       setNewIncomePeriod(activePeriod?.id || '');
@@ -157,8 +131,6 @@ export function IncomesView() {
       setNewIncomeDescription('');
       setNewIncomeAmount('');
       setNewIncomeEvent('');
-      setNewIncomeFund(null);
-      setDefaultFundInitialized(false);
       setIsAddOpen(false);
 
       toast({
@@ -214,11 +186,10 @@ export function IncomesView() {
         editIncome.description,
         amount,
         editIncome.event?.trim() || undefined,
-        editIncomeFund?.id
+        DEFAULT_FUND_ID // Always use default fund 'Cta Ahorros'
       );
 
       setEditIncome(null);
-      setEditIncomeFund(null);
       setIsEditOpen(false);
 
       toast({
@@ -414,22 +385,6 @@ export function IncomesView() {
                   placeholder="Ej: Venta especial, Bono, etc."
                 />
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="fund">Fondo (opcional)</Label>
-                <FundFilter
-                  selectedFund={newIncomeFund}
-                  onFundChange={setNewIncomeFund}
-                  placeholder="Seleccionar fondo..."
-                  includeAllFunds={false}
-                  defaultFund={getDefaultFund()}
-                  className="w-full"
-                />
-                <p className="text-sm text-muted-foreground">
-                  {getDefaultFund()
-                    ? `Si no seleccionas un fondo, se asignará al fondo "${getDefaultFund()?.name}" por defecto`
-                    : 'Si no seleccionas un fondo, se asignará al fondo "Disponible" por defecto'}
-                </p>
-              </div>
             </div>
             <DialogFooter>
               <Button
@@ -469,7 +424,6 @@ export function IncomesView() {
                 <TableHead>Descripción</TableHead>
                 <TableHead>Evento</TableHead>
                 <TableHead>Periodo</TableHead>
-                <TableHead>Fondo</TableHead>
                 <TableHead className="text-right">Monto</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
@@ -493,17 +447,6 @@ export function IncomesView() {
                     <TableCell>{income.description}</TableCell>
                     <TableCell>{income.event || ''}</TableCell>
                     <TableCell>{period?.name || 'Desconocido'}</TableCell>
-                    <TableCell>
-                      {income.fund_name ? (
-                        <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                          {income.fund_name}
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center rounded-md bg-gray-50 px-2 py-1 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-700/10">
-                          Disponible
-                        </span>
-                      )}
-                    </TableCell>
                     <TableCell className="text-right">
                       {formatCurrency(income.amount)}
                     </TableCell>
@@ -519,13 +462,7 @@ export function IncomesView() {
                             description: income.description,
                             amount: income.amount.toString(),
                             event: income.event || '',
-                            fundId: income.fund_id,
                           });
-                          // Set the fund for editing
-                          const incomeFund = income.fund_id
-                            ? getFundById(income.fund_id)
-                            : null;
-                          setEditIncomeFund(incomeFund || null);
                           setIsEditOpen(true);
                         }}
                       >
@@ -549,7 +486,7 @@ export function IncomesView() {
               {(!sortedIncomes || sortedIncomes.length === 0) && (
                 <TableRow>
                   <TableCell
-                    colSpan={6}
+                    colSpan={5}
                     className="py-4 text-center text-muted-foreground"
                   >
                     No hay ingresos registrados. Agrega un nuevo ingreso para
@@ -672,22 +609,6 @@ export function IncomesView() {
                 }
                 placeholder="Ej: Venta especial, Bono, etc."
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-fund">Fondo (opcional)</Label>
-              <FundFilter
-                selectedFund={editIncomeFund}
-                onFundChange={setEditIncomeFund}
-                placeholder="Seleccionar fondo..."
-                includeAllFunds={false}
-                defaultFund={getDefaultFund()}
-                className="w-full"
-              />
-              <p className="text-sm text-muted-foreground">
-                {getDefaultFund()
-                  ? `Si no seleccionas un fondo, se asignará al fondo "${getDefaultFund()?.name}" por defecto`
-                  : 'Si no seleccionas un fondo, se asignará al fondo "Disponible" por defecto'}
-              </p>
             </div>
           </div>
           <DialogFooter>

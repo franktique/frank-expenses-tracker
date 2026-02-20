@@ -218,18 +218,6 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              isActive={isActive('/fondos')}
-              tooltip="Fondos"
-            >
-              <Link href="/fondos">
-                <Wallet className="h-4 w-4" />
-                <span>Fondos</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
               isActive={isActive('/agrupadores')}
               tooltip="Agrupadores"
             >
@@ -308,18 +296,6 @@ export function AppSidebar() {
               <Link href="/dashboard/groupers">
                 <BarChart3 className="h-4 w-4" />
                 <span>Dashboard Agrupadores</span>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={isActive('/dashboard/fondos')}
-              tooltip="Dashboard Fondos"
-            >
-              <Link href="/dashboard/fondos">
-                <BarChart3 className="h-4 w-4" />
-                <span>Dashboard Fondos</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

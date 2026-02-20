@@ -314,7 +314,7 @@ export interface Expense {
   payment_method: PaymentMethod;
   description: string;
   amount: number;
-  source_fund_id: string; // Required source fund field
+  source_fund_id?: string; // Optional source fund (fondos UI being removed)
   source_fund_name?: string; // Populated in joins
   destination_fund_id?: string;
   destination_fund_name?: string; // Populated in joins
@@ -340,7 +340,7 @@ export const ExpenseSchema = z.object({
     .min(1, 'La descripción es obligatoria')
     .max(500, 'La descripción es demasiado larga'),
   amount: z.number().positive('El monto debe ser positivo'),
-  source_fund_id: z.string().uuid(), // Required source fund field
+  source_fund_id: z.string().uuid().optional(), // Optional source fund (fondos UI being removed)
   source_fund_name: z.string().optional(),
   destination_fund_id: z.string().uuid().optional(),
   destination_fund_name: z.string().optional(),
@@ -367,7 +367,7 @@ export const CreateExpenseSchema = z.object({
     .min(1, 'La descripción es obligatoria')
     .max(500, 'La descripción es demasiado larga'),
   amount: z.number().positive('El monto debe ser positivo'),
-  source_fund_id: z.string().uuid(), // Required source fund field
+  source_fund_id: z.string().uuid().optional(), // Optional source fund (fondos UI being removed)
   destination_fund_id: z.string().uuid().optional(),
   credit_card_id: z.string().uuid().nullable().optional(), // Optional credit card field
   pending: z.boolean().optional(), // New field for pending status
@@ -575,9 +575,14 @@ export interface FundBalanceRecalculationResult {
 }
 
 // Default fund constants
+// @deprecated Fund functionality is being removed. Use DEFAULT_FUND_ID for compatibility.
 export const DEFAULT_FUND_NAME = 'Disponible';
 export const DEFAULT_FUND_DESCRIPTION =
   'Fondo por defecto para categorías sin asignación específica';
+
+// Default fund ID to use throughout the app (Phase 1: fondos removal)
+// This ID is used when the app requires a fund_id but fondos UI is removed
+export const DEFAULT_FUND_ID = 'Cta Ahorros';
 
 // Fund validation error messages
 export const FUND_ERROR_MESSAGES = {

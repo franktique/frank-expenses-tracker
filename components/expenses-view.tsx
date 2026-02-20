@@ -6,12 +6,6 @@ import {
   FileUp,
   PlusCircle,
   Download,
-  AlertTriangle,
-  ArrowRight,
-  RotateCcw,
-  ChevronDown,
-  ChevronUp,
-  Settings,
 } from 'lucide-react';
 import { ExpenseFormDialog } from '@/components/expense-form-dialog';
 import { Button } from '@/components/ui/button';
@@ -35,11 +29,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -68,96 +57,21 @@ import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { useBudget, type PaymentMethod } from '@/context/budget-context';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
-import { FundFilter } from '@/components/fund-filter';
-import { FundSelectionConstraintIndicator } from '@/components/fund-category-relationship-indicator';
-import { SourceFundSelector } from '@/components/source-fund-selector';
 import { CreditCardSelector } from '@/components/credit-card-selector';
-import { Fund } from '@/types/funds';
 import { CreditCard, CREDIT_CARD_FRANCHISE_LABELS } from '@/types/credit-cards';
 import { useRouter, useSearchParams } from 'next/navigation';
-
-// Helper function to get available funds for a category
-const getAvailableFundsForCategory = (
-  categoryId: string,
-  categories: any[],
-  funds: Fund[]
-): Fund[] => {
-  if (!categoryId || !categories || !funds) {
-    return funds || [];
-  }
-
-  const category = categories.find((cat) => cat.id === categoryId);
-  if (!category) {
-    return funds || [];
-  }
-
-  // If category has associated_funds, use those
-  if (category.associated_funds && category.associated_funds.length > 0) {
-    return category.associated_funds;
-  }
-
-  // Fallback: if no specific funds associated, show all funds
-  return funds || [];
-};
-
-// Helper function to get default fund for a category based on priority logic
-const getDefaultFundForCategory = (
-  categoryId: string,
-  categories: any[],
-  funds: Fund[],
-  currentFilterFund: Fund | null
-): Fund | null => {
-  const availableFunds = getAvailableFundsForCategory(
-    categoryId,
-    categories,
-    funds
-  );
-
-  if (availableFunds.length === 0) {
-    return null;
-  }
-
-  // Priority 1: If current filter fund is available for this category, use it
-  if (
-    currentFilterFund &&
-    availableFunds.some((fund) => fund.id === currentFilterFund.id)
-  ) {
-    return currentFilterFund;
-  }
-
-  // Priority 2: Use first available fund for the category
-  return availableFunds[0] || null;
-};
-
-// Helper function to validate if a fund is valid for a category
-const isFundValidForCategory = (
-  fundId: string,
-  categoryId: string,
-  categories: any[],
-  funds: Fund[]
-): boolean => {
-  const availableFunds = getAvailableFundsForCategory(
-    categoryId,
-    categories,
-    funds
-  );
-  return availableFunds.some((fund) => fund.id === fundId);
-};
 
 export function ExpensesView() {
   const {
     categories,
     periods,
     expenses,
-    funds,
     activePeriod,
     addExpense,
     updateExpense,
     deleteExpense,
     getCategoryById,
     getPeriodById,
-    getFundById,
-    getDefaultFund,
     isLoading,
     dataLoaded,
     refreshData,
@@ -170,7 +84,6 @@ export function ExpensesView() {
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
-  const [isFundSectionOpenEdit, setIsFundSectionOpenEdit] = useState(false);
   const [categoryFilter, setCategoryFilter] = useState<string>(
     searchParams.get('category') || ''
   );
@@ -181,14 +94,7 @@ export function ExpensesView() {
     searchParams.get('creditCard') || ''
   );
 
-  // Fund filter state - mandatory for expenses
-  const [fundFilter, setFundFilter] = useState<Fund | null>(null);
-
   const [categorySearch, setCategorySearch] = useState('');
-
-  // State for dynamic fund filtering (for edit form only)
-  const [availableFundsForEditExpense, setAvailableFundsForEditExpense] =
-    useState<Fund[]>([]);
 
   const [editExpense, setEditExpense] = useState<{
     id: string;
@@ -198,15 +104,9 @@ export function ExpensesView() {
     paymentMethod: PaymentMethod;
     description: string;
     amount: string;
-    sourceFundId?: string;
-    destinationFundId?: string;
     creditCardId?: string;
     pending: boolean;
   } | null>(null);
-  const [editExpenseDestinationFund, setEditExpenseDestinationFund] =
-    useState<Fund | null>(null);
-  const [editExpenseSourceFund, setEditExpenseSourceFund] =
-    useState<Fund | null>(null);
   const [editExpenseCreditCard, setEditExpenseCreditCard] =
     useState<CreditCard | null>(null);
 
@@ -238,29 +138,6 @@ export function ExpensesView() {
     refreshData();
   }, []); // Empty dependency array - only run on mount
 
-  // Set default fund filter using configured default fund when data is fully loaded
-  useEffect(() => {
-    if (dataLoaded && funds && funds.length > 0 && !fundFilter) {
-      // Get the configured default fund from settings
-      const defaultFund = getDefaultFund();
-      if (defaultFund) {
-        setFundFilter(defaultFund);
-        console.log(
-          `Expenses: Fund filter set to default fund: ${defaultFund.name}`
-        );
-      } else {
-        // Fallback to "Disponible" fund if no default is configured
-        const disponibleFund = funds.find((fund) => fund.name === 'Disponible');
-        if (disponibleFund) {
-          setFundFilter(disponibleFund);
-          console.log(
-            `Expenses: Fund filter set to fallback 'Disponible' fund`
-          );
-        }
-      }
-    }
-  }, [funds, fundFilter, dataLoaded]);
-
   // Fetch credit cards for filtering
   useEffect(() => {
     const fetchCreditCards = async () => {
@@ -282,52 +159,8 @@ export function ExpensesView() {
     fetchCreditCards();
   }, []);
 
-  // Update available funds for edit expense when category changes
-  useEffect(() => {
-    if (editExpense?.categoryId && categories && funds) {
-      const availableFunds = getAvailableFundsForCategory(
-        editExpense.categoryId,
-        categories,
-        funds
-      );
-      setAvailableFundsForEditExpense(availableFunds);
-
-      // Note: Destination fund is independent of category restrictions
-      // Users can select any available fund as destination
-    } else {
-      setAvailableFundsForEditExpense(funds || []);
-      // Reset destination fund if no category selected
-      if (editExpenseDestinationFund !== null) {
-        setEditExpenseDestinationFund(null);
-      }
-    }
-  }, [
-    editExpense?.categoryId,
-    categories,
-    funds,
-    fundFilter,
-    editExpenseDestinationFund,
-  ]);
-
-  // Filter categories based on selected fund
-  const availableCategories = useMemo(() => {
-    if (!categories) {
-      return [];
-    }
-    if (!fundFilter) {
-      return categories;
-    }
-    return categories.filter((category) => {
-      // Check if the fund is in the category's associated_funds
-      if (category.associated_funds && category.associated_funds.length > 0) {
-        return category.associated_funds.some(
-          (fund: Fund) => fund.id === fundFilter.id
-        );
-      }
-      // Fallback to old fund_id for backward compatibility
-      return category.fund_id === fundFilter.id;
-    });
-  }, [categories, fundFilter]);
+  // All categories are available (no fund filter)
+  const availableCategories = categories || [];
 
   const handleExpenseAdded = () => {
     // Refresh data after expense is added
@@ -340,13 +173,12 @@ export function ExpensesView() {
       !editExpense.categoryId ||
       !editExpense.date ||
       !editExpense.description.trim() ||
-      !editExpense.amount ||
-      !editExpenseSourceFund
+      !editExpense.amount
     ) {
       toast({
         title: 'Error',
         description:
-          'Los campos obligatorios no pueden estar vacíos. Debe seleccionar un fondo origen.',
+          'Los campos obligatorios no pueden estar vacíos.',
         variant: 'destructive',
       });
       return;
@@ -357,19 +189,6 @@ export function ExpensesView() {
       toast({
         title: 'Error',
         description: 'El monto debe ser un número positivo',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    // Validate that source and destination funds are different if destination is selected
-    if (
-      editExpenseDestinationFund &&
-      editExpenseSourceFund.id === editExpenseDestinationFund.id
-    ) {
-      toast({
-        title: 'Error',
-        description: 'El fondo origen y destino no pueden ser el mismo',
         variant: 'destructive',
       });
       return;
@@ -386,15 +205,13 @@ export function ExpensesView() {
       editExpense.paymentMethod,
       editExpense.description,
       amount,
-      editExpenseSourceFund?.id,
-      editExpenseDestinationFund?.id,
+      DEFAULT_FUND_ID, // Always use default fund 'Cta Ahorros'
+      undefined, // No destination fund
       editExpenseCreditCard?.id,
       editExpense.pending
     );
 
     setEditExpense(null);
-    setEditExpenseSourceFund(null);
-    setEditExpenseDestinationFund(null);
     setEditExpenseCreditCard(null);
     setIsEditOpen(false);
 
@@ -422,8 +239,7 @@ export function ExpensesView() {
     .slice()
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  // Filter expenses by active period, selected category, payment method, and credit card if available
-  // Also filter by fund - only show expenses from categories that belong to the selected fund
+  // Filter expenses by active period, selected category, payment method, and credit card
   const filteredExpenses = sortedExpenses.filter((expense) => {
     // Filter by period
     const periodMatch = activePeriod
@@ -446,32 +262,12 @@ export function ExpensesView() {
         : creditCardFilter === 'none'
           ? !expense.credit_card_id
           : expense.credit_card_id === creditCardFilter;
-    // Filter by fund - only show expenses from categories that belong to the selected fund
-    const fundMatch = !fundFilter
-      ? true
-      : (() => {
-          const category = getCategoryById(expense.category_id);
-          if (!category) return false;
-
-          // Check if the fund is in the category's associated_funds
-          if (
-            category.associated_funds &&
-            category.associated_funds.length > 0
-          ) {
-            return category.associated_funds.some(
-              (fund: Fund) => fund.id === fundFilter.id
-            );
-          }
-          // Fallback to old fund_id for backward compatibility
-          return category.fund_id === fundFilter.id;
-        })();
 
     return (
       periodMatch &&
       categoryMatch &&
       paymentMethodMatch &&
-      creditCardMatch &&
-      fundMatch
+      creditCardMatch
     );
   });
 
@@ -505,7 +301,7 @@ export function ExpensesView() {
           </Button>
           <Button
             componentId="expenses-add-btn"
-            disabled={!dataLoaded || !fundFilter}
+            disabled={!dataLoaded}
             onClick={() => setIsAddOpen(true)}
           >
             <PlusCircle className="mr-2 h-4 w-4" />
@@ -516,52 +312,9 @@ export function ExpensesView() {
             open={isAddOpen}
             onOpenChange={setIsAddOpen}
             onSuccess={handleExpenseAdded}
-            currentFundFilter={fundFilter}
           />
         </div>
       </div>
-
-      {/* Mandatory Fund Filter */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtro de Fondo</CardTitle>
-          <CardDescription>
-            Selecciona un fondo para filtrar las categorías y gastos disponibles
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-4">
-            <Label htmlFor="fund-filter">Fondo:</Label>
-            {!dataLoaded ? (
-              <div className="flex items-center gap-2 rounded-md border border-blue-200 bg-blue-50 p-2">
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
-                <p className="text-sm text-blue-700">
-                  Cargando fondos disponibles...
-                </p>
-              </div>
-            ) : (
-              <>
-                <FundFilter
-                  selectedFund={fundFilter}
-                  onFundChange={setFundFilter}
-                  placeholder="Seleccionar fondo..."
-                  includeAllFunds={false}
-                  className="w-[300px]"
-                  required
-                />
-                {!fundFilter && (
-                  <div className="flex items-center gap-2 rounded-md border border-destructive/20 bg-destructive/10 p-2">
-                    <AlertTriangle className="h-4 w-4 text-destructive" />
-                    <p className="text-sm text-destructive">
-                      Debe seleccionar un fondo para registrar gastos
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </CardContent>
-      </Card>
 
       <Card>
         <CardHeader>
@@ -663,8 +416,6 @@ export function ExpensesView() {
                 <TableHead>Descripción</TableHead>
                 <TableHead>Medio</TableHead>
                 <TableHead>Tarjeta</TableHead>
-                <TableHead>Fondo Origen</TableHead>
-                <TableHead>Fondo Destino</TableHead>
                 <TableHead className="text-right">Monto</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
@@ -720,66 +471,6 @@ export function ExpensesView() {
                         <span className="text-sm text-muted-foreground">-</span>
                       )}
                     </TableCell>
-                    <TableCell>
-                      {expense.source_fund_name ? (
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-700/10">
-                            {expense.source_fund_name}
-                          </span>
-                          {/* Transfer indicator when source and destination are different */}
-                          {expense.destination_fund_name &&
-                            expense.source_fund_name !==
-                              expense.destination_fund_name && (
-                              <span
-                                className="inline-flex items-center rounded-md bg-orange-50 px-1.5 py-0.5 text-xs font-medium text-orange-700 ring-1 ring-inset ring-orange-700/10"
-                                title="Transferencia entre fondos"
-                              >
-                                <ArrowRight className="h-3 w-3" />
-                              </span>
-                            )}
-                          {/* Same fund indicator */}
-                          {expense.destination_fund_name &&
-                            expense.source_fund_name ===
-                              expense.destination_fund_name && (
-                              <span
-                                className="inline-flex items-center rounded-md bg-gray-50 px-1.5 py-0.5 text-xs font-medium text-gray-700 ring-1 ring-inset ring-gray-700/10"
-                                title="Mismo fondo origen y destino"
-                              >
-                                <RotateCcw className="h-3 w-3" />
-                              </span>
-                            )}
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {expense.destination_fund_name ? (
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-700/10">
-                            {expense.destination_fund_name}
-                          </span>
-                          {/* Transfer type indicator */}
-                          {expense.source_fund_name &&
-                            expense.source_fund_name !==
-                              expense.destination_fund_name && (
-                              <span className="inline-flex items-center rounded-md bg-orange-100 px-2 py-1 text-xs font-medium text-orange-800 ring-1 ring-inset ring-orange-600/20">
-                                Transferencia
-                              </span>
-                            )}
-                          {/* Same fund indicator */}
-                          {expense.source_fund_name &&
-                            expense.source_fund_name ===
-                              expense.destination_fund_name && (
-                              <span className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-800 ring-1 ring-inset ring-gray-600/20">
-                                Interno
-                              </span>
-                            )}
-                        </div>
-                      ) : (
-                        <span className="text-sm text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
                     <TableCell className="text-right">
                       {formatCurrency(expense.amount)}
                     </TableCell>
@@ -796,23 +487,9 @@ export function ExpensesView() {
                             paymentMethod: expense.payment_method,
                             description: expense.description,
                             amount: expense.amount.toString(),
-                            sourceFundId: expense.source_fund_id,
-                            destinationFundId: expense.destination_fund_id,
                             creditCardId: expense.credit_card_id,
                             pending: expense.pending || false,
                           });
-                          // Set the source fund for editing
-                          const sourceFund = expense.source_fund_id
-                            ? getFundById(expense.source_fund_id)
-                            : null;
-                          setEditExpenseSourceFund(sourceFund || null);
-                          // Set the destination fund for editing
-                          const destinationFund = expense.destination_fund_id
-                            ? getFundById(expense.destination_fund_id)
-                            : null;
-                          setEditExpenseDestinationFund(
-                            destinationFund || null
-                          );
                           // Set the credit card for editing
                           // We'll need to fetch the credit card if it exists
                           if (expense.credit_card_info) {
@@ -861,9 +538,7 @@ export function ExpensesView() {
                   >
                     {!dataLoaded
                       ? 'Cargando gastos...'
-                      : !fundFilter
-                        ? 'Selecciona un fondo para ver los gastos disponibles.'
-                        : `No hay gastos registrados para el fondo "${fundFilter.name}". Agrega un nuevo gasto para comenzar.`}
+                      : 'No hay gastos registrados. Agrega un nuevo gasto para comenzar.'}
                   </TableCell>
                 </TableRow>
               )}
@@ -879,10 +554,7 @@ export function ExpensesView() {
           setIsEditOpen(open);
           if (!open) {
             setEditExpense(null);
-            setEditExpenseSourceFund(null);
-            setEditExpenseDestinationFund(null);
             setEditExpenseCreditCard(null);
-            setIsFundSectionOpenEdit(false);
           }
         }}
       >
@@ -932,66 +604,6 @@ export function ExpensesView() {
                     ))}
                 </SelectContent>
               </Select>
-            </div>
-            {/* Collapsible Fund Configuration Section with Orange Border */}
-            <div className="rounded-lg border border-orange-200 bg-orange-50 p-3 dark:border-orange-800 dark:bg-orange-950">
-              <Collapsible
-                open={isFundSectionOpenEdit}
-                onOpenChange={setIsFundSectionOpenEdit}
-              >
-                <CollapsibleTrigger className="flex w-full items-center justify-between text-sm font-medium text-orange-800 transition-colors hover:text-orange-900 dark:text-orange-200 dark:hover:text-orange-100">
-                  <div className="flex items-center gap-2">
-                    <Settings className="h-4 w-4" />
-                    <span>Configuración de Fondos</span>
-                  </div>
-                  {isFundSectionOpenEdit ? (
-                    <ChevronUp className="h-4 w-4" />
-                  ) : (
-                    <ChevronDown className="h-4 w-4" />
-                  )}
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-3 pt-3">
-                  {editExpense?.categoryId && (
-                    <FundSelectionConstraintIndicator
-                      categoryId={editExpense.categoryId}
-                      availableFunds={availableFundsForEditExpense}
-                      selectedFund={editExpenseDestinationFund}
-                      currentFilterFund={fundFilter}
-                      className=""
-                    />
-                  )}
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-source-fund">Fondo Origen *</Label>
-                    <SourceFundSelector
-                      selectedCategoryId={editExpense?.categoryId || null}
-                      selectedSourceFund={editExpenseSourceFund}
-                      onSourceFundChange={setEditExpenseSourceFund}
-                      placeholder="Seleccionar fondo origen..."
-                      currentFundFilter={fundFilter}
-                      defaultFund={getDefaultFund()}
-                      required={true}
-                      className="w-full"
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <Label htmlFor="edit-destination-fund">
-                      Fondo Destino (opcional)
-                    </Label>
-                    <FundFilter
-                      selectedFund={editExpenseDestinationFund}
-                      onFundChange={setEditExpenseDestinationFund}
-                      placeholder="Seleccionar fondo destino..."
-                      includeAllFunds={false}
-                      className="w-full"
-                      availableFunds={funds}
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Opcional: Transfiere dinero a otro fondo. Puedes
-                      seleccionar cualquier fondo disponible como destino.
-                    </p>
-                  </div>
-                </CollapsibleContent>
-              </Collapsible>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-date">Fecha</Label>
@@ -1132,10 +744,7 @@ export function ExpensesView() {
               onClick={() => {
                 setIsEditOpen(false);
                 setEditExpense(null);
-                setEditExpenseSourceFund(null);
-                setEditExpenseDestinationFund(null);
                 setEditExpenseCreditCard(null);
-                setIsFundSectionOpenEdit(false);
               }}
             >
               Cancelar

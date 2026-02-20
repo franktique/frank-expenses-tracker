@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { CalendarIcon, ChevronDown, ChevronUp, Settings } from 'lucide-react';
+import { CalendarIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -12,11 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@/components/ui/collapsible';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -36,11 +31,7 @@ import {
 import { useToast } from '@/components/ui/use-toast';
 import { useBudget, type PaymentMethod } from '@/context/budget-context';
 import { cn, formatDate } from '@/lib/utils';
-import { FundFilter } from '@/components/fund-filter';
-import { FundSelectionConstraintIndicator } from '@/components/fund-category-relationship-indicator';
-import { SourceFundSelector } from '@/components/source-fund-selector';
 import { CreditCardSelector } from '@/components/credit-card-selector';
-import { Fund } from '@/types/funds';
 import { CreditCard } from '@/types/credit-cards';
 
 /**
@@ -55,35 +46,7 @@ interface ExpenseFormDialogProps {
   preSelectedCategoryId?: string;
   /** Callback invoked after successful expense submission */
   onSuccess?: () => void;
-  /** Optional current fund filter from parent component */
-  currentFundFilter?: Fund | null;
 }
-
-/**
- * Helper function to get available funds for a category
- */
-const getAvailableFundsForCategory = (
-  categoryId: string,
-  categories: any[],
-  funds: Fund[]
-): Fund[] => {
-  if (!categoryId || !categories || !funds) {
-    return funds || [];
-  }
-
-  const category = categories.find((cat) => cat.id === categoryId);
-  if (!category) {
-    return funds || [];
-  }
-
-  // If category has associated_funds, use those
-  if (category.associated_funds && category.associated_funds.length > 0) {
-    return category.associated_funds;
-  }
-
-  // Fallback: if no specific funds associated, show all funds
-  return funds || [];
-};
 
 /**
  * ExpenseFormDialog - Reusable dialog for adding expenses
@@ -110,15 +73,12 @@ export function ExpenseFormDialog({
   onOpenChange,
   preSelectedCategoryId,
   onSuccess,
-  currentFundFilter,
 }: ExpenseFormDialogProps) {
   const {
     categories,
     periods,
-    funds,
     activePeriod,
     addExpense,
-    getDefaultFund,
     dataLoaded,
   } = useBudget();
   const { toast } = useToast();
@@ -137,52 +97,12 @@ export function ExpenseFormDialog({
     useState<PaymentMethod>('credit');
   const [newExpenseDescription, setNewExpenseDescription] = useState('');
   const [newExpenseAmount, setNewExpenseAmount] = useState('');
-  const [newExpenseDestinationFund, setNewExpenseDestinationFund] =
-    useState<Fund | null>(null);
-  const [newExpenseSourceFund, setNewExpenseSourceFund] = useState<Fund | null>(
-    null
-  );
   const [newExpenseCreditCard, setNewExpenseCreditCard] =
     useState<CreditCard | null>(null);
   const [newExpensePending, setNewExpensePending] = useState(false);
 
-  // State for dynamic fund filtering
-  const [availableFundsForNewExpense, setAvailableFundsForNewExpense] =
-    useState<Fund[]>([]);
-
-  // UI state
-  const [isFundSectionOpen, setIsFundSectionOpen] = useState(false);
-
-  // Filter categories based on current fund filter
-  const availableCategories = currentFundFilter
-    ? categories.filter((category) => {
-        // Check if the fund is in the category's associated_funds
-        if (category.associated_funds && category.associated_funds.length > 0) {
-          return category.associated_funds.some(
-            (fund: Fund) => fund.id === currentFundFilter.id
-          );
-        }
-        // Fallback to old fund_id for backward compatibility
-        return category.fund_id === currentFundFilter.id;
-      })
-    : categories;
-
-  // Update available funds when category changes
-  useEffect(() => {
-    if (newExpenseCategory && categories && funds) {
-      const availableFunds = getAvailableFundsForCategory(
-        newExpenseCategory,
-        categories,
-        funds
-      );
-      setAvailableFundsForNewExpense(availableFunds);
-    } else {
-      setAvailableFundsForNewExpense(funds || []);
-      if (newExpenseDestinationFund !== null) {
-        setNewExpenseDestinationFund(null);
-      }
-    }
-  }, [newExpenseCategory, categories, funds, newExpenseDestinationFund]);
+  // Categories (all categories, no fund filter)
+  const availableCategories = categories;
 
   // Pre-populate category when preSelectedCategoryId is provided
   useEffect(() => {
@@ -211,15 +131,11 @@ export function ExpenseFormDialog({
       setNewExpensePaymentMethod('credit');
       setNewExpenseDescription('');
       setNewExpenseAmount('');
-      setNewExpenseSourceFund(null);
-      setNewExpenseDestinationFund(null);
       setNewExpenseCreditCard(null);
       setNewExpensePending(false);
       setCategorySearch('');
-      setAvailableFundsForNewExpense(funds || []);
-      setIsFundSectionOpen(false);
     }
-  }, [open, preSelectedCategoryId, activePeriod, funds]);
+  }, [open, preSelectedCategoryId, activePeriod]);
 
   const resetForm = () => {
     setNewExpenseCategory('');
@@ -229,13 +145,9 @@ export function ExpenseFormDialog({
     setNewExpensePaymentMethod('credit');
     setNewExpenseDescription('');
     setNewExpenseAmount('');
-    setNewExpenseSourceFund(null);
-    setNewExpenseDestinationFund(null);
     setNewExpenseCreditCard(null);
     setNewExpensePending(false);
     setCategorySearch('');
-    setAvailableFundsForNewExpense(funds || []);
-    setIsFundSectionOpen(false);
   };
 
   const handleAddExpense = async () => {
@@ -244,13 +156,12 @@ export function ExpenseFormDialog({
       !newExpensePeriod ||
       !newExpenseDate ||
       !newExpenseDescription.trim() ||
-      !newExpenseAmount ||
-      !newExpenseSourceFund
+      !newExpenseAmount
     ) {
       toast({
         title: 'Error',
         description:
-          'Los campos obligatorios no pueden estar vacíos. Debe seleccionar un fondo origen.',
+          'Los campos obligatorios no pueden estar vacíos.',
         variant: 'destructive',
       });
       return;
@@ -266,19 +177,6 @@ export function ExpenseFormDialog({
       return;
     }
 
-    // Validate that source and destination funds are different if destination is selected
-    if (
-      newExpenseDestinationFund &&
-      newExpenseSourceFund.id === newExpenseDestinationFund.id
-    ) {
-      toast({
-        title: 'Error',
-        description: 'El fondo origen y destino no pueden ser el mismo',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     try {
       await addExpense(
         newExpenseCategory,
@@ -288,8 +186,8 @@ export function ExpenseFormDialog({
         newExpensePaymentMethod,
         newExpenseDescription,
         amount,
-        newExpenseSourceFund.id,
-        newExpenseDestinationFund?.id,
+        undefined, // No source fund (fondos functionality removed)
+        undefined, // No destination fund
         newExpenseCreditCard?.id,
         newExpensePending
       );
@@ -365,11 +263,6 @@ export function ExpenseFormDialog({
                   .map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
-                      {category.fund_name && (
-                        <span className="ml-2 text-xs text-muted-foreground">
-                          ({category.fund_name})
-                        </span>
-                      )}
                     </SelectItem>
                   ))}
               </SelectContent>
@@ -379,67 +272,6 @@ export function ExpenseFormDialog({
                 Categoría preseleccionada desde el dashboard
               </p>
             )}
-          </div>
-
-          {/* Collapsible Fund Configuration Section with Orange Border */}
-          <div className="rounded-lg border border-orange-200 bg-orange-50 p-3 dark:border-orange-800 dark:bg-orange-950">
-            <Collapsible
-              open={isFundSectionOpen}
-              onOpenChange={setIsFundSectionOpen}
-            >
-              <CollapsibleTrigger className="flex w-full items-center justify-between text-sm font-medium text-orange-800 transition-colors hover:text-orange-900 dark:text-orange-200 dark:hover:text-orange-100">
-                <div className="flex items-center gap-2">
-                  <Settings className="h-4 w-4" />
-                  <span>Configuración de Fondos</span>
-                </div>
-                {isFundSectionOpen ? (
-                  <ChevronUp className="h-4 w-4" />
-                ) : (
-                  <ChevronDown className="h-4 w-4" />
-                )}
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-3 pt-3">
-                {newExpenseCategory && (
-                  <FundSelectionConstraintIndicator
-                    categoryId={newExpenseCategory}
-                    availableFunds={availableFundsForNewExpense}
-                    selectedFund={newExpenseDestinationFund ?? null}
-                    currentFilterFund={currentFundFilter ?? null}
-                    className=""
-                  />
-                )}
-                <div className="grid gap-2">
-                  <Label htmlFor="source-fund">Fondo Origen *</Label>
-                  <SourceFundSelector
-                    selectedCategoryId={newExpenseCategory}
-                    selectedSourceFund={newExpenseSourceFund}
-                    onSourceFundChange={setNewExpenseSourceFund}
-                    placeholder="Seleccionar fondo origen..."
-                    currentFundFilter={currentFundFilter}
-                    defaultFund={getDefaultFund()}
-                    required={true}
-                    className="w-full"
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="destination-fund">
-                    Fondo Destino (opcional)
-                  </Label>
-                  <FundFilter
-                    selectedFund={newExpenseDestinationFund}
-                    onFundChange={setNewExpenseDestinationFund}
-                    placeholder="Seleccionar fondo destino..."
-                    includeAllFunds={false}
-                    className="w-full"
-                    availableFunds={funds}
-                  />
-                  <p className="text-sm text-muted-foreground">
-                    Opcional: Transfiere dinero a otro fondo. Puedes seleccionar
-                    cualquier fondo disponible como destino.
-                  </p>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
           </div>
 
           <div className="grid gap-2">

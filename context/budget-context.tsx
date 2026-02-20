@@ -4,28 +4,17 @@ import type React from 'react';
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import {
-  Fund,
   Category,
   Period,
   Budget,
   Income,
   Expense,
   PaymentMethod,
-  FundBalance,
-  FundOperationResult,
-  FundBalanceRecalculationResult,
-  CategoryFundRelationship,
 } from '@/types/funds';
 import { CreditCard, CreditCardOperationResult } from '@/types/credit-cards';
 import { AppSettings } from '@/types/settings';
 import { ActivePeriodStorage } from '@/lib/active-period-storage';
 import { loadActivePeriod } from '@/lib/active-period-service';
-import {
-  categoryFundCache,
-  invalidateCategoryFundCache,
-  warmCategoryFundCache,
-} from '@/lib/category-fund-cache';
-import { CategoryFundFallback } from '@/lib/category-fund-fallback';
 
 export type BudgetContextType = {
   categories: Category[];
@@ -33,12 +22,9 @@ export type BudgetContextType = {
   budgets: Budget[];
   incomes: Income[];
   expenses: Expense[];
-  funds: Fund[];
   creditCards: CreditCard[];
   settings: AppSettings | null;
   activePeriod: Period | null;
-  selectedFund: Fund | null;
-  fundFilter: string | null; // 'all' for all funds, fund_id for specific fund, null for no filter
   isLoading: boolean;
   dataLoaded: boolean; // true when all initial data has been loaded
   error: string | null;
@@ -46,33 +32,12 @@ export type BudgetContextType = {
   dbConnectionError: boolean;
   connectionErrorDetails: string | null;
   setupDatabase: () => Promise<void>;
-  addCategory: (
-    name: string,
-    fundId?: string,
-    fundIds?: string[]
-  ) => Promise<void>;
+  addCategory: (name: string) => Promise<void>;
   updateCategory: (
     id: string,
-    name: string,
-    fundId?: string,
-    fundIds?: string[]
+    name: string
   ) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
-  getCategoryFunds: (categoryId: string) => Promise<Fund[]>;
-  updateCategoryFunds: (categoryId: string, fundIds: string[]) => Promise<void>;
-  deleteCategoryFundRelationship: (
-    categoryId: string,
-    fundId: string
-  ) => Promise<void>;
-  getAvailableFundsForCategory: (categoryId: string) => Fund[];
-  getDefaultFundForCategory: (
-    categoryId: string,
-    currentFilterFund?: Fund | null
-  ) => Fund | null;
-  refreshCategoryFundRelationships: () => Promise<void>;
-  batchUpdateCategoryFunds: (
-    updates: Array<{ categoryId: string; fundIds: string[] }>
-  ) => Promise<void>;
   addPeriod: (name: string, month: number, year: number) => Promise<void>;
   updatePeriod: (
     id: string,
@@ -100,8 +65,7 @@ export type BudgetContextType = {
     date: string,
     description: string,
     amount: number,
-    event?: string,
-    fundId?: string
+    event?: string
   ) => Promise<void>;
   updateIncome: (
     id: string,
@@ -109,8 +73,7 @@ export type BudgetContextType = {
     date: string,
     description: string,
     amount: number,
-    event?: string,
-    fundId?: string
+    event?: string
   ) => Promise<void>;
   deleteIncome: (id: string) => Promise<void>;
   addExpense: (
@@ -121,7 +84,7 @@ export type BudgetContextType = {
     paymentMethod: PaymentMethod,
     description: string,
     amount: number,
-    sourceFundId: string,
+    sourceFundId?: string,
     destinationFundId?: string,
     creditCardId?: string,
     pending?: boolean
@@ -140,28 +103,6 @@ export type BudgetContextType = {
     pending?: boolean
   ) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
-  addFund: (
-    name: string,
-    description: string | undefined,
-    initialBalance: number,
-    startDate: string
-  ) => Promise<Fund>;
-  updateFund: (
-    id: string,
-    name?: string,
-    description?: string,
-    initialBalance?: number
-  ) => Promise<Fund>;
-  deleteFund: (id: string) => Promise<void>;
-  recalculateFundBalance: (
-    id: string
-  ) => Promise<FundBalanceRecalculationResult>;
-  setSelectedFund: (fund: Fund | null) => void;
-  setFundFilter: (filter: string | null) => void;
-  getFilteredCategories: (fundId?: string) => Category[];
-  getFilteredIncomes: (fundId?: string) => Income[];
-  getFilteredExpenses: (fundId?: string) => Expense[];
-  getDashboardData: (fundId?: string) => Promise<any>;
   addCreditCard: (
     bankName: string,
     franchise: string,
@@ -178,10 +119,7 @@ export type BudgetContextType = {
   refreshCreditCards: () => Promise<void>;
   getCategoryById: (id: string) => Category | undefined;
   getPeriodById: (id: string) => Period | undefined;
-  getFundById: (id: string) => Fund | undefined;
-  getDefaultFund: () => Fund | undefined;
   refreshData: () => Promise<void>;
-  refreshFunds: () => Promise<void>;
   validateActivePeriodCache: () => Promise<boolean>;
 };
 
@@ -193,12 +131,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   const [budgets, setBudgets] = useState<Budget[]>([]);
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [funds, setFunds] = useState<Fund[]>([]);
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [activePeriod, setActivePeriod] = useState<Period | null>(null);
-  const [selectedFund, setSelectedFund] = useState<Fund | null>(null);
-  const [fundFilter, setFundFilter] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [dataLoaded, setDataLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -208,11 +143,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     string | null
   >(null);
   const [isActivePeriodFromCache, setIsActivePeriodFromCache] = useState(false);
-
-  // Category-Fund relationship cache state
-  const [categoryFundsCache, setCategoryFundsCache] = useState<
-    Map<string, Fund[]>
-  >(new Map());
 
   // Helper function to safely update session storage with active period
   const updateActivePeriodCache = (
@@ -233,27 +163,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       // The cache will be synchronized on next page load or background sync
     }
   };
-
-  // Initialize fund filter with default fund when funds are loaded and data is fully loaded
-  useEffect(() => {
-    if (dataLoaded && funds.length > 0 && !fundFilter) {
-      const defaultFund = getDefaultFund();
-      if (defaultFund) {
-        setFundFilter(defaultFund.id);
-        console.log(
-          `Fund filter initialized to default fund: ${defaultFund.name}`
-        );
-      }
-    }
-  }, [funds, fundFilter, dataLoaded]);
-
-  // Cleanup cache when component unmounts
-  useEffect(() => {
-    return () => {
-      // Clear local cache on unmount
-      setCategoryFundsCache(new Map());
-    };
-  }, []);
 
   // Check session storage for cached active period on startup
   useEffect(() => {
@@ -420,7 +329,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     setError(null);
 
     try {
-      // Fetch categories with associated funds
+      // Fetch categories
       const categoriesResponse = await fetch('/api/categories');
       if (!categoriesResponse.ok) {
         const errorText = await categoriesResponse.text();
@@ -428,28 +337,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       }
       const categoriesData = await categoriesResponse.json();
       setCategories(categoriesData);
-
-      // Clear category funds cache when categories are refreshed
-      setCategoryFundsCache(new Map());
-
-      // Preload category funds for frequently accessed categories
-      if (categoriesData.length > 0) {
-        const categoryIds = categoriesData
-          .slice(0, 10)
-          .map((cat: Category) => cat.id); // Preload first 10 categories
-        warmCategoryFundCache(categoryIds, async (categoryId: string) => {
-          try {
-            const response = await fetch(`/api/categories/${categoryId}/funds`);
-            if (response.ok) {
-              const data = await response.json();
-              return data.funds || [];
-            }
-            return [];
-          } catch {
-            return [];
-          }
-        });
-      }
 
       // Fetch periods
       const periodsResponse = await fetch('/api/periods');
@@ -529,40 +416,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       const expensesData = await expensesResponse.json();
       setExpenses(expensesData);
 
-      // Fetch funds
-      const fundsResponse = await fetch('/api/funds');
-      if (!fundsResponse.ok) {
-        // If funds fetch fails, it might be because the funds table doesn't exist
-        // Try to run the migration first
-        try {
-          const migrationResponse = await fetch('/api/migrate-fondos', {
-            method: 'POST',
-          });
-
-          if (migrationResponse.ok) {
-            // Migration successful, try fetching funds again
-            const retryResponse = await fetch('/api/funds');
-            if (!retryResponse.ok) {
-              const errorText = await retryResponse.text();
-              throw new Error(
-                `Failed to fetch funds after migration: ${errorText}`
-              );
-            }
-            const fundsData = await retryResponse.json();
-            setFunds(fundsData);
-          } else {
-            const errorText = await fundsResponse.text();
-            throw new Error(`Failed to fetch funds: ${errorText}`);
-          }
-        } catch (migrationError) {
-          const errorText = await fundsResponse.text();
-          throw new Error(`Failed to fetch funds: ${errorText}`);
-        }
-      } else {
-        const fundsData = await fundsResponse.json();
-        setFunds(fundsData);
-      }
-
       // Fetch credit cards
       try {
         const creditCardsResponse = await fetch('/api/credit-cards');
@@ -633,10 +486,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         console.warn('Failed to fetch settings:', settingsError);
       }
 
-      // Clear category-fund cache when funds are updated during data refresh
-      categoryFundCache.clear();
-      setCategoryFundsCache(new Map());
-
       // Mark data as loaded only when ALL data has been successfully fetched
       setDataLoaded(true);
     } catch (err) {
@@ -649,35 +498,14 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
   };
 
   // Category functions
-  const addCategory = async (
-    name: string,
-    fundId?: string,
-    fundIds?: string[]
-  ) => {
+  const addCategory = async (name: string) => {
     try {
-      // Prepare request body with support for multiple funds
-      const requestBody: any = { name };
-
-      if (fundIds && fundIds.length > 0) {
-        // Use multiple fund relationships
-        requestBody.fund_ids = fundIds;
-      } else if (fundId) {
-        // Use single fund (backward compatibility)
-        requestBody.fund_id = fundId;
-      } else {
-        // If no fund is specified, assign to default fund
-        const defaultFund = getDefaultFund();
-        if (defaultFund) {
-          requestBody.fund_id = defaultFund.id;
-        }
-      }
-
       const response = await fetch('/api/categories', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({ name }),
       });
 
       if (!response.ok) {
@@ -687,45 +515,20 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
       const newCategory = await response.json();
       setCategories([...categories, newCategory]);
-
-      // Clear category funds cache for the new category
-      invalidateCategoryFundCache(newCategory.id);
     } catch (err) {
       setError((err as Error).message);
       throw err;
     }
   };
 
-  const updateCategory = async (
-    id: string,
-    name: string,
-    fundId?: string,
-    fundIds?: string[]
-  ) => {
+  const updateCategory = async (id: string, name: string) => {
     try {
-      // Prepare request body with support for multiple funds
-      const requestBody: any = { name };
-
-      if (fundIds && fundIds.length > 0) {
-        // Use multiple fund relationships
-        requestBody.fund_ids = fundIds;
-      } else if (fundId) {
-        // Use single fund (backward compatibility)
-        requestBody.fund_id = fundId;
-      } else {
-        // If no fund is specified, assign to default fund
-        const defaultFund = getDefaultFund();
-        if (defaultFund) {
-          requestBody.fund_id = defaultFund.id;
-        }
-      }
-
       const response = await fetch(`/api/categories/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify({ name }),
       });
 
       if (!response.ok) {
@@ -737,12 +540,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       setCategories(
         categories.map((cat) => (cat.id === id ? updatedCategory : cat))
       );
-
-      // Clear category funds cache for the updated category
-      invalidateCategoryFundCache(id);
-
-      // Refresh funds to update balances if fund assignment changed
-      await refreshFunds();
     } catch (err) {
       setError((err as Error).message);
       throw err;
@@ -766,214 +563,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       setExpenses(
         (expenses || []).filter((expense) => expense.category_id !== id)
       );
-
-      // Clear category funds cache for the deleted category
-      invalidateCategoryFundCache(id);
-    } catch (err) {
-      setError((err as Error).message);
-      throw err;
-    }
-  };
-
-  // Category-Fund relationship functions
-  const getCategoryFunds = async (categoryId: string): Promise<Fund[]> => {
-    try {
-      // Check local state cache first
-      const localCached = categoryFundsCache.get(categoryId);
-      if (localCached) {
-        return localCached;
-      }
-
-      // Check centralized cache
-      const cached = categoryFundCache.getCategoryFunds(categoryId);
-      if (cached !== null) {
-        // Update local state cache
-        setCategoryFundsCache((prev) => new Map(prev).set(categoryId, cached));
-        return cached;
-      }
-
-      const response = await fetch(`/api/categories/${categoryId}/funds`);
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to fetch category funds: ${errorText}`);
-      }
-
-      const data = await response.json();
-      const categoryFunds = data.funds || [];
-
-      // Update both caches
-      categoryFundCache.setCategoryFunds(categoryId, categoryFunds);
-      setCategoryFundsCache((prev) =>
-        new Map(prev).set(categoryId, categoryFunds)
-      );
-
-      return categoryFunds;
-    } catch (err) {
-      setError((err as Error).message);
-      throw err;
-    }
-  };
-
-  const updateCategoryFunds = async (
-    categoryId: string,
-    fundIds: string[]
-  ): Promise<void> => {
-    try {
-      const response = await fetch(`/api/categories/${categoryId}/funds`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fund_ids: fundIds }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Failed to update category funds: ${errorText}`);
-      }
-
-      // Clear cache for this category using the centralized cache
-      invalidateCategoryFundCache(categoryId);
-
-      // Also clear local state cache
-      setCategoryFundsCache((prev) => {
-        const newCache = new Map(prev);
-        newCache.delete(categoryId);
-        return newCache;
-      });
-
-      // Refresh categories to get updated associated_funds
-      const categoriesResponse = await fetch('/api/categories');
-      if (categoriesResponse.ok) {
-        const categoriesData = await categoriesResponse.json();
-        setCategories(categoriesData);
-      }
-    } catch (err) {
-      setError((err as Error).message);
-      throw err;
-    }
-  };
-
-  const deleteCategoryFundRelationship = async (
-    categoryId: string,
-    fundId: string
-  ): Promise<void> => {
-    try {
-      const response = await fetch(
-        `/api/categories/${categoryId}/funds/${fundId}`,
-        {
-          method: 'DELETE',
-        }
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `Failed to delete category-fund relationship: ${errorText}`
-        );
-      }
-
-      // Clear cache for this category using the centralized cache
-      invalidateCategoryFundCache(categoryId);
-
-      // Also clear local state cache
-      setCategoryFundsCache((prev) => {
-        const newCache = new Map(prev);
-        newCache.delete(categoryId);
-        return newCache;
-      });
-
-      // Refresh categories to get updated associated_funds
-      const categoriesResponse = await fetch('/api/categories');
-      if (categoriesResponse.ok) {
-        const categoriesData = await categoriesResponse.json();
-        setCategories(categoriesData);
-      }
-    } catch (err) {
-      setError((err as Error).message);
-      throw err;
-    }
-  };
-
-  const getAvailableFundsForCategory = (categoryId: string): Fund[] => {
-    return CategoryFundFallback.getAvailableFundsForCategory(
-      categoryId,
-      categories,
-      funds
-    );
-  };
-
-  const getDefaultFundForCategory = (
-    categoryId: string,
-    currentFilterFund?: Fund | null
-  ): Fund | null => {
-    return CategoryFundFallback.getDefaultFundForCategory(
-      categoryId,
-      categories,
-      funds,
-      currentFilterFund,
-      fundFilter,
-      settings?.default_fund_id
-    );
-  };
-
-  // Enhanced data refresh function for category-fund relationships
-  const refreshCategoryFundRelationships = async (): Promise<void> => {
-    try {
-      // Clear all caches
-      categoryFundCache.clear();
-      setCategoryFundsCache(new Map());
-
-      // Refresh categories to get updated associated_funds
-      const categoriesResponse = await fetch('/api/categories');
-      if (categoriesResponse.ok) {
-        const categoriesData = await categoriesResponse.json();
-        setCategories(categoriesData);
-
-        // Preload category funds for active categories
-        const activeCategories = categoriesData.filter(
-          (cat: Category) =>
-            expenses.some((expense) => expense.category_id === cat.id) ||
-            budgets.some((budget) => budget.category_id === cat.id)
-        );
-
-        if (activeCategories.length > 0) {
-          const categoryIds = activeCategories.map((cat: Category) => cat.id);
-          warmCategoryFundCache(categoryIds, async (categoryId: string) => {
-            try {
-              const response = await fetch(
-                `/api/categories/${categoryId}/funds`
-              );
-              if (response.ok) {
-                const data = await response.json();
-                return data.funds || [];
-              }
-              return [];
-            } catch {
-              return [];
-            }
-          });
-        }
-      }
-    } catch (err) {
-      console.error('Error refreshing category-fund relationships:', err);
-      setError((err as Error).message);
-    }
-  };
-
-  // Batch update category funds for multiple categories
-  const batchUpdateCategoryFunds = async (
-    updates: Array<{ categoryId: string; fundIds: string[] }>
-  ): Promise<void> => {
-    try {
-      const updatePromises = updates.map(({ categoryId, fundIds }) =>
-        updateCategoryFunds(categoryId, fundIds)
-      );
-
-      await Promise.allSettled(updatePromises);
-
-      // Refresh all category-fund relationships after batch update
-      await refreshCategoryFundRelationships();
     } catch (err) {
       setError((err as Error).message);
       throw err;
@@ -1370,14 +959,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     date: string,
     description: string,
     amount: number,
-    event?: string,
-    fundId?: string
+    event?: string
   ) => {
     try {
-      // If no fund is specified, assign to default fund
-      const defaultFund = getDefaultFund();
-      const finalFundId = fundId || defaultFund?.id;
-
       const response = await fetch('/api/incomes', {
         method: 'POST',
         headers: {
@@ -1389,7 +973,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           description,
           amount,
           event,
-          fund_id: finalFundId,
+          fund_id: undefined, // Fund functionality removed
         }),
       });
 
@@ -1400,9 +984,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
       const newIncome = await response.json();
       setIncomes([...incomes, newIncome]);
-
-      // Refresh funds to update balances
-      await refreshFunds();
     } catch (err) {
       setError((err as Error).message);
       throw err;
@@ -1415,14 +996,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     date: string,
     description: string,
     amount: number,
-    event?: string,
-    fundId?: string
+    event?: string
   ) => {
     try {
-      // If no fund is specified, assign to default fund
-      const defaultFund = getDefaultFund();
-      const finalFundId = fundId || defaultFund?.id;
-
       const response = await fetch(`/api/incomes/${id}`, {
         method: 'PUT',
         headers: {
@@ -1434,7 +1010,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           description,
           amount,
           event,
-          fund_id: finalFundId,
+          fund_id: undefined, // Fund functionality removed
         }),
       });
 
@@ -1447,9 +1023,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       setIncomes(
         incomes.map((income) => (income.id === id ? updatedIncome : income))
       );
-
-      // Refresh funds to update balances
-      await refreshFunds();
     } catch (err) {
       setError((err as Error).message);
       throw err;
@@ -1468,9 +1041,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       }
 
       setIncomes((incomes || []).filter((income) => income.id !== id));
-
-      // Refresh funds to update balances
-      await refreshFunds();
     } catch (err) {
       setError((err as Error).message);
       throw err;
@@ -1486,17 +1056,12 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     paymentMethod: PaymentMethod,
     description: string,
     amount: number,
-    sourceFundId: string,
+    sourceFundId?: string,
     destinationFundId?: string,
     creditCardId?: string,
     pending?: boolean
   ) => {
     try {
-      // Validate fund transfer - prevent same fund transfers
-      if (destinationFundId && sourceFundId === destinationFundId) {
-        throw new Error('No se puede transferir dinero al mismo fondo');
-      }
-
       const response = await fetch('/api/expenses', {
         method: 'POST',
         headers: {
@@ -1524,9 +1089,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
       const newExpense = await response.json();
       setExpenses([...expenses, newExpense]);
-
-      // Refresh funds to update balances (both source and destination funds affected)
-      await refreshFunds();
     } catch (err) {
       setError((err as Error).message);
       throw err;
@@ -1547,15 +1109,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     pending?: boolean
   ) => {
     try {
-      // Validate fund transfer - prevent same fund transfers
-      if (
-        destinationFundId &&
-        sourceFundId &&
-        sourceFundId === destinationFundId
-      ) {
-        throw new Error('No se puede transferir dinero al mismo fondo');
-      }
-
       const response = await fetch(`/api/expenses/${id}`, {
         method: 'PUT',
         headers: {
@@ -1586,9 +1139,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           expense.id === id ? updatedExpense : expense
         )
       );
-
-      // Refresh funds to update balances (both source and destination funds affected)
-      await refreshFunds();
     } catch (err) {
       setError((err as Error).message);
       throw err;
@@ -1607,257 +1157,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
       }
 
       setExpenses((expenses || []).filter((expense) => expense.id !== id));
-
-      // Refresh funds to update balances
-      await refreshFunds();
     } catch (err) {
-      setError((err as Error).message);
-      throw err;
-    }
-  };
-
-  // Fund functions
-  const addFund = async (
-    name: string,
-    description: string | undefined,
-    initialBalance: number,
-    startDate: string
-  ): Promise<Fund> => {
-    try {
-      const response = await fetch('/api/funds', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name,
-          description,
-          initial_balance: initialBalance,
-          start_date: startDate,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || `Failed to add fund: ${response.status}`
-        );
-      }
-
-      const newFund = await response.json();
-      setFunds([...(funds || []), newFund]);
-      return newFund;
-    } catch (err) {
-      setError((err as Error).message);
-      throw err;
-    }
-  };
-
-  const updateFund = async (
-    id: string,
-    name?: string,
-    description?: string,
-    initialBalance?: number
-  ): Promise<Fund> => {
-    try {
-      const updateData: any = {};
-      if (name !== undefined) updateData.name = name;
-      if (description !== undefined) updateData.description = description;
-      if (initialBalance !== undefined)
-        updateData.initial_balance = initialBalance;
-
-      const response = await fetch(`/api/funds/${id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(updateData),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || `Failed to update fund: ${response.status}`
-        );
-      }
-
-      const updatedFund = await response.json();
-      setFunds(
-        (funds || []).map((fund) => (fund.id === id ? updatedFund : fund))
-      );
-      return updatedFund;
-    } catch (err) {
-      setError((err as Error).message);
-      throw err;
-    }
-  };
-
-  const deleteFund = async (id: string): Promise<void> => {
-    try {
-      const response = await fetch(`/api/funds/${id}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || `Failed to delete fund: ${response.status}`
-        );
-      }
-
-      setFunds((funds || []).filter((fund) => fund.id !== id));
-
-      // Clear selected fund if it was deleted
-      if (selectedFund && selectedFund.id === id) {
-        setSelectedFund(null);
-      }
-    } catch (err) {
-      setError((err as Error).message);
-      throw err;
-    }
-  };
-
-  const recalculateFundBalance = async (
-    id: string
-  ): Promise<FundBalanceRecalculationResult> => {
-    try {
-      const response = await fetch(`/api/funds/${id}/recalculate`, {
-        method: 'POST',
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error ||
-            `Failed to recalculate fund balance: ${response.status}`
-        );
-      }
-
-      const result = await response.json();
-
-      // Update the fund in the local state with the new balance
-      if (result.success && result.fund_id) {
-        setFunds(
-          funds.map((fund) =>
-            fund.id === result.fund_id
-              ? { ...fund, current_balance: result.new_balance }
-              : fund
-          )
-        );
-      }
-
-      return result;
-    } catch (err) {
-      setError((err as Error).message);
-      throw err;
-    }
-  };
-
-  // Fund filtering and data methods
-  const getFilteredCategories = (fundId?: string): Category[] => {
-    if (!categories) {
-      return [];
-    }
-    if (!fundId || fundId === 'all') {
-      return categories;
-    }
-
-    const fund = funds.find((f) => f.id === fundId);
-    return CategoryFundFallback.getFilteredCategories(categories, fund || null);
-  };
-
-  const getFilteredIncomes = (fundId?: string): Income[] => {
-    if (!incomes) {
-      return [];
-    }
-    if (!fundId || fundId === 'all') {
-      return incomes;
-    }
-    return incomes.filter((income) => income.fund_id === fundId);
-  };
-
-  const getFilteredExpenses = (fundId?: string): Expense[] => {
-    if (!expenses || !categories) {
-      return [];
-    }
-    if (!fundId || fundId === 'all') {
-      return expenses;
-    }
-
-    // Use the enhanced filtering logic
-    const fund = funds.find((f) => f.id === fundId);
-    const filteredCategories = CategoryFundFallback.getFilteredCategories(
-      categories,
-      fund || null
-    );
-    const fundCategoryIds = filteredCategories.map((cat) => cat.id);
-
-    return expenses.filter((expense) =>
-      fundCategoryIds.includes(expense.category_id)
-    );
-  };
-
-  const getDashboardData = async (fundId?: string): Promise<any> => {
-    try {
-      const params = new URLSearchParams();
-      if (fundId && fundId !== 'all') {
-        params.append('fund_id', fundId);
-      }
-
-      const response = await fetch(`/api/dashboard?${params.toString()}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch dashboard data: ${response.status}`);
-      }
-
-      return await response.json();
-    } catch (err) {
-      console.error('Error fetching dashboard data:', err);
-      setError((err as Error).message);
-      throw err;
-    }
-  };
-
-  const refreshFunds = async (): Promise<void> => {
-    try {
-      const fundsResponse = await fetch('/api/funds');
-      if (!fundsResponse.ok) {
-        // If funds fetch fails, it might be because the funds table doesn't exist
-        // Try to run the migration first
-        try {
-          const migrationResponse = await fetch('/api/migrate-fondos', {
-            method: 'POST',
-          });
-
-          if (migrationResponse.ok) {
-            // Migration successful, try fetching funds again
-            const retryResponse = await fetch('/api/funds');
-            if (!retryResponse.ok) {
-              const errorText = await retryResponse.text();
-              throw new Error(
-                `Failed to fetch funds after migration: ${errorText}`
-              );
-            }
-            const fundsData = await retryResponse.json();
-            setFunds(fundsData);
-          } else {
-            const errorText = await fundsResponse.text();
-            throw new Error(`Failed to fetch funds: ${errorText}`);
-          }
-        } catch (migrationError) {
-          const errorText = await fundsResponse.text();
-          throw new Error(`Failed to fetch funds: ${errorText}`);
-        }
-      } else {
-        const fundsData = await fundsResponse.json();
-        setFunds(fundsData);
-      }
-
-      // Clear category-fund cache when funds are updated
-      // as fund changes might affect category-fund relationships
-      categoryFundCache.clear();
-      setCategoryFundsCache(new Map());
-    } catch (err) {
-      console.error('Error refreshing funds:', err);
       setError((err as Error).message);
       throw err;
     }
@@ -1905,25 +1205,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
 
   const getPeriodById = (id: string) => {
     return periods.find((period) => period.id === id);
-  };
-
-  const getFundById = (id: string) => {
-    return funds.find((fund) => fund.id === id);
-  };
-
-  const getDefaultFund = (): Fund | undefined => {
-    // First, try to use the configured default fund from settings
-    if (settings?.default_fund_id) {
-      const configuredDefault = funds.find(
-        (fund) => fund.id === settings.default_fund_id
-      );
-      if (configuredDefault) {
-        return configuredDefault;
-      }
-    }
-
-    // Fallback to CategoryFundFallback logic for backward compatibility
-    return CategoryFundFallback.getDefaultFund(funds) ?? undefined;
   };
 
   // Credit Card functions
@@ -2075,12 +1356,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         budgets,
         incomes,
         expenses,
-        funds,
         creditCards,
         settings,
         activePeriod,
-        selectedFund,
-        fundFilter,
         isLoading,
         dataLoaded,
         error,
@@ -2091,13 +1369,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         addCategory,
         updateCategory,
         deleteCategory,
-        getCategoryFunds,
-        updateCategoryFunds,
-        deleteCategoryFundRelationship,
-        getAvailableFundsForCategory,
-        getDefaultFundForCategory,
-        refreshCategoryFundRelationships,
-        batchUpdateCategoryFunds,
         addPeriod,
         updatePeriod,
         deletePeriod,
@@ -2112,16 +1383,6 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         addExpense,
         updateExpense,
         deleteExpense,
-        addFund,
-        updateFund,
-        deleteFund,
-        recalculateFundBalance,
-        setSelectedFund,
-        setFundFilter,
-        getFilteredCategories,
-        getFilteredIncomes,
-        getFilteredExpenses,
-        getDashboardData,
         addCreditCard,
         updateCreditCard,
         deleteCreditCard,
@@ -2129,10 +1390,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         refreshCreditCards,
         getCategoryById,
         getPeriodById,
-        getFundById,
-        getDefaultFund,
         refreshData,
-        refreshFunds,
         validateActivePeriodCache,
       }}
     >

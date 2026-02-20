@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
-import { CreateExpenseSchema, SOURCE_FUND_ERROR_MESSAGES } from '@/types/funds';
-import { validateExpenseSourceFunds } from '@/lib/source-fund-validation';
+import { CreateExpenseSchema, DEFAULT_FUND_ID } from '@/types/funds';
 
 export async function GET(request: NextRequest) {
   try {
@@ -171,30 +170,6 @@ export async function POST(request: NextRequest) {
       pending,
     } = validationResult.data;
 
-    // Enhanced validation using the validation library
-    const validation = await validateExpenseSourceFunds(
-      category_id,
-      source_fund_id,
-      destination_fund_id,
-      amount
-    );
-
-    if (!validation.isValid) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validation.errors,
-          warnings: validation.warnings,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Log warnings if any
-    if (validation.warnings.length > 0) {
-      console.warn('Expense creation warnings:', validation.warnings);
-    }
-
     // Standardize date to ensure consistency with Colombia timezone
     let dateToSave = date;
 
@@ -204,29 +179,31 @@ export async function POST(request: NextRequest) {
       dateToSave = date.split('T')[0];
     }
 
-    // Insert the expense
+    // Insert the expense (source_fund_id is optional, fondos UI being removed)
     const [newExpense] = await sql`
       INSERT INTO expenses (category_id, period_id, date, event, payment_method, description, amount, source_fund_id, destination_fund_id, credit_card_id, pending)
       VALUES (${category_id}, ${period_id}, ${dateToSave}, ${
         event || null
-      }, ${payment_method}, ${description}, ${amount}, ${source_fund_id}, ${
-        destination_fund_id || null
-      }, ${credit_card_id || null}, ${pending || false})
+      }, ${payment_method}, ${description}, ${amount}, ${
+        source_fund_id || null
+      }, ${destination_fund_id || null}, ${credit_card_id || null}, ${pending || false})
       RETURNING *
     `;
 
-    // Update fund balances
+    // Update fund balances (only if source_fund_id is provided)
     // Decrease source fund balance
-    await sql`
-      UPDATE funds 
-      SET current_balance = current_balance - ${amount}
-      WHERE id = ${source_fund_id}
-    `;
+    if (source_fund_id) {
+      await sql`
+        UPDATE funds
+        SET current_balance = current_balance - ${amount}
+        WHERE id = ${source_fund_id}
+      `;
+    }
 
     // Increase destination fund balance if specified (fund transfer)
     if (destination_fund_id) {
       await sql`
-        UPDATE funds 
+        UPDATE funds
         SET current_balance = current_balance + ${amount}
         WHERE id = ${destination_fund_id}
       `;
@@ -246,7 +223,7 @@ export async function POST(request: NextRequest) {
       FROM expenses e
       JOIN categories c ON e.category_id = c.id
       JOIN periods p ON e.period_id = p.id
-      JOIN funds sf ON e.source_fund_id = sf.id
+      LEFT JOIN funds sf ON e.source_fund_id = sf.id
       LEFT JOIN funds df ON e.destination_fund_id = df.id
       LEFT JOIN credit_cards cc ON e.credit_card_id = cc.id
       WHERE e.id = ${newExpense.id}

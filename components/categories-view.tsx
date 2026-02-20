@@ -42,23 +42,7 @@ import {
 } from '@/components/ui/table';
 import { useToast } from '@/components/ui/use-toast';
 import { useBudget } from '@/context/budget-context';
-import { FundFilter } from '@/components/fund-filter';
-import { MultiFundSelector } from '@/components/multi-fund-selector';
 import {
-  CategoryFundErrorDialog,
-  useCategoryFundErrorDialog,
-} from '@/components/category-fund-error-dialog';
-import {
-  CategoryFundLoadingButton,
-  useCategoryFundLoadingState,
-} from '@/components/category-fund-loading-states';
-import { FundCategoryRelationshipIndicator } from '@/components/fund-category-relationship-indicator';
-import {
-  CategoryFundInfoPanel,
-  CategoryFundInfoCompact,
-} from '@/components/category-fund-info-panel';
-import {
-  Fund,
   Category,
   TipoGasto,
   RecurrenceFrequency,
@@ -80,7 +64,6 @@ export function CategoriesView() {
     addCategory,
     updateCategory,
     deleteCategory,
-    funds,
     refreshData,
   } = useBudget();
   const { toast } = useToast();
@@ -90,10 +73,8 @@ export function CategoriesView() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [newCategoryFunds, setNewCategoryFunds] = useState<Fund[]>([]);
   const [newCategoryTipoGasto, setNewCategoryTipoGasto] = useState<TipoGasto>();
   const [editCategory, setEditCategory] = useState<Category | null>(null);
-  const [editCategoryFunds, setEditCategoryFunds] = useState<Fund[]>([]);
   const [editCategoryTipoGasto, setEditCategoryTipoGasto] =
     useState<TipoGasto>();
   const [editCategoryDefaultDay, setEditCategoryDefaultDay] = useState<
@@ -110,93 +91,10 @@ export function CategoriesView() {
   const [deleteValidation, setDeleteValidation] = useState<{
     hasExpenses: boolean;
     expenseCount: number;
-    affectedFunds: string[];
   } | null>(null);
-  const [fundFilter, setFundFilter] = useState<Fund | null>(null);
 
-  // Enhanced error handling and loading states
-  const { dialogState, showError, hideError } = useCategoryFundErrorDialog();
-  const loadingState = useCategoryFundLoadingState();
-
-  // Filter categories based on selected fund
-  const filteredCategories = useMemo(() => {
-    if (!categories) {
-      return [];
-    }
-    if (!fundFilter) {
-      return categories;
-    }
-    return categories.filter((category) => {
-      // Check both old fund_id and new associated_funds
-      if (category.fund_id === fundFilter.id) {
-        return true;
-      }
-      if (category.associated_funds) {
-        return category.associated_funds.some(
-          (fund) => fund.id === fundFilter.id
-        );
-      }
-      return false;
-    });
-  }, [categories, fundFilter]);
-
-  // Helper function to get category funds for API calls
-  const getCategoryFunds = async (categoryId: string): Promise<Fund[]> => {
-    try {
-      const response = await fetch(`/api/categories/${categoryId}/funds`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch category funds');
-      }
-      const data = await response.json();
-      return data.funds || [];
-    } catch (error) {
-      console.error('Error fetching category funds:', error);
-      return [];
-    }
-  };
-
-  // Helper function to update category funds with enhanced error handling
-  const updateCategoryFunds = async (
-    categoryId: string,
-    fundIds: string[],
-    forceUpdate: boolean = false
-  ): Promise<void> => {
-    try {
-      const url = forceUpdate
-        ? `/api/categories/${categoryId}/funds?force=true`
-        : `/api/categories/${categoryId}/funds`;
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ fund_ids: fundIds }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-
-        // Handle validation conflicts (409 status)
-        if (response.status === 409) {
-          // Show error dialog and wait for user confirmation
-          await showError(
-            errorData,
-            'Confirmar actualización de fondos',
-            async () => {
-              await updateCategoryFunds(categoryId, fundIds, true);
-            }
-          );
-          return;
-        }
-
-        throw new Error(errorData.error || 'Failed to update category funds');
-      }
-    } catch (error) {
-      console.error('Error updating category funds:', error);
-      throw error;
-    }
-  };
+  // All categories (no fund filter)
+  const filteredCategories = categories || [];
 
   // Helper function to validate category deletion
   const validateCategoryDeletion = async (categoryId: string) => {
@@ -210,14 +108,9 @@ export function CategoriesView() {
         const expenseCount = expenses.length;
 
         if (expenseCount > 0) {
-          // Get affected funds
-          const categoryFunds = await getCategoryFunds(categoryId);
-          const affectedFunds = categoryFunds.map((fund) => fund.name);
-
           return {
             hasExpenses: true,
             expenseCount,
-            affectedFunds,
           };
         }
       }
@@ -225,14 +118,12 @@ export function CategoriesView() {
       return {
         hasExpenses: false,
         expenseCount: 0,
-        affectedFunds: [],
       };
     } catch (error) {
       console.error('Error validating category deletion:', error);
       return {
         hasExpenses: false,
         expenseCount: 0,
-        affectedFunds: [],
       };
     }
   };
@@ -247,12 +138,7 @@ export function CategoriesView() {
       return;
     }
 
-    loadingState.setLoading('addCategory', true, 'Agregando categoría...');
-
     try {
-      // Create category with fund_ids array if funds are selected
-      const fundIds = newCategoryFunds.map((fund) => fund.id);
-
       const response = await fetch('/api/categories', {
         method: 'POST',
         headers: {
@@ -260,7 +146,6 @@ export function CategoriesView() {
         },
         body: JSON.stringify({
           name: newCategoryName,
-          fund_ids: fundIds.length > 0 ? fundIds : undefined,
           tipo_gasto: newCategoryTipoGasto || undefined,
           default_day: newCategoryDefaultDay || undefined,
           recurrence_frequency: newCategoryRecurrenceFrequency || undefined,
@@ -269,22 +154,11 @@ export function CategoriesView() {
 
       if (!response.ok) {
         const errorData = await response.json();
-
-        // Show enhanced error dialog for validation errors
-        if (response.status === 400 || response.status === 409) {
-          showError(errorData, 'Error al agregar categoría');
-          return;
-        }
-
         throw new Error(errorData.error || 'Failed to add category');
       }
 
-      // Get fund names before clearing state
-      const fundNames = newCategoryFunds.map((f) => f.name).join(', ');
-
       // Reset form immediately
       setNewCategoryName('');
-      setNewCategoryFunds([]);
       setNewCategoryTipoGasto(undefined);
       setNewCategoryDefaultDay(null);
       setNewCategoryRecurrenceFrequency(null);
@@ -293,9 +167,7 @@ export function CategoriesView() {
       // Show success toast
       toast({
         title: 'Categoría agregada',
-        description: `La categoría ha sido agregada exitosamente${
-          fundNames ? ` con fondos: ${fundNames}` : ''
-        }`,
+        description: 'La categoría ha sido agregada exitosamente',
       });
 
       // Refresh the context data to show the new category
@@ -307,8 +179,6 @@ export function CategoriesView() {
           (error as Error).message || 'No se pudo agregar la categoría',
         variant: 'destructive',
       });
-    } finally {
-      loadingState.setLoading('addCategory', false);
     }
   };
 
@@ -321,8 +191,6 @@ export function CategoriesView() {
       });
       return;
     }
-
-    loadingState.setLoading('editCategory', true, 'Actualizando categoría...');
 
     try {
       // Build update payload with all fields including tipo_gasto, default_day, and recurrence
@@ -356,13 +224,8 @@ export function CategoriesView() {
         throw new Error(errorData.error || 'Failed to update category');
       }
 
-      // Update fund relationships separately with enhanced error handling
-      const fundIds = editCategoryFunds.map((fund) => fund.id);
-      await updateCategoryFunds(editCategory.id, fundIds);
-
       // Close dialog and reset state immediately
       setEditCategory(null);
-      setEditCategoryFunds([]);
       setEditCategoryTipoGasto(undefined);
       setEditCategoryDefaultDay(null);
       setEditCategoryRecurrenceFrequency(null);
@@ -386,8 +249,6 @@ export function CategoriesView() {
           variant: 'destructive',
         });
       }
-    } finally {
-      loadingState.setLoading('editCategory', false);
     }
   };
 
@@ -448,15 +309,6 @@ export function CategoriesView() {
 
   const handleEditClick = (category: Category) => {
     setEditCategory(category);
-    // Set associated funds or fallback to single fund
-    if (category.associated_funds && category.associated_funds.length > 0) {
-      setEditCategoryFunds(category.associated_funds);
-    } else if (category.fund_id && funds) {
-      const categoryFund = funds.find((f) => f.id === category.fund_id);
-      setEditCategoryFunds(categoryFund ? [categoryFund] : []);
-    } else {
-      setEditCategoryFunds([]);
-    }
     // Set tipo_gasto
     setEditCategoryTipoGasto(category.tipo_gasto);
     // Set default_day
@@ -471,17 +323,6 @@ export function CategoriesView() {
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Categorías</h1>
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="fund-filter">Filtrar por fondo:</Label>
-            <FundFilter
-              selectedFund={fundFilter}
-              onFundChange={setFundFilter}
-              placeholder="Todos los fondos"
-              includeAllFunds={true}
-              allFundsLabel="Todos los fondos"
-              className="w-[200px]"
-            />
-          </div>
           <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
             <DialogTrigger asChild>
               <Button componentId="categories-add-btn">
@@ -493,8 +334,7 @@ export function CategoriesView() {
               <DialogHeader>
                 <DialogTitle>Agregar Categoría</DialogTitle>
                 <DialogDescription>
-                  Ingresa el nombre de la nueva categoría de presupuesto y
-                  asígnala a un fondo
+                  Ingresa el nombre de la nueva categoría de presupuesto
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-4">
@@ -507,16 +347,6 @@ export function CategoriesView() {
                     onChange={(e) => setNewCategoryName(e.target.value)}
                     placeholder="Ej: Alimentación, Transporte, etc."
                   />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="funds">Fondos asociados (opcional)</Label>
-                  <MultiFundSelector
-                    selectedFunds={newCategoryFunds}
-                    onFundsChange={setNewCategoryFunds}
-                    placeholder="Seleccionar fondos..."
-                    className="w-full"
-                  />
-                  <CategoryFundInfoCompact className="mt-2" />
                 </div>
                 <div className="grid gap-2">
                   <TipoGastoSelect
@@ -607,42 +437,27 @@ export function CategoriesView() {
                   onClick={() => {
                     setIsAddOpen(false);
                     setNewCategoryName('');
-                    setNewCategoryFunds([]);
                     setNewCategoryTipoGasto(undefined);
                     setNewCategoryDefaultDay(null);
                     setNewCategoryRecurrenceFrequency(null);
                   }}
-                  disabled={loadingState.isLoading('addCategory')}
                 >
                   Cancelar
                 </Button>
-                <CategoryFundLoadingButton
-                  isLoading={loadingState.isLoading('addCategory')}
-                  loadingText="Guardando..."
-                  onClick={handleAddCategory}
-                >
+                <Button onClick={handleAddCategory}>
                   Guardar
-                </CategoryFundLoadingButton>
+                </Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
       </div>
 
-      {/* Info Panel */}
-      <CategoryFundInfoPanel
-        showTips={true}
-        showStats={false}
-        className="mb-6"
-      />
-
       <Card>
         <CardHeader>
           <CardTitle>Categorías de Presupuesto</CardTitle>
           <CardDescription>
             Administra las categorías para clasificar tus gastos
-            {fundFilter &&
-              ` - Mostrando categorías del fondo "${fundFilter.name}"`}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -650,7 +465,6 @@ export function CategoriesView() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>
-                <TableHead>Fondo</TableHead>
                 <TableHead>Tipo Gasto</TableHead>
                 <TableHead>Día por Defecto</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
@@ -666,15 +480,6 @@ export function CategoriesView() {
                   <TableRow key={category.id}>
                     <TableCell className="font-medium">
                       {category.name}
-                    </TableCell>
-                    <TableCell>
-                      <FundCategoryRelationshipIndicator
-                        associatedFunds={category.associated_funds || []}
-                        fallbackFundName={category.fund_name}
-                        showCount={true}
-                        showTooltip={true}
-                        variant="default"
-                      />
                     </TableCell>
                     <TableCell>
                       <TipoGastoBadge tipoGasto={category.tipo_gasto} />
@@ -713,12 +518,10 @@ export function CategoriesView() {
               {(!filteredCategories || filteredCategories.length === 0) && (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={4}
                     className="py-4 text-center text-muted-foreground"
                   >
-                    {fundFilter
-                      ? `No hay categorías en el fondo "${fundFilter.name}". Agrega una nueva categoría para comenzar.`
-                      : 'No hay categorías. Agrega una nueva categoría para comenzar.'}
+                    No hay categorías. Agrega una nueva categoría para comenzar.
                   </TableCell>
                 </TableRow>
               )}
@@ -748,16 +551,6 @@ export function CategoriesView() {
                   )
                 }
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="edit-funds">Fondos asociados (opcional)</Label>
-              <MultiFundSelector
-                selectedFunds={editCategoryFunds}
-                onFundsChange={setEditCategoryFunds}
-                placeholder="Seleccionar fondos..."
-                className="w-full"
-              />
-              <CategoryFundInfoCompact className="mt-2" />
             </div>
             <div className="grid gap-2">
               <TipoGastoSelect
@@ -842,22 +635,16 @@ export function CategoriesView() {
               onClick={() => {
                 setIsEditOpen(false);
                 setEditCategory(null);
-                setEditCategoryFunds([]);
                 setEditCategoryTipoGasto(undefined);
                 setEditCategoryDefaultDay(null);
                 setEditCategoryRecurrenceFrequency(null);
               }}
-              disabled={loadingState.isLoading('editCategory')}
             >
               Cancelar
             </Button>
-            <CategoryFundLoadingButton
-              isLoading={loadingState.isLoading('editCategory')}
-              loadingText="Guardando..."
-              onClick={handleEditCategory}
-            >
+            <Button onClick={handleEditCategory}>
               Guardar
-            </CategoryFundLoadingButton>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -901,15 +688,6 @@ export function CategoriesView() {
                   <strong>{deleteValidation?.expenseCount}</strong> gastos
                   registrados.
                 </p>
-                {deleteValidation?.affectedFunds &&
-                  deleteValidation.affectedFunds.length > 0 && (
-                    <p>
-                      Fondos afectados:{' '}
-                      <strong>
-                        {deleteValidation.affectedFunds.join(', ')}
-                      </strong>
-                    </p>
-                  )}
                 <p className="font-medium text-destructive">
                   Al eliminar la categoría, también se eliminarán todos los
                   gastos asociados. Esta acción no se puede deshacer.
@@ -935,13 +713,6 @@ export function CategoriesView() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Enhanced Error Dialog */}
-      <CategoryFundErrorDialog
-        open={dialogState.open}
-        onOpenChange={hideError}
-        {...dialogState.props}
-      />
     </div>
   );
 }

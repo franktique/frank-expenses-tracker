@@ -1,7 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
-import { UpdateExpenseSchema, SOURCE_FUND_ERROR_MESSAGES } from '@/types/funds';
-import { validateSourceFundUpdate } from '@/lib/source-fund-validation';
+import { UpdateExpenseSchema } from '@/types/funds';
 
 export async function GET(
   request: NextRequest,
@@ -116,35 +115,6 @@ export async function PUT(
         ? credit_card_id
         : existingExpense.credit_card_id;
     pending = pending !== undefined ? pending : existingExpense.pending;
-
-    // Enhanced validation for expense updates
-    const validation = await validateSourceFundUpdate(
-      id,
-      category_id !== existingExpense.category_id ? category_id : undefined,
-      source_fund_id !== existingExpense.source_fund_id
-        ? source_fund_id
-        : undefined,
-      destination_fund_id !== existingExpense.destination_fund_id
-        ? destination_fund_id
-        : undefined,
-      amount !== existingExpense.amount ? amount : undefined
-    );
-
-    if (!validation.isValid) {
-      return NextResponse.json(
-        {
-          error: 'Validation failed',
-          details: validation.errors,
-          warnings: validation.warnings,
-        },
-        { status: 400 }
-      );
-    }
-
-    // Log warnings if any
-    if (validation.warnings.length > 0) {
-      console.warn('Expense update warnings:', validation.warnings);
-    }
 
     // Revert old fund balance changes
     const oldSourceFundId = existingExpense.source_fund_id;

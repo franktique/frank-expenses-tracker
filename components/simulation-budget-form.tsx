@@ -91,7 +91,6 @@ import {
 type Category = {
   id: string | number; // Support both string (UUID) and number IDs
   name: string;
-  fund_name?: string;
   tipo_gasto?: TipoGasto;
 };
 
@@ -2708,14 +2707,7 @@ export function SimulationBudgetForm({
                             )}
                           </TableCell>
                           <TableCell className="font-medium">
-                            <div>
-                              <div>{category.name}</div>
-                              {category.fund_name && (
-                                <div className="text-xs text-muted-foreground">
-                                  Fondo: {category.fund_name}
-                                </div>
-                              )}
-                            </div>
+                            {category.name}
                           </TableCell>
                           <TableCell>
                             {category.tipo_gasto ? (

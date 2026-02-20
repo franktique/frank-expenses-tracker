@@ -79,6 +79,9 @@ export interface TabBarProps {
   onAddTab: () => void;
   onTabPin: (tabId: string) => void;
   onTabContextMenu?: (tabId: string, event: React.MouseEvent) => void;
+  // Split view props
+  splitPanelCount?: 1 | 2 | 3;
+  onSplitChange?: (count: 1 | 2 | 3) => void;
 }
 
 export interface TabProps {

@@ -81,6 +81,16 @@ export type InvestmentSummary = {
 };
 
 /**
+ * TargetIncomeFormData - Form data for target income (Renta Objetivo) calculator mode
+ * Given a desired monthly income and an annual rate, calculates the required capital
+ */
+export type TargetIncomeFormData = {
+  annualRate: number;           // EA percentage (e.g. 8.25)
+  targetMonthlyIncome: number;  // Desired monthly income in currency units
+  currency: CurrencyCode;
+};
+
+/**
  * RateComparison - Comparison data for different interest rates
  */
 export type RateComparison = {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { RefreshCw } from 'lucide-react';
+import { RefreshCw, FolderOpen, Trash2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -15,16 +15,23 @@ import { InvestmentScheduleTable } from './investment-schedule-table';
 import { RateComparisonPanel } from './rate-comparison-panel';
 import { SaveScenarioDialog } from './save-scenario-dialog';
 import { InvestScenarioList } from './invest-scenario-list';
+import { InvestTargetIncomeForm } from './invest-target-income-form';
+import { InvestTargetIncomeResults } from './invest-target-income-results';
 import type {
   InvestmentScenario,
   InvestmentSummary,
   InvestmentPeriodDetail,
   RateComparisonResult,
+  TargetIncomeFormData,
+  CurrencyCode,
 } from '@/types/invest-simulator';
+import { formatCurrency } from '@/types/invest-simulator';
 import {
   calculateInvestmentSummary,
   generateMonthlySummarySchedule,
   compareRates,
+  calculateRequiredCapitalForMonthlyIncome,
+  convertEAToMonthlyRate,
 } from '@/lib/invest-calculations';
 
 interface InvestCalculatorProps {
@@ -40,8 +47,45 @@ const DEFAULT_FORM_DATA: InvestmentFormData = {
   currency: 'COP',
 };
 
+const DEFAULT_TARGET_INCOME_DATA: TargetIncomeFormData = {
+  annualRate: 8.25,
+  targetMonthlyIncome: 1000000,
+  currency: 'COP',
+};
+
+type CalculatorMode = 'projection' | 'target-income';
+
+type SavedTargetIncomeScenario = {
+  id: string;
+  name: string;
+  notes?: string;
+  annualRate: number;
+  targetMonthlyIncome: number;
+  currency: CurrencyCode;
+  savedAt: string;
+};
+
+const TARGET_INCOME_STORAGE_KEY = 'invest_target_income_scenarios';
+
 export function InvestCalculator({ initialScenario }: InvestCalculatorProps) {
   const { toast } = useToast();
+
+  // Calculator mode
+  const [calculatorMode, setCalculatorMode] =
+    useState<CalculatorMode>('projection');
+
+  // Target income form state
+  const [targetIncomeData, setTargetIncomeData] =
+    useState<TargetIncomeFormData>(DEFAULT_TARGET_INCOME_DATA);
+  const [loadedTargetScenarioId, setLoadedTargetScenarioId] = useState<
+    string | null
+  >(null);
+  const [loadedTargetScenarioName, setLoadedTargetScenarioName] = useState<
+    string | null
+  >(null);
+  const [savedTargetScenarios, setSavedTargetScenarios] = useState<
+    SavedTargetIncomeScenario[]
+  >([]);
 
   // Form state
   const [formData, setFormData] = useState<InvestmentFormData>(
@@ -114,6 +158,16 @@ export function InvestCalculator({ initialScenario }: InvestCalculatorProps) {
       additionalRates
     );
   }, [formData, additionalRates]);
+
+  // Target income calculation
+  const targetIncomeResult = useMemo(() => {
+    const requiredCapital = calculateRequiredCapitalForMonthlyIncome(
+      targetIncomeData.annualRate,
+      targetIncomeData.targetMonthlyIncome
+    );
+    const monthlyRate = convertEAToMonthlyRate(targetIncomeData.annualRate);
+    return { requiredCapital, monthlyRate };
+  }, [targetIncomeData]);
 
   // Fetch saved scenarios
   const fetchScenarios = useCallback(async () => {
@@ -253,6 +307,118 @@ export function InvestCalculator({ initialScenario }: InvestCalculatorProps) {
     setAdditionalRates([]);
   };
 
+  // ── Target income localStorage helpers ────────────────────────────────────
+
+  const loadTargetScenarios = useCallback(() => {
+    try {
+      const raw = localStorage.getItem(TARGET_INCOME_STORAGE_KEY);
+      if (raw) setSavedTargetScenarios(JSON.parse(raw));
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTargetScenarios();
+  }, [loadTargetScenarios]);
+
+  const handleSaveTargetIncome = async (
+    name: string,
+    notes?: string
+  ): Promise<void> => {
+    try {
+      const raw = localStorage.getItem(TARGET_INCOME_STORAGE_KEY);
+      const existing: SavedTargetIncomeScenario[] = raw ? JSON.parse(raw) : [];
+
+      if (loadedTargetScenarioId) {
+        // Update existing
+        const updated = existing.map((s) =>
+          s.id === loadedTargetScenarioId
+            ? {
+                ...s,
+                name,
+                notes,
+                annualRate: targetIncomeData.annualRate,
+                targetMonthlyIncome: targetIncomeData.targetMonthlyIncome,
+                currency: targetIncomeData.currency,
+              }
+            : s
+        );
+        localStorage.setItem(
+          TARGET_INCOME_STORAGE_KEY,
+          JSON.stringify(updated)
+        );
+        setSavedTargetScenarios(updated);
+        setLoadedTargetScenarioName(name);
+      } else {
+        // Create new
+        const newScenario: SavedTargetIncomeScenario = {
+          id: crypto.randomUUID(),
+          name,
+          notes,
+          annualRate: targetIncomeData.annualRate,
+          targetMonthlyIncome: targetIncomeData.targetMonthlyIncome,
+          currency: targetIncomeData.currency,
+          savedAt: new Date().toISOString(),
+        };
+        const updated = [newScenario, ...existing];
+        localStorage.setItem(
+          TARGET_INCOME_STORAGE_KEY,
+          JSON.stringify(updated)
+        );
+        setSavedTargetScenarios(updated);
+        setLoadedTargetScenarioId(newScenario.id);
+        setLoadedTargetScenarioName(newScenario.name);
+      }
+    } catch {
+      throw new Error('No se pudo guardar en el almacenamiento local');
+    }
+  };
+
+  const handleLoadTargetScenario = (scenario: SavedTargetIncomeScenario) => {
+    setTargetIncomeData({
+      annualRate: scenario.annualRate,
+      targetMonthlyIncome: scenario.targetMonthlyIncome,
+      currency: scenario.currency,
+    });
+    setLoadedTargetScenarioId(scenario.id);
+    setLoadedTargetScenarioName(scenario.name);
+    toast({
+      title: 'Renta Objetivo cargada',
+      description: `"${scenario.name}" ha sido cargada`,
+    });
+  };
+
+  const handleDeleteTargetScenario = (id: string) => {
+    try {
+      const raw = localStorage.getItem(TARGET_INCOME_STORAGE_KEY);
+      const existing: SavedTargetIncomeScenario[] = raw ? JSON.parse(raw) : [];
+      const updated = existing.filter((s) => s.id !== id);
+      localStorage.setItem(TARGET_INCOME_STORAGE_KEY, JSON.stringify(updated));
+      setSavedTargetScenarios(updated);
+      if (loadedTargetScenarioId === id) {
+        setLoadedTargetScenarioId(null);
+        setLoadedTargetScenarioName(null);
+      }
+      toast({
+        title: 'Eliminado',
+        description: 'La simulación ha sido eliminada',
+      });
+    } catch {
+      toast({
+        title: 'Error',
+        description: 'No se pudo eliminar la simulación',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleResetTargetIncome = () => {
+    setTargetIncomeData(DEFAULT_TARGET_INCOME_DATA);
+    setLoadedTargetScenarioId(null);
+    setLoadedTargetScenarioName(null);
+  };
+
   // Add rate comparison
   const handleAddRate = (rate: number, label?: string) => {
     // Don't add if it's the base rate
@@ -290,75 +456,193 @@ export function InvestCalculator({ initialScenario }: InvestCalculatorProps) {
       {/* Header with loaded scenario info and reset button */}
       <div className="flex items-center justify-between">
         <div>
-          {loadedScenarioName ? (
-            <p className="text-sm text-muted-foreground">
-              Editando:{' '}
-              <span className="font-medium">{loadedScenarioName}</span>
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground">Nueva simulación</p>
+          {calculatorMode === 'projection' && (
+            <>
+              {loadedScenarioName ? (
+                <p className="text-sm text-muted-foreground">
+                  Editando:{' '}
+                  <span className="font-medium">{loadedScenarioName}</span>
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Nueva simulación
+                </p>
+              )}
+            </>
+          )}
+          {calculatorMode === 'target-income' && (
+            <>
+              {loadedTargetScenarioName ? (
+                <p className="text-sm text-muted-foreground">
+                  Editando:{' '}
+                  <span className="font-medium">
+                    {loadedTargetScenarioName}
+                  </span>
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Nueva renta objetivo
+                </p>
+              )}
+            </>
           )}
         </div>
         <div className="flex items-center gap-2">
-          {(loadedScenarioId || formData !== DEFAULT_FORM_DATA) && (
-            <Button variant="outline" size="sm" onClick={handleReset}>
+          {calculatorMode === 'projection' &&
+            (loadedScenarioId || formData !== DEFAULT_FORM_DATA) && (
+              <Button variant="outline" size="sm" onClick={handleReset}>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Nueva Simulación
+              </Button>
+            )}
+          {calculatorMode === 'projection' && (
+            <SaveScenarioDialog
+              onSave={handleSave}
+              defaultName={loadedScenarioName || ''}
+              defaultNotes={loadedScenarioNotes}
+              isUpdate={!!loadedScenarioId}
+            />
+          )}
+          {calculatorMode === 'target-income' && loadedTargetScenarioId && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResetTargetIncome}
+            >
               <RefreshCw className="mr-2 h-4 w-4" />
-              Nueva Simulación
+              Nueva
             </Button>
           )}
-          <SaveScenarioDialog
-            onSave={handleSave}
-            defaultName={loadedScenarioName || ''}
-            defaultNotes={loadedScenarioNotes}
-            isUpdate={!!loadedScenarioId}
-          />
+          {calculatorMode === 'target-income' && (
+            <SaveScenarioDialog
+              onSave={handleSaveTargetIncome}
+              defaultName={loadedTargetScenarioName || ''}
+              isUpdate={!!loadedTargetScenarioId}
+            />
+          )}
         </div>
       </div>
 
-      {/* Main calculator area */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Left: Form inputs */}
-        <InvestCalculatorForm data={formData} onChange={setFormData} />
-
-        {/* Right: Summary results */}
-        <InvestSummaryCards
-          summary={summary}
-          currency={formData.currency}
-          termMonths={formData.termMonths}
-        />
-      </div>
-
-      {/* Tabs for detailed views */}
-      <Tabs defaultValue="chart" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="chart">Gráfico</TabsTrigger>
-          <TabsTrigger value="detail">Detalle por Periodo</TabsTrigger>
-          <TabsTrigger value="compare">Comparar Tasas</TabsTrigger>
+      {/* Mode switcher */}
+      <Tabs
+        value={calculatorMode}
+        onValueChange={(v) => setCalculatorMode(v as CalculatorMode)}
+        className="w-full"
+      >
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="projection">Proyección</TabsTrigger>
+          <TabsTrigger value="target-income">Renta Objetivo</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="chart" className="mt-4">
-          <InvestProjectionChart
-            schedule={schedule}
-            currency={formData.currency}
-            compoundingFrequency={formData.compoundingFrequency}
-          />
+        {/* Projection mode */}
+        <TabsContent value="projection" className="mt-6 space-y-6">
+          {/* Main calculator area */}
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <InvestCalculatorForm data={formData} onChange={setFormData} />
+            <InvestSummaryCards
+              summary={summary}
+              currency={formData.currency}
+              termMonths={formData.termMonths}
+            />
+          </div>
+
+          {/* Tabs for detailed views */}
+          <Tabs defaultValue="chart" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="chart">Gráfico</TabsTrigger>
+              <TabsTrigger value="detail">Detalle por Periodo</TabsTrigger>
+              <TabsTrigger value="compare">Comparar Tasas</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="chart" className="mt-4">
+              <InvestProjectionChart
+                schedule={schedule}
+                currency={formData.currency}
+                compoundingFrequency={formData.compoundingFrequency}
+              />
+            </TabsContent>
+
+            <TabsContent value="detail" className="mt-4">
+              <InvestmentScheduleTable
+                schedule={schedule}
+                currency={formData.currency}
+                compoundingFrequency={formData.compoundingFrequency}
+              />
+            </TabsContent>
+
+            <TabsContent value="compare" className="mt-4">
+              <RateComparisonPanel
+                comparisons={rateComparisons}
+                currency={formData.currency}
+                onAddRate={handleAddRate}
+                onRemoveRate={handleRemoveRate}
+              />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
-        <TabsContent value="detail" className="mt-4">
-          <InvestmentScheduleTable
-            schedule={schedule}
-            currency={formData.currency}
-            compoundingFrequency={formData.compoundingFrequency}
-          />
-        </TabsContent>
+        {/* Target income mode */}
+        <TabsContent value="target-income" className="mt-6 space-y-6">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <InvestTargetIncomeForm
+              data={targetIncomeData}
+              onChange={setTargetIncomeData}
+            />
+            <InvestTargetIncomeResults
+              requiredCapital={targetIncomeResult.requiredCapital}
+              targetMonthlyIncome={targetIncomeData.targetMonthlyIncome}
+              annualRate={targetIncomeData.annualRate}
+              monthlyRate={targetIncomeResult.monthlyRate}
+              currency={targetIncomeData.currency}
+            />
+          </div>
 
-        <TabsContent value="compare" className="mt-4">
-          <RateComparisonPanel
-            comparisons={rateComparisons}
-            currency={formData.currency}
-            onAddRate={handleAddRate}
-            onRemoveRate={handleRemoveRate}
-          />
+          {/* Saved target income scenarios */}
+          {savedTargetScenarios.length > 0 && (
+            <div className="rounded-lg border p-4">
+              <h3 className="mb-3 text-sm font-semibold">
+                Rentas guardadas ({savedTargetScenarios.length})
+              </h3>
+              <div className="space-y-2">
+                {savedTargetScenarios.map((scenario) => (
+                  <div
+                    key={scenario.id}
+                    className="flex items-center justify-between rounded-md border bg-card px-3 py-2 text-sm"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium">{scenario.name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatCurrency(
+                          scenario.targetMonthlyIncome,
+                          scenario.currency
+                        )}{' '}
+                        / mes · {scenario.annualRate}% EA
+                      </p>
+                    </div>
+                    <div className="ml-3 flex shrink-0 gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => handleLoadTargetScenario(scenario)}
+                      >
+                        <FolderOpen className="mr-1 h-3 w-3" />
+                        Cargar
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-xs text-destructive hover:text-destructive"
+                        onClick={() => handleDeleteTargetScenario(scenario.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </TabsContent>
       </Tabs>
 

@@ -17,6 +17,7 @@ import { SaveScenarioDialog } from './save-scenario-dialog';
 import { InvestScenarioList } from './invest-scenario-list';
 import { InvestTargetIncomeForm } from './invest-target-income-form';
 import { InvestTargetIncomeResults } from './invest-target-income-results';
+import { InvestBudgetCapitalTab } from './invest-budget-capital-tab';
 import type {
   InvestmentScenario,
   InvestmentSummary,
@@ -53,7 +54,7 @@ const DEFAULT_TARGET_INCOME_DATA: TargetIncomeFormData = {
   currency: 'COP',
 };
 
-type CalculatorMode = 'projection' | 'target-income';
+type CalculatorMode = 'projection' | 'target-income' | 'budget-capital';
 
 type SavedTargetIncomeScenario = {
   id: string;
@@ -529,9 +530,10 @@ export function InvestCalculator({ initialScenario }: InvestCalculatorProps) {
         onValueChange={(v) => setCalculatorMode(v as CalculatorMode)}
         className="w-full"
       >
-        <TabsList className="grid w-full grid-cols-2">
+        <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="projection">Proyección</TabsTrigger>
           <TabsTrigger value="target-income">Renta Objetivo</TabsTrigger>
+          <TabsTrigger value="budget-capital">Capital por Gasto</TabsTrigger>
         </TabsList>
 
         {/* Projection mode */}
@@ -643,6 +645,11 @@ export function InvestCalculator({ initialScenario }: InvestCalculatorProps) {
               </div>
             </div>
           )}
+        </TabsContent>
+
+        {/* Budget capital mode */}
+        <TabsContent value="budget-capital">
+          <InvestBudgetCapitalTab />
         </TabsContent>
       </Tabs>
 

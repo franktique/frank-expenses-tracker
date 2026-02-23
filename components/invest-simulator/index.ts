@@ -10,3 +10,4 @@ export { InvestmentScheduleTable } from './investment-schedule-table';
 export { RateComparisonPanel } from './rate-comparison-panel';
 export { SaveScenarioDialog } from './save-scenario-dialog';
 export { InvestScenarioList } from './invest-scenario-list';
+export { InvestBudgetCapitalTab } from './invest-budget-capital-tab';

@@ -272,7 +272,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         setConnectionErrorDetails(null);
 
         if (data.initialized) {
-          refreshData();
+          refreshData(true);
         } else {
           setIsLoading(false);
         }
@@ -306,7 +306,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         setIsDbInitialized(true);
         setDbConnectionError(false);
         setConnectionErrorDetails(null);
-        await refreshData();
+        await refreshData(true);
       } else {
         throw new Error(data.message || 'Unknown error setting up database');
       }
@@ -317,8 +317,11 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const refreshData = async () => {
-    if (!isDbInitialized) {
+  const refreshData = async (forceInit?: boolean) => {
+    // forceInit bypasses the isDbInitialized stale-closure check when called
+    // from checkDbStatus/setupDatabase (where the setter has been called but
+    // the React state hasn't re-rendered yet).
+    if (!(forceInit || isDbInitialized)) {
       setIsLoading(false);
       setDataLoaded(false);
       return;

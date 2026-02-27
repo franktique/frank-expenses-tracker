@@ -58,10 +58,12 @@ export default function CategoryBarsDashboard() {
   }, [expenses, activePeriod, selectedCategoryId]);
 
   // Default to first category if none selected
-  const categoryOptions = categories.map((cat) => ({
-    value: cat.id,
-    label: cat.name,
-  }));
+  const categoryOptions = [...categories]
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .map((cat) => ({
+      value: cat.id,
+      label: cat.name,
+    }));
   const selectedCategory = categories.find(
     (cat) => cat.id === selectedCategoryId
   );

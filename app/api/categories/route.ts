@@ -4,13 +4,18 @@ import { CreateCategorySchema, DEFAULT_FUND_NAME } from '@/types/funds';
 
 export async function GET() {
   try {
-    // Get categories with backward compatibility fund info
+    // Get categories with backward compatibility fund info and default credit card
     const categories = await sql`
-      SELECT 
+      SELECT
         c.*,
-        f.name as fund_name
+        f.name as fund_name,
+        cc.bank_name as cc_bank_name,
+        cc.franchise as cc_franchise,
+        cc.last_four_digits as cc_last_four_digits,
+        cc.is_active as cc_is_active
       FROM categories c
       LEFT JOIN funds f ON c.fund_id = f.id
+      LEFT JOIN credit_cards cc ON c.default_credit_card_id = cc.id
       ORDER BY c.name
     `;
 
@@ -49,11 +54,22 @@ export async function GET() {
       return acc;
     }, {});
 
-    // Enhance categories with associated_funds array
-    const enhancedCategories = categories.map((category: any) => ({
-      ...category,
-      associated_funds: fundsByCategory[category.id] || [],
-    }));
+    // Enhance categories with associated_funds array and credit card info
+    const enhancedCategories = categories.map((category: any) => {
+      const { cc_bank_name, cc_franchise, cc_last_four_digits, cc_is_active, ...rest } = category;
+      return {
+        ...rest,
+        associated_funds: fundsByCategory[category.id] || [],
+        default_credit_card_info: category.default_credit_card_id
+          ? {
+              bank_name: cc_bank_name,
+              franchise: cc_franchise,
+              last_four_digits: cc_last_four_digits,
+              is_active: cc_is_active,
+            }
+          : null,
+      };
+    });
 
     return NextResponse.json(enhancedCategories);
   } catch (error) {
@@ -78,7 +94,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, fund_id, tipo_gasto, default_day, recurrence_frequency } =
+    const { name, fund_id, tipo_gasto, default_day, recurrence_frequency, default_credit_card_id } =
       validationResult.data;
     const { fund_ids } = body; // Extract fund_ids from raw body
 
@@ -127,8 +143,8 @@ export async function POST(request: NextRequest) {
 
     // Create the category
     const [newCategory] = await sql`
-      INSERT INTO categories (name, fund_id, tipo_gasto, default_day, recurrence_frequency)
-      VALUES (${name}, ${finalFundId}, ${tipo_gasto || null}, ${default_day || null}, ${recurrence_frequency || null})
+      INSERT INTO categories (name, fund_id, tipo_gasto, default_day, recurrence_frequency, default_credit_card_id)
+      VALUES (${name}, ${finalFundId}, ${tipo_gasto || null}, ${default_day || null}, ${recurrence_frequency || null}, ${default_credit_card_id || null})
       RETURNING *
     `;
 

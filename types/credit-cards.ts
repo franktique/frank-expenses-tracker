@@ -119,6 +119,39 @@ export const CREDIT_CARD_FRANCHISE_LABELS: Record<CreditCardFranchise, string> =
     other: 'Otra',
   };
 
+// Credit Card Dashboard types
+
+export interface CreditCardDashboardCategoryRow {
+  category_id: string;
+  category_name: string;
+  tipo_gasto?: string | null;
+  actual: number;      // sum of expenses charged to this card in this category
+  projected: number;   // sum of budgets for this category (default card = this card)
+}
+
+export interface CreditCardDashboardRow {
+  credit_card: CreditCard;
+  actual_total: number;
+  projected_total: number;
+  categories: CreditCardDashboardCategoryRow[];
+}
+
+export interface CreditCardDashboardUnassigned {
+  actual_total: number;
+  categories: { category_id: string; category_name: string; actual: number }[];
+}
+
+export interface CreditCardDashboardResponse {
+  period_id: string;
+  period_name: string;
+  cards: CreditCardDashboardRow[];
+  unassigned: CreditCardDashboardUnassigned; // expenses with credit_card_id but card not linked to any category default
+  no_card: {                                  // expenses without any credit_card_id
+    actual_total: number;
+    categories: { category_id: string; category_name: string; actual: number; projected: number }[];
+  };
+}
+
 // API response types
 export interface CreditCardListResponse {
   credit_cards: CreditCard[];

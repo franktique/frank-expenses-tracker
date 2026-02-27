@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { PlusCircle, AlertTriangle } from 'lucide-react';
+import { PlusCircle, AlertTriangle, CreditCard as CreditCardIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -57,6 +57,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { CreditCardSelector } from '@/components/credit-card-selector';
+import { CreditCard as CreditCardType, CREDIT_CARD_FRANCHISE_LABELS } from '@/types/credit-cards';
 
 export function CategoriesView() {
   const {
@@ -87,6 +89,10 @@ export function CategoriesView() {
   >(null);
   const [newCategoryRecurrenceFrequency, setNewCategoryRecurrenceFrequency] =
     useState<RecurrenceFrequency>(null);
+  const [newCategoryDefaultCreditCard, setNewCategoryDefaultCreditCard] =
+    useState<CreditCardType | null>(null);
+  const [editCategoryDefaultCreditCard, setEditCategoryDefaultCreditCard] =
+    useState<CreditCardType | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleteValidation, setDeleteValidation] = useState<{
     hasExpenses: boolean;
@@ -149,6 +155,7 @@ export function CategoriesView() {
           tipo_gasto: newCategoryTipoGasto || undefined,
           default_day: newCategoryDefaultDay || undefined,
           recurrence_frequency: newCategoryRecurrenceFrequency || undefined,
+          default_credit_card_id: newCategoryDefaultCreditCard?.id || null,
         }),
       });
 
@@ -162,6 +169,7 @@ export function CategoriesView() {
       setNewCategoryTipoGasto(undefined);
       setNewCategoryDefaultDay(null);
       setNewCategoryRecurrenceFrequency(null);
+      setNewCategoryDefaultCreditCard(null);
       setIsAddOpen(false);
 
       // Show success toast
@@ -210,6 +218,9 @@ export function CategoriesView() {
         updatePayload.recurrence_frequency = editCategoryRecurrenceFrequency;
       }
 
+      // Always send default_credit_card_id (null to clear it)
+      updatePayload.default_credit_card_id = editCategoryDefaultCreditCard?.id || null;
+
       // Update category using API call
       const response = await fetch(`/api/categories/${editCategory.id}`, {
         method: 'PUT',
@@ -229,6 +240,7 @@ export function CategoriesView() {
       setEditCategoryTipoGasto(undefined);
       setEditCategoryDefaultDay(null);
       setEditCategoryRecurrenceFrequency(null);
+      setEditCategoryDefaultCreditCard(null);
       setIsEditOpen(false);
 
       // Show success toast
@@ -315,6 +327,20 @@ export function CategoriesView() {
     setEditCategoryDefaultDay(category.default_day || null);
     // Set recurrence frequency
     setEditCategoryRecurrenceFrequency(category.recurrence_frequency || null);
+    // Set default credit card (reconstruct CreditCardType from info if available)
+    if (category.default_credit_card_id && category.default_credit_card_info) {
+      setEditCategoryDefaultCreditCard({
+        id: category.default_credit_card_id,
+        bank_name: category.default_credit_card_info.bank_name,
+        franchise: category.default_credit_card_info.franchise as CreditCardType['franchise'],
+        last_four_digits: category.default_credit_card_info.last_four_digits,
+        is_active: category.default_credit_card_info.is_active,
+        created_at: '',
+        updated_at: '',
+      });
+    } else {
+      setEditCategoryDefaultCreditCard(null);
+    }
     setIsEditOpen(true);
   };
 
@@ -430,6 +456,20 @@ export function CategoriesView() {
                       : 'Día preferido del mes para gastos de esta categoría'}
                   </p>
                 </div>
+
+                <div className="grid gap-2">
+                  <Label>Tarjeta de Crédito por Defecto (opcional)</Label>
+                  <CreditCardSelector
+                    selectedCreditCard={newCategoryDefaultCreditCard}
+                    onCreditCardChange={setNewCategoryDefaultCreditCard}
+                    placeholder="Sin tarjeta por defecto"
+                    showNoCardOption={true}
+                    showOnlyActive={true}
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Tarjeta que se pre-seleccionará al registrar gastos en esta categoría
+                  </p>
+                </div>
               </div>
               <DialogFooter>
                 <Button
@@ -440,6 +480,7 @@ export function CategoriesView() {
                     setNewCategoryTipoGasto(undefined);
                     setNewCategoryDefaultDay(null);
                     setNewCategoryRecurrenceFrequency(null);
+                    setNewCategoryDefaultCreditCard(null);
                   }}
                 >
                   Cancelar
@@ -466,6 +507,7 @@ export function CategoriesView() {
               <TableRow>
                 <TableHead>Nombre</TableHead>
                 <TableHead>Tipo Gasto</TableHead>
+                <TableHead>Tarjeta por Defecto</TableHead>
                 <TableHead>Día por Defecto</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
@@ -483,6 +525,19 @@ export function CategoriesView() {
                     </TableCell>
                     <TableCell>
                       <TipoGastoBadge tipoGasto={category.tipo_gasto} />
+                    </TableCell>
+                    <TableCell>
+                      {category.default_credit_card_info ? (
+                        <div className="flex items-center gap-1.5">
+                          <CreditCardIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-sm">
+                            {CREDIT_CARD_FRANCHISE_LABELS[category.default_credit_card_info.franchise as keyof typeof CREDIT_CARD_FRANCHISE_LABELS] || category.default_credit_card_info.franchise}{' '}
+                            ····{category.default_credit_card_info.last_four_digits}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">-</span>
+                      )}
                     </TableCell>
                     <TableCell>
                       {category.default_day ? (
@@ -518,7 +573,7 @@ export function CategoriesView() {
               {(!filteredCategories || filteredCategories.length === 0) && (
                 <TableRow>
                   <TableCell
-                    colSpan={4}
+                    colSpan={5}
                     className="py-4 text-center text-muted-foreground"
                   >
                     No hay categorías. Agrega una nueva categoría para comenzar.
@@ -628,6 +683,20 @@ export function CategoriesView() {
                   : 'Especifica el día preferido del mes (1-31) para los gastos de esta categoría'}
               </p>
             </div>
+
+            <div className="grid gap-2">
+              <Label>Tarjeta de Crédito por Defecto (opcional)</Label>
+              <CreditCardSelector
+                selectedCreditCard={editCategoryDefaultCreditCard}
+                onCreditCardChange={setEditCategoryDefaultCreditCard}
+                placeholder="Sin tarjeta por defecto"
+                showNoCardOption={true}
+                showOnlyActive={true}
+              />
+              <p className="text-xs text-muted-foreground">
+                Tarjeta que se pre-seleccionará al registrar gastos en esta categoría
+              </p>
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -638,6 +707,7 @@ export function CategoriesView() {
                 setEditCategoryTipoGasto(undefined);
                 setEditCategoryDefaultDay(null);
                 setEditCategoryRecurrenceFrequency(null);
+                setEditCategoryDefaultCreditCard(null);
               }}
             >
               Cancelar

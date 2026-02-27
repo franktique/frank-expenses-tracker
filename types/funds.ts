@@ -152,6 +152,13 @@ export interface Category {
   tipo_gasto?: TipoGasto; // Expense type: F (Fijo), V (Variable), SF (Semi Fijo)
   default_day?: number | null; // Preferred day of month for category expenses (1-31). When recurrence_frequency is set, this becomes the first payment day
   recurrence_frequency?: RecurrenceFrequency; // Payment frequency for this category
+  default_credit_card_id?: string | null; // Default credit card for expenses in this category
+  default_credit_card_info?: { // Populated in joins
+    bank_name: string;
+    franchise: string;
+    last_four_digits: string;
+    is_active: boolean;
+  } | null;
 }
 
 // Category-Fund relationship interface
@@ -206,6 +213,7 @@ export const CreateCategorySchema = z.object({
     .nullable()
     .optional(), // Preferred day of month (1-31)
   recurrence_frequency: RecurrenceFrequencyEnum,
+  default_credit_card_id: z.string().uuid().nullable().optional(),
 });
 
 // Category update schema
@@ -233,6 +241,7 @@ export const UpdateCategorySchema = z.object({
     .nullable()
     .optional(), // Preferred day of month (1-31)
   recurrence_frequency: RecurrenceFrequencyEnum,
+  default_credit_card_id: z.string().uuid().nullable().optional(),
 });
 
 // Category-Fund relationship schemas

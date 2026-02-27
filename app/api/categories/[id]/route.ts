@@ -10,11 +10,16 @@ export async function GET(
   try {
     const id = params.id;
     const [category] = await sql`
-      SELECT 
+      SELECT
         c.*,
-        f.name as fund_name
+        f.name as fund_name,
+        cc.bank_name as cc_bank_name,
+        cc.franchise as cc_franchise,
+        cc.last_four_digits as cc_last_four_digits,
+        cc.is_active as cc_is_active
       FROM categories c
       LEFT JOIN funds f ON c.fund_id = f.id
+      LEFT JOIN credit_cards cc ON c.default_credit_card_id = cc.id
       WHERE c.id = ${id}
     `;
 
@@ -42,9 +47,18 @@ export async function GET(
       ORDER BY f.name
     `;
 
+    const { cc_bank_name, cc_franchise, cc_last_four_digits, cc_is_active, ...categoryRest } = category;
     const enhancedCategory = {
-      ...category,
+      ...categoryRest,
       associated_funds: associatedFunds,
+      default_credit_card_info: category.default_credit_card_id
+        ? {
+            bank_name: cc_bank_name,
+            franchise: cc_franchise,
+            last_four_digits: cc_last_four_digits,
+            is_active: cc_is_active,
+          }
+        : null,
     };
 
     return NextResponse.json(enhancedCategory);
@@ -81,6 +95,7 @@ export async function PUT(
       tipo_gasto,
       default_day,
       recurrence_frequency,
+      default_credit_card_id,
     } = validationResult.data;
 
     // Check if category exists
@@ -243,6 +258,10 @@ export async function PUT(
       setClauses.push(`recurrence_frequency = $${values.length + 1}`);
       values.push(recurrence_frequency);
     }
+    if (default_credit_card_id !== undefined) {
+      setClauses.push(`default_credit_card_id = $${values.length + 1}`);
+      values.push(default_credit_card_id);
+    }
 
     // Only execute update if there are fields to update
     if (setClauses.length > 0) {
@@ -279,13 +298,18 @@ export async function PUT(
       );
     }
 
-    // Fetch the updated category with fund information and associated funds
+    // Fetch the updated category with fund information, associated funds, and credit card
     const [categoryWithFund] = await sql`
-      SELECT 
+      SELECT
         c.*,
-        f.name as fund_name
+        f.name as fund_name,
+        cc.bank_name as cc_bank_name,
+        cc.franchise as cc_franchise,
+        cc.last_four_digits as cc_last_four_digits,
+        cc.is_active as cc_is_active
       FROM categories c
       LEFT JOIN funds f ON c.fund_id = f.id
+      LEFT JOIN credit_cards cc ON c.default_credit_card_id = cc.id
       WHERE c.id = ${id}
     `;
 
@@ -315,9 +339,18 @@ export async function PUT(
       console.log(`Budget sync result: ${syncResult.message}`);
     }
 
+    const { cc_bank_name, cc_franchise, cc_last_four_digits, cc_is_active, ...categoryRest } = categoryWithFund;
     const enhancedCategory = {
-      ...categoryWithFund,
+      ...categoryRest,
       associated_funds: associatedFunds,
+      default_credit_card_info: categoryWithFund.default_credit_card_id
+        ? {
+            bank_name: cc_bank_name,
+            franchise: cc_franchise,
+            last_four_digits: cc_last_four_digits,
+            is_active: cc_is_active,
+          }
+        : null,
       budgets_updated: default_day !== undefined ? true : undefined,
     };
 

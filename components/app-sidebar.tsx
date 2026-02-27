@@ -51,6 +51,7 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { isAuthenticated } = useAuth();
   const [overspendOpen, setOverspendOpen] = useState(false);
+  const [creditCardMenuOpen, setCreditCardMenuOpen] = useState(false);
   const { toggleSidebar, state } = useSidebar();
   const isCollapsed = state === 'collapsed';
 
@@ -82,6 +83,12 @@ export function AppSidebar() {
       return (
         pathname === '/dashboard/overspend' ||
         pathname.startsWith('/dashboard/overspend/')
+      );
+    }
+    if (path === '/tarjetas-credito') {
+      return (
+        pathname === '/tarjetas-credito' ||
+        pathname === '/dashboard/credit-cards'
       );
     }
     return pathname === path;
@@ -204,16 +211,51 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
-            <SidebarMenuButton
-              asChild
-              isActive={isActive('/tarjetas-credito')}
-              tooltip="Tarjetas de Crédito"
+            <Collapsible
+              open={creditCardMenuOpen}
+              onOpenChange={setCreditCardMenuOpen}
+              className="w-full"
             >
-              <Link href="/tarjetas-credito">
-                <CreditCard className="h-4 w-4" />
-                <span>Tarjetas de Crédito</span>
-              </Link>
-            </SidebarMenuButton>
+              <CollapsibleTrigger asChild>
+                <SidebarMenuButton
+                  isActive={isActive('/tarjetas-credito')}
+                  className="w-full"
+                  tooltip="Tarjetas de Crédito"
+                >
+                  <CreditCard className="h-4 w-4" />
+                  <span>Tarjetas de Crédito</span>
+                  <ChevronRight
+                    className={`ml-auto h-4 w-4 transition-transform ${
+                      creditCardMenuOpen ? 'rotate-90' : ''
+                    }`}
+                  />
+                </SidebarMenuButton>
+              </CollapsibleTrigger>
+              <CollapsibleContent>
+                <SidebarMenuSub>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === '/tarjetas-credito'}
+                    >
+                      <Link href="/tarjetas-credito">
+                        <span>Gestión</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuSubItem>
+                  <SidebarMenuSubItem>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={pathname === '/dashboard/credit-cards'}
+                    >
+                      <Link href="/dashboard/credit-cards">
+                        <span>Dashboard</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuSubItem>
+                </SidebarMenuSub>
+              </CollapsibleContent>
+            </Collapsible>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton

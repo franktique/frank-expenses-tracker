@@ -765,3 +765,27 @@ export interface BudgetExecutionResponse {
   };
   budgetDetails: Record<string, BudgetDetail[]>; // Map of date/week to budget details
 }
+
+// Payment Calendar types
+export interface PaymentCalendarBudgetEntry {
+  budgetId: string;
+  categoryId: string;
+  categoryName: string;
+  amount: number;
+  paymentMethod: 'cash' | 'credit' | 'debit';
+}
+
+export interface PaymentCalendarDay {
+  date: string; // YYYY-MM-DD
+  cashTotal: number; // sum of cash + debit budgets
+  creditTotal: number; // sum of credit budgets
+  budgets: PaymentCalendarBudgetEntry[];
+}
+
+export interface PaymentCalendarResponse {
+  periodId: string;
+  periodName: string;
+  month: number; // 1-12
+  year: number;
+  days: PaymentCalendarDay[];
+}

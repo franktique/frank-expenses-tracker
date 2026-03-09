@@ -439,6 +439,18 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
+              isActive={isActive('/dashboard/payment-calendar')}
+              tooltip="Calendario de Pagos"
+            >
+              <Link href="/dashboard/payment-calendar">
+                <CalendarRange className="h-4 w-4" />
+                <span>Calendario de Pagos</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
               isActive={isActive('/setup')}
               tooltip="Configuración"
             >

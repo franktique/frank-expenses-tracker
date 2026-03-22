@@ -87,7 +87,8 @@ export type BudgetContextType = {
     sourceFundId?: string,
     destinationFundId?: string,
     creditCardId?: string,
-    pending?: boolean
+    pending?: boolean,
+    eventId?: number
   ) => Promise<void>;
   updateExpense: (
     id: string,
@@ -100,7 +101,8 @@ export type BudgetContextType = {
     sourceFundId?: string,
     destinationFundId?: string,
     creditCardId?: string,
-    pending?: boolean
+    pending?: boolean,
+    eventId?: number
   ) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   addCreditCard: (
@@ -1062,7 +1064,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     sourceFundId?: string,
     destinationFundId?: string,
     creditCardId?: string,
-    pending?: boolean
+    pending?: boolean,
+    eventId?: number
   ) => {
     try {
       const response = await fetch('/api/expenses', {
@@ -1075,6 +1078,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           period_id: periodId,
           date,
           event,
+          event_id: eventId ?? null,
           payment_method: paymentMethod,
           description,
           amount,
@@ -1109,7 +1113,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     sourceFundId?: string,
     destinationFundId?: string,
     creditCardId?: string,
-    pending?: boolean
+    pending?: boolean,
+    eventId?: number
   ) => {
     try {
       const response = await fetch(`/api/expenses/${id}`, {
@@ -1121,6 +1126,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           category_id: categoryId,
           date,
           event,
+          event_id: eventId ?? null,
           payment_method: paymentMethod,
           description,
           amount,

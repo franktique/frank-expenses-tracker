@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { sql } from '@/lib/db';
-import { CreateExpenseSchema, DEFAULT_FUND_ID } from '@/types/funds';
+import { CreateExpenseSchema } from '@/types/funds';
 
 export async function GET(request: NextRequest) {
   try {
@@ -21,6 +21,7 @@ export async function GET(request: NextRequest) {
           e.description,
           e.amount,
           e.event,
+          e.event_id,
           e.date,
           e.source_fund_id,
           e.destination_fund_id,
@@ -33,13 +34,15 @@ export async function GET(request: NextRequest) {
           cc.bank_name as credit_card_bank_name,
           cc.franchise as credit_card_franchise,
           cc.last_four_digits as credit_card_last_four_digits,
-          cc.is_active as credit_card_is_active
+          cc.is_active as credit_card_is_active,
+          ev.name as event_name
         FROM expenses e
         JOIN categories c ON e.category_id = c.id
         JOIN periods p ON e.period_id = p.id
         LEFT JOIN funds sf ON e.source_fund_id = sf.id
         LEFT JOIN funds df ON e.destination_fund_id = df.id
         LEFT JOIN credit_cards cc ON e.credit_card_id = cc.id
+        LEFT JOIN events ev ON e.event_id = ev.id
         WHERE e.credit_card_id = ${creditCardFilter}
         ORDER BY e.date DESC
       `;
@@ -54,6 +57,7 @@ export async function GET(request: NextRequest) {
           e.description,
           e.amount,
           e.event,
+          e.event_id,
           e.date,
           e.source_fund_id,
           e.destination_fund_id,
@@ -66,13 +70,15 @@ export async function GET(request: NextRequest) {
           cc.bank_name as credit_card_bank_name,
           cc.franchise as credit_card_franchise,
           cc.last_four_digits as credit_card_last_four_digits,
-          cc.is_active as credit_card_is_active
+          cc.is_active as credit_card_is_active,
+          ev.name as event_name
         FROM expenses e
         JOIN categories c ON e.category_id = c.id
         JOIN periods p ON e.period_id = p.id
         LEFT JOIN funds sf ON e.source_fund_id = sf.id
         LEFT JOIN funds df ON e.destination_fund_id = df.id
         LEFT JOIN credit_cards cc ON e.credit_card_id = cc.id
+        LEFT JOIN events ev ON e.event_id = ev.id
         WHERE e.source_fund_id = ${fundFilter}
            OR EXISTS (
              SELECT 1 FROM category_fund_relationships cfr
@@ -92,6 +98,7 @@ export async function GET(request: NextRequest) {
           e.description,
           e.amount,
           e.event,
+          e.event_id,
           e.date,
           e.source_fund_id,
           e.destination_fund_id,
@@ -104,19 +111,21 @@ export async function GET(request: NextRequest) {
           cc.bank_name as credit_card_bank_name,
           cc.franchise as credit_card_franchise,
           cc.last_four_digits as credit_card_last_four_digits,
-          cc.is_active as credit_card_is_active
+          cc.is_active as credit_card_is_active,
+          ev.name as event_name
         FROM expenses e
         JOIN categories c ON e.category_id = c.id
         JOIN periods p ON e.period_id = p.id
         LEFT JOIN funds sf ON e.source_fund_id = sf.id
         LEFT JOIN funds df ON e.destination_fund_id = df.id
         LEFT JOIN credit_cards cc ON e.credit_card_id = cc.id
+        LEFT JOIN events ev ON e.event_id = ev.id
         ORDER BY e.date DESC
       `;
     }
 
     // Transform expenses to include credit card info in the expected format
-    const transformedExpenses = expenses.map((expense: any) => ({
+    const transformedExpenses = expenses.map((expense: Record<string, unknown>) => ({
       ...expense,
       credit_card_info: expense.credit_card_bank_name
         ? {
@@ -161,6 +170,7 @@ export async function POST(request: NextRequest) {
       period_id,
       date,
       event,
+      event_id,
       payment_method,
       description,
       amount,
@@ -181,10 +191,10 @@ export async function POST(request: NextRequest) {
 
     // Insert the expense (source_fund_id is optional, fondos UI being removed)
     const [newExpense] = await sql`
-      INSERT INTO expenses (category_id, period_id, date, event, payment_method, description, amount, source_fund_id, destination_fund_id, credit_card_id, pending)
+      INSERT INTO expenses (category_id, period_id, date, event, event_id, payment_method, description, amount, source_fund_id, destination_fund_id, credit_card_id, pending)
       VALUES (${category_id}, ${period_id}, ${dateToSave}, ${
         event || null
-      }, ${payment_method}, ${description}, ${amount}, ${
+      }, ${event_id ?? null}, ${payment_method}, ${description}, ${amount}, ${
         source_fund_id || null
       }, ${destination_fund_id || null}, ${credit_card_id || null}, ${pending || false})
       RETURNING *
@@ -219,13 +229,15 @@ export async function POST(request: NextRequest) {
         df.name as destination_fund_name,
         cc.bank_name as credit_card_bank_name,
         cc.franchise as credit_card_franchise,
-        cc.last_four_digits as credit_card_last_four_digits
+        cc.last_four_digits as credit_card_last_four_digits,
+        ev.name as event_name
       FROM expenses e
       JOIN categories c ON e.category_id = c.id
       JOIN periods p ON e.period_id = p.id
       LEFT JOIN funds sf ON e.source_fund_id = sf.id
       LEFT JOIN funds df ON e.destination_fund_id = df.id
       LEFT JOIN credit_cards cc ON e.credit_card_id = cc.id
+      LEFT JOIN events ev ON e.event_id = ev.id
       WHERE e.id = ${newExpense.id}
     `;
 
@@ -245,7 +257,7 @@ export async function POST(request: NextRequest) {
       credit_card_last_four_digits: undefined,
     };
 
-    return NextResponse.json(transformedExpense);
+    return NextResponse.json(transformedExpense, { status: 201 });
   } catch (error) {
     console.error('Error creating expense:', error);
     return NextResponse.json(

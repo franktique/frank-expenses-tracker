@@ -8,9 +8,10 @@ export async function GET(
   try {
     const periodId = params.periodId;
     const expenses = await sql`
-      SELECT e.*, c.name as category_name
+      SELECT e.*, c.name as category_name, ev.name as event_name
       FROM expenses e
       JOIN categories c ON e.category_id = c.id
+      LEFT JOIN events ev ON e.event_id = ev.id
       WHERE e.period_id = ${periodId}
       ORDER BY e.date DESC
     `;

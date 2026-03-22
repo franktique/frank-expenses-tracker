@@ -33,6 +33,8 @@ import { useBudget, type PaymentMethod } from '@/context/budget-context';
 import { cn, formatDate } from '@/lib/utils';
 import { CreditCardSelector } from '@/components/credit-card-selector';
 import { CreditCard } from '@/types/credit-cards';
+import { Event } from '@/types/funds';
+import { EventSelector } from '@/components/event-selector';
 
 /**
  * Props for ExpenseFormDialog component
@@ -92,7 +94,7 @@ export function ExpenseFormDialog({
   const [newExpenseDate, setNewExpenseDate] = useState<Date | undefined>(
     new Date()
   );
-  const [newExpenseEvent, setNewExpenseEvent] = useState('');
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [newExpensePaymentMethod, setNewExpensePaymentMethod] =
     useState<PaymentMethod>('credit');
   const [newExpenseDescription, setNewExpenseDescription] = useState('');
@@ -127,7 +129,7 @@ export function ExpenseFormDialog({
       }
       setNewExpensePeriod(activePeriod?.id || '');
       setNewExpenseDate(new Date());
-      setNewExpenseEvent('');
+      setSelectedEvent(null);
       setNewExpensePaymentMethod('credit');
       setNewExpenseDescription('');
       setNewExpenseAmount('');
@@ -141,7 +143,7 @@ export function ExpenseFormDialog({
     setNewExpenseCategory('');
     setNewExpensePeriod(activePeriod?.id || '');
     setNewExpenseDate(new Date());
-    setNewExpenseEvent('');
+    setSelectedEvent(null);
     setNewExpensePaymentMethod('credit');
     setNewExpenseDescription('');
     setNewExpenseAmount('');
@@ -182,14 +184,15 @@ export function ExpenseFormDialog({
         newExpenseCategory,
         newExpensePeriod,
         newExpenseDate.toISOString(),
-        newExpenseEvent.trim() || undefined,
+        selectedEvent?.name, // backward compat: keep event string
         newExpensePaymentMethod,
         newExpenseDescription,
         amount,
         undefined, // No source fund (fondos functionality removed)
         undefined, // No destination fund
         newExpenseCreditCard?.id,
-        newExpensePending
+        newExpensePending,
+        selectedEvent?.id // event_id
       );
 
       resetForm();
@@ -330,12 +333,10 @@ export function ExpenseFormDialog({
 
           <div className="grid gap-2">
             <Label htmlFor="event">Evento (opcional)</Label>
-            <Input
-              componentId="expense-form-event-input"
-              id="event"
-              value={newExpenseEvent}
-              onChange={(e) => setNewExpenseEvent(e.target.value)}
-              placeholder="Ej: Cumpleaños, Viaje, etc."
+            <EventSelector
+              selectedEvent={selectedEvent}
+              onEventChange={setSelectedEvent}
+              placeholder="Seleccionar evento..."
             />
           </div>
 

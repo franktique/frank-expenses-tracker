@@ -153,7 +153,8 @@ export interface Category {
   default_day?: number | null; // Preferred day of month for category expenses (1-31). When recurrence_frequency is set, this becomes the first payment day
   recurrence_frequency?: RecurrenceFrequency; // Payment frequency for this category
   default_credit_card_id?: string | null; // Default credit card for expenses in this category
-  default_credit_card_info?: { // Populated in joins
+  default_credit_card_info?: {
+    // Populated in joins
     bank_name: string;
     franchise: string;
     last_four_digits: string;
@@ -313,13 +314,73 @@ export const UpdateIncomeSchema = z.object({
   fund_id: z.string().uuid().optional(),
 });
 
+// Event interface and validation schemas
+export interface Event {
+  id: number;
+  name: string;
+  description?: string;
+  expense_count?: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export const EventSchema = z.object({
+  id: z.number().int().positive(),
+  name: z
+    .string()
+    .min(1, 'El nombre del evento es obligatorio')
+    .max(255, 'El nombre del evento es demasiado largo'),
+  description: z
+    .string()
+    .max(1000, 'La descripción es demasiado larga')
+    .optional(),
+  expense_count: z.number().int().min(0).optional(),
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+export const CreateEventSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'El nombre del evento es obligatorio')
+    .max(255, 'El nombre del evento es demasiado largo'),
+  description: z
+    .string()
+    .max(1000, 'La descripción es demasiado larga')
+    .optional(),
+});
+
+export const UpdateEventSchema = z.object({
+  name: z
+    .string()
+    .min(1, 'El nombre del evento es obligatorio')
+    .max(255, 'El nombre del evento es demasiado largo')
+    .optional(),
+  description: z
+    .string()
+    .max(1000, 'La descripción es demasiado larga')
+    .optional(),
+});
+
+// Event error messages
+export const EVENT_ERROR_MESSAGES = {
+  EVENT_NOT_FOUND: 'El evento especificado no existe',
+  EVENT_NAME_REQUIRED: 'El nombre del evento es obligatorio',
+  EVENT_NAME_DUPLICATE: 'Ya existe un evento con este nombre',
+  EVENT_IN_USE:
+    'No se puede eliminar un evento con gastos asociados sin confirmación',
+  EVENT_DELETE_FAILED: 'No se pudo eliminar el evento',
+} as const;
+
 // Enhanced Expense interface with fund and credit card support
 export interface Expense {
   id: string;
   category_id: string;
   period_id: string;
   date: string;
-  event?: string;
+  event?: string; // backward compat free-text field
+  event_id?: number; // FK to events table
+  event_name?: string; // populated in joins
   payment_method: PaymentMethod;
   description: string;
   amount: number;
@@ -370,13 +431,14 @@ export const CreateExpenseSchema = z.object({
   period_id: z.string().uuid(),
   date: z.string().refine((date) => !isNaN(Date.parse(date)), 'Fecha inválida'),
   event: z.string().max(255, 'El evento es demasiado largo').optional(),
+  event_id: z.number().int().positive().nullable().optional(),
   payment_method: PaymentMethodEnum,
   description: z
     .string()
     .min(1, 'La descripción es obligatoria')
     .max(500, 'La descripción es demasiado larga'),
   amount: z.number().positive('El monto debe ser positivo'),
-  source_fund_id: z.string().uuid().optional(), // Optional source fund (fondos UI being removed)
+  source_fund_id: z.string().optional(), // Optional source fund (fondos UI being removed)
   destination_fund_id: z.string().uuid().optional(),
   credit_card_id: z.string().uuid().nullable().optional(), // Optional credit card field
   pending: z.boolean().optional(), // New field for pending status
@@ -390,6 +452,7 @@ export const UpdateExpenseSchema = z.object({
     .refine((date) => !isNaN(Date.parse(date)), 'Fecha inválida')
     .optional(),
   event: z.string().max(255, 'El evento es demasiado largo').optional(),
+  event_id: z.number().int().positive().nullable().optional(),
   payment_method: PaymentMethodEnum.optional(),
   description: z
     .string()
@@ -397,7 +460,7 @@ export const UpdateExpenseSchema = z.object({
     .max(500, 'La descripción es demasiado larga')
     .optional(),
   amount: z.number().positive('El monto debe ser positivo').optional(),
-  source_fund_id: z.string().uuid().optional(), // Optional source fund field for updates
+  source_fund_id: z.string().optional(), // Optional source fund field for updates
   destination_fund_id: z.string().uuid().optional(),
   credit_card_id: z.string().uuid().nullable().optional(), // Optional credit card field for updates
   pending: z.boolean().optional(), // New field for pending status

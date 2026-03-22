@@ -9,7 +9,7 @@ export async function GET(
   try {
     const { id } = await params;
     const [expense] = await sql`
-      SELECT 
+      SELECT
         e.*,
         c.name as category_name,
         p.name as period_name,
@@ -17,13 +17,15 @@ export async function GET(
         df.name as destination_fund_name,
         cc.bank_name as credit_card_bank_name,
         cc.franchise as credit_card_franchise,
-        cc.last_four_digits as credit_card_last_four_digits
+        cc.last_four_digits as credit_card_last_four_digits,
+        ev.name as event_name
       FROM expenses e
       JOIN categories c ON e.category_id = c.id
       JOIN periods p ON e.period_id = p.id
       LEFT JOIN funds sf ON e.source_fund_id = sf.id
       LEFT JOIN funds df ON e.destination_fund_id = df.id
       LEFT JOIN credit_cards cc ON e.credit_card_id = cc.id
+      LEFT JOIN events ev ON e.event_id = ev.id
       WHERE e.id = ${id}
     `;
 
@@ -89,6 +91,7 @@ export async function PUT(
       category_id,
       date,
       event,
+      event_id,
       payment_method,
       description,
       amount,
@@ -102,6 +105,7 @@ export async function PUT(
     category_id = category_id || existingExpense.category_id;
     date = date || existingExpense.date;
     event = event !== undefined ? event : existingExpense.event;
+    event_id = event_id !== undefined ? event_id : existingExpense.event_id;
     payment_method = payment_method || existingExpense.payment_method;
     description = description || existingExpense.description;
     amount = amount !== undefined ? amount : existingExpense.amount;
@@ -146,6 +150,7 @@ export async function PUT(
         category_id = ${category_id},
         date = ${date},
         event = ${event || null},
+        event_id = ${event_id ?? null},
         payment_method = ${payment_method},
         description = ${description},
         amount = ${amount},
@@ -180,7 +185,7 @@ export async function PUT(
 
     // Fetch the updated expense with fund and credit card information
     const [expenseWithFunds] = await sql`
-      SELECT 
+      SELECT
         e.*,
         c.name as category_name,
         p.name as period_name,
@@ -188,13 +193,15 @@ export async function PUT(
         df.name as destination_fund_name,
         cc.bank_name as credit_card_bank_name,
         cc.franchise as credit_card_franchise,
-        cc.last_four_digits as credit_card_last_four_digits
+        cc.last_four_digits as credit_card_last_four_digits,
+        ev.name as event_name
       FROM expenses e
       JOIN categories c ON e.category_id = c.id
       JOIN periods p ON e.period_id = p.id
-      JOIN funds sf ON e.source_fund_id = sf.id
+      LEFT JOIN funds sf ON e.source_fund_id = sf.id
       LEFT JOIN funds df ON e.destination_fund_id = df.id
       LEFT JOIN credit_cards cc ON e.credit_card_id = cc.id
+      LEFT JOIN events ev ON e.event_id = ev.id
       WHERE e.id = ${id}
     `;
 

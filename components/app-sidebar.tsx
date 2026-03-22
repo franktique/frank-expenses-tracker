@@ -13,6 +13,7 @@ import {
   Layers as LayersIcon,
   Percent,
   PieChart,
+  Tag,
   TrendingUp,
   Wallet,
   Zap,
@@ -89,6 +90,12 @@ export function AppSidebar() {
       return (
         pathname === '/tarjetas-credito' ||
         pathname === '/dashboard/credit-cards'
+      );
+    }
+    if (path === '/dashboard/eventos') {
+      return (
+        pathname === '/dashboard/eventos' ||
+        pathname.startsWith('/dashboard/eventos/')
       );
     }
     return pathname === path;
@@ -207,6 +214,18 @@ export function AppSidebar() {
               <Link href="/gastos">
                 <Receipt className="h-4 w-4" />
                 <span>Gastos</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/dashboard/eventos')}
+              tooltip="Eventos"
+            >
+              <Link href="/dashboard/eventos">
+                <Tag className="h-4 w-4" />
+                <span>Eventos</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

@@ -58,7 +58,9 @@ import { Badge } from '@/components/ui/badge';
 import { useBudget, type PaymentMethod } from '@/context/budget-context';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
 import { CreditCardSelector } from '@/components/credit-card-selector';
+import { EventSelector } from '@/components/event-selector';
 import { CreditCard, CREDIT_CARD_FRANCHISE_LABELS } from '@/types/credit-cards';
+import { Event } from '@/types/funds';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 export function ExpensesView() {
@@ -109,6 +111,7 @@ export function ExpensesView() {
   } | null>(null);
   const [editExpenseCreditCard, setEditExpenseCreditCard] =
     useState<CreditCard | null>(null);
+  const [editExpenseEvent, setEditExpenseEvent] = useState<Event | null>(null);
 
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
@@ -201,18 +204,20 @@ export function ExpensesView() {
       editExpense.id,
       editExpense.categoryId,
       editExpense.date.toISOString(),
-      editExpense.event.trim() || undefined,
+      editExpenseEvent?.name || undefined,
       editExpense.paymentMethod,
       editExpense.description,
       amount,
-      DEFAULT_FUND_ID, // Always use default fund 'Cta Ahorros'
+      undefined, // Keep existing source_fund_id from expense record
       undefined, // No destination fund
       editExpenseCreditCard?.id,
-      editExpense.pending
+      editExpense.pending,
+      editExpenseEvent?.id
     );
 
     setEditExpense(null);
     setEditExpenseCreditCard(null);
+    setEditExpenseEvent(null);
     setIsEditOpen(false);
 
     toast({
@@ -510,6 +515,17 @@ export function ExpensesView() {
                           } else {
                             setEditExpenseCreditCard(null);
                           }
+                          // Set the event for editing
+                          if (expense.event_id && expense.event_name) {
+                            setEditExpenseEvent({
+                              id: expense.event_id,
+                              name: expense.event_name,
+                              created_at: '',
+                              updated_at: '',
+                            });
+                          } else {
+                            setEditExpenseEvent(null);
+                          }
                           setIsEditOpen(true);
                         }}
                       >
@@ -640,15 +656,10 @@ export function ExpensesView() {
               </Popover>
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-event">Evento (opcional)</Label>
-              <Input
-                id="edit-event"
-                value={editExpense?.event || ''}
-                onChange={(e) =>
-                  setEditExpense((prev) =>
-                    prev ? { ...prev, event: e.target.value } : null
-                  )
-                }
+              <Label>Evento (opcional)</Label>
+              <EventSelector
+                selectedEvent={editExpenseEvent}
+                onEventChange={setEditExpenseEvent}
               />
             </div>
             <div className="grid gap-2">

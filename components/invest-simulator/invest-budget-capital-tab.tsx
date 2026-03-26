@@ -32,6 +32,7 @@ import { CategoryExclusionFilter } from '@/components/category-exclusion-filter'
 
 const EXCL_KEY = (periodId: string) => `invest_budget_capital_excl_${periodId}`;
 const RATE_KEY = (periodId: string) => `invest_budget_capital_rate_${periodId}`;
+const EXCHANGE_RATE_KEY = 'invest_budget_capital_exchange_rate';
 
 export function InvestBudgetCapitalTab() {
   const { activePeriod, budgets, categories } = useBudget();
@@ -44,6 +45,9 @@ export function InvestBudgetCapitalTab() {
   const [currency, setCurrency] = useState<CurrencyCode>('COP');
   const [excludedCategories, setExcludedCategories] = useState<string[]>([]);
   const [hasLoadedFromStorage, setHasLoadedFromStorage] = useState(false);
+
+  // Exchange rate state (COP per 1 USD) — manually entered, persisted to localStorage
+  const [exchangeRate, setExchangeRate] = useState<number | null>(4200);
 
   // Load saved rate + exclusions from localStorage when period changes
   useEffect(() => {
@@ -81,6 +85,16 @@ export function InvestBudgetCapitalTab() {
       // ignore
     }
 
+    try {
+      const storedER = localStorage.getItem(EXCHANGE_RATE_KEY);
+      if (storedER !== null) {
+        const parsed = parseFloat(storedER);
+        if (!isNaN(parsed) && parsed > 0) setExchangeRate(parsed);
+      }
+    } catch {
+      // ignore
+    }
+
     setHasLoadedFromStorage(true);
   }, [activePeriod]);
 
@@ -98,6 +112,13 @@ export function InvestBudgetCapitalTab() {
       // ignore
     }
   }, [excludedCategories, hasLoadedFromStorage, activePeriod]);
+
+  // Save exchange rate to localStorage whenever it changes (after initial load)
+  useEffect(() => {
+    if (exchangeRate == null) return;
+    if (!hasLoadedFromStorage) return;
+    try { localStorage.setItem(EXCHANGE_RATE_KEY, String(exchangeRate)); } catch {}
+  }, [exchangeRate, hasLoadedFromStorage]);
 
   // Aggregate budget amounts per category for the active period
   const categoryBudgets = useMemo(() => {
@@ -145,7 +166,12 @@ export function InvestBudgetCapitalTab() {
     [categoryBudgets]
   );
 
-  // Per-row capital calculations — only recalculate when appliedRate changes
+  // Split count state (transient, no persistence needed)
+  const [splitCount, setSplitCount] = useState<number>(1);
+  const decreaseSplit = () => setSplitCount((s) => Math.max(1, s - 1));
+  const increaseSplit = () => setSplitCount((s) => s + 1);
+
+  // Per-row capital calculations — only recalculate when appliedRate or exchangeRate changes
   const rowsWithCapital = useMemo(() => {
     if (appliedRate === null) return [];
     let runningCapital = 0;
@@ -155,9 +181,12 @@ export function InvestBudgetCapitalTab() {
         row.budgetAmount
       );
       runningCapital += Number(requiredCapital) || 0;
-      return { ...row, requiredCapital, runningCapital };
+      const dailyCOP = row.budgetAmount / 20;
+      const dailyUSD = exchangeRate != null && exchangeRate > 0 ? dailyCOP / exchangeRate : null;
+      const splitUSD = dailyUSD != null ? dailyUSD / splitCount : null;
+      return { ...row, requiredCapital, runningCapital, dailyCOP, dailyUSD, splitUSD };
     });
-  }, [visibleRows, appliedRate]);
+  }, [visibleRows, appliedRate, exchangeRate, splitCount]);
 
   // Totals
   const totalBudget = useMemo(
@@ -286,6 +315,42 @@ export function InvestBudgetCapitalTab() {
             </Select>
           </div>
 
+          {/* Exchange rate */}
+          <div className="space-y-2">
+            <Label className="text-sm text-muted-foreground">Tasa COP/USD</Label>
+            <div className="flex items-center gap-1">
+              <span className="text-sm text-muted-foreground">1 USD =</span>
+              <Input
+                type="number"
+                min="1"
+                step="1"
+                value={exchangeRate ?? ''}
+                onChange={(e) => {
+                  const v = parseFloat(e.target.value);
+                  setExchangeRate(isNaN(v) || v <= 0 ? null : v);
+                }}
+                className="w-28 text-right"
+              />
+              <span className="text-sm text-muted-foreground">COP</span>
+            </div>
+          </div>
+
+          {/* Split */}
+          <div className="space-y-2">
+            <Label className="text-sm text-muted-foreground">Split</Label>
+            <div className="flex items-center gap-1">
+              <Button type="button" variant="outline" size="icon"
+                className="h-8 w-8" onClick={decreaseSplit} disabled={splitCount <= 1}>
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="w-6 text-center text-sm font-semibold">{splitCount}</span>
+              <Button type="button" variant="outline" size="icon"
+                className="h-8 w-8" onClick={increaseSplit}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+
           {/* Calculate button */}
           <div className="flex flex-col justify-end">
             {hasPendingChanges && appliedRate !== null && (
@@ -343,6 +408,10 @@ export function InvestBudgetCapitalTab() {
                   <TableHead className="text-right">
                     Presupuesto mensual
                   </TableHead>
+                  <TableHead className="text-right">Daily COP</TableHead>
+                  <TableHead className="text-right">COP/USD</TableHead>
+                  <TableHead className="text-right">USD</TableHead>
+                  <TableHead className="text-right">Split</TableHead>
                   <TableHead className="text-right">
                     Capital requerido
                   </TableHead>
@@ -361,6 +430,24 @@ export function InvestBudgetCapitalTab() {
                       {formatCurrency(row.budgetAmount, currency)}
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
+                      {formatCurrency(row.dailyCOP, currency)}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums text-muted-foreground">
+                      {exchangeRate != null
+                        ? exchangeRate.toLocaleString('es-CO', { maximumFractionDigits: 0 })
+                        : '—'}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {row.dailyUSD != null
+                        ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(row.dailyUSD)
+                        : '—'}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
+                      {row.splitUSD != null
+                        ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(row.splitUSD)
+                        : '—'}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
                       {formatCurrency(row.requiredCapital, currency)}
                     </TableCell>
                     <TableCell className="text-right font-medium tabular-nums text-purple-700 dark:text-purple-300">
@@ -374,6 +461,20 @@ export function InvestBudgetCapitalTab() {
                   <TableCell>Total</TableCell>
                   <TableCell className="text-right tabular-nums">
                     {formatCurrency(totalBudget, currency)}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {formatCurrency(totalBudget / 20, currency)}
+                  </TableCell>
+                  <TableCell />
+                  <TableCell className="text-right tabular-nums">
+                    {exchangeRate != null && exchangeRate > 0
+                      ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((totalBudget / 20) / exchangeRate)
+                      : '—'}
+                  </TableCell>
+                  <TableCell className="text-right tabular-nums">
+                    {exchangeRate != null && exchangeRate > 0
+                      ? new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format((totalBudget / 20) / exchangeRate / splitCount)
+                      : '—'}
                   </TableCell>
                   <TableCell className="text-right tabular-nums">
                     {formatCurrency(totalCapital, currency)}

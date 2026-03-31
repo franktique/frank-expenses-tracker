@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { CalendarIcon } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { CalendarIcon, Check, ChevronsUpDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -28,6 +28,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { useToast } from '@/components/ui/use-toast';
 import { useBudget, type PaymentMethod } from '@/context/budget-context';
 import { cn, formatDate } from '@/lib/utils';
@@ -87,7 +95,10 @@ export function ExpenseFormDialog({
 
   // Form state
   const [newExpenseCategory, setNewExpenseCategory] = useState('');
-  const [categorySearch, setCategorySearch] = useState('');
+  const [categorySearchValue, setCategorySearchValue] = useState('');
+  const [categoryDebouncedSearch, setCategoryDebouncedSearch] = useState('');
+  const [categoryPopoverOpen, setCategoryPopoverOpen] = useState(false);
+  const categoryDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [newExpensePeriod, setNewExpensePeriod] = useState(
     activePeriod?.id || ''
   );
@@ -105,6 +116,24 @@ export function ExpenseFormDialog({
 
   // Categories (all categories, no fund filter)
   const availableCategories = categories;
+
+  const filteredCategories = useMemo(() => {
+    const query = categoryDebouncedSearch.trim().toLowerCase();
+    const sorted = availableCategories
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name));
+    if (!query) return sorted;
+    return sorted.filter((c) => c.name.toLowerCase().includes(query));
+  }, [availableCategories, categoryDebouncedSearch]);
+
+  const handleCategorySearchChange = (value: string) => {
+    setCategorySearchValue(value);
+    if (categoryDebounceRef.current) clearTimeout(categoryDebounceRef.current);
+    categoryDebounceRef.current = setTimeout(
+      () => setCategoryDebouncedSearch(value),
+      300
+    );
+  };
 
   // Pre-populate category when preSelectedCategoryId is provided
   useEffect(() => {
@@ -135,7 +164,9 @@ export function ExpenseFormDialog({
       setNewExpenseAmount('');
       setNewExpenseCreditCard(null);
       setNewExpensePending(false);
-      setCategorySearch('');
+      setCategorySearchValue('');
+      setCategoryDebouncedSearch('');
+      if (categoryDebounceRef.current) clearTimeout(categoryDebounceRef.current);
     }
   }, [open, preSelectedCategoryId, activePeriod]);
 
@@ -149,7 +180,9 @@ export function ExpenseFormDialog({
     setNewExpenseAmount('');
     setNewExpenseCreditCard(null);
     setNewExpensePending(false);
-    setCategorySearch('');
+    setCategorySearchValue('');
+    setCategoryDebouncedSearch('');
+    if (categoryDebounceRef.current) clearTimeout(categoryDebounceRef.current);
   };
 
   const handleAddExpense = async () => {
@@ -232,44 +265,88 @@ export function ExpenseFormDialog({
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="category">Categoría *</Label>
-            <Select
-              value={newExpenseCategory}
-              onValueChange={setNewExpenseCategory}
-              disabled={!!preSelectedCategoryId}
-            >
-              <SelectTrigger
-                componentId="expense-form-category-select"
-                id="category"
+            <Label>Categoría *</Label>
+            {preSelectedCategoryId ? (
+              <Input
+                value={
+                  availableCategories.find(
+                    (c) => c.id === newExpenseCategory
+                  )?.name || ''
+                }
+                disabled
+                className="bg-muted"
+              />
+            ) : (
+              <Popover
+                open={categoryPopoverOpen}
+                onOpenChange={(nextOpen) => {
+                  setCategoryPopoverOpen(nextOpen);
+                  if (!nextOpen) {
+                    setCategorySearchValue('');
+                    setCategoryDebouncedSearch('');
+                  }
+                }}
               >
-                <SelectValue placeholder="Selecciona una categoría" />
-              </SelectTrigger>
-              <SelectContent>
-                {!preSelectedCategoryId && (
-                  <div className="p-2">
-                    <Input
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={categoryPopoverOpen}
+                    className="w-full justify-between"
+                  >
+                    <span className="truncate">
+                      {newExpenseCategory
+                        ? availableCategories.find(
+                            (c) => c.id === newExpenseCategory
+                          )?.name || 'Selecciona una categoría'
+                        : 'Selecciona una categoría'}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-[--radix-popover-trigger-width] p-0"
+                  align="start"
+                >
+                  <Command shouldFilter={false}>
+                    <CommandInput
                       placeholder="Buscar categoría..."
-                      value={categorySearch}
-                      onChange={(e) => setCategorySearch(e.target.value)}
-                      className="mb-2"
+                      value={categorySearchValue}
+                      onValueChange={handleCategorySearchChange}
                     />
-                  </div>
-                )}
-                {availableCategories
-                  .slice()
-                  .sort((a, b) => a.name.localeCompare(b.name))
-                  .filter((category) =>
-                    category.name
-                      .toLowerCase()
-                      .includes(categorySearch.toLowerCase())
-                  )
-                  .map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+                    <CommandList>
+                      <CommandEmpty>
+                        No se encontraron categorías.
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {filteredCategories.map((category) => (
+                          <CommandItem
+                            key={category.id}
+                            value={category.id}
+                            onSelect={() => {
+                              setNewExpenseCategory(category.id);
+                              setCategoryPopoverOpen(false);
+                              setCategorySearchValue('');
+                              setCategoryDebouncedSearch('');
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                newExpenseCategory === category.id
+                                  ? 'opacity-100'
+                                  : 'opacity-0'
+                              )}
+                            />
+                            {category.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            )}
             {preSelectedCategoryId && (
               <p className="text-xs text-muted-foreground">
                 Categoría preseleccionada desde el dashboard

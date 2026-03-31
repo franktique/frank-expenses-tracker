@@ -1,8 +1,10 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   CalendarIcon,
+  Check,
+  ChevronsUpDown,
   FileUp,
   PlusCircle,
   Download,
@@ -57,6 +59,14 @@ import { useToast } from '@/components/ui/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { useBudget, type PaymentMethod } from '@/context/budget-context';
 import { cn, formatCurrency, formatDate } from '@/lib/utils';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
 import { CreditCardSelector } from '@/components/credit-card-selector';
 import { EventSelector } from '@/components/event-selector';
 import { CreditCard, CREDIT_CARD_FRANCHISE_LABELS } from '@/types/credit-cards';
@@ -89,6 +99,10 @@ export function ExpensesView() {
   const [categoryFilter, setCategoryFilter] = useState<string>(
     searchParams.get('category') || ''
   );
+  const [filterCatSearchValue, setFilterCatSearchValue] = useState('');
+  const [filterCatDebouncedSearch, setFilterCatDebouncedSearch] = useState('');
+  const [filterCatPopoverOpen, setFilterCatPopoverOpen] = useState(false);
+  const filterCatDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>(
     searchParams.get('paymentMethod') || ''
   );
@@ -96,7 +110,10 @@ export function ExpensesView() {
     searchParams.get('creditCard') || ''
   );
 
-  const [categorySearch, setCategorySearch] = useState('');
+  const [editCatSearchValue, setEditCatSearchValue] = useState('');
+  const [editCatDebouncedSearch, setEditCatDebouncedSearch] = useState('');
+  const [editCatPopoverOpen, setEditCatPopoverOpen] = useState(false);
+  const editCatDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [editExpense, setEditExpense] = useState<{
     id: string;
@@ -164,6 +181,42 @@ export function ExpensesView() {
 
   // All categories are available (no fund filter)
   const availableCategories = categories || [];
+
+  const editFilteredCategories = useMemo(() => {
+    const sorted = availableCategories
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name));
+    const query = editCatDebouncedSearch.trim().toLowerCase();
+    if (!query) return sorted;
+    return sorted.filter((c) => c.name.toLowerCase().includes(query));
+  }, [availableCategories, editCatDebouncedSearch]);
+
+  const handleEditCatSearchChange = (value: string) => {
+    setEditCatSearchValue(value);
+    if (editCatDebounceRef.current) clearTimeout(editCatDebounceRef.current);
+    editCatDebounceRef.current = setTimeout(
+      () => setEditCatDebouncedSearch(value),
+      300
+    );
+  };
+
+  const filterFilteredCategories = useMemo(() => {
+    const sorted = availableCategories
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name));
+    const query = filterCatDebouncedSearch.trim().toLowerCase();
+    if (!query) return sorted;
+    return sorted.filter((c) => c.name.toLowerCase().includes(query));
+  }, [availableCategories, filterCatDebouncedSearch]);
+
+  const handleFilterCatSearchChange = (value: string) => {
+    setFilterCatSearchValue(value);
+    if (filterCatDebounceRef.current) clearTimeout(filterCatDebounceRef.current);
+    filterCatDebounceRef.current = setTimeout(
+      () => setFilterCatDebouncedSearch(value),
+      300
+    );
+  };
 
   const handleExpenseAdded = () => {
     // Refresh data after expense is added
@@ -331,29 +384,97 @@ export function ExpensesView() {
           </CardDescription>
           <div className="mt-4 space-y-4">
             <div>
-              <Label htmlFor="category-filter">Filtrar por categoría</Label>
-              <Select
-                value={categoryFilter}
-                onValueChange={(value) => {
-                  setCategoryFilter(value);
-                  updateUrlParams({ category: value });
+              <Label>Filtrar por categoría</Label>
+              <Popover
+                open={filterCatPopoverOpen}
+                onOpenChange={(nextOpen) => {
+                  setFilterCatPopoverOpen(nextOpen);
+                  if (!nextOpen) {
+                    setFilterCatSearchValue('');
+                    setFilterCatDebouncedSearch('');
+                  }
                 }}
               >
-                <SelectTrigger id="category-filter" className="mt-1">
-                  <SelectValue placeholder="Todas las categorías" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas las categorías</SelectItem>
-                  {availableCategories
-                    .slice()
-                    .sort((a, b) => a.name.localeCompare(b.name))
-                    .map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={filterCatPopoverOpen}
+                    className="mt-1 w-full justify-between"
+                  >
+                    <span className="truncate">
+                      {!categoryFilter || categoryFilter === 'all'
+                        ? 'Todas las categorías'
+                        : availableCategories.find(
+                            (c) => c.id === categoryFilter
+                          )?.name || 'Todas las categorías'}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-[--radix-popover-trigger-width] p-0"
+                  align="start"
+                >
+                  <Command shouldFilter={false}>
+                    <CommandInput
+                      placeholder="Buscar categoría..."
+                      value={filterCatSearchValue}
+                      onValueChange={handleFilterCatSearchChange}
+                    />
+                    <CommandList>
+                      <CommandEmpty>
+                        No se encontraron categorías.
+                      </CommandEmpty>
+                      <CommandGroup>
+                        <CommandItem
+                          value="all"
+                          onSelect={() => {
+                            setCategoryFilter('all');
+                            updateUrlParams({ category: 'all' });
+                            setFilterCatPopoverOpen(false);
+                            setFilterCatSearchValue('');
+                            setFilterCatDebouncedSearch('');
+                          }}
+                        >
+                          <Check
+                            className={cn(
+                              'mr-2 h-4 w-4',
+                              (!categoryFilter || categoryFilter === 'all')
+                                ? 'opacity-100'
+                                : 'opacity-0'
+                            )}
+                          />
+                          Todas las categorías
+                        </CommandItem>
+                        {filterFilteredCategories.map((category) => (
+                          <CommandItem
+                            key={category.id}
+                            value={category.id}
+                            onSelect={() => {
+                              setCategoryFilter(category.id);
+                              updateUrlParams({ category: category.id });
+                              setFilterCatPopoverOpen(false);
+                              setFilterCatSearchValue('');
+                              setFilterCatDebouncedSearch('');
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                categoryFilter === category.id
+                                  ? 'opacity-100'
+                                  : 'opacity-0'
+                              )}
+                            />
+                            {category.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div>
@@ -583,43 +704,80 @@ export function ExpensesView() {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
-              <Label htmlFor="edit-category">Categoría</Label>
-              <Select
-                value={editExpense?.categoryId || ''}
-                onValueChange={(value) => {
-                  setEditExpense((prev) =>
-                    prev ? { ...prev, categoryId: value } : null
-                  );
-                  // The useEffect will handle fund selection automatically
+              <Label>Categoría</Label>
+              <Popover
+                open={editCatPopoverOpen}
+                onOpenChange={(nextOpen) => {
+                  setEditCatPopoverOpen(nextOpen);
+                  if (!nextOpen) {
+                    setEditCatSearchValue('');
+                    setEditCatDebouncedSearch('');
+                  }
                 }}
               >
-                <SelectTrigger id="edit-category">
-                  <SelectValue placeholder="Selecciona una categoría" />
-                </SelectTrigger>
-                <SelectContent>
-                  <div className="p-2">
-                    <Input
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={editCatPopoverOpen}
+                    className="w-full justify-between"
+                  >
+                    <span className="truncate">
+                      {editExpense?.categoryId
+                        ? availableCategories.find(
+                            (c) => c.id === editExpense.categoryId
+                          )?.name || 'Selecciona una categoría'
+                        : 'Selecciona una categoría'}
+                    </span>
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  className="w-[--radix-popover-trigger-width] p-0"
+                  align="start"
+                >
+                  <Command shouldFilter={false}>
+                    <CommandInput
                       placeholder="Buscar categoría..."
-                      value={categorySearch}
-                      onChange={(e) => setCategorySearch(e.target.value)}
-                      className="mb-2"
+                      value={editCatSearchValue}
+                      onValueChange={handleEditCatSearchChange}
                     />
-                  </div>
-                  {availableCategories
-                    .slice()
-                    .sort((a, b) => a.name.localeCompare(b.name))
-                    .filter((category) =>
-                      category.name
-                        .toLowerCase()
-                        .includes(categorySearch.toLowerCase())
-                    )
-                    .map((category) => (
-                      <SelectItem key={category.id} value={category.id}>
-                        {category.name}
-                      </SelectItem>
-                    ))}
-                </SelectContent>
-              </Select>
+                    <CommandList>
+                      <CommandEmpty>
+                        No se encontraron categorías.
+                      </CommandEmpty>
+                      <CommandGroup>
+                        {editFilteredCategories.map((category) => (
+                          <CommandItem
+                            key={category.id}
+                            value={category.id}
+                            onSelect={() => {
+                              setEditExpense((prev) =>
+                                prev
+                                  ? { ...prev, categoryId: category.id }
+                                  : null
+                              );
+                              setEditCatPopoverOpen(false);
+                              setEditCatSearchValue('');
+                              setEditCatDebouncedSearch('');
+                            }}
+                          >
+                            <Check
+                              className={cn(
+                                'mr-2 h-4 w-4',
+                                editExpense?.categoryId === category.id
+                                  ? 'opacity-100'
+                                  : 'opacity-0'
+                              )}
+                            />
+                            {category.name}
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
             <div className="grid gap-2">
               <Label htmlFor="edit-date">Fecha</Label>

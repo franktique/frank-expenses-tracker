@@ -5,6 +5,7 @@ import {
   BookOpen,
   CalendarRange,
   Calculator,
+  ClipboardList,
   CreditCard,
   Database,
   DollarSign,
@@ -96,6 +97,11 @@ export function AppSidebar() {
       return (
         pathname === '/dashboard/eventos' ||
         pathname.startsWith('/dashboard/eventos/')
+      );
+    }
+    if (path === '/cotizaciones') {
+      return (
+        pathname === '/cotizaciones' || pathname.startsWith('/cotizaciones/')
       );
     }
     return pathname === path;
@@ -226,6 +232,18 @@ export function AppSidebar() {
               <Link href="/dashboard/eventos">
                 <Tag className="h-4 w-4" />
                 <span>Eventos</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/cotizaciones')}
+              tooltip="Cotizaciones"
+            >
+              <Link href="/cotizaciones">
+                <ClipboardList className="h-4 w-4" />
+                <span>Cotizaciones</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

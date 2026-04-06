@@ -19,6 +19,7 @@ import {
   Wallet,
   Zap,
   Receipt,
+  HandCoins,
   ChevronRight,
   PanelLeftClose,
   PanelLeft,
@@ -293,6 +294,18 @@ export function AppSidebar() {
                 </SidebarMenuSub>
               </CollapsibleContent>
             </Collapsible>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/seguimiento-deudas')}
+              tooltip="Seguimiento Deudas"
+            >
+              <Link href="/seguimiento-deudas">
+                <HandCoins className="h-4 w-4" />
+                <span>Seguimiento Deudas</span>
+              </Link>
+            </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton

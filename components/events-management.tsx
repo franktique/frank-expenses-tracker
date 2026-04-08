@@ -563,6 +563,7 @@ export function EventsManagement() {
                   <TableHead>Nombre</TableHead>
                   <TableHead>Descripción</TableHead>
                   <TableHead>Gastos</TableHead>
+                  <TableHead>Total</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -590,6 +591,9 @@ export function EventsManagement() {
                           <Badge variant="secondary">
                             {event.expense_count ?? 0}
                           </Badge>
+                        </TableCell>
+                        <TableCell className="font-medium">
+                          {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(event.total_amount ?? 0))}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button

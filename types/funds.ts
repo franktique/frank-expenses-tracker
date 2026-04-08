@@ -320,6 +320,7 @@ export interface Event {
   name: string;
   description?: string;
   expense_count?: number;
+  total_amount?: number;
   created_at: string;
   updated_at: string;
 }

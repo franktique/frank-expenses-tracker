@@ -19,7 +19,8 @@ export async function GET(request: NextRequest) {
           ev.description,
           ev.created_at,
           ev.updated_at,
-          COUNT(e.id)::int AS expense_count
+          COUNT(e.id)::int AS expense_count,
+          COALESCE(SUM(e.amount), 0)::numeric AS total_amount
         FROM events ev
         LEFT JOIN expenses e ON e.event_id = ev.id
         WHERE ev.name ILIKE ${searchTerm}
@@ -35,7 +36,8 @@ export async function GET(request: NextRequest) {
           ev.description,
           ev.created_at,
           ev.updated_at,
-          COUNT(e.id)::int AS expense_count
+          COUNT(e.id)::int AS expense_count,
+          COALESCE(SUM(e.amount), 0)::numeric AS total_amount
         FROM events ev
         LEFT JOIN expenses e ON e.event_id = ev.id
         GROUP BY ev.id, ev.name, ev.description, ev.created_at, ev.updated_at
@@ -98,7 +100,7 @@ export async function POST(request: NextRequest) {
     `;
 
     return NextResponse.json(
-      { ...newEvent, expense_count: 0 },
+      { ...newEvent, expense_count: 0, total_amount: 0 },
       { status: 201 }
     );
   } catch (error) {

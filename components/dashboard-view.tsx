@@ -101,12 +101,17 @@ export function DashboardView() {
   const [sortBy, setSortBy] = useState<'default_day' | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
 
+  // Filter to show only categories with no payments
+  const [showOnlyUnpaid, setShowOnlyUnpaid] = useState(false);
+
   // Memoized sorted and filtered budget summary
   const sortedBudgetSummary = useMemo(() => {
     if (!dashboardData?.budgetSummary) return [];
 
     const filtered = dashboardData.budgetSummary.filter(
-      (item) => !excludedCategories.includes(item.category_id)
+      (item) =>
+        !excludedCategories.includes(item.category_id) &&
+        (!showOnlyUnpaid || item.total_amount === 0)
     );
 
     if (!sortBy) return filtered;
@@ -121,16 +126,18 @@ export function DashboardView() {
         return bValue - aValue;
       }
     });
-  }, [dashboardData?.budgetSummary, excludedCategories, sortBy, sortDirection]);
+  }, [dashboardData?.budgetSummary, excludedCategories, showOnlyUnpaid, sortBy, sortDirection]);
 
   // Memoized filtered budget summary (unsorted) for calculations
   const filteredBudgetSummary = useMemo(() => {
     if (!dashboardData?.budgetSummary) return [];
 
     return dashboardData.budgetSummary.filter(
-      (item) => !excludedCategories.includes(item.category_id)
+      (item) =>
+        !excludedCategories.includes(item.category_id) &&
+        (!showOnlyUnpaid || item.total_amount === 0)
     );
-  }, [dashboardData?.budgetSummary, excludedCategories]);
+  }, [dashboardData?.budgetSummary, excludedCategories, showOnlyUnpaid]);
 
   // Load excluded categories from localStorage on mount
   useEffect(() => {
@@ -721,6 +728,15 @@ export function DashboardView() {
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
+                  <label className="flex cursor-pointer items-center gap-2 text-sm text-muted-foreground hover:text-foreground">
+                    <input
+                      type="checkbox"
+                      checked={showOnlyUnpaid}
+                      onChange={(e) => setShowOnlyUnpaid(e.target.checked)}
+                      className="h-4 w-4 cursor-pointer"
+                    />
+                    Solo sin pagos
+                  </label>
                   <CategoryExclusionFilter
                     categories={availableCategories}
                     excludedCategories={excludedCategories}

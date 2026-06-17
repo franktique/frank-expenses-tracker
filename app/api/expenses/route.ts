@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
           e.destination_fund_id,
           e.credit_card_id,
           e.pending,
+          e.store_name,
           c.name as category_name,
           p.name as period_name,
           sf.name as source_fund_name,
@@ -63,6 +64,7 @@ export async function GET(request: NextRequest) {
           e.destination_fund_id,
           e.credit_card_id,
           e.pending,
+          e.store_name,
           c.name as category_name,
           p.name as period_name,
           sf.name as source_fund_name,
@@ -104,6 +106,7 @@ export async function GET(request: NextRequest) {
           e.destination_fund_id,
           e.credit_card_id,
           e.pending,
+          e.store_name,
           c.name as category_name,
           p.name as period_name,
           sf.name as source_fund_name,
@@ -178,6 +181,7 @@ export async function POST(request: NextRequest) {
       destination_fund_id,
       credit_card_id,
       pending,
+      store_name,
     } = validationResult.data;
 
     // Standardize date to ensure consistency with Colombia timezone
@@ -191,12 +195,12 @@ export async function POST(request: NextRequest) {
 
     // Insert the expense (source_fund_id is optional, fondos UI being removed)
     const [newExpense] = await sql`
-      INSERT INTO expenses (category_id, period_id, date, event, event_id, payment_method, description, amount, source_fund_id, destination_fund_id, credit_card_id, pending)
+      INSERT INTO expenses (category_id, period_id, date, event, event_id, payment_method, description, amount, source_fund_id, destination_fund_id, credit_card_id, pending, store_name)
       VALUES (${category_id}, ${period_id}, ${dateToSave}, ${
         event || null
       }, ${event_id ?? null}, ${payment_method}, ${description}, ${amount}, ${
         source_fund_id || null
-      }, ${destination_fund_id || null}, ${credit_card_id || null}, ${pending || false})
+      }, ${destination_fund_id || null}, ${credit_card_id || null}, ${pending || false}, ${store_name || null})
       RETURNING *
     `;
 

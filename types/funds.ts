@@ -397,7 +397,81 @@ export interface Expense {
     is_active?: boolean; // Credit card active status
   }; // Populated in joins when credit card is associated
   pending?: boolean; // New field for pending status
+  store_name?: string; // Optional store/market name for price comparison
+  category_name?: string; // Populated in joins
+  period_name?: string; // Populated in joins
 }
+
+// Category sub-group (Level 1 catalog)
+export interface CategorySubgroup {
+  id: string;
+  category_id: string;
+  name: string;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+  items?: CategoryItem[];
+}
+
+// Category item (Level 2 catalog)
+export interface CategoryItem {
+  id: string;
+  subgroup_id: string;
+  subgroup_name?: string;
+  name: string;
+  default_unit?: string;
+  display_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+// Per-expense detail record
+export interface ExpenseDetail {
+  id: string;
+  expense_id: string;
+  item_id: string;
+  item_name?: string;
+  subgroup_id?: string;
+  subgroup_name?: string;
+  amount: number;
+  quantity?: number | null;
+  unit?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export const CreateCategorySubgroupSchema = z.object({
+  name: z.string().min(1).max(255),
+  display_order: z.number().int().min(0).optional(),
+});
+
+export const UpdateCategorySubgroupSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  display_order: z.number().int().min(0).optional(),
+});
+
+export const CreateCategoryItemSchema = z.object({
+  name: z.string().min(1).max(255),
+  default_unit: z.string().max(50).optional(),
+  display_order: z.number().int().min(0).optional(),
+});
+
+export const UpdateCategoryItemSchema = z.object({
+  name: z.string().min(1).max(255).optional(),
+  default_unit: z.string().max(50).nullable().optional(),
+  display_order: z.number().int().min(0).optional(),
+});
+
+export const UpsertExpenseDetailsSchema = z.object({
+  details: z.array(
+    z.object({
+      item_id: z.string().uuid(),
+      amount: z.number().positive(),
+      quantity: z.number().positive().nullable().optional(),
+      unit: z.string().max(50).nullable().optional(),
+    })
+  ),
+});
 
 export const ExpenseSchema = z.object({
   id: z.string().uuid(),
@@ -443,6 +517,7 @@ export const CreateExpenseSchema = z.object({
   destination_fund_id: z.string().uuid().optional(),
   credit_card_id: z.string().uuid().nullable().optional(), // Optional credit card field
   pending: z.boolean().optional(), // New field for pending status
+  store_name: z.string().max(255).nullable().optional(),
 });
 
 // Expense update schema
@@ -465,6 +540,7 @@ export const UpdateExpenseSchema = z.object({
   destination_fund_id: z.string().uuid().optional(),
   credit_card_id: z.string().uuid().nullable().optional(), // Optional credit card field for updates
   pending: z.boolean().optional(), // New field for pending status
+  store_name: z.string().max(255).nullable().optional(),
 });
 
 // Existing interfaces that don't need fund support but are included for completeness

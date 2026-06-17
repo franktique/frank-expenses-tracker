@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { PlusCircle, AlertTriangle, CreditCard as CreditCardIcon } from 'lucide-react';
+import { PlusCircle, AlertTriangle, CreditCard as CreditCardIcon, List } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -59,6 +59,7 @@ import {
 } from '@/components/ui/select';
 import { CreditCardSelector } from '@/components/credit-card-selector';
 import { CreditCard as CreditCardType, CREDIT_CARD_FRANCHISE_LABELS } from '@/types/credit-cards';
+import { CategorySubcatalogDialog } from '@/components/category-subcatalog-dialog';
 
 export function CategoriesView() {
   const {
@@ -98,6 +99,8 @@ export function CategoriesView() {
     hasExpenses: boolean;
     expenseCount: number;
   } | null>(null);
+  const [isSubcatalogOpen, setIsSubcatalogOpen] = useState(false);
+  const [subcatalogCategory, setSubcatalogCategory] = useState<Category | null>(null);
 
   // All categories (no fund filter)
   const filteredCategories = categories || [];
@@ -552,6 +555,18 @@ export function CategoriesView() {
                       <Button
                         variant="ghost"
                         size="sm"
+                        onClick={() => {
+                          setSubcatalogCategory(category);
+                          setIsSubcatalogOpen(true);
+                        }}
+                        title="Gestionar sub-categorías"
+                      >
+                        <List className="h-4 w-4 mr-1" />
+                        Sub-cat.
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => handleEditClick(category)}
                       >
                         Editar
@@ -783,6 +798,17 @@ export function CategoriesView() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {subcatalogCategory && (
+        <CategorySubcatalogDialog
+          open={isSubcatalogOpen}
+          onOpenChange={(open) => {
+            setIsSubcatalogOpen(open);
+            if (!open) setSubcatalogCategory(null);
+          }}
+          category={subcatalogCategory}
+        />
+      )}
     </div>
   );
 }

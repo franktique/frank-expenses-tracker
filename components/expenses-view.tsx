@@ -6,6 +6,7 @@ import {
   Check,
   ChevronsUpDown,
   FileUp,
+  List,
   PlusCircle,
   Download,
 } from 'lucide-react';
@@ -70,7 +71,8 @@ import {
 import { CreditCardSelector } from '@/components/credit-card-selector';
 import { EventSelector } from '@/components/event-selector';
 import { CreditCard, CREDIT_CARD_FRANCHISE_LABELS } from '@/types/credit-cards';
-import { Event } from '@/types/funds';
+import { Event, Expense } from '@/types/funds';
+import { ExpenseDetailDialog } from '@/components/expense-detail-dialog';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 export function ExpensesView() {
@@ -115,6 +117,10 @@ export function ExpensesView() {
   const [editCatPopoverOpen, setEditCatPopoverOpen] = useState(false);
   const editCatDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [detailExpense, setDetailExpense] = useState<Expense | null>(null);
+  const [categoryCatalogMap, setCategoryCatalogMap] = useState<Record<string, boolean>>({});
+
   const [editExpense, setEditExpense] = useState<{
     id: string;
     categoryId: string;
@@ -125,6 +131,7 @@ export function ExpensesView() {
     amount: string;
     creditCardId?: string;
     pending: boolean;
+    storeName: string;
   } | null>(null);
   const [editExpenseCreditCard, setEditExpenseCreditCard] =
     useState<CreditCard | null>(null);
@@ -178,6 +185,17 @@ export function ExpensesView() {
 
     fetchCreditCards();
   }, []);
+
+  // Fetch catalog status for all visible category IDs
+  useEffect(() => {
+    if (!expenses || expenses.length === 0) return;
+    const uniqueIds = [...new Set(expenses.map((e) => e.category_id))];
+    if (uniqueIds.length === 0) return;
+    fetch(`/api/categories/catalog-status?ids=${uniqueIds.join(',')}`)
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((data) => setCategoryCatalogMap(data))
+      .catch(() => {});
+  }, [expenses]);
 
   // All categories are available (no fund filter)
   const availableCategories = categories || [];
@@ -265,7 +283,8 @@ export function ExpensesView() {
       undefined, // No destination fund
       editExpenseCreditCard?.id,
       editExpense.pending,
-      editExpenseEvent?.id
+      editExpenseEvent?.id,
+      editExpense.storeName || undefined
     );
 
     setEditExpense(null);
@@ -540,6 +559,7 @@ export function ExpensesView() {
                 <TableHead>Fecha</TableHead>
                 <TableHead>Categoría</TableHead>
                 <TableHead>Descripción</TableHead>
+                <TableHead>Tienda</TableHead>
                 <TableHead>Medio</TableHead>
                 <TableHead>Tarjeta</TableHead>
                 <TableHead className="text-right">Monto</TableHead>
@@ -567,6 +587,13 @@ export function ExpensesView() {
                         <span className="block text-xs text-muted-foreground">
                           Evento: {expense.event}
                         </span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {expense.store_name ? (
+                        <span className="text-sm">{expense.store_name}</span>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">-</span>
                       )}
                     </TableCell>
                     <TableCell>
@@ -604,6 +631,23 @@ export function ExpensesView() {
                       <Button
                         variant="ghost"
                         size="sm"
+                        disabled={!categoryCatalogMap[expense.category_id]}
+                        className={
+                          categoryCatalogMap[expense.category_id]
+                            ? 'text-primary'
+                            : 'text-muted-foreground'
+                        }
+                        title="Ver / agregar detalle de ítems"
+                        onClick={() => {
+                          setDetailExpense(expense as Expense);
+                          setIsDetailOpen(true);
+                        }}
+                      >
+                        <List className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => {
                           setEditExpense({
                             id: expense.id,
@@ -615,6 +659,7 @@ export function ExpensesView() {
                             amount: expense.amount.toString(),
                             creditCardId: expense.credit_card_id,
                             pending: expense.pending || false,
+                            storeName: expense.store_name || '',
                           });
                           // Set the credit card for editing
                           // We'll need to fetch the credit card if it exists
@@ -670,7 +715,7 @@ export function ExpensesView() {
               {(!filteredExpenses || filteredExpenses.length === 0) && (
                 <TableRow>
                   <TableCell
-                    colSpan={9}
+                    colSpan={8}
                     className="py-4 text-center text-muted-foreground"
                   >
                     {!dataLoaded
@@ -906,6 +951,19 @@ export function ExpensesView() {
                 showOnlyActive={true}
               />
             </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-store-name">Tienda / Comercio (opcional)</Label>
+              <Input
+                id="edit-store-name"
+                placeholder="Ej: Éxito, Carulla..."
+                value={editExpense?.storeName || ''}
+                onChange={(e) =>
+                  setEditExpense((prev) =>
+                    prev ? { ...prev, storeName: e.target.value } : null
+                  )
+                }
+              />
+            </div>
           </div>
           <DialogFooter>
             <Button
@@ -949,6 +1007,17 @@ export function ExpensesView() {
         open={isImportOpen}
         onOpenChange={setIsImportOpen}
       />
+
+      {detailExpense && (
+        <ExpenseDetailDialog
+          open={isDetailOpen}
+          onOpenChange={(open) => {
+            setIsDetailOpen(open);
+            if (!open) setDetailExpense(null);
+          }}
+          expense={detailExpense}
+        />
+      )}
     </div>
   );
 }

@@ -113,6 +113,7 @@ export function ExpenseFormDialog({
   const [newExpenseCreditCard, setNewExpenseCreditCard] =
     useState<CreditCard | null>(null);
   const [newExpensePending, setNewExpensePending] = useState(false);
+  const [newExpenseStoreName, setNewExpenseStoreName] = useState('');
 
   // Categories (all categories, no fund filter)
   const availableCategories = categories;
@@ -164,6 +165,7 @@ export function ExpenseFormDialog({
       setNewExpenseAmount('');
       setNewExpenseCreditCard(null);
       setNewExpensePending(false);
+      setNewExpenseStoreName('');
       setCategorySearchValue('');
       setCategoryDebouncedSearch('');
       if (categoryDebounceRef.current) clearTimeout(categoryDebounceRef.current);
@@ -180,6 +182,7 @@ export function ExpenseFormDialog({
     setNewExpenseAmount('');
     setNewExpenseCreditCard(null);
     setNewExpensePending(false);
+    setNewExpenseStoreName('');
     setCategorySearchValue('');
     setCategoryDebouncedSearch('');
     if (categoryDebounceRef.current) clearTimeout(categoryDebounceRef.current);
@@ -225,7 +228,8 @@ export function ExpenseFormDialog({
         undefined, // No destination fund
         newExpenseCreditCard?.id,
         newExpensePending,
-        selectedEvent?.id // event_id
+        selectedEvent?.id, // event_id
+        newExpenseStoreName || undefined
       );
 
       resetForm();
@@ -489,6 +493,16 @@ export function ExpenseFormDialog({
               showNoCardOption={true}
               required={false}
               showOnlyActive={true}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="store-name">Tienda / Comercio (opcional)</Label>
+            <Input
+              id="store-name"
+              placeholder="Ej: Éxito, Carulla, Rappi..."
+              value={newExpenseStoreName}
+              onChange={(e) => setNewExpenseStoreName(e.target.value)}
             />
           </div>
         </div>

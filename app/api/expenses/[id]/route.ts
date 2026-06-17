@@ -99,6 +99,7 @@ export async function PUT(
       destination_fund_id,
       credit_card_id,
       pending,
+      store_name,
     } = validationResult.data;
 
     // Use existing values if not provided
@@ -143,6 +144,10 @@ export async function PUT(
       `;
     }
 
+    // Use existing store_name if not provided in update
+    const storeNameToSave =
+      store_name !== undefined ? store_name : existingExpense.store_name;
+
     // Update the expense
     const [updatedExpense] = await sql`
       UPDATE expenses
@@ -157,7 +162,8 @@ export async function PUT(
         source_fund_id = ${source_fund_id},
         destination_fund_id = ${destination_fund_id || null},
         credit_card_id = ${credit_card_id || null},
-        pending = ${pending || false}
+        pending = ${pending || false},
+        store_name = ${storeNameToSave || null}
       WHERE id = ${id}
       RETURNING *
     `;

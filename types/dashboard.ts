@@ -195,3 +195,31 @@ export function hasPaymentMethodFiltering(
     filter.estudio_based_filtering
   );
 }
+
+// ─── Historical Expenses (Historial Tab) ───
+
+export interface HistoricalPeriodInfo {
+  period_id: string;
+  period_name: string;
+  month: number;
+  year: number;
+  is_open: boolean;
+}
+
+export interface HistoricalCategoryRow {
+  category_id: string;
+  category_name: string;
+  byPeriod: Record<
+    string,
+    { credit_amount: number; cash_debit_amount: number }
+  >;
+}
+
+export interface HistoricalData {
+  periods: HistoricalPeriodInfo[];
+  categories: HistoricalCategoryRow[];
+  totals: Record<
+    string,
+    { credit_amount: number; cash_debit_amount: number }
+  >;
+}

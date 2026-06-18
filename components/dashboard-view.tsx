@@ -48,6 +48,7 @@ import {
   CumulativeExpensesChart,
   DailyExpensesChart,
 } from './dashboard-charts';
+import { HistoricalExpensesView } from '@/components/historical-expenses-view';
 import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
 import { CategoryExclusionFilter } from '@/components/category-exclusion-filter';
@@ -510,11 +511,12 @@ export function DashboardView() {
       </div>
 
       <Tabs defaultValue="summary" className="mt-6 w-full max-w-full">
-        <TabsList className="grid w-full max-w-full grid-cols-4">
+        <TabsList className="grid w-full max-w-full grid-cols-5">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
           <TabsTrigger value="daily">Gastos Diarios</TabsTrigger>
           <TabsTrigger value="cumulative">Gastos Acumulados</TabsTrigger>
           <TabsTrigger value="categories">Por Categoría</TabsTrigger>
+          <TabsTrigger value="history">Historial</TabsTrigger>
         </TabsList>
 
         <TabsContent value="summary" className="mt-6">
@@ -1077,6 +1079,13 @@ export function DashboardView() {
           <div className="w-full max-w-full p-0">
             <CategoryExpensesChart periodId={dashboardData.activePeriod.id} />
           </div>
+        </TabsContent>
+
+        <TabsContent value="history" className="mt-6 w-full max-w-full p-0">
+          <HistoricalExpensesView
+            categoryIds={sortedBudgetSummary.map((c) => c.category_id)}
+            categoryOrder={sortedBudgetSummary.map((c) => c.category_id)}
+          />
         </TabsContent>
       </Tabs>
 

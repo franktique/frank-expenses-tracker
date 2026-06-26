@@ -35,6 +35,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
 import { useBudget, PaymentMethod } from '@/context/budget-context';
 import { formatCurrency } from '@/lib/utils';
@@ -44,6 +45,7 @@ export function BudgetsView() {
     categories,
     periods,
     budgets,
+    expenses,
     activePeriod,
     addBudget,
     updateBudget,
@@ -54,6 +56,7 @@ export function BudgetsView() {
     activePeriod?.id || ''
   );
   const [comparisonPeriodId, setComparisonPeriodId] = useState<string>('');
+  const [comparisonMode, setComparisonMode] = useState<'budget' | 'actual'>('budget');
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editCategory, setEditCategory] = useState<{
     id: string;
@@ -83,6 +86,23 @@ export function BudgetsView() {
 
   // Get inactive periods for comparison dropdown (exclude active period)
   const inactivePeriods = periods.filter((p) => !p.isOpen);
+
+  // Pre-aggregate actual expenses for comparison period by category
+  const comparisonActualByCategory: Record<string, { cash: number; credit: number }> = {};
+  if (comparisonPeriod && comparisonMode === 'actual') {
+    for (const expense of expenses) {
+      if (expense.period_id !== comparisonPeriod.id) continue;
+      const catId = expense.category_id;
+      if (!comparisonActualByCategory[catId]) {
+        comparisonActualByCategory[catId] = { cash: 0, credit: 0 };
+      }
+      if (expense.payment_method === 'cash' || expense.payment_method === 'debit') {
+        comparisonActualByCategory[catId].cash += Number(expense.amount);
+      } else if (expense.payment_method === 'credit') {
+        comparisonActualByCategory[catId].credit += Number(expense.amount);
+      }
+    }
+  }
 
   const handleEditBudget = () => {
     if (!editCategory || !selectedPeriod) return;
@@ -204,6 +224,21 @@ export function BudgetsView() {
                   </SelectContent>
                 </Select>
               </div>
+              {comparisonPeriodId && (
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm text-muted-foreground">Mostrar:</Label>
+                  <span className={`text-sm ${comparisonMode === 'budget' ? 'font-medium' : 'text-muted-foreground'}`}>
+                    Presupuestado
+                  </span>
+                  <Switch
+                    checked={comparisonMode === 'actual'}
+                    onCheckedChange={(checked) => setComparisonMode(checked ? 'actual' : 'budget')}
+                  />
+                  <span className={`text-sm ${comparisonMode === 'actual' ? 'font-medium' : 'text-muted-foreground'}`}>
+                    Real
+                  </span>
+                </div>
+              )}
             </div>
           </div>
         </CardHeader>
@@ -288,13 +323,13 @@ export function BudgetsView() {
                   {comparisonPeriod && (
                     <>
                       <TableHead className="bg-muted/50 text-right text-muted-foreground">
-                        Efectivo (Ref)
+                        {comparisonMode === 'actual' ? 'Efectivo Real (Ref)' : 'Efectivo (Ref)'}
                       </TableHead>
                       <TableHead className="bg-muted/50 text-right text-muted-foreground">
-                        Crédito (Ref)
+                        {comparisonMode === 'actual' ? 'Crédito Real (Ref)' : 'Crédito (Ref)'}
                       </TableHead>
                       <TableHead className="bg-muted/50 text-right text-muted-foreground">
-                        Total (Ref)
+                        {comparisonMode === 'actual' ? 'Total Real (Ref)' : 'Total (Ref)'}
                       </TableHead>
                     </>
                   )}
@@ -340,13 +375,14 @@ export function BudgetsView() {
                         b.payment_method === 'credit'
                     );
 
-                    const comparisonTotalAmount =
-                      (comparisonCashBudget
-                        ? Number(comparisonCashBudget.expected_amount)
-                        : 0) +
-                      (comparisonCreditBudget
-                        ? Number(comparisonCreditBudget.expected_amount)
-                        : 0);
+                    // Reference column values (budget or actual expenses depending on mode)
+                    const refCash = comparisonMode === 'actual'
+                      ? (comparisonActualByCategory[category.id]?.cash || 0)
+                      : (comparisonCashBudget ? Number(comparisonCashBudget.expected_amount) : 0);
+                    const refCredit = comparisonMode === 'actual'
+                      ? (comparisonActualByCategory[category.id]?.credit || 0)
+                      : (comparisonCreditBudget ? Number(comparisonCreditBudget.expected_amount) : 0);
+                    const refTotal = refCash + refCredit;
 
                     return (
                       <TableRow key={category.id}>
@@ -356,17 +392,13 @@ export function BudgetsView() {
                         {comparisonPeriod && (
                           <>
                             <TableCell className="bg-muted/30 text-right text-muted-foreground">
-                              {formatCurrency(
-                                comparisonCashBudget?.expected_amount || 0
-                              )}
+                              {formatCurrency(refCash)}
                             </TableCell>
                             <TableCell className="bg-muted/30 text-right text-muted-foreground">
-                              {formatCurrency(
-                                comparisonCreditBudget?.expected_amount || 0
-                              )}
+                              {formatCurrency(refCredit)}
                             </TableCell>
                             <TableCell className="bg-muted/30 text-right font-medium text-muted-foreground">
-                              {formatCurrency(comparisonTotalAmount)}
+                              {formatCurrency(refTotal)}
                             </TableCell>
                           </>
                         )}

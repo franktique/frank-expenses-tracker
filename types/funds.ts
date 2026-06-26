@@ -319,6 +319,8 @@ export interface Event {
   id: number;
   name: string;
   description?: string;
+  start_date?: string;
+  end_date?: string;
   expense_count?: number;
   total_amount?: number;
   created_at: string;
@@ -349,6 +351,16 @@ export const CreateEventSchema = z.object({
     .string()
     .max(1000, 'La descripción es demasiado larga')
     .optional(),
+  start_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida')
+    .nullable()
+    .optional(),
+  end_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida')
+    .nullable()
+    .optional(),
 });
 
 export const UpdateEventSchema = z.object({
@@ -360,6 +372,16 @@ export const UpdateEventSchema = z.object({
   description: z
     .string()
     .max(1000, 'La descripción es demasiado larga')
+    .optional(),
+  start_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida')
+    .nullable()
+    .optional(),
+  end_date: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida')
+    .nullable()
     .optional(),
 });
 

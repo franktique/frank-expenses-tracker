@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { PlusCircle, Tag, AlertTriangle, ChevronDown, ChevronUp, Search, X, Pencil, Check, BarChart3 } from 'lucide-react';
+import { PlusCircle, Tag, AlertTriangle, ChevronDown, ChevronUp, Search, X, Pencil, Check, BarChart3, CalendarSearch } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Button } from '@/components/ui/button';
 import {
@@ -50,6 +50,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Event } from '@/types/funds';
 import { formatDate } from '@/lib/utils';
 
@@ -66,13 +67,37 @@ export function EventsManagement() {
   // Form state for adding
   const [newEventName, setNewEventName] = useState('');
   const [newEventDescription, setNewEventDescription] = useState('');
+  const [newEventStartDate, setNewEventStartDate] = useState('');
+  const [newEventEndDate, setNewEventEndDate] = useState('');
   const [addNameError, setAddNameError] = useState('');
+  const [addDateError, setAddDateError] = useState('');
 
   // Form state for editing
   const [editEvent, setEditEvent] = useState<Event | null>(null);
   const [editEventName, setEditEventName] = useState('');
   const [editEventDescription, setEditEventDescription] = useState('');
+  const [editEventStartDate, setEditEventStartDate] = useState('');
+  const [editEventEndDate, setEditEventEndDate] = useState('');
   const [editNameError, setEditNameError] = useState('');
+  const [editDateError, setEditDateError] = useState('');
+
+  // Match expenses dialog state
+  interface MatchExpense {
+    id: string;
+    description: string | null;
+    amount: number;
+    payment_method: string;
+    date: string;
+    category_name: string | null;
+    current_event_name: string | null;
+    current_event_id: number | null;
+  }
+  const [matchDialogOpen, setMatchDialogOpen] = useState(false);
+  const [matchingEvent, setMatchingEvent] = useState<Event | null>(null);
+  const [matchingExpenses, setMatchingExpenses] = useState<MatchExpense[]>([]);
+  const [selectedExpenseIds, setSelectedExpenseIds] = useState<Set<string>>(new Set());
+  const [isLoadingMatches, setIsLoadingMatches] = useState(false);
+  const [isAssociating, setIsAssociating] = useState(false);
 
   // Delete state
   const [deleteId, setDeleteId] = useState<number | null>(null);
@@ -153,9 +178,16 @@ export function EventsManagement() {
     ), [eventExpenses]);
 
   const filteredEvents = useMemo(() => {
-    const sorted = [...events].sort((a, b) =>
-      a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })
-    );
+    const sorted = [...events].sort((a, b) => {
+      const aHasDates = !!(a.start_date && a.end_date);
+      const bHasDates = !!(b.start_date && b.end_date);
+      if (aHasDates && !bHasDates) return -1;
+      if (!aHasDates && bHasDates) return 1;
+      if (aHasDates && bHasDates) {
+        return new Date(b.start_date!).getTime() - new Date(a.start_date!).getTime();
+      }
+      return a.name.localeCompare(b.name, 'es', { sensitivity: 'base' });
+    });
     if (!searchFilter.trim()) return sorted;
     const query = searchFilter.trim().toLowerCase();
     return sorted.filter(
@@ -212,20 +244,31 @@ export function EventsManagement() {
   const resetAddForm = () => {
     setNewEventName('');
     setNewEventDescription('');
+    setNewEventStartDate('');
+    setNewEventEndDate('');
     setAddNameError('');
+    setAddDateError('');
   };
 
   const resetEditForm = () => {
     setEditEvent(null);
     setEditEventName('');
     setEditEventDescription('');
+    setEditEventStartDate('');
+    setEditEventEndDate('');
     setEditNameError('');
+    setEditDateError('');
   };
 
   const handleAddEvent = async () => {
     setAddNameError('');
+    setAddDateError('');
     if (!newEventName.trim()) {
       setAddNameError('El nombre del evento es obligatorio');
+      return;
+    }
+    if (newEventStartDate && newEventEndDate && newEventEndDate < newEventStartDate) {
+      setAddDateError('La fecha fin debe ser mayor o igual a la fecha inicio');
       return;
     }
 
@@ -237,6 +280,8 @@ export function EventsManagement() {
         body: JSON.stringify({
           name: newEventName.trim(),
           description: newEventDescription.trim() || undefined,
+          start_date: newEventStartDate || null,
+          end_date: newEventEndDate || null,
         }),
       });
 
@@ -272,8 +317,13 @@ export function EventsManagement() {
   const handleEditEvent = async () => {
     if (!editEvent) return;
     setEditNameError('');
+    setEditDateError('');
     if (!editEventName.trim()) {
       setEditNameError('El nombre del evento es obligatorio');
+      return;
+    }
+    if (editEventStartDate && editEventEndDate && editEventEndDate < editEventStartDate) {
+      setEditDateError('La fecha fin debe ser mayor o igual a la fecha inicio');
       return;
     }
 
@@ -285,6 +335,8 @@ export function EventsManagement() {
         body: JSON.stringify({
           name: editEventName.trim(),
           description: editEventDescription.trim() || undefined,
+          start_date: editEventStartDate || null,
+          end_date: editEventEndDate || null,
         }),
       });
 
@@ -373,8 +425,83 @@ export function EventsManagement() {
     setEditEvent(event);
     setEditEventName(event.name);
     setEditEventDescription(event.description ?? '');
+    setEditEventStartDate(event.start_date ? event.start_date.split('T')[0] : '');
+    setEditEventEndDate(event.end_date ? event.end_date.split('T')[0] : '');
     setEditNameError('');
+    setEditDateError('');
     setIsEditOpen(true);
+  };
+
+  const handleFindMatchingExpenses = async (event: Event) => {
+    setMatchingEvent(event);
+    setMatchDialogOpen(true);
+    setSelectedExpenseIds(new Set());
+    setMatchingExpenses([]);
+    setIsLoadingMatches(true);
+    try {
+      const response = await fetch(`/api/events/${event.id}/match-expenses`);
+      if (!response.ok) throw new Error('Failed to load matching expenses');
+      const data = await response.json();
+      setMatchingExpenses(data.expenses ?? []);
+    } catch (error) {
+      console.error('Error loading matching expenses:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudieron cargar los gastos concordantes',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoadingMatches(false);
+    }
+  };
+
+  const handleAssociateExpenses = async () => {
+    if (!matchingEvent || selectedExpenseIds.size === 0) return;
+    setIsAssociating(true);
+    try {
+      const response = await fetch(`/api/events/${matchingEvent.id}/associate-expenses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ expense_ids: Array.from(selectedExpenseIds) }),
+      });
+      if (!response.ok) throw new Error('Failed to associate expenses');
+      const data = await response.json();
+      toast({
+        title: 'Gastos asociados',
+        description: `${data.updated} gasto(s) asociado(s) al evento exitosamente`,
+      });
+      setMatchDialogOpen(false);
+      setMatchingEvent(null);
+      setMatchingExpenses([]);
+      setSelectedExpenseIds(new Set());
+      await loadEvents();
+    } catch (error) {
+      console.error('Error associating expenses:', error);
+      toast({
+        title: 'Error',
+        description: 'No se pudieron asociar los gastos',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsAssociating(false);
+    }
+  };
+
+  const toggleExpenseSelection = (id: string) => {
+    setSelectedExpenseIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAllExpenses = () => {
+    if (selectedExpenseIds.size === matchingExpenses.length) {
+      setSelectedExpenseIds(new Set());
+    } else {
+      setSelectedExpenseIds(new Set(matchingExpenses.map((e) => e.id)));
+    }
   };
 
   const handleReassignEvent = async (expenseId: string) => {
@@ -483,6 +610,29 @@ export function EventsManagement() {
                   rows={3}
                 />
               </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="grid gap-2">
+                  <Label htmlFor="event-start-date">Fecha inicio (opcional)</Label>
+                  <Input
+                    id="event-start-date"
+                    type="date"
+                    value={newEventStartDate}
+                    onChange={(e) => { setNewEventStartDate(e.target.value); setAddDateError(''); }}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="event-end-date">Fecha fin (opcional)</Label>
+                  <Input
+                    id="event-end-date"
+                    type="date"
+                    value={newEventEndDate}
+                    onChange={(e) => { setNewEventEndDate(e.target.value); setAddDateError(''); }}
+                  />
+                </div>
+              </div>
+              {addDateError && (
+                <p className="text-sm text-destructive">{addDateError}</p>
+              )}
             </div>
             <DialogFooter>
               <Button
@@ -562,6 +712,7 @@ export function EventsManagement() {
                 <TableRow>
                   <TableHead>Nombre</TableHead>
                   <TableHead>Descripción</TableHead>
+                  <TableHead>Período</TableHead>
                   <TableHead>Gastos</TableHead>
                   <TableHead>Total</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
@@ -587,6 +738,15 @@ export function EventsManagement() {
                         <TableCell className="text-muted-foreground">
                           {event.description ?? '—'}
                         </TableCell>
+                        <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
+                          {event.start_date && event.end_date ? (
+                            <span>
+                              {formatDate(event.start_date, { day: '2-digit', month: 'short' })}
+                              {' – '}
+                              {formatDate(event.end_date, { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </span>
+                          ) : '—'}
+                        </TableCell>
                         <TableCell>
                           <Badge variant="secondary">
                             {event.expense_count ?? 0}
@@ -596,6 +756,16 @@ export function EventsManagement() {
                           {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(event.total_amount ?? 0))}
                         </TableCell>
                         <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            title={!event.start_date || !event.end_date ? 'Define fechas inicio y fin para buscar concordancias' : 'Buscar gastos concordantes'}
+                            disabled={!event.start_date || !event.end_date}
+                            onClick={(e) => { e.stopPropagation(); handleFindMatchingExpenses(event); }}
+                          >
+                            <CalendarSearch className="mr-1 h-4 w-4" />
+                            Concordancias
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -615,7 +785,7 @@ export function EventsManagement() {
                       </TableRow>
                       {selectedEventId === event.id && (
                         <TableRow>
-                          <TableCell colSpan={4} className="bg-muted/30 p-0">
+                          <TableCell colSpan={6} className="bg-muted/30 p-0">
                             <div className="p-4">
                               {isLoadingExpenses ? (
                                 <p className="text-center text-sm text-muted-foreground">Cargando gastos...</p>
@@ -906,6 +1076,29 @@ export function EventsManagement() {
                 rows={3}
               />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="grid gap-2">
+                <Label htmlFor="edit-event-start-date">Fecha inicio (opcional)</Label>
+                <Input
+                  id="edit-event-start-date"
+                  type="date"
+                  value={editEventStartDate}
+                  onChange={(e) => { setEditEventStartDate(e.target.value); setEditDateError(''); }}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="edit-event-end-date">Fecha fin (opcional)</Label>
+                <Input
+                  id="edit-event-end-date"
+                  type="date"
+                  value={editEventEndDate}
+                  onChange={(e) => { setEditEventEndDate(e.target.value); setEditDateError(''); }}
+                />
+              </div>
+            </div>
+            {editDateError && (
+              <p className="text-sm text-destructive">{editDateError}</p>
+            )}
           </div>
           <DialogFooter>
             <Button
@@ -921,6 +1114,122 @@ export function EventsManagement() {
             <Button onClick={handleEditEvent} disabled={isSubmitting}>
               {isSubmitting ? 'Guardando...' : 'Guardar'}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Match Expenses Dialog */}
+      <Dialog
+        open={matchDialogOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setMatchDialogOpen(false);
+            setMatchingEvent(null);
+            setMatchingExpenses([]);
+            setSelectedExpenseIds(new Set());
+          }
+        }}
+      >
+        <DialogContent className="max-w-4xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CalendarSearch className="h-5 w-5" />
+              Gastos concordantes — {matchingEvent?.name}
+            </DialogTitle>
+            <DialogDescription>
+              {matchingEvent?.start_date && matchingEvent?.end_date
+                ? `Gastos del ${formatDate(matchingEvent.start_date, { day: '2-digit', month: 'short', year: 'numeric' })} al ${formatDate(matchingEvent.end_date, { day: '2-digit', month: 'short', year: 'numeric' })} que no están asociados a este evento.`
+                : ''}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-auto">
+            {isLoadingMatches ? (
+              <p className="text-center text-sm text-muted-foreground py-8">Buscando gastos concordantes...</p>
+            ) : matchingExpenses.length === 0 ? (
+              <p className="text-center text-sm text-muted-foreground py-8">
+                No se encontraron gastos en este período sin asociar al evento.
+              </p>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={selectedExpenseIds.size === matchingExpenses.length && matchingExpenses.length > 0}
+                        onCheckedChange={toggleAllExpenses}
+                        aria-label="Seleccionar todos"
+                      />
+                    </TableHead>
+                    <TableHead>Descripción</TableHead>
+                    <TableHead>Categoría</TableHead>
+                    <TableHead className="text-right">Monto</TableHead>
+                    <TableHead>Tipo de Pago</TableHead>
+                    <TableHead>Fecha</TableHead>
+                    <TableHead>Evento actual</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {matchingExpenses.map((expense) => (
+                    <TableRow
+                      key={expense.id}
+                      className={`cursor-pointer ${selectedExpenseIds.has(expense.id) ? 'bg-primary/10' : ''}`}
+                      onClick={() => toggleExpenseSelection(expense.id)}
+                    >
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedExpenseIds.has(expense.id)}
+                          onCheckedChange={() => toggleExpenseSelection(expense.id)}
+                          aria-label="Seleccionar gasto"
+                        />
+                      </TableCell>
+                      <TableCell>{expense.description ?? '—'}</TableCell>
+                      <TableCell className="text-muted-foreground">{expense.category_name ?? '—'}</TableCell>
+                      <TableCell className="text-right font-medium">
+                        {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(Number(expense.amount))}
+                      </TableCell>
+                      <TableCell>
+                        {expense.payment_method === 'credito' ? 'Tarjeta de Crédito' : 'Efectivo/Débito'}
+                      </TableCell>
+                      <TableCell className="whitespace-nowrap">
+                        {formatDate(expense.date, { day: '2-digit', month: 'short', year: 'numeric' })}
+                      </TableCell>
+                      <TableCell className="text-muted-foreground text-sm">
+                        {expense.current_event_name ?? <span className="italic">Sin evento</span>}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
+          </div>
+          <DialogFooter className="mt-4 flex items-center justify-between gap-2">
+            <p className="text-sm text-muted-foreground">
+              {selectedExpenseIds.size > 0
+                ? `${selectedExpenseIds.size} de ${matchingExpenses.length} seleccionado(s)`
+                : `${matchingExpenses.length} gasto(s) encontrado(s)`}
+            </p>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setMatchDialogOpen(false);
+                  setMatchingEvent(null);
+                  setMatchingExpenses([]);
+                  setSelectedExpenseIds(new Set());
+                }}
+                disabled={isAssociating}
+              >
+                Cancelar
+              </Button>
+              <Button
+                disabled={selectedExpenseIds.size === 0 || isAssociating}
+                onClick={handleAssociateExpenses}
+              >
+                {isAssociating
+                  ? 'Asociando...'
+                  : `Asociar${selectedExpenseIds.size > 0 ? ` (${selectedExpenseIds.size})` : ''} a evento`}
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>

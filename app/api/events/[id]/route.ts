@@ -18,13 +18,15 @@ export async function GET(
         ev.id,
         ev.name,
         ev.description,
+        ev.start_date,
+        ev.end_date,
         ev.created_at,
         ev.updated_at,
         COUNT(e.id)::int AS expense_count
       FROM events ev
       LEFT JOIN expenses e ON e.event_id = ev.id
       WHERE ev.id = ${eventId}
-      GROUP BY ev.id, ev.name, ev.description, ev.created_at, ev.updated_at
+      GROUP BY ev.id, ev.name, ev.description, ev.start_date, ev.end_date, ev.created_at, ev.updated_at
     `;
 
     if (!event) {
@@ -61,7 +63,7 @@ export async function PUT(
       );
     }
 
-    const { name, description } = validationResult.data;
+    const { name, description, start_date, end_date } = validationResult.data;
 
     // Fetch existing event
     const [existing] = await sql`SELECT * FROM events WHERE id = ${eventId}`;
@@ -72,6 +74,10 @@ export async function PUT(
     const newName = name !== undefined ? name.trim() : existing.name;
     const newDescription =
       description !== undefined ? description : existing.description;
+    const newStartDate =
+      start_date !== undefined ? start_date : existing.start_date;
+    const newEndDate =
+      end_date !== undefined ? end_date : existing.end_date;
 
     // Check for duplicate name if name is being changed
     if (
@@ -97,9 +103,11 @@ export async function PUT(
       SET
         name        = ${newName},
         description = ${newDescription ?? null},
+        start_date  = ${newStartDate ?? null},
+        end_date    = ${newEndDate ?? null},
         updated_at  = NOW()
       WHERE id = ${eventId}
-      RETURNING id, name, description, created_at, updated_at
+      RETURNING id, name, description, start_date, end_date, created_at, updated_at
     `;
 
     // Return with expense_count
@@ -108,13 +116,15 @@ export async function PUT(
         ev.id,
         ev.name,
         ev.description,
+        ev.start_date,
+        ev.end_date,
         ev.created_at,
         ev.updated_at,
         COUNT(e.id)::int AS expense_count
       FROM events ev
       LEFT JOIN expenses e ON e.event_id = ev.id
       WHERE ev.id = ${updatedEvent.id}
-      GROUP BY ev.id, ev.name, ev.description, ev.created_at, ev.updated_at
+      GROUP BY ev.id, ev.name, ev.description, ev.start_date, ev.end_date, ev.created_at, ev.updated_at
     `;
 
     return NextResponse.json(eventWithCount);

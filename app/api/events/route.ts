@@ -17,6 +17,8 @@ export async function GET(request: NextRequest) {
           ev.id,
           ev.name,
           ev.description,
+          ev.start_date,
+          ev.end_date,
           ev.created_at,
           ev.updated_at,
           COUNT(e.id)::int AS expense_count,
@@ -24,7 +26,7 @@ export async function GET(request: NextRequest) {
         FROM events ev
         LEFT JOIN expenses e ON e.event_id = ev.id
         WHERE ev.name ILIKE ${searchTerm}
-        GROUP BY ev.id, ev.name, ev.description, ev.created_at, ev.updated_at
+        GROUP BY ev.id, ev.name, ev.description, ev.start_date, ev.end_date, ev.created_at, ev.updated_at
         ORDER BY ev.name ASC
         LIMIT ${limit}
       `;
@@ -34,13 +36,15 @@ export async function GET(request: NextRequest) {
           ev.id,
           ev.name,
           ev.description,
+          ev.start_date,
+          ev.end_date,
           ev.created_at,
           ev.updated_at,
           COUNT(e.id)::int AS expense_count,
           COALESCE(SUM(e.amount), 0)::numeric AS total_amount
         FROM events ev
         LEFT JOIN expenses e ON e.event_id = ev.id
-        GROUP BY ev.id, ev.name, ev.description, ev.created_at, ev.updated_at
+        GROUP BY ev.id, ev.name, ev.description, ev.start_date, ev.end_date, ev.created_at, ev.updated_at
         ORDER BY ev.name ASC
         LIMIT ${limit}
       `;
@@ -76,7 +80,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, description } = validationResult.data;
+    const { name, description, start_date, end_date } = validationResult.data;
     const trimmedName = name.trim();
 
     // Check for duplicate name (case-insensitive)
@@ -94,9 +98,9 @@ export async function POST(request: NextRequest) {
     }
 
     const [newEvent] = await sql`
-      INSERT INTO events (name, description)
-      VALUES (${trimmedName}, ${description ?? null})
-      RETURNING id, name, description, created_at, updated_at
+      INSERT INTO events (name, description, start_date, end_date)
+      VALUES (${trimmedName}, ${description ?? null}, ${start_date ?? null}, ${end_date ?? null})
+      RETURNING id, name, description, start_date, end_date, created_at, updated_at
     `;
 
     return NextResponse.json(

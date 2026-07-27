@@ -980,3 +980,127 @@ The **Interest Rate Simulator** (`/simular-tasas`) allows users to convert inter
 - Rate input stored as decimal (e.g., 0.12 for 12%)
 - Display shows percentages with 4 decimal places
 - All conversions are pure functions (no side effects)
+
+#### AI Assistant (Claude-powered)
+
+The **AI Assistant** (`/asistente` + global floating panel) lets the user ask natural-language questions about their financial data and get answers grounded in real DB state. Built on Claude with a Spanish system prompt and a tool-use loop.
+
+**Features**:
+
+- **Natural-language Q&A**: Ask "¿Cuánto he gastado este periodo?" or "¿En qué categorías estoy gastando de más?" — the assistant calls deterministic tools, then assembles a Spanish answer citing real numbers
+- **Savings optimization** (headline use case): "Quiero ahorrar $500 este mes, ¿dónde puedo recortar?" returns a ranked plan of concrete cut candidates computed deterministically
+- **Conversation persistence**: All chats saved to Postgres — resumable across sessions, rename/delete from UI
+- **Streaming responses**: Tokens stream back via NDJSON for instant feedback
+- **Global panel** (`Cmd+K` / `Ctrl+K`) and dedicated page at `/asistente`
+
+**Configuration** (`.env.local` — see `.env.example`):
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `ANTHROPIC_API_KEY` | Yes | — | API key from https://console.anthropic.com/ |
+| `ANTHROPIC_MODEL` | No | `claude-sonnet-4-6` | Model ID. Alternatives: `claude-opus-4-7` (best reasoning, ~5× cost), `claude-haiku-4-5` (cheapest) |
+| `ASSISTANT_MAX_TOKENS` | No | `4096` | Max tokens per assistant response |
+| `ASSISTANT_MAX_TOOL_CALLS` | No | `10` | Cap on tool iterations per turn (cost guardrail) |
+
+**Database Setup**:
+
+```bash
+# Idempotent — safe to run on dev and prod
+curl -X POST https://your-domain.com/api/migrate-assistant
+# or locally:
+curl -X POST http://localhost:3000/api/migrate-assistant
+```
+
+Creates two tables:
+- `assistant_conversations` (id, title, created_at, updated_at)
+- `assistant_messages` (id, conversation_id, role[user|assistant|tool], content, tool_data JSONB, created_at) with `ON DELETE CASCADE`
+
+**Architecture (hybrid deterministic + LLM)**:
+
+- **Agent runner** (`lib/assistant/agent.ts`): Uses `@anthropic-ai/sdk` (base SDK) with a manual streaming tool-use loop. The `@anthropic-ai/claude-agent-sdk` package is also installed but NOT used — it spawns the Claude Code CLI subprocess, which is incompatible with Next.js serverless. Tool functions are SDK-agnostic so the runner could be swapped without touching tools.
+- **Tools** (`lib/assistant/tools.ts`): Plain async functions returning JSON. Each wraps existing SQL patterns from `app/api/dashboard/`, `app/api/overspend/`, etc. The LLM decides which to call per question; deterministic code does all arithmetic.
+- **System prompt** (`lib/assistant/system-prompt.ts`): Spanish, domain-aware (funds, periods, tipo_gasto F/V/SF/E, payment methods).
+
+**Available Tools**:
+
+| Tool | Purpose |
+|------|---------|
+| `get_active_period_summary` | Totals for active period: income, expenses, budget, balance, remaining |
+| `get_overspend_by_category` | Categories over budget with amounts and percentages |
+| `get_category_spending` | Spending by category with payment-method breakdown + filters |
+| `list_recent_expenses` | Recent transactions (configurable limit, filters) |
+| `get_fund_balances` | All funds with current and initial balances |
+| `get_budget_execution` | Projected payments grouped by date |
+| `get_spending_history` | Last N periods trend with payment-method breakdown |
+| `suggest_savings` | **Computes concrete savings candidates for a target amount** — prioritizes overspent variable/semi-fixed categories, returns both a ranked plan and all candidates |
+| `get_category_breakdown` | Spending grouped by tipo_gasto (F/V/SF/E) |
+
+**API Endpoints**:
+
+- `POST /api/migrate-assistant` — Create tables (idempotent)
+- `GET /api/assistant/conversations` — List with preview and message count
+- `POST /api/assistant/conversations` — Create new conversation
+- `GET /api/assistant/conversations/[id]` — Get with all messages
+- `PATCH /api/assistant/conversations/[id]` — Rename (`{ title }`)
+- `DELETE /api/assistant/conversations/[id]` — Delete (cascade)
+- `POST /api/assistant/conversations/[id]/messages` — Stream agent response (NDJSON)
+
+**Streaming Protocol** (`POST /messages` returns `Content-Type: application/x-ndjson`):
+
+Each line is one JSON event. Read line-by-line on the client:
+
+```
+{"type":"message_start"}
+{"type":"text_delta","payload":{"text":"..."}}
+{"type":"tool_call","payload":{"tool":"suggest_savings","input":{...}}}
+{"type":"tool_result","payload":{"tool":"suggest_savings","ok":true,"output":{...}}}
+{"type":"message_end","payload":{"assistant_message_id":"..."}}
+{"type":"error","payload":{"message":"..."}}
+```
+
+**Components** (`/components/assistant/`):
+
+- `AssistantPanel` — Right-side Sheet, opened via `Cmd+K` or trigger button
+- `AssistantTrigger` — Floating action button (bottom-right) + keyboard shortcut
+- `AssistantChatMessage` — User/assistant message bubble with streaming cursor
+- `AssistantChatInput` — Auto-growing textarea (Enter to send, Shift+Enter for newline)
+- `AssistantConversationList` — List with inline rename/delete
+- `AssistantSuggestions` — Starter prompt chips in empty state
+
+**Context**: `AssistantProvider` (`/context/assistant-context.tsx`) mounted at the **root layout** (`app/layout.tsx`) — not `ConditionalLayout` — so `/asistente` can SSR-render. State: conversations, current conversation, messages, streaming text, panel open, error.
+
+**User Flow**:
+
+1. User opens panel via `Cmd+K`, the FAB, or the "Asistente IA" sidebar entry
+2. Either picks a starter suggestion or types a question
+3. User message persists immediately; assistant streams back tokens
+4. The assistant calls one or more tools (visible in console, surfaced in future UI as "thinking…")
+5. Final response cites numbers from tool output
+6. Refresh the page — conversation is still there
+7. Rename/delete from the conversation list
+
+**Adding a New Tool**:
+
+1. Add a `ToolDefinition` to `lib/assistant/tools.ts` (name, Spanish description, JSON Schema input, async handler)
+2. Push it to the `TOOLS` array at the bottom of the file
+3. The agent picks it up automatically — no other wiring needed
+4. Tool handlers receive `Record<string, unknown>`; validate inputs inside the handler
+5. Use sentinel-based SQL (`WHERE (${param}::text IS NULL OR col = ${param})`) instead of conditional fragments — Neon composition with empty `sql\`\`` is unreliable
+
+**Adding a New UI Suggestion**:
+
+Edit `SUGGESTIONS` array in `components/assistant/assistant-suggestions.tsx` — each entry has an icon, label, and the actual prompt string sent to the agent.
+
+**Troubleshooting**:
+
+- **"ANTHROPIC_API_KEY no está configurada"**: Add it to `.env.local` and restart `pnpm dev`
+- **`useAssistant debe usarse dentro de AssistantProvider`**: Provider is at `app/layout.tsx` — don't move it back to `ConditionalLayout` (SSR for `/asistente` requires it at root)
+- **Tool returns `error: 'No hay periodo activo.'`**: User needs an open period — most tools default to the active period
+- **`Suggest_savings` says `achievable: false`**: The target exceeds what's mathematically cuttable from current spending; the response includes `shortfall` and `all_candidates` so the model can explain
+- **Token budget on long conversations**: Currently the runner sends full history; if you hit context limits, truncate in `buildMessages` (`lib/assistant/agent.ts`)
+
+**Notes**:
+
+- **Auth gap**: Endpoint inherits the project's password-only auth (no server-side session enforcement). Add a session check inside `messages/route.ts` if you need to gate it.
+- **Phase 1 scope**: NL Q&A + savings suggestions only. Deferred to later phases: proactive dashboard insights, what-if scenario simulations, AI expense categorization. The infra (tools registry, streaming route, persistence, UI shell) is reusable for all of them.
+- **Cost control**: `ASSISTANT_MAX_TOOL_CALLS=10` caps the agent loop. Each tool call adds one round-trip; monitor usage if you switch to Opus.

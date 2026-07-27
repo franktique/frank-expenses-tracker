@@ -10,6 +10,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { BudgetProvider } from '@/context/budget-context';
 import { AuthProvider } from '@/lib/auth-context';
 import { ActivePeriodErrorBoundary } from '@/components/active-period-error-boundary';
+import { AssistantProvider } from '@/context/assistant-context';
 import { TabProvider } from '@/components/tabs';
 
 const inter = Inter({ subsets: ['latin'] });
@@ -32,14 +33,16 @@ export default function RootLayout({
           <AuthProvider>
             <ActivePeriodErrorBoundary showGlobalErrors={true}>
               <BudgetProvider>
-                <TabProvider>
-                  <SidebarProvider>
-                    <Suspense fallback={<div className="flex min-h-screen" />}>
-                      <ConditionalLayout>{children}</ConditionalLayout>
-                    </Suspense>
-                    <Toaster />
-                  </SidebarProvider>
-                </TabProvider>
+                <AssistantProvider>
+                  <TabProvider>
+                    <SidebarProvider>
+                      <Suspense fallback={<div className="flex min-h-screen" />}>
+                        <ConditionalLayout>{children}</ConditionalLayout>
+                      </Suspense>
+                      <Toaster />
+                    </SidebarProvider>
+                  </TabProvider>
+                </AssistantProvider>
               </BudgetProvider>
             </ActivePeriodErrorBoundary>
           </AuthProvider>

@@ -5,6 +5,8 @@ import { useRef } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useBudget } from '@/context/budget-context';
 import { SimpleTabLayout } from '@/components/simple-tab-layout';
+import { AssistantPanel } from '@/components/assistant/assistant-panel';
+import { AssistantTrigger } from '@/components/assistant/assistant-trigger';
 import { Loader2 } from 'lucide-react';
 
 export function ConditionalLayout({ children }: { children: React.ReactNode }) {
@@ -53,7 +55,13 @@ export function ConditionalLayout({ children }: { children: React.ReactNode }) {
       );
     }
 
-    return <SimpleTabLayout>{children}</SimpleTabLayout>;
+    return (
+      <>
+        <SimpleTabLayout>{children}</SimpleTabLayout>
+        <AssistantTrigger />
+        <AssistantPanel />
+      </>
+    );
   }
 
   // Regular layout for non-authenticated users

@@ -60,7 +60,7 @@ export function SimpleTabLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main content area with tabs */}
       <main
-        className={`min-h-0 flex-1 ${
+        className={`min-h-0 min-w-0 flex-1 ${
           isSplit
             ? splitState.panelCount === 3
               ? 'grid grid-cols-3 grid-rows-1'

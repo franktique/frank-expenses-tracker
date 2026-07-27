@@ -223,3 +223,17 @@ export interface HistoricalData {
     { credit_amount: number; cash_debit_amount: number }
   >;
 }
+
+// ─── Historical Overexpense (Exceso Histórico Tab) ───
+
+export interface OverexpenseHistoricalCategoryRow {
+  category_id: string;
+  category_name: string;
+  byPeriod: Record<string, { credit_diff: number; cash_debit_diff: number }>;
+}
+
+export interface OverexpenseHistoricalData {
+  periods: HistoricalPeriodInfo[];
+  categories: OverexpenseHistoricalCategoryRow[];
+  totals: Record<string, { credit_diff: number; cash_debit_diff: number }>;
+}

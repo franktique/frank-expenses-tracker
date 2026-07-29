@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Card,
   CardContent,
@@ -39,6 +40,13 @@ import { Switch } from '@/components/ui/switch';
 import { useToast } from '@/components/ui/use-toast';
 import { useBudget, PaymentMethod } from '@/context/budget-context';
 import { formatCurrency } from '@/lib/utils';
+import {
+  ExcedenteSelectionState,
+  isExcedenteSelected,
+  loadExcedenteSelectionFromStorage,
+  saveExcedenteSelectionToStorage,
+  toggleExcedenteSelection,
+} from '@/lib/excedente-selection-utils';
 
 export function BudgetsView() {
   const {
@@ -57,6 +65,7 @@ export function BudgetsView() {
   );
   const [comparisonPeriodId, setComparisonPeriodId] = useState<string>('');
   const [comparisonMode, setComparisonMode] = useState<'budget' | 'actual'>('budget');
+  const [excedenteSelection, setExcedenteSelection] = useState<ExcedenteSelectionState>({});
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editCategory, setEditCategory] = useState<{
     id: string;
@@ -103,6 +112,79 @@ export function BudgetsView() {
       }
     }
   }
+
+  // Load the excedente-sobrante checkbox selection whenever the period /
+  // comparison-period combination changes
+  useEffect(() => {
+    if (selectedPeriodId && comparisonPeriodId) {
+      setExcedenteSelection(
+        loadExcedenteSelectionFromStorage(selectedPeriodId, comparisonPeriodId)
+      );
+    } else {
+      setExcedenteSelection({});
+    }
+  }, [selectedPeriodId, comparisonPeriodId]);
+
+  // Persist the selection to localStorage on every change
+  useEffect(() => {
+    if (selectedPeriodId && comparisonPeriodId) {
+      saveExcedenteSelectionToStorage(
+        selectedPeriodId,
+        comparisonPeriodId,
+        excedenteSelection
+      );
+    }
+  }, [excedenteSelection, selectedPeriodId, comparisonPeriodId]);
+
+  // Compute per-category budget vs. reference-period comparison values,
+  // reused by both the table rows and the "Excedente Sobrante" KPI total.
+  const getCategoryComparisonValues = (category: { id: string }) => {
+    const cashBudget = periodBudgets.find(
+      (b) => b.category_id === category.id && b.payment_method === 'cash'
+    );
+    const creditBudget = periodBudgets.find(
+      (b) => b.category_id === category.id && b.payment_method === 'credit'
+    );
+
+    const totalAmount =
+      (cashBudget ? Number(cashBudget.expected_amount) : 0) +
+      (creditBudget ? Number(creditBudget.expected_amount) : 0);
+
+    const comparisonCashBudget = comparisonBudgets.find(
+      (b) => b.category_id === category.id && b.payment_method === 'cash'
+    );
+    const comparisonCreditBudget = comparisonBudgets.find(
+      (b) => b.category_id === category.id && b.payment_method === 'credit'
+    );
+
+    const refCash = comparisonMode === 'actual'
+      ? (comparisonActualByCategory[category.id]?.cash || 0)
+      : (comparisonCashBudget ? Number(comparisonCashBudget.expected_amount) : 0);
+    const refCredit = comparisonMode === 'actual'
+      ? (comparisonActualByCategory[category.id]?.credit || 0)
+      : (comparisonCreditBudget ? Number(comparisonCreditBudget.expected_amount) : 0);
+    const refTotal = refCash + refCredit;
+
+    const excedenteSobrante = Math.max(0, totalAmount - refTotal);
+
+    return {
+      cashBudget,
+      creditBudget,
+      totalAmount,
+      refCash,
+      refCredit,
+      refTotal,
+      excedenteSobrante,
+    };
+  };
+
+  // Total "Excedente Sobrante" across only the categories marked with the checkbox
+  const totalExcedenteSobrante = comparisonPeriod
+    ? categories.reduce((sum, category) => {
+        if (!isExcedenteSelected(category.id, excedenteSelection)) return sum;
+        return sum + getCategoryComparisonValues(category).excedenteSobrante;
+      }, 0)
+    : 0;
 
   const handleEditBudget = () => {
     if (!editCategory || !selectedPeriod) return;
@@ -244,8 +326,8 @@ export function BudgetsView() {
         </CardHeader>
         <CardContent>
           {selectedPeriod && (
-            <div className="mb-6">
-              <Card>
+            <div className="mb-6 flex flex-col gap-4 md:flex-row">
+              <Card className="flex-1">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
                     Total Presupuestado
@@ -309,6 +391,41 @@ export function BudgetsView() {
                   </p>
                 </CardContent>
               </Card>
+              {comparisonPeriod && (
+                <Card className="flex-1">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      Excedente Sobrante Total
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        (vs {comparisonPeriod.name})
+                      </span>
+                    </CardTitle>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      className="h-4 w-4 text-muted-foreground"
+                    >
+                      <path d="M12 5v14M19 12l-7 7-7-7" />
+                    </svg>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">
+                      {formatCurrency(totalExcedenteSobrante)}
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Suma de las categorías marcadas cuyo presupuesto actual
+                      excede lo{' '}
+                      {comparisonMode === 'actual' ? 'pagado' : 'presupuestado'}{' '}
+                      en el periodo de referencia
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           )}
           {!selectedPeriod ? (
@@ -331,6 +448,9 @@ export function BudgetsView() {
                       <TableHead className="bg-muted/50 text-right text-muted-foreground">
                         {comparisonMode === 'actual' ? 'Total Real (Ref)' : 'Total (Ref)'}
                       </TableHead>
+                      <TableHead className="bg-muted/50 text-right text-muted-foreground">
+                        Excedente Sobrante
+                      </TableHead>
                     </>
                   )}
                   <TableHead className="text-center">
@@ -347,42 +467,15 @@ export function BudgetsView() {
                   .slice() // Create a copy of the array to avoid mutating the original
                   .sort((a, b) => a.name.localeCompare(b.name)) // Sort alphabetically by name
                   .map((category) => {
-                    // Find budgets for this category in selected period for different payment methods
-                    const cashBudget = periodBudgets.find(
-                      (b) =>
-                        b.category_id === category.id &&
-                        b.payment_method === 'cash'
-                    );
-                    const creditBudget = periodBudgets.find(
-                      (b) =>
-                        b.category_id === category.id &&
-                        b.payment_method === 'credit'
-                    );
-
-                    const totalAmount =
-                      (cashBudget ? Number(cashBudget.expected_amount) : 0) +
-                      (creditBudget ? Number(creditBudget.expected_amount) : 0);
-
-                    // Find comparison budgets for this category
-                    const comparisonCashBudget = comparisonBudgets.find(
-                      (b) =>
-                        b.category_id === category.id &&
-                        b.payment_method === 'cash'
-                    );
-                    const comparisonCreditBudget = comparisonBudgets.find(
-                      (b) =>
-                        b.category_id === category.id &&
-                        b.payment_method === 'credit'
-                    );
-
-                    // Reference column values (budget or actual expenses depending on mode)
-                    const refCash = comparisonMode === 'actual'
-                      ? (comparisonActualByCategory[category.id]?.cash || 0)
-                      : (comparisonCashBudget ? Number(comparisonCashBudget.expected_amount) : 0);
-                    const refCredit = comparisonMode === 'actual'
-                      ? (comparisonActualByCategory[category.id]?.credit || 0)
-                      : (comparisonCreditBudget ? Number(comparisonCreditBudget.expected_amount) : 0);
-                    const refTotal = refCash + refCredit;
+                    const {
+                      cashBudget,
+                      creditBudget,
+                      totalAmount,
+                      refCash,
+                      refCredit,
+                      refTotal,
+                      excedenteSobrante,
+                    } = getCategoryComparisonValues(category);
 
                     return (
                       <TableRow key={category.id}>
@@ -399,6 +492,22 @@ export function BudgetsView() {
                             </TableCell>
                             <TableCell className="bg-muted/30 text-right font-medium text-muted-foreground">
                               {formatCurrency(refTotal)}
+                            </TableCell>
+                            <TableCell className="bg-muted/30 text-right font-medium text-muted-foreground">
+                              <div className="flex items-center justify-end gap-2">
+                                <Checkbox
+                                  checked={isExcedenteSelected(
+                                    category.id,
+                                    excedenteSelection
+                                  )}
+                                  onCheckedChange={() =>
+                                    setExcedenteSelection((prev) =>
+                                      toggleExcedenteSelection(prev, category.id)
+                                    )
+                                  }
+                                />
+                                {formatCurrency(excedenteSobrante)}
+                              </div>
                             </TableCell>
                           </>
                         )}

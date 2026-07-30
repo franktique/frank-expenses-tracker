@@ -7,12 +7,16 @@ import type { AssistantMessage } from '@/types/assistant';
 export function AssistantChatMessage({
   message,
   streaming = false,
+  processLabel,
 }: {
   message: Pick<AssistantMessage, 'role' | 'content'> & { streaming?: boolean };
   streaming?: boolean;
+  /** Short live-narration label (e.g. "Consultando get_category_spending…") shown while streaming has started but no answer text has arrived yet. */
+  processLabel?: string;
 }) {
   const isUser = message.role === 'user';
   const content = message.content || '';
+  const isThinking = streaming && !content;
 
   return (
     <div
@@ -43,10 +47,23 @@ export function AssistantChatMessage({
             isUser
               ? 'bg-primary text-primary-foreground'
               : 'bg-muted text-foreground',
-            streaming && 'after:ml-0.5 after:inline-block after:h-3 after:w-1.5 after:translate-y-0.5 after:animate-pulse after:bg-foreground/60 after:content-[""]'
+            streaming &&
+              !isThinking &&
+              'after:ml-0.5 after:inline-block after:h-3 after:w-1.5 after:translate-y-0.5 after:animate-pulse after:bg-foreground/60 after:content-[""]'
           )}
         >
-          {content || (streaming ? '' : '(sin contenido)')}
+          {isThinking ? (
+            <span className="flex items-center gap-2 text-muted-foreground">
+              <span className="flex gap-1">
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.3s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current [animation-delay:-0.15s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-current" />
+              </span>
+              {processLabel || 'Pensando…'}
+            </span>
+          ) : (
+            content || (streaming ? '' : '(sin contenido)')
+          )}
         </div>
       </div>
     </div>

@@ -17,12 +17,27 @@ import type { AssistantMessage } from '@/types/assistant';
 
 export type AssistantTurnEvent =
   | { type: 'text_delta'; text: string }
+  | { type: 'thinking_delta'; text: string }
   | { type: 'tool_call'; tool: string; input: unknown }
   | { type: 'tool_result'; tool: string; ok: boolean; output: unknown }
   | { type: 'final'; text: string }
   | { type: 'error'; message: string };
 
 const MAX_TURNS = Number(process.env.ASSISTANT_MAX_TOOL_CALLS) || 10;
+
+/**
+ * Extended thinking is an Anthropic-specific Messages API extension. Only
+ * request it when talking to Anthropic's own API (no ANTHROPIC_BASE_URL
+ * override) unless explicitly forced — a Anthropic-compatible third-party
+ * endpoint (e.g. Kimi K3) may not support the `thinking` param, or may
+ * reject the request outright.
+ */
+function shouldRequestThinking(): boolean {
+  const override = process.env.ASSISTANT_ENABLE_THINKING;
+  if (override === 'true') return true;
+  if (override === 'false') return false;
+  return !process.env.ANTHROPIC_BASE_URL;
+}
 
 function getClient(): Anthropic {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -31,7 +46,8 @@ function getClient(): Anthropic {
       'ANTHROPIC_API_KEY no está configurada. Agrégala a .env.local (ver .env.example).'
     );
   }
-  return new Anthropic({ apiKey });
+  const baseURL = process.env.ANTHROPIC_BASE_URL;
+  return new Anthropic({ apiKey, ...(baseURL ? { baseURL } : {}) });
 }
 
 function getModel(): string {
@@ -100,6 +116,15 @@ export async function* runAssistantTurn({
           system: ASSISTANT_SYSTEM_PROMPT,
           messages,
           tools: tools as Anthropic.Tool[],
+          ...(shouldRequestThinking()
+            ? {
+                thinking: {
+                  type: 'adaptive' as const,
+                  display: 'summarized' as const,
+                },
+                output_config: { effort: 'medium' as const },
+              }
+            : {}),
         },
         abortController ? { signal: abortController.signal } : undefined
       );
@@ -111,11 +136,25 @@ export async function* runAssistantTurn({
       }> = [];
 
       for await (const event of stream) {
-        if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+        if (
+          event.type === 'content_block_delta' &&
+          event.delta.type === 'text_delta'
+        ) {
           assistantText += event.delta.text;
           yield { type: 'text_delta', text: event.delta.text };
         }
-        if (event.type === 'content_block_start' && event.content_block.type === 'tool_use') {
+        if (
+          event.type === 'content_block_delta' &&
+          event.delta.type === 'thinking_delta'
+        ) {
+          yield { type: 'thinking_delta', text: event.delta.thinking };
+        }
+        // signature_delta and redacted_thinking blocks carry no displayable
+        // text — intentionally not yielded as thinking_delta events.
+        if (
+          event.type === 'content_block_start' &&
+          event.content_block.type === 'tool_use'
+        ) {
           toolUseBlocks.push({
             id: event.content_block.id,
             name: event.content_block.name,
@@ -153,8 +192,13 @@ export async function* runAssistantTurn({
 
         yield { type: 'tool_call', tool: block.name, input: block.input };
 
-        const dispatched = await dispatchTool(block.name, block.input as Record<string, unknown>);
-        const output = dispatched.ok ? dispatched.result : { error: dispatched.error };
+        const dispatched = await dispatchTool(
+          block.name,
+          block.input as Record<string, unknown>
+        );
+        const output = dispatched.ok
+          ? dispatched.result
+          : { error: dispatched.error };
 
         yield {
           type: 'tool_result',
@@ -181,7 +225,8 @@ export async function* runAssistantTurn({
     } else {
       yield {
         type: 'error',
-        message: 'El asistente excedió el número máximo de iteraciones de herramientas.',
+        message:
+          'El asistente excedió el número máximo de iteraciones de herramientas.',
       };
     }
   } catch (err) {

@@ -992,13 +992,16 @@ The **AI Assistant** (`/asistente` + global floating panel) lets the user ask na
 - **Conversation persistence**: All chats saved to Postgres — resumable across sessions, rename/delete from UI
 - **Streaming responses**: Tokens stream back via NDJSON for instant feedback
 - **Global panel** (`Cmd+K` / `Ctrl+K`) and dedicated page at `/asistente`
+- **Process panel** ("Ver proceso" toggle, `/asistente` only): right-side panel showing the live trace of a turn — extended-thinking text (when the active model/provider supports and returns it) interleaved with tool calls/results in chronological order. Ephemeral (not persisted to DB); the in-bubble "pensando" placeholder also derives a live label from the same trace (e.g. "Consultando get_category_spending…") instead of a static message.
 
 **Configuration** (`.env.local` — see `.env.example`):
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `ANTHROPIC_API_KEY` | Yes | — | API key from https://console.anthropic.com/ |
-| `ANTHROPIC_MODEL` | No | `claude-sonnet-4-6` | Model ID. Alternatives: `claude-opus-4-7` (best reasoning, ~5× cost), `claude-haiku-4-5` (cheapest) |
+| `ANTHROPIC_API_KEY` | Yes | — | API key from https://console.anthropic.com/ (or from an alternate provider, if using `ANTHROPIC_BASE_URL`) |
+| `ANTHROPIC_BASE_URL` | No | Anthropic's endpoint | Override to point at any Anthropic-Messages-API-compatible provider (e.g. Kimi K3) instead of Anthropic directly |
+| `ANTHROPIC_MODEL` | No | `claude-sonnet-4-6` | Model ID. Alternatives: `claude-opus-4-7` (best reasoning, ~5× cost), `claude-haiku-4-5` (cheapest), or an alternate provider's model id (e.g. `kimi-k3`) if using `ANTHROPIC_BASE_URL` |
+| `ASSISTANT_ENABLE_THINKING` | No | auto (`true` only when `ANTHROPIC_BASE_URL` is unset) | Force extended thinking on/off (`true`/`false`). `thinking` is an Anthropic-specific Messages API extension — don't force `true` against a non-Anthropic provider (e.g. Kimi K3, future LM Studio) unless you've confirmed it supports the param |
 | `ASSISTANT_MAX_TOKENS` | No | `4096` | Max tokens per assistant response |
 | `ASSISTANT_MAX_TOOL_CALLS` | No | `10` | Cap on tool iterations per turn (cost guardrail) |
 
@@ -1052,31 +1055,35 @@ Each line is one JSON event. Read line-by-line on the client:
 ```
 {"type":"message_start"}
 {"type":"text_delta","payload":{"text":"..."}}
+{"type":"thinking_delta","payload":{"text":"..."}}
 {"type":"tool_call","payload":{"tool":"suggest_savings","input":{...}}}
 {"type":"tool_result","payload":{"tool":"suggest_savings","ok":true,"output":{...}}}
 {"type":"message_end","payload":{"assistant_message_id":"..."}}
 {"type":"error","payload":{"message":"..."}}
 ```
 
+`thinking_delta` only appears when `shouldRequestThinking()` (in `lib/assistant/agent.ts`) is true for the active provider — clients must treat its absence as normal, not an error.
+
 **Components** (`/components/assistant/`):
 
 - `AssistantPanel` — Right-side Sheet, opened via `Cmd+K` or trigger button
 - `AssistantTrigger` — Floating action button (bottom-right) + keyboard shortcut
-- `AssistantChatMessage` — User/assistant message bubble with streaming cursor
+- `AssistantChatMessage` — User/assistant message bubble with streaming cursor; while streaming with no answer text yet, shows an animated "thinking" placeholder using an optional `processLabel` prop instead of the answer cursor
 - `AssistantChatInput` — Auto-growing textarea (Enter to send, Shift+Enter for newline)
 - `AssistantConversationList` — List with inline rename/delete
 - `AssistantSuggestions` — Starter prompt chips in empty state
+- `AssistantProcessPanel` (`/asistente` only) — Renders the live `processEntries` trace (thinking text, tool_call/tool_result chips with collapsible JSON); auto-scrolls; not used by the Cmd+K sheet
 
-**Context**: `AssistantProvider` (`/context/assistant-context.tsx`) mounted at the **root layout** (`app/layout.tsx`) — not `ConditionalLayout` — so `/asistente` can SSR-render. State: conversations, current conversation, messages, streaming text, panel open, error.
+**Context**: `AssistantProvider` (`/context/assistant-context.tsx`) mounted at the **root layout** (`app/layout.tsx`) — not `ConditionalLayout` — so `/asistente` can SSR-render. State: conversations, current conversation, messages, streaming text, panel open, error, plus `processEntries`/`showProcess`/`setShowProcess` for the process panel. `showProcess` persists to `localStorage` (`assistant_show_process_panel`); `processEntries` is in-memory only, reset at the start of each `sendMessage` call.
 
 **User Flow**:
 
 1. User opens panel via `Cmd+K`, the FAB, or the "Asistente IA" sidebar entry
 2. Either picks a starter suggestion or types a question
 3. User message persists immediately; assistant streams back tokens
-4. The assistant calls one or more tools (visible in console, surfaced in future UI as "thinking…")
+4. The assistant calls one or more tools; on `/asistente`, toggling "Ver proceso" surfaces a live trace (thinking + tool calls) in a right-side panel, and the in-bubble placeholder narrates the same trace instead of a static "pensando"
 5. Final response cites numbers from tool output
-6. Refresh the page — conversation is still there
+6. Refresh the page — conversation is still there (the process trace is not — it's ephemeral)
 7. Rename/delete from the conversation list
 
 **Adding a New Tool**:

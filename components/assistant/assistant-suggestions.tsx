@@ -10,8 +10,8 @@ const SUGGESTIONS = [
   },
   {
     icon: Wallet,
-    label: 'Quiero ahorrar $500 este mes',
-    prompt: 'Quiero ahorrar $500 este mes, ¿dónde puedo recortar gastos?',
+    label: 'Quiero ahorrar $500.000 este mes',
+    prompt: 'Quiero ahorrar $500.000 este mes, ¿dónde puedo recortar gastos?',
   },
   {
     icon: PieChart,

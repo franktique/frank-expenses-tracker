@@ -29,6 +29,7 @@ export interface ConversationListItem extends AssistantConversation {
 export interface StreamingEvent {
   type:
     | 'text_delta'
+    | 'thinking_delta'
     | 'tool_call'
     | 'tool_result'
     | 'message_start'

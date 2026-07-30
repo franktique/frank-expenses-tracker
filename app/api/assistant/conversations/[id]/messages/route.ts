@@ -15,10 +15,15 @@ import type { AssistantMessage, StreamingEvent } from '@/types/assistant';
  * Stream event shapes (each line is one JSON object):
  *   { "type": "message_start" }
  *   { "type": "text_delta", "payload": { "text": "..." } }
+ *   { "type": "thinking_delta", "payload": { "text": "..." } }
  *   { "type": "tool_call", "payload": { "tool": "...", "input": {...} } }
  *   { "type": "tool_result", "payload": { "tool": "...", "ok": true, "output": {...} } }
  *   { "type": "message_end", "payload": { "assistant_message_id": "..." } }
  *   { "type": "error", "payload": { "message": "..." } }
+ *
+ * `thinking_delta` only appears when the active model/provider supports and
+ * returns Claude's extended thinking — see shouldRequestThinking() in
+ * lib/assistant/agent.ts. Clients must treat its absence as normal.
  */
 
 export const runtime = 'nodejs';
@@ -67,7 +72,8 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
 
   // Auto-title the conversation if it's still the default and this is the first user message
   if ((conversation as any).title === 'Nueva conversación') {
-    const autoTitle = content.length > 50 ? content.slice(0, 47) + '…' : content;
+    const autoTitle =
+      content.length > 50 ? content.slice(0, 47) + '…' : content;
     await sql`
       UPDATE assistant_conversations
       SET title = ${autoTitle}, updated_at = NOW()
@@ -103,6 +109,13 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
             controller.enqueue(
               sendEvent(encoder, {
                 type: 'text_delta',
+                payload: { text: event.text },
+              })
+            );
+          } else if (event.type === 'thinking_delta') {
+            controller.enqueue(
+              sendEvent(encoder, {
+                type: 'thinking_delta',
                 payload: { text: event.text },
               })
             );

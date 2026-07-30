@@ -14,6 +14,19 @@ import type {
   ConversationWithMessages,
 } from '@/types/assistant';
 
+export type ProcessEntry =
+  | { id: string; type: 'thinking'; text: string }
+  | { id: string; type: 'tool_call'; tool: string; input: unknown }
+  | {
+      id: string;
+      type: 'tool_result';
+      tool: string;
+      ok: boolean;
+      output: unknown;
+    };
+
+const SHOW_PROCESS_STORAGE_KEY = 'assistant_show_process_panel';
+
 interface AssistantContextValue {
   // Panel state
   isOpen: boolean;
@@ -39,24 +52,57 @@ interface AssistantContextValue {
   sendMessage: (content: string) => Promise<void>;
   abortStreaming: () => void;
 
+  // Process panel (thinking + tool call trace, ephemeral/live-only)
+  processEntries: ProcessEntry[];
+  showProcess: boolean;
+  setShowProcess: (value: boolean) => void;
+
   // Errors
   error: string | null;
   clearError: () => void;
 }
 
-const AssistantContext = createContext<AssistantContextValue | undefined>(undefined);
+const AssistantContext = createContext<AssistantContextValue | undefined>(
+  undefined
+);
 
 export function AssistantProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [conversations, setConversations] = useState<ConversationListItem[]>([]);
-  const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [conversations, setConversations] = useState<ConversationListItem[]>(
+    []
+  );
+  const [currentConversationId, setCurrentConversationId] = useState<
+    string | null
+  >(null);
   const [messages, setMessages] = useState<AssistantMessage[]>([]);
   const [isLoadingConversations, setIsLoadingConversations] = useState(false);
   const [streamingText, setStreamingText] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [processEntries, setProcessEntries] = useState<ProcessEntry[]>([]);
+  const [showProcess, setShowProcessState] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
+
+  // Hydrate the process-panel toggle from localStorage after mount to avoid
+  // an SSR/CSR hydration mismatch.
+  useEffect(() => {
+    try {
+      const stored = window.localStorage.getItem(SHOW_PROCESS_STORAGE_KEY);
+      if (stored !== null) setShowProcessState(stored === 'true');
+    } catch {
+      // localStorage unavailable — keep default
+    }
+  }, []);
+
+  const setShowProcess = useCallback((value: boolean) => {
+    setShowProcessState(value);
+    try {
+      window.localStorage.setItem(SHOW_PROCESS_STORAGE_KEY, String(value));
+    } catch {
+      // ignore write failures (private browsing, quota, etc.)
+    }
+  }, []);
 
   const refreshConversations = useCallback(async () => {
     setIsLoadingConversations(true);
@@ -84,7 +130,9 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await fetch(`/api/assistant/conversations/${id}`);
       if (!res.ok) throw new Error('No se pudo cargar la conversación');
-      const data = (await res.json()) as { conversation: ConversationWithMessages };
+      const data = (await res.json()) as {
+        conversation: ConversationWithMessages;
+      };
       setMessages(data.conversation.messages || []);
     } catch (err) {
       setError((err as Error).message);
@@ -192,6 +240,7 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
 
       setIsStreaming(true);
       setStreamingText('');
+      setProcessEntries([]);
       setError(null);
 
       const controller = new AbortController();
@@ -234,13 +283,60 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
               if (event.type === 'text_delta' && event.payload?.text) {
                 accumulatedAssistant += event.payload.text;
                 setStreamingText(accumulatedAssistant);
+              } else if (
+                event.type === 'thinking_delta' &&
+                event.payload?.text
+              ) {
+                const text: string = event.payload.text;
+                setProcessEntries((prev) => {
+                  const last = prev[prev.length - 1];
+                  if (last && last.type === 'thinking') {
+                    return [
+                      ...prev.slice(0, -1),
+                      { ...last, text: last.text + text },
+                    ];
+                  }
+                  return [
+                    ...prev,
+                    {
+                      id: `thinking-${Date.now()}-${prev.length}`,
+                      type: 'thinking',
+                      text,
+                    },
+                  ];
+                });
+              } else if (event.type === 'tool_call') {
+                const { tool, input } = event.payload || {};
+                setProcessEntries((prev) => [
+                  ...prev,
+                  {
+                    id: `tool_call-${Date.now()}-${prev.length}`,
+                    type: 'tool_call',
+                    tool,
+                    input,
+                  },
+                ]);
+              } else if (event.type === 'tool_result') {
+                const { tool, ok, output } = event.payload || {};
+                setProcessEntries((prev) => [
+                  ...prev,
+                  {
+                    id: `tool_result-${Date.now()}-${prev.length}`,
+                    type: 'tool_result',
+                    tool,
+                    ok,
+                    output,
+                  },
+                ]);
               } else if (event.type === 'error') {
                 setError(event.payload?.message || 'Error del asistente');
               } else if (event.type === 'message_end') {
                 // Commit the assistant message to state
                 if (accumulatedAssistant.trim()) {
                   const finalMessage: AssistantMessage = {
-                    id: event.payload?.assistant_message_id || `asst-${Date.now()}`,
+                    id:
+                      event.payload?.assistant_message_id ||
+                      `asst-${Date.now()}`,
                     conversation_id: conversationId!,
                     role: 'assistant',
                     content: accumulatedAssistant,
@@ -295,12 +391,17 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
     isStreaming,
     sendMessage,
     abortStreaming,
+    processEntries,
+    showProcess,
+    setShowProcess,
     error,
     clearError,
   };
 
   return (
-    <AssistantContext.Provider value={value}>{children}</AssistantContext.Provider>
+    <AssistantContext.Provider value={value}>
+      {children}
+    </AssistantContext.Provider>
   );
 }
 

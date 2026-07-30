@@ -49,6 +49,7 @@ import {
   DailyExpensesChart,
 } from './dashboard-charts';
 import { HistoricalExpensesView } from '@/components/historical-expenses-view';
+import { HistoricalOverexpenseView } from '@/components/historical-overexpense-view';
 import { useRouter } from 'next/navigation';
 import { Label } from '@/components/ui/label';
 import { CategoryExclusionFilter } from '@/components/category-exclusion-filter';
@@ -511,12 +512,13 @@ export function DashboardView() {
       </div>
 
       <Tabs defaultValue="summary" className="mt-6 w-full max-w-full">
-        <TabsList className="grid w-full max-w-full grid-cols-5">
+        <TabsList className="grid w-full max-w-full grid-cols-6">
           <TabsTrigger value="summary">Resumen</TabsTrigger>
           <TabsTrigger value="daily">Gastos Diarios</TabsTrigger>
           <TabsTrigger value="cumulative">Gastos Acumulados</TabsTrigger>
           <TabsTrigger value="categories">Por Categoría</TabsTrigger>
           <TabsTrigger value="history">Historial</TabsTrigger>
+          <TabsTrigger value="overexpense-history">Exceso Histórico</TabsTrigger>
         </TabsList>
 
         <TabsContent value="summary" className="mt-6">
@@ -1083,6 +1085,16 @@ export function DashboardView() {
 
         <TabsContent value="history" className="mt-6 w-full max-w-full p-0">
           <HistoricalExpensesView
+            categoryIds={sortedBudgetSummary.map((c) => c.category_id)}
+            categoryOrder={sortedBudgetSummary.map((c) => c.category_id)}
+          />
+        </TabsContent>
+
+        <TabsContent
+          value="overexpense-history"
+          className="mt-6 w-full max-w-full p-0"
+        >
+          <HistoricalOverexpenseView
             categoryIds={sortedBudgetSummary.map((c) => c.category_id)}
             categoryOrder={sortedBudgetSummary.map((c) => c.category_id)}
           />

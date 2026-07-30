@@ -4,28 +4,34 @@ import { useEffect, useState, Fragment, useMemo, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
 import { cn, formatCurrency } from '@/lib/utils';
-import { HistoricalData } from '@/types/dashboard';
+import { OverexpenseHistoricalData } from '@/types/dashboard';
 
-interface HistoricalExpensesViewProps {
+interface HistoricalOverexpenseViewProps {
   categoryIds?: string[];
   categoryOrder?: string[];
 }
 
 type ViewMode = 'split' | 'consolidated';
 
-function combinedAmount(entry?: {
-  credit_amount: number;
-  cash_debit_amount: number;
-}) {
-  if (!entry) return 0;
-  return entry.credit_amount + entry.cash_debit_amount;
+function diffClassName(value: number) {
+  if (value > 0) return 'text-red-600 dark:text-red-400';
+  if (value < 0) return 'text-green-600 dark:text-green-400';
+  return '';
 }
 
-export function HistoricalExpensesView({
+function combinedDiff(entry?: {
+  credit_diff: number;
+  cash_debit_diff: number;
+}) {
+  if (!entry) return 0;
+  return entry.credit_diff + entry.cash_debit_diff;
+}
+
+export function HistoricalOverexpenseView({
   categoryIds,
   categoryOrder,
-}: HistoricalExpensesViewProps) {
-  const [data, setData] = useState<HistoricalData | null>(null);
+}: HistoricalOverexpenseViewProps) {
+  const [data, setData] = useState<OverexpenseHistoricalData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('split');
@@ -69,13 +75,17 @@ export function HistoricalExpensesView({
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const url = new URL('/api/dashboard/history', window.location.origin);
+        const url = new URL(
+          '/api/dashboard/overexpense-history',
+          window.location.origin
+        );
         if (categoryIds && categoryIds.length > 0) {
           url.searchParams.set('categoryIds', categoryIds.join(','));
         }
         const res = await fetch(url.toString());
-        if (!res.ok) throw new Error('Failed to fetch historical data');
-        const json = (await res.json()) as HistoricalData;
+        if (!res.ok)
+          throw new Error('Failed to fetch overexpense history data');
+        const json = (await res.json()) as OverexpenseHistoricalData;
         setData(json);
       } catch (e) {
         setError((e as Error).message);
@@ -136,7 +146,7 @@ export function HistoricalExpensesView({
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
-        <CardTitle>Historial de Gastos por Categoria</CardTitle>
+        <CardTitle>Exceso de Gasto Histórico</CardTitle>
         <div className="flex items-center gap-2">
           <span
             className={cn(
@@ -261,29 +271,59 @@ export function HistoricalExpensesView({
                   {isSplit ? (
                     <>
                       {/* Current period — sticky */}
-                      <td className="sticky left-[180px] z-[15] w-[110px] min-w-[110px] max-w-[110px] border-b border-r bg-background px-3 py-2 text-right tabular-nums">
+                      <td
+                        className={cn(
+                          'sticky left-[180px] z-[15] w-[110px] min-w-[110px] max-w-[110px] border-b border-r bg-background px-3 py-2 text-right tabular-nums',
+                          diffClassName(
+                            cat.byPeriod[currentPeriod.period_id]
+                              ?.credit_diff ?? 0
+                          )
+                        )}
+                      >
                         {formatCurrency(
-                          cat.byPeriod[currentPeriod.period_id]
-                            ?.credit_amount ?? 0
+                          cat.byPeriod[currentPeriod.period_id]?.credit_diff ??
+                            0
                         )}
                       </td>
-                      <td className="sticky left-[290px] z-[15] w-[110px] min-w-[110px] max-w-[110px] border-b border-r bg-background px-3 py-2 text-right tabular-nums">
+                      <td
+                        className={cn(
+                          'sticky left-[290px] z-[15] w-[110px] min-w-[110px] max-w-[110px] border-b border-r bg-background px-3 py-2 text-right tabular-nums',
+                          diffClassName(
+                            cat.byPeriod[currentPeriod.period_id]
+                              ?.cash_debit_diff ?? 0
+                          )
+                        )}
+                      >
                         {formatCurrency(
                           cat.byPeriod[currentPeriod.period_id]
-                            ?.cash_debit_amount ?? 0
+                            ?.cash_debit_diff ?? 0
                         )}
                       </td>
                       {/* Past periods — interleaved credit/cash per period */}
                       {pastPeriods.map((p) => (
                         <Fragment key={p.period_id}>
-                          <td className="w-[110px] border-b border-r px-3 py-2 text-right tabular-nums">
+                          <td
+                            className={cn(
+                              'w-[110px] border-b border-r px-3 py-2 text-right tabular-nums',
+                              diffClassName(
+                                cat.byPeriod[p.period_id]?.credit_diff ?? 0
+                              )
+                            )}
+                          >
                             {formatCurrency(
-                              cat.byPeriod[p.period_id]?.credit_amount ?? 0
+                              cat.byPeriod[p.period_id]?.credit_diff ?? 0
                             )}
                           </td>
-                          <td className="w-[110px] border-b border-r px-3 py-2 text-right tabular-nums">
+                          <td
+                            className={cn(
+                              'w-[110px] border-b border-r px-3 py-2 text-right tabular-nums',
+                              diffClassName(
+                                cat.byPeriod[p.period_id]?.cash_debit_diff ?? 0
+                              )
+                            )}
+                          >
                             {formatCurrency(
-                              cat.byPeriod[p.period_id]?.cash_debit_amount ?? 0
+                              cat.byPeriod[p.period_id]?.cash_debit_diff ?? 0
                             )}
                           </td>
                         </Fragment>
@@ -291,18 +331,30 @@ export function HistoricalExpensesView({
                     </>
                   ) : (
                     <>
-                      <td className="sticky left-[180px] z-[15] w-[140px] min-w-[140px] max-w-[140px] border-b border-r bg-background px-3 py-2 text-right tabular-nums">
+                      <td
+                        className={cn(
+                          'sticky left-[180px] z-[15] w-[140px] min-w-[140px] max-w-[140px] border-b border-r bg-background px-3 py-2 text-right tabular-nums',
+                          diffClassName(
+                            combinedDiff(cat.byPeriod[currentPeriod.period_id])
+                          )
+                        )}
+                      >
                         {formatCurrency(
-                          combinedAmount(cat.byPeriod[currentPeriod.period_id])
+                          combinedDiff(cat.byPeriod[currentPeriod.period_id])
                         )}
                       </td>
                       {pastPeriods.map((p) => (
                         <td
                           key={p.period_id}
-                          className="w-[140px] border-b border-r px-3 py-2 text-right tabular-nums"
+                          className={cn(
+                            'w-[140px] border-b border-r px-3 py-2 text-right tabular-nums',
+                            diffClassName(
+                              combinedDiff(cat.byPeriod[p.period_id])
+                            )
+                          )}
                         >
                           {formatCurrency(
-                            combinedAmount(cat.byPeriod[p.period_id])
+                            combinedDiff(cat.byPeriod[p.period_id])
                           )}
                         </td>
                       ))}
@@ -318,27 +370,56 @@ export function HistoricalExpensesView({
                 </td>
                 {isSplit ? (
                   <>
-                    <td className="sticky left-[180px] z-[15] border-r bg-muted/30 px-3 py-2 text-right tabular-nums">
+                    <td
+                      className={cn(
+                        'sticky left-[180px] z-[15] border-r bg-muted/30 px-3 py-2 text-right tabular-nums',
+                        diffClassName(
+                          data.totals[currentPeriod.period_id]?.credit_diff ?? 0
+                        )
+                      )}
+                    >
                       {formatCurrency(
-                        data.totals[currentPeriod.period_id]?.credit_amount ?? 0
+                        data.totals[currentPeriod.period_id]?.credit_diff ?? 0
                       )}
                     </td>
-                    <td className="sticky left-[290px] z-[15] border-r bg-muted/30 px-3 py-2 text-right tabular-nums">
+                    <td
+                      className={cn(
+                        'sticky left-[290px] z-[15] border-r bg-muted/30 px-3 py-2 text-right tabular-nums',
+                        diffClassName(
+                          data.totals[currentPeriod.period_id]
+                            ?.cash_debit_diff ?? 0
+                        )
+                      )}
+                    >
                       {formatCurrency(
-                        data.totals[currentPeriod.period_id]
-                          ?.cash_debit_amount ?? 0
+                        data.totals[currentPeriod.period_id]?.cash_debit_diff ??
+                          0
                       )}
                     </td>
                     {pastPeriods.map((p) => (
                       <Fragment key={p.period_id}>
-                        <td className="border-r px-3 py-2 text-right tabular-nums">
+                        <td
+                          className={cn(
+                            'border-r px-3 py-2 text-right tabular-nums',
+                            diffClassName(
+                              data.totals[p.period_id]?.credit_diff ?? 0
+                            )
+                          )}
+                        >
                           {formatCurrency(
-                            data.totals[p.period_id]?.credit_amount ?? 0
+                            data.totals[p.period_id]?.credit_diff ?? 0
                           )}
                         </td>
-                        <td className="border-r px-3 py-2 text-right tabular-nums">
+                        <td
+                          className={cn(
+                            'border-r px-3 py-2 text-right tabular-nums',
+                            diffClassName(
+                              data.totals[p.period_id]?.cash_debit_diff ?? 0
+                            )
+                          )}
+                        >
                           {formatCurrency(
-                            data.totals[p.period_id]?.cash_debit_amount ?? 0
+                            data.totals[p.period_id]?.cash_debit_diff ?? 0
                           )}
                         </td>
                       </Fragment>
@@ -346,19 +427,27 @@ export function HistoricalExpensesView({
                   </>
                 ) : (
                   <>
-                    <td className="sticky left-[180px] z-[15] border-r bg-muted/30 px-3 py-2 text-right tabular-nums">
+                    <td
+                      className={cn(
+                        'sticky left-[180px] z-[15] border-r bg-muted/30 px-3 py-2 text-right tabular-nums',
+                        diffClassName(
+                          combinedDiff(data.totals[currentPeriod.period_id])
+                        )
+                      )}
+                    >
                       {formatCurrency(
-                        combinedAmount(data.totals[currentPeriod.period_id])
+                        combinedDiff(data.totals[currentPeriod.period_id])
                       )}
                     </td>
                     {pastPeriods.map((p) => (
                       <td
                         key={p.period_id}
-                        className="border-r px-3 py-2 text-right tabular-nums"
-                      >
-                        {formatCurrency(
-                          combinedAmount(data.totals[p.period_id])
+                        className={cn(
+                          'border-r px-3 py-2 text-right tabular-nums',
+                          diffClassName(combinedDiff(data.totals[p.period_id]))
                         )}
+                      >
+                        {formatCurrency(combinedDiff(data.totals[p.period_id]))}
                       </td>
                     ))}
                   </>

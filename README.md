@@ -48,6 +48,12 @@ The Budget Tracker is a sophisticated financial management tool that implements 
 - **Financial Studies**: Conduct detailed financial analysis across different scenarios
 - **Performance Tracking**: Monitor financial goals and targets
 
+### 🤖 AI Assistant
+
+- **Natural-Language Q&A**: Ask questions about your financial data in Spanish, answered from real DB state
+- **Savings Suggestions**: Get concrete, ranked cut candidates to hit a savings target
+- **Configurable Provider**: Uses Claude by default; can be pointed at any Anthropic-Messages-API-compatible provider (e.g. Kimi K3) via `ANTHROPIC_BASE_URL`
+
 ## Technology Stack
 
 - **Frontend**: Next.js 15 with App Router, React 18
@@ -118,6 +124,8 @@ npm install
 cp .env.example .env.local
 ```
 
+`ANTHROPIC_API_KEY` is required to use the AI Assistant. See `.env.example` for the optional `ANTHROPIC_BASE_URL`/`ANTHROPIC_MODEL` overrides to run it against an alternate Anthropic-compatible provider (e.g. Kimi K3).
+
 4. Initialize the database
 
 ```bash
@@ -182,6 +190,12 @@ npm run dev
 
 - Manage budgeting time periods
 - Open/close periods for data integrity
+
+### AI Assistant (`/asistente`)
+
+- Ask natural-language questions about your financial data (Spanish)
+- Get ranked savings suggestions for a target amount
+- Also available as a global floating panel (`Cmd+K` / `Ctrl+K`)
 
 ## Database Migrations
 

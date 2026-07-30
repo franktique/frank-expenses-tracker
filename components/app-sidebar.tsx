@@ -14,6 +14,7 @@ import {
   Layers as LayersIcon,
   Percent,
   PieChart,
+  Sparkles,
   Tag,
   TrendingUp,
   Wallet,
@@ -105,6 +106,9 @@ export function AppSidebar() {
         pathname === '/cotizaciones' || pathname.startsWith('/cotizaciones/')
       );
     }
+    if (path === '/asistente') {
+      return pathname === '/asistente' || pathname.startsWith('/asistente/');
+    }
     return pathname === path;
   };
 
@@ -161,6 +165,18 @@ export function AppSidebar() {
               <Link href="/">
                 <Home className="h-4 w-4" />
                 <span>Dashboard</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/asistente')}
+              tooltip="Asistente IA"
+            >
+              <Link href="/asistente">
+                <Sparkles className="h-4 w-4" />
+                <span>Asistente IA</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

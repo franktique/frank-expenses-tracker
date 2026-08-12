@@ -2,1112 +2,125 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Development Commands
+## Commands
 
-### Essential Commands
-
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run test` - Run Jest tests
-- `npm run test:watch` - Run tests in watch mode
-- `npm run test:coverage` - Generate test coverage report
-
-### Database Commands
-
-The application uses API routes for database operations. Key migration endpoints:
-
-- `/api/setup-db` - Initialize database schema
-- `/api/migrate-fondos` - Migrate funds (fondos) tables
-- `/api/migrate-category-fund-relationships` - Migrate category-fund relationships
-- `/api/migrate-expense-source-funds` - Migrate expense source fund tracking
-- `/api/migrate-tipo-gasto` - Add tipo_gasto column to categories for expense type classification
-- `/api/migrate-tipo-gasto-constraint` - Update tipo_gasto constraint to include E (Eventual) type
-
-## Application Architecture
-
-### Technology Stack
-
-- **Framework**: Next.js 15 with App Router
-- **Database**: Neon PostgreSQL with `@neondatabase/serverless`
-- **UI Components**: Radix UI with custom components in `/components/ui/`
-- **Styling**: Tailwind CSS with custom design system
-- **Charts**: Recharts for data visualization
-- **Validation**: Zod schemas
-- **Testing**: Jest with React Testing Library
-
-### Core Architecture Patterns
-
-#### Context-Based State Management
-
-The application uses React Context for global state management:
-
-- **BudgetContext** (`/context/budget-context.tsx`) - Main application state
-- **AuthContext** (`/lib/auth-context.tsx`) - Authentication state
-- **ActivePeriodErrorBoundary** - Handles period-related errors
-
-#### Database Connection Pattern
-
-Database connections use a resilient pattern with retry logic:
-
-- **Safe Client Creation** (`/lib/db.ts`) - Handles connection failures gracefully
-- **Exponential Backoff** - Built-in retry mechanism for rate limits
-- **Connection Testing** - Validates database connectivity before operations
-
-#### Fund-Based Financial System
-
-The application implements a sophisticated fund management system:
-
-- **Multi-Fund Categories** - Categories can be associated with multiple funds
-- **Source Fund Tracking** - Expenses track which fund money comes from
-- **Fund Transfers** - Support for inter-fund transfers via expenses
-- **Balance Calculations** - Automatic fund balance recalculation
-
-### Key Data Models
-
-#### Core Entities (see `/types/funds.ts`)
-
-- **Fund** - Financial pools with balances (`id`, `name`, `initial_balance`, `current_balance`)
-- **Category** - Expense categories with fund associations (`id`, `name`, `associated_funds[]`, `tipo_gasto`)
-  - **Tipo Gasto**: Expense type classification (F=Fijo/Fixed, V=Variable, SF=Semi Fijo/Semi-Fixed)
-- **Period** - Time periods for budgeting (`id`, `name`, `month`, `year`, `is_open`)
-- **Expense** - Transactions with source/destination funds (`source_fund_id`, `destination_fund_id`)
-- **Income** - Money inflows to specific funds (`fund_id`)
-- **Budget** - Expected spending per category/period
-
-#### Fund System Features
-
-- **Default Fund**: "Disponible" fund for unassigned categories
-- **Category-Fund Relationships**: Many-to-many mapping via `category_fund_relationships` table
-- **Fund Filtering**: UI can filter data by specific funds or show all
-- **Fund Analytics**: Balance trends and transaction history
-
-### API Structure
-
-#### RESTful Endpoints
-
-- `/api/categories/[id]/funds/` - Manage category-fund relationships
-- `/api/expenses/validate-source-fund/` - Validate fund assignments
-- `/api/funds/[id]/recalculate/` - Recalculate fund balances
-- `/api/dashboard/` - Aggregated data with fund filtering
-
-#### Migration Endpoints
-
-- Database schema migrations are handled via dedicated API routes
-- Each migration has corresponding test and rollback scripts in `/scripts/`
-
-### Component Architecture
-
-#### UI Component System
-
-- **Base Components** (`/components/ui/`) - Radix UI wrappers with consistent styling
-- **Feature Components** (`/components/`) - Business logic components
-- **Chart Components** - Optimized Recharts implementations with performance monitoring
-
-#### Error Handling
-
-- **Error Boundaries** - Component-level error isolation
-- **Validation** - Zod schemas for type-safe data validation
-- **Fund Validation** - Specialized validation for fund relationships
-
-### Development Patterns
-
-#### Caching Strategy
-
-- **Category-Fund Cache** (`/lib/category-fund-cache.ts`) - In-memory relationship caching
-- **Active Period Storage** (`/lib/active-period-storage.ts`) - Session storage for UI state
-- **Fund Balance Cache** - Automatic invalidation on fund updates
-
-#### Testing Strategy
-
-- **Unit Tests** - Component and utility function testing
-- **Integration Tests** - API endpoint and database testing
-- **Migration Tests** - Database schema change validation
-- **Performance Tests** - Chart rendering and large dataset handling
-
-#### CSS Conventions
-
-- Uses CSS-in-JS variables for theming (`--primary`, `--background`, etc.)
-- Responsive design with mobile-first approach
-- Chart-specific styling variables (`--chart-1` through `--chart-5`)
-
-### Common Development Tasks
-
-#### Adding a New Fund Feature
-
-1. Update type definitions in `/types/funds.ts`
-2. Add validation schemas with Zod
-3. Create API endpoints in `/app/api/`
-4. Update BudgetContext if state management needed
-5. Add UI components with proper error handling
-6. Write tests covering the new functionality
-
-#### Database Schema Changes
-
-1. Create migration script in `/scripts/`
-2. Add corresponding API endpoint in `/app/api/`
-3. Update type definitions
-4. Add rollback and verification scripts
-5. Test with existing data scenarios
-
-#### Working with Fund Relationships
-
-- Always validate fund assignments for categories
-- Use `CategoryFundFallback` for backward compatibility
-- Implement proper cache invalidation
-- Handle fund filtering in UI components
-
-#### Working with Tipo Gasto (Expense Types)
-
-The **Tipo Gasto** feature classifies categories into four expense types:
-
-- **F (Fijo)** - Fixed expenses (blue badge) - Regular, recurring expenses like rent, insurance
-- **V (Variable)** - Variable expenses (green badge) - Expenses that fluctuate like groceries, entertainment
-- **SF (Semi Fijo)** - Semi-fixed expenses (orange badge) - Partially recurring like utilities, subscriptions
-- **E (Eventual)** - Eventual expenses (red badge) - Rare, one-time expenses like car repairs, medical bills
-
-**Implementation Details**:
-
-- Constants defined in `/types/funds.ts`: `TIPO_GASTO_VALUES`, `TIPO_GASTO_LABELS`
-- Validation: Uses Zod enum validation in category schemas
-- Database: Stored in `categories.tipo_gasto` as VARCHAR(2) with check constraint
-- UI Components:
-  - `TipoGastoBadge` (`/components/tipo-gasto-badge.tsx`) - Display with color coding
-  - `TipoGastoSelect` (`/components/tipo-gasto-select.tsx`) - Form select component
-- Migration: Use `/api/migrate-tipo-gasto` endpoint to add column to existing databases
-- Optional field: Type is optional for backward compatibility
-
-**Adding Tipo Gasto to New Features**:
-
-1. Include `tipo_gasto?: TipoGasto` in data models
-2. Add to validation schemas with `.enum(["F", "V", "SF"]).optional()`
-3. Use `TipoGastoBadge` component for display
-4. Use `TipoGastoSelect` component for form input
-5. Remember to handle undefined/null values gracefully
-
-#### Quick-Add Expense Pattern
-
-- **Password Note**: if asked for a password when using playwright MCP, use the password: 123
-- **Component**: `/components/expense-form-dialog.tsx` - Reusable dialog for adding expenses
-- **Usage**: Can be triggered from any view (dashboard, tables, etc.)
-- **Features**:
-  - Pre-populate category via `preSelectedCategoryId` prop
-  - Auto-handles fund relationships and validation
-  - Supports current fund filter context via `currentFundFilter` prop
-  - Callback on success via `onSuccess` prop for data refresh
-- **Example Implementation** (dashboard-view.tsx:618-633):
-  ```tsx
-  // Add PlusCircle icon to table rows
-  <div className="flex items-center gap-2">
-    <span>{item.category_name}</span>
-    <Button
-      variant="ghost"
-      size="sm"
-      className="h-6 w-6 p-0 opacity-0 hover:bg-accent group-hover:opacity-100"
-      onClick={() => {
-        setSelectedCategoryId(item.category_id);
-        setIsQuickAddExpenseOpen(true);
-      }}
-    >
-      <PlusCircle className="h-4 w-4" />
-    </Button>
-  </div>
-  ```
-
-#### Simulation Budget Form - Drag & Drop Reordering
-
-The **Simulation Budget Form** (`/components/simulation-budget-form.tsx`) now supports drag-and-drop reordering of budget categories with automatic balance recalculation.
-
-**Features**:
-
-- **Drag Handle Icon** - GripVertical icon appears on hover over each row for intuitive drag indication
-- **Custom Category Ordering** - Users can reorder categories within their tipo_gasto groups using drag & drop
-- **Group Boundary Protection** - Drag operations are restricted within the same tipo_gasto group; dragging across groups is prevented with visual feedback
-- **Automatic Balance Recalculation** - Running balances update immediately after dropping a category in a new position
-- **Local Persistence** - Custom order is saved to browser localStorage (`simulation_${simulationId}_category_order`) and restored across browser sessions
-- **Integration with Tipo Gasto Sorting** - Custom drag order applies within tipo_gasto groups after tipo_gasto sorting is applied
-
-**Implementation Details**:
-
-- **State Management**: Uses `categoryOrder`, `draggedCategoryId`, `draggedTipoGasto`, and `isValidDropTarget` states
-- **Drag Handlers**:
-  - `handleDragStart` - Captures dragged category ID and tipo_gasto value
-  - `handleDragOver` - Validates drop target is in same tipo_gasto group, provides visual feedback
-  - `handleDrop` - Reorders category array and updates state
-  - `handleDragEnd` - Clears drag state
-- **Sorting Integration**:
-  - `getSortedCategories` memoized selector applies custom order after tipo_gasto grouping
-  - `categoryBalances` automatically recalculates based on new sorted order
-- **Local Storage**:
-  - Loads saved order on component mount from browser localStorage with JSON parsing and error handling
-  - Saves order to browser localStorage whenever `categoryOrder` changes
-  - Persists across browser sessions and page reloads
-
-**Visual Feedback**:
-
-- Dragged row: `opacity-50 bg-accent`
-- Valid drop zone (same grupo): `bg-blue-50 dark:bg-blue-950`
-- Drag cursor: `cursor-move` on table rows
-- Drag handle icon: Visible on row hover with `opacity-0 group-hover:opacity-100 transition-opacity`
-
-**Usage Example**:
-
-```tsx
-// Users can drag category rows to reorder within tipo_gasto groups
-// 1. Click and hold on drag handle (GripVertical icon)
-// 2. Drag over target row within same tipo_gasto group
-// 3. Drop to reorder - balances automatically recalculate
-// 4. Order persists in browser localStorage across sessions
-```
-
-**Notes**:
-
-- Custom order persists in browser localStorage across sessions but is not synced to database
-- Order is stored locally per simulation: `simulation_${simulationId}_category_order`
-- Order survives browser session, page refreshes, and tab closures
-- Clearing browser localStorage will reset the custom order to default
-- When tipo_gasto sort is toggled off, custom order is preserved
-- Categories with undefined tipo_gasto are treated as separate group
-- Custom order applies per user/device (each device maintains its own order)
-
-#### Simulation Sub-Groups - Grouping Categories
-
-The **Simulation Sub-Groups** feature allows users to organize budget categories into logical groups with their own subtotals and management controls.
-
-**Features**:
-
-- **Create Sub-Groups**: Select multiple categories and name the group with automatic API save
-- **Display Organization**: Collapsible headers with expand/collapse toggle, shows category count and subtotals
-- **Subtotal Rows**: Display aggregated Efectivo, Crédito, Ahorro Esperado, and Total per sub-group
-- **Delete Sub-Groups**: Confirmation dialog removes group (categories remain uncategorized)
-- **Mixed Layout**: Uncategorized categories can be interspersed with sub-groups at any position
-- **Database Persistence**: All sub-groups persisted to PostgreSQL with proper relationships
-
-**Data Model**:
-
-- `simulation_subgroups` table: `id`, `simulation_id`, `name`, `display_order`, `created_at`, `updated_at`
-- `subgroup_categories` junction table: `id`, `subgroup_id`, `category_id`, `order_within_subgroup`
-
-**API Endpoints**:
-
-- `GET /api/simulations/[id]/subgroups` - Fetch all sub-groups with categories
-- `POST /api/simulations/[id]/subgroups` - Create sub-group with selected categories
-- `PATCH /api/simulations/[id]/subgroups/[subgroupId]` - Update sub-group name/order
-- `DELETE /api/simulations/[id]/subgroups/[subgroupId]` - Delete sub-group (cascade to categories)
-- `POST /api/migrate-simulation-subgroups` - Initialize database tables if needed
-
-**Components**:
-
-- `SubgroupNameDialog` (`components/subgroup-name-dialog.tsx`) - Modal for naming new sub-groups
-- `SubgroupHeaderRow` (`components/subgroup-header-row.tsx`) - Renders header with expand/collapse and delete
-- `SubgroupSubtotalRow` (`components/subgroup-subtotal-row.tsx`) - Renders subtotal row with aggregated values
-
-**Utilities**:
-
-- `organizeTableRowsWithSubgroups()` - Merges sub-groups and uncategorized categories for table rendering
-- `calculateSubgroupSubtotals()` - Memoized calculation of sub-group totals
-- `shouldShowRow()` - Determines visibility based on expand/collapse state
-- `getSubgroupForCategory()` - Finds parent sub-group for a category
-
-**Integration Notes**:
-
-- **Filters**: `hideEmptyCategories` and `excludedCategoryIds` work with sub-groups (filters individual categories while subtotals show full group)
-- **Drag-Drop**: Individual categories within expanded sub-groups can be reordered; collapsed sub-group categories are not draggable
-- **Tipo_gasto Sort**: Categories sort by tipo_gasto within sub-groups; sub-groups maintain integrity during sort operations
-- **Excel Export**: Sub-groups displayed as indented headers with category rows and subtotal rows in exported Excel files
-
-**Adding Sub-Groups to Components**:
-
-1. Import types: `import type { Subgroup } from "@/types/simulation"`
-2. Fetch sub-groups: `const subgroups = await fetch(/api/simulations/${id}/subgroups).then(r => r.json())`
-3. Organize table: `const tableRows = organizeTableRowsWithSubgroups(subgroups, categories, excludedIds)`
-4. Track expansion: `const [expandedSubgroups, setExpandedSubgroups] = useState<Set<string>>(new Set())`
-5. Render with visibility: `if (shouldShowRow(row, tableRows, expandedSubgroups)) { /* render */ }`
-
-**Performance**:
-
-- Sub-group subtotal calculations use `useMemo` to prevent unnecessary recalculations
-- Table organization is O(n + s) where n = categories and s = sub-groups
-- Expand/collapse is O(1) state toggle with no data fetching
-
-#### Simulation Sub-Groups - Add/Remove Categories
-
-The **Simulation Sub-Groups Enhancement** allows users to dynamically add and remove categories from existing sub-groups within the budget simulation form.
-
-**Features**:
-
-- **Add Categories Button**: '+' button on sub-group headers enters "add mode" to select uncategorized categories
-- **Done Button**: Replaces '+' button during add mode; clicking it adds selected categories to the sub-group
-- **Cancel Functionality**: 'X' button exits add mode without saving changes
-- **Remove Categories**: Small trash icons appear on category rows within sub-groups for easy removal
-- **Visual Feedback**: Selected categories highlight with blue background during add mode
-- **Disabled State**: '+' button disables when no uncategorized categories are available
-
-**State Management**:
-
-- `addingToSubgroupId: string | null` - Tracks which sub-group is in add mode (only one at a time)
-- `categoriesToAddToSubgroup: (string | number)[]` - Categories selected for addition
-- `isAddingCategoriesLoading: boolean` - Loading state during API operations
-
-**Handlers**:
-
-- `getUncategorizedCategories()` - Returns categories not in any sub-group (filtered by current sort/filters)
-- `getSubgroupForCategory()` - Finds which sub-group a category belongs to
-- `handleAddToSubgroupClick()` - Enters add mode for a sub-group
-- `handleDoneAddingToSubgroup()` - Saves selected categories to sub-group via API
-- `handleRemoveCategoryFromSubgroup()` - Removes category from sub-group with confirmation
-- `handleCancelAddToSubgroup()` - Exits add mode without saving
-- `toggleCategoryForAddition()` - Toggles category selection during add mode
-
-**Component Integration**:
-
-- `SubgroupHeaderRow` - Updated with new props: `isInAddMode`, `onAddCategories`, `onDoneAddingCategories`, `onCancelAddingCategories`, `canAddCategories`
-- Category rows show checkboxes for uncategorized categories when in add mode
-- Category rows show delete buttons for categorized items in expanded sub-groups
-
-**API Operations**:
-
-- `PATCH /api/simulations/[id]/subgroups/[subgroupId]` - Adds categories (sends full categoryIds array)
-- Automatic UI update after successful API call
-- Confirmation dialog before removing categories
-
-**User Flow**:
-
-1. User sees '+' button on sub-group header (disabled if no uncategorized categories)
-2. Click '+' to enter add mode - checkboxes appear on uncategorized categories
-3. Select desired categories via checkboxes
-4. Click 'Done' to add them to the sub-group (button shows in header)
-5. Or click 'X' to cancel and exit add mode
-6. To remove categories: click trash icon on any categorized row
-7. Confirm removal in dialog, category moves back to uncategorized section
-
-**Key Implementation Details**:
-
-- Uncategorized categories are filtered by current view (respects hideEmptyCategories, excludedCategoryIds, sort order)
-- Only one sub-group can be in add mode at a time
-- Selected categories get visual blue highlight background
-- API updates sub-group atomically (sends all category IDs at once)
-- Toast notifications for success/error feedback
-- Confirmation dialogs prevent accidental category removal
-
-#### Simulation Sub-Groups - Drag & Drop Reordering
-
-The **Simulation Sub-Groups Drag & Drop Reordering** feature allows users to reorganize sub-groups and reorder them relative to each other and uncategorized categories through intuitive drag-and-drop interactions.
-
-**Features**:
-
-- **Drag Sub-Group Headers**: Click and drag sub-group headers to move entire groups above/below other sub-groups
-- **Move Relative to Categories**: Sub-groups can be positioned above, below, or between uncategorized categories
-- **Visual Drag Feedback**:
-  - Drag handle icon (GripVertical) appears on sub-group headers on hover
-  - Dragged row shows reduced opacity (50%) and accent background color
-  - Drop zones highlight with blue background (light blue-50 for light theme, dark blue-950 for dark theme)
-  - Cursor changes to move cursor while dragging
-- **Custom Order Persistence**: Sub-group ordering is saved to browser localStorage and restored across sessions
-  - Key format: `simulation_${simulationId}_subgroup_order`
-  - Persists across browser sessions, page reloads, and tab closures
-- **Collapsed Groups Support**: Can drag sub-groups even when collapsed; categories move together with header
-- **Disabled During Operations**: Dragging is disabled when:
-  - In add/edit mode for any sub-group
-  - Auto-save or manual save is in progress
-  - Sub-group is being deleted
-- **Balance Calculations**: Running balances automatically recalculate based on new sub-group order
-
-**Data Structures**:
-
-- `subgroupOrder`: `string[]` - Array of sub-group IDs in custom order
-- `subgroupDragState`: Object tracking drag operations with `draggedItemId`, `draggedItemType`, `dropZoneIndex`
-- `uncategorizedCategoryOrder`: `(string | number)[]` - For future uncategorized category reordering
-
-**State Management**:
-
-- `subgroupOrder` is initialized from localStorage or database `displayOrder`
-- Auto-saves to localStorage on every change
-- Validated against existing sub-groups to handle deleted items
-- Separate from database `displayOrder` - UI-only state
-
-**Handlers**:
-
-- `handleSubgroupDragStart()` - Initiate drag with validation
-- `handleSubgroupDragOver()` - Manage drop zone feedback
-- `handleSubgroupDrop()` - Execute reordering logic
-- `handleSubgroupDragEnd()` - Clean up drag state
-- `isSubgroupDraggingDisabled()` - Check if drag is allowed
-
-**Component Integration**:
-
-- `SubgroupHeaderRow` (props on lines 24-30) - Accepts drag handlers and visual state props
-  - `isDragging`: Applied opacity-50 and accent background
-  - `isDragOver`: Applied blue-50 background for drop zones
-  - `onDragStart`, `onDragOver`, `onDrop`, `onDragEnd` - Drag event handlers
-- Table rendering (lines 1795-1803) - Uses `reorganizeTableRowsWithSubgroupOrder()` when custom order exists
-- Visual updates (lines 1836-1837) - Tracks which row is being dragged/dropped
-
-**Utilities** (`/lib/subgroup-reordering-utils.ts`):
-
-- `moveSubgroupInOrder()` - Reorder sub-groups in array
-- `reorganizeTableRowsWithSubgroupOrder()` - Apply custom order to table rows
-- `validateSubgroupId()` - Check if sub-group exists
-- `cleanupSubgroupOrder()` - Remove deleted sub-groups from order
-- `initializeSubgroupOrder()` - Create initial order from database
-
-**Browser Compatibility**:
-
-- Uses HTML5 Drag & Drop API
-- Works in all modern browsers (Chrome, Firefox, Safari, Edge)
-- Gracefully falls back to database order if localStorage unavailable
-
-**Usage Example**:
-
-```tsx
-// Users drag sub-group headers to reorder:
-1. Hover over sub-group header to see drag handle icon
-2. Click and drag the header to move the sub-group
-3. Drop above/below another sub-group or uncategorized section
-4. Order automatically saves to localStorage
-5. Refresh page - custom order is restored
-```
-
-**Performance Considerations**:
-
-- Sub-group reordering uses memoized table row organization
-- Drag events don't trigger API calls (UI-only reordering)
-- Balance recalculation is automatic via existing memoized selector
-- Each simulation maintains independent order (per-browser/device)
-
-**Integration with Existing Features**:
-
-- **Tipo Gasto Sorting**: Subgroups maintain relative order when tipo_gasto sort is applied
-- **Category Drag-Drop**: Individual categories within subgroups use existing category-level drag (doesn't interfere)
-- **Auto-Save**: Captures new sub-group order in auto-save operations
-- **Excel Export**: Exported files respect custom sub-group order
-- **Collapsed State**: Order is independent of expand/collapse state
-
-**Known Limitations**:
-
-- Custom order is browser/device-specific (not synced across devices)
-- Order is not stored in database (stored only in localStorage)
-- Clearing browser data will reset order to default
-- Uncategorized categories reordering is not yet implemented
-
-#### Simulation Budget - Visibility Toggle
-
-The **Visibility Toggle** feature allows users to hide specific sub-groups and categories in the budget simulation form, with hidden items automatically excluded from balance calculations and displayed with strikethrough text styling.
-
-**Features**:
-
-- **Eye Icon Toggle**: Eye icon appears on:
-  - Sub-group headers (left side, visible on hover)
-  - Individual category rows (right side, visible on hover)
-- **Visual Feedback**: Hidden items display with:
-  - Strikethrough (line-through) text styling
-  - Reduced opacity (60%) for visual de-emphasis
-- **Smart Calculations**: Hidden items are automatically excluded from:
-  - Sub-group subtotals
-  - Running balance calculations
-  - Total budget calculations
-- **Hierarchy Awareness**:
-  - Hiding a sub-group hides all its contained categories
-  - Individual categories can be hidden independently within expanded sub-groups
-  - Parent sub-group visibility is respected when calculating category visibility
-- **Persistence**: Visibility state saved to browser localStorage with key format:
-  - `simulation_${simulationId}_visibility_state`
-  - Persists across browser sessions and page reloads
-
-**State Management**:
-
-- `visibilityState`: `Record<string | number, boolean>` - Maps item IDs to visibility state
-  - Default: items visible (true) unless explicitly hidden in state
-  - Stores both subgroup IDs and category IDs
-- Initialized from localStorage on component mount
-- Auto-saves to localStorage whenever state changes
-
-**Visibility Logic**:
-
-- **Sub-group Visibility**: Direct visibility state
-  - Item hidden if `visibilityState[subgroupId] === false`
-- **Category Visibility**: Considers both item and parent sub-group
-  - Item hidden if own visibility is false OR parent subgroup is hidden
-  - Uses `isCategoryVisible(categoryId, parentSubgroupId, visibilityState)` utility
-
-**Component Updates**:
-
-- `SubgroupHeaderRow` - Added `isVisible` prop and `onToggleVisibility` callback
-  - Eye/EyeOff icon button with purple hover color
-  - Button hidden during add-category mode
-  - Icon shows on hover with smooth opacity transition
-- `SubgroupSubtotalRow` - Added `isSubgroupVisible` prop
-  - Displays strikethrough styling when parent subgroup is hidden
-- Category rows - Added visibility toggle button in last cell
-  - Eye/EyeOff icon button with purple hover color
-  - Updates when category is hidden
-
-**Utilities** (`/lib/visibility-calculation-utils.ts`):
-
-- `isItemVisible()` - Check if item is visible (defaults to visible)
-- `isSubgroupVisible()` - Check subgroup visibility
-- `isCategoryVisible()` - Check category visibility (considers parent)
-- `toggleVisibility()` - Toggle visibility state for an item
-- `filterVisibleCategories()` - Get only visible categories from a list
-- `countVisibleCategories()` - Count visible categories (for header display)
-- `saveVisibilityToStorage()` - Persist to localStorage
-- `loadVisibilityFromStorage()` - Load from localStorage
-
-**Calculation Updates**:
-
-- `categoryBalances` memo updated to skip hidden categories
-  - Uses `isCategoryVisible()` check before including in balance calculation
-  - Excludes net spend from hidden items
-- `subgroupBalances` memo updated to skip hidden categories
-  - Only counts visible categories toward subgroup balance
-- `calculateSubgroupSubtotals()` function accepts optional `visibilityState` parameter
-  - Checks both subgroup and category visibility before summing
-  - Maintains backward compatibility (optional parameter)
-
-**Styling**:
-
-- Strikethrough: CSS `line-through` class applied to hidden rows
-- Opacity: `opacity-60` applied to hidden rows
-- Eye icon color: Purple hover background (`hover:bg-purple-100 dark:hover:bg-purple-900/20`)
-- Icon size: `h-4 w-4` (consistent with other icons)
-
-**User Interaction Flow**:
-
-1. User hovers over subgroup header or category row
-2. Eye icon appears with smooth opacity transition
-3. User clicks eye icon to toggle visibility
-4. Item immediately shows strikethrough styling if hidden
-5. Balance calculations update automatically
-6. Visibility state persists to localStorage
-
-**Integration with Existing Features**:
-
-- **Sub-group Management**: Works with create/edit/delete operations
-  - Visibility independent of sub-group organization
-  - Hidden categories can still be added/removed from sub-groups
-- **Drag & Drop**: Compatible with category and sub-group reordering
-  - Can drag hidden items (visibility doesn't affect dragging)
-  - Dropped items retain their visibility state
-- **Tipo Gasto Sorting**: Visibility independent of sort order
-  - Hidden items stay hidden after sorting
-  - Sort order applies within visible items
-- **Excel Export**: Respects visibility state
-  - Only visible items included in exported data
-- **Auto-Save**: Captures visibility state in saved simulations
-  - Visibility persists independently of other budget changes
-
-**Known Limitations**:
-
-- Visibility state is browser/device-specific (not synced across devices)
-- Not stored in database (UI-only state in localStorage)
-- Clearing browser localStorage will reset visibility state
-- Visibility is per-simulation (independent tracking for each simulation)
-
-#### Overspend Analysis - Current Period vs All Periods
-
-The **Overspend Actual** dashboard provides two views for analyzing spending overage across budgets:
-
-**Menu Structure**:
-
-- "Overspend Actual" submenu in sidebar with two options:
-  - **Periodo Actual** - Shows overspend data for the currently active period only
-  - **Todos los Periodos** - Shows aggregated overspend across all existing periods
-
-**Current Period View** (`/dashboard/overspend`):
-
-- Displays overspend for the active period with horizontal bar chart
-- Shows Planeado (Budgeted) vs Excedente (Overspend) side-by-side
-- Filters: Payment method (Todos, Efectivo/Débito, Tarjeta Crédito)
-- Category exclusion filter available via Settings button
-- KPI cards for total overspend by payment method
-- Categories sorted by overspend amount (highest to lowest)
-
-**All Periods View** (`/dashboard/overspend/all-periods`):
-
-- Aggregates overspend data across all available periods with interactive timeline visualization
-- **Bar Chart Timeline**:
-  - Interactive bar chart showing overspend for each period
-  - Bars color-coded by status:
-    - 🔴 Red bars for periods with overspend
-    - 🟢 Green bars for periods under budget
-    - 🔵 Blue bar for selected period
-  - X-axis shows period names (rotated 45° for readability)
-  - Y-axis shows overspend amounts
-  - Click any bar to select that period and view details
-  - Hover tooltips show exact overspend amounts
-  - Responsive height (400px) with full-width responsive layout
-- **Detail Breakdown Table**:
-  - Displays below bar chart when a period is selected
-  - Shows all categories with their overspend for selected period
-  - Includes columns: Categoría | Planeado | Gastado | Overspend | %
-  - Categories sorted by overspend amount (highest first)
-  - Rows highlighted in light red if category has overspend
-- Filtering options:
-  - Payment method filtering (Todos, Efectivo/Débito, Tarjeta Crédito)
-  - Category exclusion filtering via Settings button
-  - Filters update both chart and detail table in real-time
-- Loading and error states for data fetching
-
-**API Endpoint**:
-
-- `GET /api/overspend/all-periods` - Fetches aggregated overspend data
-  - Query Parameters:
-    - `paymentMethod` (optional): "cash", "credit", or undefined for all
-    - `excludedCategories` (optional): Comma-separated list of category IDs to exclude
-  - Response: `AllPeriodsOverspendResponse` with:
-    - `overspendByCategory[]` - Array of categories with period-wise breakdown
-    - `summary` - Aggregate totals and payment method breakdown
-
-**Data Types** (`/types/funds.ts`):
-
-- `PeriodOverspendData` - Single period's overspend data for a category
-- `CategoryOverspendRow` - Category with all periods' overspend data
-- `AllPeriodsOverspendResponse` - Complete API response structure
-
-**Implementation Details**:
-
-- Uses client-side data fetching (no BudgetContext dependency)
-- Automatic data refresh when filters change
-- Responsive design supports mobile, tablet, and desktop views
-- Memoized calculations for performance optimization
-- Chart labels show currency formatted amounts (es-MX locale)
-
-**User Flow - All Periods View**:
-
-1. Navigate to "Overspend Actual" → "Todos los Periodos" in sidebar
-2. Page loads showing interactive bar chart timeline of all periods
-3. Bar chart displays:
-   - Each period as a bar (colored red/green/blue based on status)
-   - Period names on X-axis (rotated for readability)
-   - Overspend amounts on Y-axis
-4. Hover over any bar to see exact overspend amount in tooltip
-5. Click any bar to select that period:
-   - Selected bar turns blue
-   - Detail breakdown table appears below chart
-6. Detail table shows for selected period:
-   - All categories with their overspend amounts
-   - Columns: Category | Planned | Spent | Overspend | %
-   - Categories sorted by highest overspend first
-7. Use payment method dropdown to filter data by payment type:
-   - Updates all bars in chart
-   - Updates detail table with filtered data
-8. Click "Filtros" button to show category exclusion filter
-9. Select categories to exclude from calculations:
-   - Chart updates immediately
-   - Detail table updates with excluded categories removed
-10. Click on different period bar to switch detail view
-
-#### Projected Budget Execution Dashboard
-
-The **Projected Budget Execution** dashboard (`/dashboard/projected-execution`) visualizes when budgets are scheduled to be executed during the active period, helping with cash flow planning.
-
-**Features**:
-
-- **Daily/Weekly Toggle**: Switch between daily granularity (all individual dates) and weekly aggregation (by ISO week)
-- **Interactive Bar Chart**: Shows budgeted amounts distribution across period dates
-  - X-axis: Date (daily) or Week number (weekly)
-  - Y-axis: Total budget amount (currency formatted)
-  - Peak bar highlighted in orange, others in indigo
-  - Responsive with rotated labels for readability
-- **KPI Cards**: Display key metrics
-  - Total budgeted amount for the period
-  - Average per day/week
-  - Peak budget amount with date/week
-  - Minimum budget amount
-- **Smart Defaults**: Budgets without `default_date` automatically use day 1 of the period
-- **Auto-switching**: Weekly view auto-enables if period spans more than 31 days
-- **Responsive Design**: Optimized for mobile, tablet, and desktop screens
-
-**Data Aggregation Logic**:
-
-- Fetches all budgets for the active period
-- Groups by `default_date` if set, otherwise uses period start date (day 1)
-- Daily view: Direct date aggregation (sums all budgets with same date)
-- Weekly view: Groups dates by ISO week number (Monday=1), aggregates weekly totals
-- Automatic calculation of statistics: total, average, peak, minimum
-
-**API Endpoint** (`GET /api/budget-execution/[periodId]`):
-
-- Query Parameter: `viewMode=daily|weekly`
-- Returns: `BudgetExecutionResponse` with aggregated data and summary statistics
-- Handles edge cases: no budgets, missing default_dates, empty periods
-
-**Implementation Details**:
-
-- Uses Recharts `BarChart` for data visualization
-- Locale-formatted dates (es-MX) for display
-- Memoized calculations for performance optimization
-- Error handling with user-friendly messages
-- Loading states with spinner feedback
-- Empty state messaging when no data available
-
-**Interactive Features**:
-
-- **Click on Bars**: Click any bar in the chart to view detailed budget breakdown for that day/week
-- **Detail Table**: Displays category names and amounts for selected period
-- **Visual Feedback**: Selected bar highlights in blue, peak bars in orange, normal bars in indigo
-- **Toggle Selection**: Click same bar again to hide detail table
-- **Auto-Clear**: Selection clears when switching between daily and weekly views
-- **Responsive**: Works seamlessly on mobile devices
-
-**Data Flow**:
-
-1. Component mounts with active period from `BudgetContext`
-2. `fetchBudgetExecutionData()` calls API endpoint
-3. API aggregates budgets by date/week based on viewMode + collects budget details
-4. Response includes data array, summary statistics, and `budgetDetails` mapping
-5. `formatChartData()` transforms for Recharts compatibility
-6. Chart and KPI cards render with formatted data
-7. User clicks bar → `handleBarClick()` extracts date → updates `selectedDate` state
-8. Detail table renders conditionally with filtered budget details
-9. User toggles viewMode → clears selection and re-fetches data
-
-**API Response Structure**:
-
-```typescript
-interface BudgetExecutionResponse {
-  periodId: string;
-  periodName: string;
-  viewMode: "daily" | "weekly";
-  data: BudgetExecutionData[];           // For chart rendering
-  summary: { ... };                      // KPI statistics
-  budgetDetails: Record<string, BudgetDetail[]>; // For detail table
-}
-
-interface BudgetDetail {
-  budgetId: string;
-  categoryId: string;
-  categoryName: string;
-  amount: number;
-  date: string;        // YYYY-MM-DD (preserved even in weekly view)
-  paymentMethod: string;
-}
-```
-
-**Integration Notes**:
-
-- Requires active period to be selected (displays warning otherwise)
-- Works seamlessly with `default_date` feature (previous implementation)
-- Uses existing `BudgetContext` for period management
-- Follows established dashboard patterns (see category-bars, overspend dashboards)
-- No database updates needed - read-only visualization
-- Interactive detail view with budget breakdown information
-
-#### Investment Simulator
-
-The **Investment Simulator** (`/simular-inversiones`) allows users to project investment growth with compound interest, including regular monthly contributions and multiple rate comparisons.
-
-**Features**:
-
-- **Real-time Calculations**: All calculations happen client-side as user adjusts parameters
-- **Configurable Parameters**:
-  - Initial amount (monto inicial)
-  - Monthly contribution (aporte mensual)
-  - Term in months (plazo)
-  - Annual effective rate (tasa EA) - configurable unlike reference image
-  - Compounding frequency: Daily or Monthly
-  - Currency selection (COP, USD, EUR, MXN, ARS, GBP)
-- **Interactive Form**: +/- buttons for quick adjustments, similar to reference design
-- **Save When Ready**: Users configure and preview results before saving to database
-- **Rate Comparison**: Add multiple rates to compare final balances and interest earned
-- **Projection Chart**: Area chart showing capital vs accumulated interest over time
-- **Period Detail Table**: Month-by-month breakdown with pagination
-
-**Data Model**:
-
-- `investment_scenarios` table: `id`, `name`, `initial_amount`, `monthly_contribution`, `term_months`, `annual_rate`, `compounding_frequency`, `currency`, `created_at`, `updated_at`
-- `investment_rate_comparisons` table: `id`, `investment_scenario_id`, `rate`, `label`, `created_at`
-
-**API Endpoints**:
-
-- `GET /api/invest-scenarios` - List all scenarios with projected balances
-- `POST /api/invest-scenarios` - Create new scenario
-- `GET /api/invest-scenarios/[id]` - Get scenario by ID
-- `PUT /api/invest-scenarios/[id]` - Update scenario
-- `DELETE /api/invest-scenarios/[id]` - Delete scenario (cascades to comparisons)
-- `GET /api/invest-scenarios/[id]/projection` - Full projection with schedule
-- `GET /api/invest-scenarios/[id]/rate-comparisons` - Get rate comparisons
-- `POST /api/invest-scenarios/[id]/rate-comparisons` - Add rate comparison
-- `DELETE /api/invest-scenarios/[id]/rate-comparisons` - Remove rate comparison
-- `POST /api/migrate-invest-simulator` - Initialize database tables
-
-**Components** (`/components/invest-simulator/`):
-
-- `InvestCalculator` - Main component integrating all features
-- `InvestCalculatorForm` - Form with +/- buttons for parameters
-- `InvestSummaryCards` - KPI cards showing projected results
-- `InvestProjectionChart` - Area chart with capital vs interest
-- `InvestmentScheduleTable` - Period-by-period breakdown
-- `RateComparisonPanel` - Add/remove rates, comparison table
-- `SaveScenarioDialog` - Modal for naming and saving
-- `InvestScenarioList` - Collapsible list of saved scenarios
-
-**Calculation Functions** (`/lib/invest-calculations.ts`):
-
-- `convertEAToPeriodicRate(rate, frequency)` - EA to daily/monthly rate
-- `calculateFutureValue(principal, rate, periods, contribution)` - FV with contributions
-- `generateProjectionSchedule(scenario)` - Full period-by-period detail
-- `generateMonthlySummarySchedule(scenario)` - Monthly summary for charts
-- `calculateInvestmentSummary(scenario)` - Summary statistics
-- `compareRates(scenario, additionalRates)` - Multi-rate comparison
-- `calculateTimeToTarget(target, scenario)` - Time to reach goal
-- `calculateRequiredContribution(target, ...)` - Required monthly amount
-
-**Type Definitions** (`/types/invest-simulator.ts`):
-
-- `InvestmentScenario` - Scenario configuration
-- `InvestmentSummary` - Calculated totals
-- `InvestmentPeriodDetail` - Single period breakdown
-- `RateComparison` / `RateComparisonResult` - Rate comparison data
-- Zod schemas for validation
-
-**Financial Formulas**:
-
-- EA to Monthly Rate: `(1 + EA)^(1/12) - 1`
-- EA to Daily Rate: `(1 + EA)^(1/365) - 1`
-- Future Value: `P(1+r)^n + PMT × ((1+r)^n - 1) / r`
-
-**User Flow**:
-
-1. Navigate to `/simular-inversiones`
-2. Adjust parameters using form (calculations update in real-time)
-3. View summary cards, chart, and period detail
-4. Add comparison rates to see alternatives
-5. Click "Guardar Simulación" when satisfied
-6. Enter name in dialog, confirm save
-7. Access saved scenarios via collapsible list
-8. Click "Cargar" to load existing scenario for editing
-
-**Integration Notes**:
-
-- No BudgetContext dependency - standalone feature
-- Auto-migrates tables on first use if not exist
-- Purple theme consistent with financial tools
-- Supports both daily and monthly compounding
-- Rate comparisons work in real-time without saving
-
-#### Interest Rate Simulator
-
-The **Interest Rate Simulator** (`/simular-tasas`) allows users to convert interest rates between different formats (EA, Mensual, Diaria, Nominal) and save conversions for future reference.
-
-**Features**:
-
-- **Real-time Conversions**: All conversions happen client-side as user adjusts the rate
-- **Rate Types Supported**:
-  - EA (Efectiva Anual) - Annual Effective Rate
-  - EM (Efectiva Mensual) - Monthly Effective Rate
-  - ED (Efectiva Diaria) - Daily Effective Rate
-  - NM (Nominal Mensual) - Nominal Monthly Rate (annual with monthly compounding)
-  - NA (Nominal Anual) - Nominal Annual Rate
-- **Interactive Form**: +/- buttons for quick rate adjustments, preset buttons for common rates
-- **Educational Display**: Shows conversion formulas for each rate type
-- **Save Scenarios**: Save rate conversions with name and notes for future reference
-- **Scenario Management**: List, load, and delete saved scenarios
-
-**Data Model**:
-
-- `interest_rate_scenarios` table: `id`, `name`, `input_rate`, `input_rate_type`, `notes`, `created_at`, `updated_at`
-
-**API Endpoints**:
-
-- `GET /api/interest-rate-scenarios` - List all scenarios with conversions
-- `POST /api/interest-rate-scenarios` - Create new scenario
-- `GET /api/interest-rate-scenarios/[id]` - Get scenario by ID
-- `PUT /api/interest-rate-scenarios/[id]` - Update scenario
-- `DELETE /api/interest-rate-scenarios/[id]` - Delete scenario
-- `POST /api/migrate-interest-rate-simulator` - Initialize database tables
-
-**Components** (`/components/interest-rate-simulator/`):
-
-- `InterestRateCalculator` - Main component with tabs (Calculator/Scenarios)
-- `InterestRateForm` - Form with rate input, type selector, +/- buttons
-- `InterestRateResults` - Display cards showing all converted rates with formulas
-- `SaveRateDialog` - Modal for naming and saving scenarios
-- `InterestRateScenarioList` - Table of saved scenarios with load/delete actions
-
-**Calculation Functions** (`/lib/interest-rate-calculations.ts`):
-
-- `convertEAtoEM(ea)` - EA to Monthly Effective: `(1+EA)^(1/12) - 1`
-- `convertEAtoED(ea)` - EA to Daily Effective: `(1+EA)^(1/365) - 1`
-- `convertEAtoNM(ea)` - EA to Nominal Monthly: `12 × EM`
-- `convertEMtoEA(em)` - Monthly to EA: `(1+EM)^12 - 1`
-- `convertEDtoEA(ed)` - Daily to EA: `(1+ED)^365 - 1`
-- `convertNMtoEA(nm)` - Nominal to EA: `(1+NM/12)^12 - 1`
-- `convertRate(rate, fromType)` - Main conversion function returning all equivalents
-- `getConversionDisplay(rate, fromType)` - Conversion results with display metadata
-
-**Type Definitions** (`/types/interest-rate-simulator.ts`):
-
-- `RATE_TYPES` - Constants with labels and descriptions for each rate type
-- `RateType` - Union type of supported rate types
-- `InterestRateScenario` - Saved scenario data
-- `RateConversionResult` - Object with all converted rates
-- `RateConversionDisplay` - Conversion with formula and isInput flag
-- Zod schemas for create/update validation
-
-**Rate Conversion Formulas**:
-| From | To EA | Formula |
-|------|-------|---------|
-| EA | EA | Input value |
-| EM | EA | `(1 + EM)^12 - 1` |
-| ED | EA | `(1 + ED)^365 - 1` |
-| NM | EA | `(1 + NM/12)^12 - 1` |
-| NA | EA | `(1 + NA/12)^12 - 1` |
-
-| From EA | To  | Formula                      |
-| ------- | --- | ---------------------------- |
-| EA      | EM  | `(1 + EA)^(1/12) - 1`        |
-| EA      | ED  | `(1 + EA)^(1/365) - 1`       |
-| EA      | NM  | `12 × ((1 + EA)^(1/12) - 1)` |
-
-**User Flow**:
-
-1. Navigate to `/simular-tasas`
-2. Enter rate value (as percentage, e.g., 12 for 12%)
-3. Select input rate type (EA, EM, ED, NM, NA)
-4. View all equivalent rates instantly with formulas
-5. Click "Guardar Simulación" to save
-6. Enter name and optional notes, confirm save
-7. Switch to "Mis Simulaciones" tab to view saved scenarios
-8. Click "Cargar" to load a saved scenario for editing
-
-**Integration Notes**:
-
-- No BudgetContext dependency - standalone feature
-- Auto-migrates tables on first use if not exist
-- Purple theme consistent with other financial simulators
-- Rate input stored as decimal (e.g., 0.12 for 12%)
-- Display shows percentages with 4 decimal places
-- All conversions are pure functions (no side effects)
-
-#### AI Assistant (Claude-powered)
-
-The **AI Assistant** (`/asistente` + global floating panel) lets the user ask natural-language questions about their financial data and get answers grounded in real DB state. Built on Claude with a Spanish system prompt and a tool-use loop.
-
-**Features**:
-
-- **Natural-language Q&A**: Ask "¿Cuánto he gastado este periodo?" or "¿En qué categorías estoy gastando de más?" — the assistant calls deterministic tools, then assembles a Spanish answer citing real numbers
-- **Savings optimization** (headline use case): "Quiero ahorrar $500 este mes, ¿dónde puedo recortar?" returns a ranked plan of concrete cut candidates computed deterministically
-- **Conversation persistence**: All chats saved to Postgres — resumable across sessions, rename/delete from UI
-- **Streaming responses**: Tokens stream back via NDJSON for instant feedback
-- **Global panel** (`Cmd+K` / `Ctrl+K`) and dedicated page at `/asistente`
-- **Process panel** ("Ver proceso" toggle, `/asistente` only): right-side panel showing the live trace of a turn — extended-thinking text (when the active model/provider supports and returns it) interleaved with tool calls/results in chronological order. Ephemeral (not persisted to DB); the in-bubble "pensando" placeholder also derives a live label from the same trace (e.g. "Consultando get_category_spending…") instead of a static message.
-
-**Configuration** (`.env.local` — see `.env.example`):
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `ANTHROPIC_API_KEY` | Yes | — | API key from https://console.anthropic.com/ (or from an alternate provider, if using `ANTHROPIC_BASE_URL`) |
-| `ANTHROPIC_BASE_URL` | No | Anthropic's endpoint | Override to point at any Anthropic-Messages-API-compatible provider (e.g. Kimi K3) instead of Anthropic directly |
-| `ANTHROPIC_MODEL` | No | `claude-sonnet-4-6` | Model ID. Alternatives: `claude-opus-4-7` (best reasoning, ~5× cost), `claude-haiku-4-5` (cheapest), or an alternate provider's model id (e.g. `kimi-k3`) if using `ANTHROPIC_BASE_URL` |
-| `ASSISTANT_ENABLE_THINKING` | No | auto (`true` only when `ANTHROPIC_BASE_URL` is unset) | Force extended thinking on/off (`true`/`false`). `thinking` is an Anthropic-specific Messages API extension — don't force `true` against a non-Anthropic provider (e.g. Kimi K3, future LM Studio) unless you've confirmed it supports the param |
-| `ASSISTANT_MAX_TOKENS` | No | `4096` | Max tokens per assistant response |
-| `ASSISTANT_MAX_TOOL_CALLS` | No | `10` | Cap on tool iterations per turn (cost guardrail) |
-
-**Database Setup**:
+Package manager is **pnpm** (see `packageManager` in `package.json`), though `npm run` works too.
 
 ```bash
-# Idempotent — safe to run on dev and prod
-curl -X POST https://your-domain.com/api/migrate-assistant
-# or locally:
-curl -X POST http://localhost:3000/api/migrate-assistant
+pnpm dev                 # Dev server (localhost:3000)
+pnpm build               # Production build
+pnpm lint                # ESLint (next/core-web-vitals + prettier-as-error)
+pnpm format              # Prettier write across the repo
+pnpm test                # Jest
+pnpm test:watch
+pnpm test:coverage
 ```
 
-Creates two tables:
-- `assistant_conversations` (id, title, created_at, updated_at)
-- `assistant_messages` (id, conversation_id, role[user|assistant|tool], content, tool_data JSONB, created_at) with `ON DELETE CASCADE`
+Run a single test file or test:
 
-**Architecture (hybrid deterministic + LLM)**:
-
-- **Agent runner** (`lib/assistant/agent.ts`): Uses `@anthropic-ai/sdk` (base SDK) with a manual streaming tool-use loop. The `@anthropic-ai/claude-agent-sdk` package is also installed but NOT used — it spawns the Claude Code CLI subprocess, which is incompatible with Next.js serverless. Tool functions are SDK-agnostic so the runner could be swapped without touching tools.
-- **Tools** (`lib/assistant/tools.ts`): Plain async functions returning JSON. Each wraps existing SQL patterns from `app/api/dashboard/`, `app/api/overspend/`, etc. The LLM decides which to call per question; deterministic code does all arithmetic.
-- **System prompt** (`lib/assistant/system-prompt.ts`): Spanish, domain-aware (funds, periods, tipo_gasto F/V/SF/E, payment methods).
-
-**Available Tools**:
-
-| Tool | Purpose |
-|------|---------|
-| `get_active_period_summary` | Totals for active period: income, expenses, budget, balance, remaining |
-| `get_overspend_by_category` | Categories over budget with amounts and percentages |
-| `get_category_spending` | Spending by category with payment-method breakdown + filters |
-| `list_recent_expenses` | Recent transactions (configurable limit, filters) |
-| `get_fund_balances` | All funds with current and initial balances |
-| `get_budget_execution` | Projected payments grouped by date |
-| `get_spending_history` | Last N periods trend with payment-method breakdown |
-| `suggest_savings` | **Computes concrete savings candidates for a target amount** — prioritizes overspent variable/semi-fixed categories, returns both a ranked plan and all candidates |
-| `get_category_breakdown` | Spending grouped by tipo_gasto (F/V/SF/E) |
-
-**API Endpoints**:
-
-- `POST /api/migrate-assistant` — Create tables (idempotent)
-- `GET /api/assistant/conversations` — List with preview and message count
-- `POST /api/assistant/conversations` — Create new conversation
-- `GET /api/assistant/conversations/[id]` — Get with all messages
-- `PATCH /api/assistant/conversations/[id]` — Rename (`{ title }`)
-- `DELETE /api/assistant/conversations/[id]` — Delete (cascade)
-- `POST /api/assistant/conversations/[id]/messages` — Stream agent response (NDJSON)
-
-**Streaming Protocol** (`POST /messages` returns `Content-Type: application/x-ndjson`):
-
-Each line is one JSON event. Read line-by-line on the client:
-
-```
-{"type":"message_start"}
-{"type":"text_delta","payload":{"text":"..."}}
-{"type":"thinking_delta","payload":{"text":"..."}}
-{"type":"tool_call","payload":{"tool":"suggest_savings","input":{...}}}
-{"type":"tool_result","payload":{"tool":"suggest_savings","ok":true,"output":{...}}}
-{"type":"message_end","payload":{"assistant_message_id":"..."}}
-{"type":"error","payload":{"message":"..."}}
+```bash
+pnpm test lib/__tests__/subgroup-calculations.test.ts
+pnpm test -- -t "calculates subtotals"
 ```
 
-`thinking_delta` only appears when `shouldRequestThinking()` (in `lib/assistant/agent.ts`) is true for the active provider — clients must treat its absence as normal, not an error.
+### Important build caveat
 
-**Components** (`/components/assistant/`):
+`next.config.mjs` sets `eslint.ignoreDuringBuilds: true` **and** `typescript.ignoreBuildErrors: true`. A green `pnpm build` does not mean the code typechecks. Run `pnpm lint` and `npx tsc --noEmit` explicitly before considering a change done.
 
-- `AssistantPanel` — Right-side Sheet, opened via `Cmd+K` or trigger button
-- `AssistantTrigger` — Floating action button (bottom-right) + keyboard shortcut
-- `AssistantChatMessage` — User/assistant message bubble with streaming cursor; while streaming with no answer text yet, shows an animated "thinking" placeholder using an optional `processLabel` prop instead of the answer cursor
-- `AssistantChatInput` — Auto-growing textarea (Enter to send, Shift+Enter for newline)
-- `AssistantConversationList` — List with inline rename/delete
-- `AssistantSuggestions` — Starter prompt chips in empty state
-- `AssistantProcessPanel` (`/asistente` only) — Renders the live `processEntries` trace (thinking text, tool_call/tool_result chips with collapsible JSON); auto-scrolls; not used by the Cmd+K sheet
+`next.config.mjs` also pins `TZ: 'America/Bogota'` — date arithmetic assumes Colombia time.
 
-**Context**: `AssistantProvider` (`/context/assistant-context.tsx`) mounted at the **root layout** (`app/layout.tsx`) — not `ConditionalLayout` — so `/asistente` can SSR-render. State: conversations, current conversation, messages, streaming text, panel open, error, plus `processEntries`/`showProcess`/`setShowProcess` for the process panel. `showProcess` persists to `localStorage` (`assistant_show_process_panel`); `processEntries` is in-memory only, reset at the start of each `sendMessage` call.
+### Local dev credentials
 
-**User Flow**:
+Login is password-only. When driving the app with a browser tool locally, the password is `123`.
 
-1. User opens panel via `Cmd+K`, the FAB, or the "Asistente IA" sidebar entry
-2. Either picks a starter suggestion or types a question
-3. User message persists immediately; assistant streams back tokens
-4. The assistant calls one or more tools; on `/asistente`, toggling "Ver proceso" surfaces a live trace (thinking + tool calls) in a right-side panel, and the in-bubble placeholder narrates the same trace instead of a static "pensando"
-5. Final response cites numbers from tool output
-6. Refresh the page — conversation is still there (the process trace is not — it's ephemeral)
-7. Rename/delete from the conversation list
+## Architecture
 
-**Adding a New Tool**:
+Next.js 15 App Router + React 18, Neon serverless PostgreSQL, Radix UI + Tailwind (shadcn-style `components/ui/`), Recharts, Zod, Jest + React Testing Library. UI copy is in **Spanish**; code identifiers are English.
 
-1. Add a `ToolDefinition` to `lib/assistant/tools.ts` (name, Spanish description, JSON Schema input, async handler)
-2. Push it to the `TOOLS` array at the bottom of the file
-3. The agent picks it up automatically — no other wiring needed
-4. Tool handlers receive `Record<string, unknown>`; validate inputs inside the handler
-5. Use sentinel-based SQL (`WHERE (${param}::text IS NULL OR col = ${param})`) instead of conditional fragments — Neon composition with empty `sql\`\`` is unreliable
+### Database access
 
-**Adding a New UI Suggestion**:
+All DB access goes through `sql` exported from `lib/db.ts` — a Neon tagged-template client wrapped by `createSafeClient()`, which adds exponential-backoff retry on rate-limit errors and degrades to a throwing dummy client when `DATABASE_URL_NEW` is unset (note the `_NEW` suffix; it is not `DATABASE_URL`). API routes import it directly:
 
-Edit `SUGGESTIONS` array in `components/assistant/assistant-suggestions.tsx` — each entry has an icon, label, and the actual prompt string sent to the agent.
+```ts
+import { sql } from '@/lib/db';
+const rows = await sql`SELECT ...`;
+```
 
-**Troubleshooting**:
+**Conditional WHERE clauses must use the sentinel pattern**, not composed SQL fragments — Neon's template composition with an empty `` sql`` `` is unreliable:
 
-- **"ANTHROPIC_API_KEY no está configurada"**: Add it to `.env.local` and restart `pnpm dev`
-- **`useAssistant debe usarse dentro de AssistantProvider`**: Provider is at `app/layout.tsx` — don't move it back to `ConditionalLayout` (SSR for `/asistente` requires it at root)
-- **Tool returns `error: 'No hay periodo activo.'`**: User needs an open period — most tools default to the active period
-- **`Suggest_savings` says `achievable: false`**: The target exceeds what's mathematically cuttable from current spending; the response includes `shortfall` and `all_candidates` so the model can explain
-- **Token budget on long conversations**: Currently the runner sends full history; if you hit context limits, truncate in `buildMessages` (`lib/assistant/agent.ts`)
+```ts
+WHERE (${fundId}::text IS NULL OR e.source_fund_id = ${fundId})
+```
 
-**Notes**:
+### Migrations run as API routes, not a CLI
 
-- **Auth gap**: Endpoint inherits the project's password-only auth (no server-side session enforcement). Add a session check inside `messages/route.ts` if you need to gate it.
-- **Phase 1 scope**: NL Q&A + savings suggestions only. Deferred to later phases: proactive dashboard insights, what-if scenario simulations, AI expense categorization. The infra (tools registry, streaming route, persistence, UI shell) is reusable for all of them.
-- **Cost control**: `ASSISTANT_MAX_TOOL_CALLS=10` caps the agent loop. Each tool call adds one round-trip; monitor usage if you switch to Opus.
+There is no migration runner. Each schema change is a `app/api/migrate-*/route.ts` endpoint (31 of them) that you hit once, with matching `.sql` / rollback / README files in `scripts/`. Endpoints are idempotent; some expose `GET`, some `POST` — check the route before calling.
+
+```bash
+curl -X POST http://localhost:3000/api/setup-db          # initial schema
+curl -X POST http://localhost:3000/api/migrate-fondos     # example feature migration
+```
+
+When adding a schema change: write `scripts/create-*-migration.sql` + `scripts/rollback-*.sql`, add the `app/api/migrate-*/route.ts` endpoint, then update the types in `types/`.
+
+### Provider stack
+
+`app/layout.tsx` nests the global providers in this order:
+
+```
+ThemeProvider → AuthProvider → ActivePeriodErrorBoundary → BudgetProvider
+  → AssistantProvider → TabProvider → SidebarProvider → ConditionalLayout
+```
+
+- **`BudgetProvider`** (`context/budget-context.tsx`, ~1400 lines) is the app's data layer: categories, periods, budgets, incomes, expenses, credit cards, settings, plus every CRUD mutation. Most views consume `useBudget()` rather than fetching directly.
+- **`AuthProvider`** (`lib/auth-context.tsx`) holds password auth (flag in `localStorage`) *and* active-period loading, which has circuit-breaker and adaptive-retry variants in `lib/active-period-service.ts` with a `sessionStorage` cache in `lib/active-period-storage.ts`.
+- **`AssistantProvider`** must stay at the **root layout**, not inside `ConditionalLayout` — `/asistente` needs it to SSR. Moving it back produces `useAssistant debe usarse dentro de AssistantProvider`.
+- **`ConditionalLayout`** gates the app: hides chrome on `/login`, strips sidebar/tabs when `?_layout=panel`, and shows the initial loading screen. It uses a `hasLoadedOnce` ref latch so that page-level `refreshData()` calls on mount can't re-trigger the loading gate — that latch exists to prevent an infinite render loop; don't remove it.
+- **`TabProvider`** + `SimpleTabLayout` implement an in-app browser-like tab bar with split-view panels (`hooks/use-split-view.ts`). Navigation is tab-scoped, so a route can be mounted more than once.
+
+### Fund-based domain model
+
+The core concept is that money lives in named **funds** and every transaction names its source. `types/funds.ts` is the canonical model file (Zod schemas + constants live there too).
+
+- **Fund** — balance pool; the default is `DEFAULT_FUND_NAME = 'Disponible'`.
+- **Category** ↔ **Fund** is many-to-many via `category_fund_relationships`. Categories also carry `tipo_gasto`: `F` Fijo, `V` Variable, `SF` Semi Fijo, `E` Eventual (`TIPO_GASTO_VALUES` / `TIPO_GASTO_LABELS`, plus `TIPO_GASTO_SORT_ORDERS` driving the 3-cycle sort in `components/simulation-budget-form.tsx`). It is optional for backward compatibility — handle `undefined`.
+- **Expense** — has `source_fund_id` and optional `destination_fund_id`; an expense with both is how a **fund transfer** is modeled.
+- **Period** — month/year budgeting window with a single open "active period"; most queries and assistant tools default to it. Closing a period freezes its data.
+- **Budget** — expected amount per category per period, with recurrence support (`lib/budget-recurrence-utils.ts`).
+
+Note the current state of the fund system: the schema and expense/income wiring are fully live, but there is **no `/fondos` page and no fund CRUD or recalculate endpoint**. Funds are seeded by `/api/migrate-fondos`, the default is picked in `/api/settings`, and `funds.current_balance` is mutated inline by `UPDATE funds` statements inside `app/api/expenses/route.ts`, `app/api/expenses/[id]/route.ts`, and `app/api/incomes/route.ts`. Any change to how an expense stores its funds has to keep those balance updates in sync — nothing recomputes them afterwards. Read-only aggregates live under `/api/dashboard/funds/` (`balances`, `transfers`).
+
+Careful with the word *subgroup* — it means two unrelated things. `/api/categories/[id]/subgroups/[subgroupId]/items` is the per-category **item catalog** used by expense detail tracking; `simulation_subgroups` is the category-grouping feature inside simulations.
+
+### Feature areas
+
+Beyond core budgeting, each of these is a page under `app/`, an API group under `app/api/`, a types file, and calculation helpers in `lib/`:
+
+| Area | Route | Types / logic |
+|---|---|---|
+| Groupers & studies | `/agrupadores`, `/estudios` | `types/estudios.ts` |
+| Simulations (with subgroups & templates) | `/simular` | `types/simulation.ts`, `lib/subgroup-*.ts` |
+| Loan / investment / interest-rate simulators | `/simular-prestamos`, `/simular-inversiones`, `/simular-tasas` | `lib/loan-calculations.ts`, `lib/invest-calculations.ts`, `lib/interest-rate-calculations.ts` |
+| Credit cards | `/tarjetas-credito` | `types/credit-cards.ts` |
+| Debt tracking | `/seguimiento-deudas` | `lib/debt-tracking-calculations.ts` |
+| Quotes | `/cotizaciones` | `types/cotizaciones.ts` |
+| AI assistant | `/asistente` | `lib/assistant/` |
+
+### AI assistant
+
+`lib/assistant/` runs a manual streaming tool-use loop on the base **`@anthropic-ai/sdk`**. `@anthropic-ai/claude-agent-sdk` is in `package.json` but deliberately **unused** — it spawns the Claude Code CLI as a subprocess, which does not work under Next.js serverless.
+
+- `agent.ts` — the loop, streaming, and `shouldRequestThinking()` (extended thinking is requested only against Anthropic's own endpoint unless `ASSISTANT_ENABLE_THINKING` overrides it).
+- `tools.ts` — plain async functions returning JSON, registered in a `TOOLS` array at the bottom of the file. Adding an entry there is the only wiring needed. Tools wrap the same SQL the dashboard/overspend routes use, so **all arithmetic stays in deterministic code** and the model only chooses and narrates.
+- `system-prompt.ts` — Spanish, domain-aware.
+
+`POST /api/assistant/conversations/[id]/messages` streams **NDJSON** (`application/x-ndjson`), one JSON event per line: `message_start`, `text_delta`, `thinking_delta`, `tool_call`, `tool_result`, `message_end`, `error`. Clients must treat a missing `thinking_delta` as normal. Conversations persist in `assistant_conversations` / `assistant_messages` (created by `POST /api/migrate-assistant`); the "Ver proceso" trace is in-memory only.
+
+Config lives in `.env.local` (`ANTHROPIC_API_KEY`, plus optional `ANTHROPIC_BASE_URL`, `ANTHROPIC_MODEL`, `ASSISTANT_ENABLE_THINKING`, `ASSISTANT_MAX_TOKENS`, `ASSISTANT_MAX_TOOL_CALLS`) — see `.env.example` for the full annotated list.
+
+## Conventions
+
+- Path alias `@/*` maps to the repo root, in both `tsconfig.json` and Jest's `moduleNameMapper`.
+- Prettier: single quotes, semicolons, 80 columns, es5 trailing commas, `prettier-plugin-tailwindcss` for class sorting. It's an **ESLint error**, so `pnpm lint` fails on unformatted code.
+- Tests live in `__tests__/` directories next to the code (`lib/`, `components/`, `hooks/`, `types/`, and several `app/api/*/`). Coverage is collected from `lib/`, `components/`, `context/`. Files matching `lib/__tests__/verify-*.js` and `integration-test-*.js` are excluded from the run — they are manual scripts, not Jest tests.
+- Design docs for individual features are written to `docs/` (60+ `feat-*.md` / `fix-*.md` files). Check there before reverse-engineering a feature's intent.

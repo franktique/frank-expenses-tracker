@@ -188,6 +188,7 @@ export function SimulationBudgetForm({
 
   // Filter state management
   const [hideEmptyCategories, setHideEmptyCategories] = useState(false);
+  const [hideStruckCategories, setHideStruckCategories] = useState(false);
   const [excludedCategoryIds, setExcludedCategoryIds] = useState<
     (string | number)[]
   >([]);
@@ -1310,25 +1311,40 @@ export function SimulationBudgetForm({
     [hasUnsavedChanges, budgetData, performSave]
   );
 
-  // Calculate totals
+  // Calculate totals (hidden categories are excluded from every KPI)
   const totals = useMemo(() => {
     let totalEfectivo = 0;
     let totalCredito = 0;
     let totalAhorroEfectivo = 0;
     let totalAhorroCredito = 0;
     let totalGeneral = 0;
+    let categoriesWithBudget = 0;
 
     Object.entries(budgetData).forEach(([categoryId, data]) => {
+      // Skip categories hidden through the visibility (eye) toggle.
+      // getSubgroupForCategory is declared further below, so look it up inline.
+      const parentSubgroupId = subgroups.find((sg) =>
+        sg.categoryIds.some((cid) => String(cid) === String(categoryId))
+      )?.id;
+      if (!isCategoryVisible(categoryId, parentSubgroupId, visibilityState)) {
+        return;
+      }
+
       const efectivo = parseFloat(data.efectivo_amount) || 0;
       const credito = parseFloat(data.credito_amount) || 0;
       const ahorroEfectivo = parseFloat(data.ahorro_efectivo_amount) || 0;
       const ahorroCredito = parseFloat(data.ahorro_credito_amount) || 0;
+      const categoryTotal = efectivo + credito - ahorroEfectivo - ahorroCredito;
 
       totalEfectivo += efectivo;
       totalCredito += credito;
       totalAhorroEfectivo += ahorroEfectivo;
       totalAhorroCredito += ahorroCredito;
-      totalGeneral += efectivo + credito - ahorroEfectivo - ahorroCredito;
+      totalGeneral += categoryTotal;
+
+      if (categoryTotal > 0) {
+        categoriesWithBudget++;
+      }
     });
 
     const totalNetSpend = totalEfectivo - totalAhorroEfectivo;
@@ -1340,8 +1356,9 @@ export function SimulationBudgetForm({
       ahorroCredito: totalAhorroCredito,
       netSpend: totalNetSpend,
       general: totalGeneral,
+      categoriesWithBudget,
     };
-  }, [budgetData]);
+  }, [budgetData, subgroups, visibilityState]);
 
   // Get category total
   const getCategoryTotal = (categoryId: string | number): number => {
@@ -1462,6 +1479,22 @@ export function SimulationBudgetForm({
       sg.categoryIds.some((cid) => String(cid) === String(categoryId))
     );
   };
+
+  // Number of categories actually rendered, after every filter (including the
+  // "Ocultar tachadas" toggle). Used for the filter status line.
+  const visibleCategoryCount = useMemo(
+    () =>
+      getSortedCategories.filter(
+        (c) =>
+          !hideStruckCategories ||
+          isCategoryVisible(
+            c.id,
+            getSubgroupForCategory(subgroups, c.id)?.id,
+            visibilityState
+          )
+      ).length,
+    [getSortedCategories, hideStruckCategories, subgroups, visibilityState]
+  );
 
   // Calculate balances for each category respecting sub-group order
   const categoryBalances = useMemo(() => {
@@ -2184,12 +2217,7 @@ export function SimulationBudgetForm({
                 {formatCurrency(totals.general)}
               </div>
               <p className="mt-1 text-xs text-muted-foreground">
-                {
-                  Object.keys(budgetData).filter(
-                    (categoryId) => getCategoryTotal(categoryId) > 0
-                  ).length
-                }{' '}
-                categorías con presupuesto
+                {totals.categoriesWithBudget} categorías con presupuesto
               </p>
             </CardContent>
           </Card>
@@ -2221,6 +2249,23 @@ export function SimulationBudgetForm({
                     className="cursor-pointer text-sm font-medium"
                   >
                     Ocultar sin presupuesto
+                  </Label>
+                </div>
+
+                {/* Hide Struck-Through (visibility-toggled) Categories */}
+                <div className="flex items-center space-x-2 rounded-lg border bg-muted/30 px-3 py-2">
+                  <Checkbox
+                    id="hide-struck-categories"
+                    checked={hideStruckCategories}
+                    onCheckedChange={(checked) =>
+                      setHideStruckCategories(checked as boolean)
+                    }
+                  />
+                  <Label
+                    htmlFor="hide-struck-categories"
+                    className="cursor-pointer text-sm font-medium"
+                  >
+                    Ocultar tachadas
                   </Label>
                 </div>
 
@@ -2331,9 +2376,11 @@ export function SimulationBudgetForm({
               </div>
 
               {/* Filter status info */}
-              {(hideEmptyCategories || excludedCategoryIds.length > 0) && (
+              {(hideEmptyCategories ||
+                hideStruckCategories ||
+                excludedCategoryIds.length > 0) && (
                 <div className="text-xs text-muted-foreground">
-                  {getSortedCategories.length} de {categories.length} categorías
+                  {visibleCategoryCount} de {categories.length} categorías
                   visibles
                 </div>
               )}
@@ -2475,6 +2522,52 @@ export function SimulationBudgetForm({
                       expandedSubgroups,
                       excludedCategoryIds
                     );
+                  }
+
+                  // Drop rows hidden through the visibility (eye) toggle.
+                  // A subgroup block disappears entirely when the subgroup
+                  // itself is hidden or all of its categories are.
+                  if (hideStruckCategories) {
+                    const hiddenSubgroupIds = new Set(
+                      subgroups
+                        .filter(
+                          (sg) =>
+                            !isSubgroupVisible(sg.id, visibilityState) ||
+                            (sg.categoryIds.length > 0 &&
+                              sg.categoryIds.every(
+                                (cid) =>
+                                  !isCategoryVisible(
+                                    cid,
+                                    sg.id,
+                                    visibilityState
+                                  )
+                              ))
+                        )
+                        .map((sg) => sg.id)
+                    );
+
+                    tableRows = tableRows.filter((row) => {
+                      if (
+                        row.type === 'subgroup_header' ||
+                        row.type === 'subgroup_subtotal'
+                      ) {
+                        return !hiddenSubgroupIds.has(row.subgroupId!);
+                      }
+
+                      const parentId = getSubgroupForCategory(
+                        subgroups,
+                        row.categoryId!
+                      )?.id;
+                      if (parentId && hiddenSubgroupIds.has(parentId)) {
+                        return false;
+                      }
+
+                      return isCategoryVisible(
+                        row.categoryId!,
+                        parentId,
+                        visibilityState
+                      );
+                    });
                   }
 
                   if (tableRows.length === 0) {

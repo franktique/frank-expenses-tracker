@@ -674,6 +674,7 @@ export function ExpensesView() {
                                 expense.credit_card_info.last_four_digits,
                               is_active:
                                 expense.credit_card_info.is_active ?? true,
+                              cutoff_day: null,
                               created_at: '',
                               updated_at: '',
                             };

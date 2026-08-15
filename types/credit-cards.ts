@@ -24,6 +24,7 @@ export interface CreditCard {
   franchise: CreditCardFranchise;
   last_four_digits: string;
   is_active: boolean;
+  cutoff_day: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -40,6 +41,12 @@ export const CreditCardSchema = z.object({
     .string()
     .regex(/^[0-9]{4}$/, 'Deben ser exactamente 4 dígitos'),
   is_active: z.boolean(),
+  cutoff_day: z
+    .number()
+    .int('El día de corte debe ser un número entero')
+    .min(1, 'El día de corte debe estar entre 1 y 31')
+    .max(31, 'El día de corte debe estar entre 1 y 31')
+    .nullable(),
   created_at: z.string(),
   updated_at: z.string(),
 });
@@ -55,6 +62,13 @@ export const CreateCreditCardSchema = z.object({
     .string()
     .regex(/^[0-9]{4}$/, 'Deben ser exactamente 4 dígitos'),
   is_active: z.boolean().optional().default(true),
+  cutoff_day: z
+    .number()
+    .int('El día de corte debe ser un número entero')
+    .min(1, 'El día de corte debe estar entre 1 y 31')
+    .max(31, 'El día de corte debe estar entre 1 y 31')
+    .nullable()
+    .optional(),
 });
 
 // Credit Card update schema (for API requests)
@@ -70,6 +84,13 @@ export const UpdateCreditCardSchema = z.object({
     .regex(/^[0-9]{4}$/, 'Deben ser exactamente 4 dígitos')
     .optional(),
   is_active: z.boolean().optional(),
+  cutoff_day: z
+    .number()
+    .int('El día de corte debe ser un número entero')
+    .min(1, 'El día de corte debe estar entre 1 y 31')
+    .max(31, 'El día de corte debe estar entre 1 y 31')
+    .nullable()
+    .optional(),
 });
 
 // Credit Card status update schema (for status toggle operations)
@@ -95,6 +116,7 @@ export const CREDIT_CARD_ERROR_MESSAGES = {
   LAST_FOUR_DIGITS_REQUIRED: 'Los últimos 4 dígitos son obligatorios',
   LAST_FOUR_DIGITS_INVALID: 'Los últimos 4 dígitos deben ser números',
   LAST_FOUR_DIGITS_LENGTH: 'Deben ser exactamente 4 dígitos',
+  CUTOFF_DAY_RANGE: 'El día de corte debe estar entre 1 y 31',
   DUPLICATE_CREDIT_CARD: 'Ya existe una tarjeta con estos datos',
   CREDIT_CARD_IN_USE:
     'No se puede eliminar la tarjeta porque está asociada a gastos',
@@ -125,8 +147,8 @@ export interface CreditCardDashboardCategoryRow {
   category_id: string;
   category_name: string;
   tipo_gasto?: string | null;
-  actual: number;      // sum of expenses charged to this card in this category
-  projected: number;   // sum of budgets for this category (default card = this card)
+  actual: number; // sum of expenses charged to this card in this category
+  projected: number; // sum of budgets for this category (default card = this card)
 }
 
 export interface CreditCardDashboardRow {
@@ -146,10 +168,36 @@ export interface CreditCardDashboardResponse {
   period_name: string;
   cards: CreditCardDashboardRow[];
   unassigned: CreditCardDashboardUnassigned; // expenses with credit_card_id but card not linked to any category default
-  no_card: {                                  // expenses without any credit_card_id
+  no_card: {
+    // expenses without any credit_card_id
     actual_total: number;
-    categories: { category_id: string; category_name: string; actual: number; projected: number }[];
+    categories: {
+      category_id: string;
+      category_name: string;
+      actual: number;
+      projected: number;
+    }[];
   };
+}
+
+// Credit Card payment projection types
+
+export interface CreditCardProjectionRow {
+  credit_card: CreditCard;
+  has_cutoff_day: boolean;
+  window_start: string | null; // YYYY-MM-DD, exclusive
+  window_end: string | null; // YYYY-MM-DD, inclusive
+  next_payment_month: number | null; // 0-indexed (0 = January)
+  next_payment_year: number | null;
+  projected_amount: number;
+  expense_count: number;
+}
+
+export interface CreditCardProjectionResponse {
+  period_id: string | null;
+  period_name: string | null;
+  cards: CreditCardProjectionRow[];
+  total_projected: number;
 }
 
 // API response types

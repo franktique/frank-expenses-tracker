@@ -3,18 +3,18 @@ import { sql } from '@/lib/db';
 import {
   CreateCreditCardSchema,
   CREDIT_CARD_ERROR_MESSAGES,
-  type CreditCard,
 } from '@/types/credit-cards';
 
 export async function GET() {
   try {
     const creditCards = await sql`
-      SELECT 
+      SELECT
         id,
         bank_name,
         franchise,
         last_four_digits,
         is_active,
+        cutoff_day,
         created_at,
         updated_at
       FROM credit_cards
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { bank_name, franchise, last_four_digits, is_active } =
+    const { bank_name, franchise, last_four_digits, is_active, cutoff_day } =
       validationResult.data;
 
     // Check for duplicate credit card (same bank + franchise + last four digits)
@@ -73,16 +73,17 @@ export async function POST(request: NextRequest) {
 
     // Create the credit card
     const [newCreditCard] = await sql`
-      INSERT INTO credit_cards (bank_name, franchise, last_four_digits, is_active)
+      INSERT INTO credit_cards (bank_name, franchise, last_four_digits, is_active, cutoff_day)
       VALUES (${bank_name}, ${franchise}, ${last_four_digits}, ${
         is_active ?? true
-      })
-      RETURNING 
+      }, ${cutoff_day ?? null})
+      RETURNING
         id,
         bank_name,
         franchise,
         last_four_digits,
         is_active,
+        cutoff_day,
         created_at,
         updated_at
     `;

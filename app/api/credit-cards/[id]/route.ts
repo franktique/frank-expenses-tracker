@@ -104,24 +104,52 @@ export async function PUT(
     ) {
       // Only updating status
       [updatedCard] = await sql`
-        UPDATE credit_cards 
+        UPDATE credit_cards
         SET is_active = ${updateData.is_active}, updated_at = NOW()
         WHERE id = ${id}
         RETURNING *
       `;
     } else {
-      // Update all provided fields
-      [updatedCard] = await sql`
-        UPDATE credit_cards 
-        SET 
-          bank_name = COALESCE(${updateData.bank_name}, bank_name),
-          franchise = COALESCE(${updateData.franchise}, franchise),
-          last_four_digits = COALESCE(${updateData.last_four_digits}, last_four_digits),
-          is_active = COALESCE(${updateData.is_active}, is_active),
-          updated_at = NOW()
-        WHERE id = ${id}
-        RETURNING *
-      `;
+      // Build dynamic SET clause so fields can be updated or cleared (e.g. cutoff_day → NULL)
+      const setClauses: string[] = [];
+      const values: any[] = [];
+
+      if (updateData.bank_name !== undefined) {
+        setClauses.push(`bank_name = $${values.length + 1}`);
+        values.push(updateData.bank_name);
+      }
+      if (updateData.franchise !== undefined) {
+        setClauses.push(`franchise = $${values.length + 1}`);
+        values.push(updateData.franchise);
+      }
+      if (updateData.last_four_digits !== undefined) {
+        setClauses.push(`last_four_digits = $${values.length + 1}`);
+        values.push(updateData.last_four_digits);
+      }
+      if (updateData.is_active !== undefined) {
+        setClauses.push(`is_active = $${values.length + 1}`);
+        values.push(updateData.is_active);
+      }
+      if (updateData.cutoff_day !== undefined) {
+        setClauses.push(`cutoff_day = $${values.length + 1}`);
+        values.push(updateData.cutoff_day);
+      }
+
+      if (setClauses.length > 0) {
+        const query = `
+          UPDATE credit_cards
+          SET ${setClauses.join(', ')}, updated_at = NOW()
+          WHERE id = $${values.length + 1}
+          RETURNING *
+        `;
+        values.push(id);
+        const result = await sql.query(query, values);
+        [updatedCard] = result;
+      } else {
+        [updatedCard] = await sql`
+          SELECT * FROM credit_cards WHERE id = ${id}
+        `;
+      }
     }
 
     return NextResponse.json(updatedCard);

@@ -338,6 +338,7 @@ export function CategoriesView() {
         franchise: category.default_credit_card_info.franchise as CreditCardType['franchise'],
         last_four_digits: category.default_credit_card_info.last_four_digits,
         is_active: category.default_credit_card_info.is_active,
+        cutoff_day: null,
         created_at: '',
         updated_at: '',
       });

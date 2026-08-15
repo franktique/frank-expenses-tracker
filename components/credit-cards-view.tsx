@@ -1,12 +1,11 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   PlusCircle,
   CreditCard as CreditCardIcon,
   AlertTriangle,
-  Power,
-  PowerOff,
+  CalendarClock,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -62,10 +61,30 @@ import {
   UpdateCreditCardStatusSchema,
   CREDIT_CARD_FRANCHISE_LABELS,
   CREDIT_CARD_ERROR_MESSAGES,
+  CreditCardProjectionResponse,
 } from '@/types/credit-cards';
+import { useBudget } from '@/context/budget-context';
+import {
+  getSpanishMonthName,
+  parseDateString,
+} from '@/lib/credit-card-projection-utils';
+
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat('es-MX', {
+    style: 'currency',
+    currency: 'MXN',
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(amount);
+
+const formatWindowDate = (dateString: string) => {
+  const { year, month, day } = parseDateString(dateString);
+  return `${day} de ${getSpanishMonthName(month)} de ${year}`;
+};
 
 export function CreditCardsView() {
   const { toast } = useToast();
+  const { activePeriod } = useBudget();
 
   // State management
   const [creditCards, setCreditCards] = useState<CreditCard[]>([]);
@@ -81,6 +100,7 @@ export function CreditCardsView() {
     CreditCardFranchise | ''
   >('');
   const [newCardLastFourDigits, setNewCardLastFourDigits] = useState('');
+  const [newCardCutoffDay, setNewCardCutoffDay] = useState('');
 
   // Form state for editing credit card
   const [editCard, setEditCard] = useState<CreditCard | null>(null);
@@ -89,6 +109,13 @@ export function CreditCardsView() {
     CreditCardFranchise | ''
   >('');
   const [editCardLastFourDigits, setEditCardLastFourDigits] = useState('');
+  const [editCardCutoffDay, setEditCardCutoffDay] = useState('');
+
+  // Payment projection state
+  const [projectionData, setProjectionData] =
+    useState<CreditCardProjectionResponse | null>(null);
+  const [isProjectionLoading, setIsProjectionLoading] = useState(false);
+  const [projectionError, setProjectionError] = useState<string | null>(null);
 
   // Delete state
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -105,6 +132,35 @@ export function CreditCardsView() {
     loadCreditCards();
   }, []);
 
+  const fetchProjection = useCallback(async (periodId: string) => {
+    setIsProjectionLoading(true);
+    setProjectionError(null);
+    try {
+      const response = await fetch(
+        `/api/credit-cards/projection?period_id=${periodId}`
+      );
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Error al cargar la proyección');
+      }
+      const data: CreditCardProjectionResponse = await response.json();
+      setProjectionData(data);
+    } catch (error) {
+      console.error('Error loading credit card projection:', error);
+      setProjectionError(
+        (error as Error).message || 'No se pudo cargar la proyección de pago'
+      );
+    } finally {
+      setIsProjectionLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activePeriod?.id) {
+      fetchProjection(activePeriod.id);
+    }
+  }, [activePeriod?.id, fetchProjection]);
+
   const loadCreditCards = async () => {
     try {
       setIsLoading(true);
@@ -114,6 +170,10 @@ export function CreditCardsView() {
       }
       const data = await response.json();
       setCreditCards(data.credit_cards || []);
+      // Refresh the projection after any card change (add/edit/delete/status)
+      if (activePeriod?.id) {
+        fetchProjection(activePeriod.id);
+      }
     } catch (error) {
       console.error('Error loading credit cards:', error);
       toast({
@@ -130,6 +190,7 @@ export function CreditCardsView() {
     setNewCardBankName('');
     setNewCardFranchise('');
     setNewCardLastFourDigits('');
+    setNewCardCutoffDay('');
   };
 
   const resetEditCardForm = () => {
@@ -137,6 +198,7 @@ export function CreditCardsView() {
     setEditCardBankName('');
     setEditCardFranchise('');
     setEditCardLastFourDigits('');
+    setEditCardCutoffDay('');
   };
 
   const handleAddCreditCard = async () => {
@@ -146,6 +208,7 @@ export function CreditCardsView() {
         bank_name: newCardBankName.trim(),
         franchise: newCardFranchise,
         last_four_digits: newCardLastFourDigits.trim(),
+        cutoff_day: newCardCutoffDay === '' ? null : Number(newCardCutoffDay),
       });
 
       if (!validationResult.success) {
@@ -204,6 +267,7 @@ export function CreditCardsView() {
         bank_name: editCardBankName.trim(),
         franchise: editCardFranchise,
         last_four_digits: editCardLastFourDigits.trim(),
+        cutoff_day: editCardCutoffDay === '' ? null : Number(editCardCutoffDay),
       });
 
       if (!validationResult.success) {
@@ -355,6 +419,9 @@ export function CreditCardsView() {
     setEditCardBankName(creditCard.bank_name);
     setEditCardFranchise(creditCard.franchise);
     setEditCardLastFourDigits(creditCard.last_four_digits);
+    setEditCardCutoffDay(
+      creditCard.cutoff_day ? String(creditCard.cutoff_day) : ''
+    );
     setIsEditOpen(true);
   };
 
@@ -512,6 +579,22 @@ export function CreditCardsView() {
                   Solo los últimos 4 dígitos de tu tarjeta para identificarla
                 </p>
               </div>
+              <div className="grid gap-2">
+                <Label htmlFor="cutoff-day">Día de Corte</Label>
+                <Input
+                  id="cutoff-day"
+                  type="number"
+                  min={1}
+                  max={31}
+                  value={newCardCutoffDay}
+                  onChange={(e) => setNewCardCutoffDay(e.target.value)}
+                  placeholder="Ej: 15"
+                />
+                <p className="text-sm text-muted-foreground">
+                  Día del mes en que cierra el ciclo de la tarjeta (1-31). Se
+                  usa para proyectar el pago del próximo mes. Opcional.
+                </p>
+              </div>
             </div>
             <DialogFooter>
               <Button
@@ -640,6 +723,96 @@ export function CreditCardsView() {
         </CardContent>
       </Card>
 
+      {/* Payment projection */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <CalendarClock className="h-5 w-5" />
+            Proyección de pago
+          </CardTitle>
+          <CardDescription>
+            Pago estimado de cada tarjeta según los gastos registrados en su
+            ciclo de corte.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {!activePeriod ? (
+            <p className="text-sm text-muted-foreground">
+              No hay un período activo seleccionado para calcular la proyección.
+            </p>
+          ) : isProjectionLoading ? (
+            <p className="text-sm text-muted-foreground">
+              Calculando proyección de pago...
+            </p>
+          ) : projectionError ? (
+            <p className="text-sm text-destructive">{projectionError}</p>
+          ) : !projectionData || projectionData.cards.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No hay tarjetas de crédito activas para proyectar.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {projectionData.cards.map((row) => (
+                <div
+                  key={row.credit_card.id}
+                  className="flex flex-col gap-1 rounded-lg border p-4"
+                >
+                  {row.has_cutoff_day && row.window_start && row.window_end ? (
+                    <>
+                      <div className="flex items-center justify-between gap-4">
+                        <p className="font-medium">
+                          {formatCreditCardDisplay(row.credit_card)}
+                        </p>
+                        <p className="text-lg font-semibold tabular-nums">
+                          {formatCurrency(row.projected_amount)}
+                        </p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        Ciclo: {formatWindowDate(row.window_start)} al{' '}
+                        {formatWindowDate(row.window_end)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Este pago corresponde al presupuesto de{' '}
+                        {getSpanishMonthName(row.next_payment_month ?? 0)}{' '}
+                        {row.next_payment_year}.
+                      </p>
+                      {row.expense_count === 0 ? (
+                        <p className="text-sm text-muted-foreground">
+                          No hay gastos registrados en este ciclo de corte.
+                        </p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          {row.expense_count}{' '}
+                          {row.expense_count === 1 ? 'gasto' : 'gastos'} en el
+                          ciclo
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <p className="font-medium">
+                        {formatCreditCardDisplay(row.credit_card)}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Esta tarjeta no tiene día de corte configurado. Edítala
+                        para agregar su Fecha de Corte y ver su proyección de
+                        pago.
+                      </p>
+                    </>
+                  )}
+                </div>
+              ))}
+              <div className="flex items-center justify-between border-t pt-3">
+                <p className="text-sm font-medium">Pago total proyectado</p>
+                <p className="text-lg font-semibold tabular-nums">
+                  {formatCurrency(projectionData.total_projected)}
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent>
@@ -694,6 +867,23 @@ export function CreditCardsView() {
                 placeholder="1234"
                 maxLength={4}
               />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="edit-cutoff-day">Día de Corte</Label>
+              <Input
+                id="edit-cutoff-day"
+                type="number"
+                min={1}
+                max={31}
+                value={editCardCutoffDay}
+                onChange={(e) => setEditCardCutoffDay(e.target.value)}
+                placeholder="Ej: 15"
+              />
+              <p className="text-sm text-muted-foreground">
+                Día del mes en que cierra el ciclo de la tarjeta (1-31). Se usa
+                para proyectar el pago del próximo mes. Déjalo vacío para quitar
+                el día de corte.
+              </p>
             </div>
           </div>
           <DialogFooter>

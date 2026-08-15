@@ -69,15 +69,16 @@ export async function GET(request: NextRequest) {
       franchise: string;
       last_four_digits: string;
       is_active: boolean;
+      cutoff_day: number | null;
       created_at: string;
       updated_at: string;
     };
-    const cards = await sql`
-      SELECT id, bank_name, franchise, last_four_digits, is_active, created_at, updated_at
+    const cards = (await sql`
+      SELECT id, bank_name, franchise, last_four_digits, is_active, cutoff_day, created_at, updated_at
       FROM credit_cards
       WHERE is_active = true
       ORDER BY bank_name, franchise, last_four_digits
-    ` as CardRow[];
+    `) as CardRow[];
 
     // Build lookup maps
     type CategoryDetail = {
@@ -91,7 +92,10 @@ export async function GET(request: NextRequest) {
     // cardId → categoryId → detail
     const cardActualMap = new Map<string, Map<string, CategoryDetail>>();
     // categoryId → actual (no card)
-    const noCardActualMap = new Map<string, { category_name: string; actual: number }>();
+    const noCardActualMap = new Map<
+      string,
+      { category_name: string; actual: number }
+    >();
 
     for (const row of actualRows) {
       const cardId = row.credit_card_id as string | null;
@@ -117,9 +121,18 @@ export async function GET(request: NextRequest) {
     }
 
     // cardId → categoryId → projected
-    const cardProjectedMap = new Map<string, Map<string, { category_name: string; tipo_gasto: string | null; projected: number }>>();
+    const cardProjectedMap = new Map<
+      string,
+      Map<
+        string,
+        { category_name: string; tipo_gasto: string | null; projected: number }
+      >
+    >();
     // null → categoryId → projected (no default card)
-    const noCardProjectedMap = new Map<string, { category_name: string; tipo_gasto: string | null; projected: number }>();
+    const noCardProjectedMap = new Map<
+      string,
+      { category_name: string; tipo_gasto: string | null; projected: number }
+    >();
 
     for (const row of projectedRows) {
       const cardId = row.default_credit_card_id as string | null;
@@ -127,7 +140,8 @@ export async function GET(request: NextRequest) {
       const proj = parseFloat(row.projected) || 0;
 
       if (cardId) {
-        if (!cardProjectedMap.has(cardId)) cardProjectedMap.set(cardId, new Map());
+        if (!cardProjectedMap.has(cardId))
+          cardProjectedMap.set(cardId, new Map());
         const existing = cardProjectedMap.get(cardId)!.get(catId);
         cardProjectedMap.get(cardId)!.set(catId, {
           category_name: row.category_name,
@@ -158,8 +172,18 @@ export async function GET(request: NextRequest) {
       const card = cardMap.get(cardId);
       if (!card) continue; // skip if card doesn't exist (was deleted)
 
-      const actualByCategory = cardActualMap.get(cardId) || new Map<string, CategoryDetail>();
-      const projectedByCategory = cardProjectedMap.get(cardId) || new Map<string, { category_name: string; tipo_gasto: string | null; projected: number }>();
+      const actualByCategory =
+        cardActualMap.get(cardId) || new Map<string, CategoryDetail>();
+      const projectedByCategory =
+        cardProjectedMap.get(cardId) ||
+        new Map<
+          string,
+          {
+            category_name: string;
+            tipo_gasto: string | null;
+            projected: number;
+          }
+        >();
 
       const categoryIds = new Set([
         ...Array.from(actualByCategory.keys()),
@@ -178,10 +202,18 @@ export async function GET(request: NextRequest) {
           actualByCategory.get(catId)?.tipo_gasto ||
           projectedByCategory.get(catId)?.tipo_gasto ||
           null;
-        categories.push({ category_id: catId, category_name, tipo_gasto, actual, projected });
+        categories.push({
+          category_id: catId,
+          category_name,
+          tipo_gasto,
+          actual,
+          projected,
+        });
       }
 
-      categories.sort((a, b) => a.category_name.localeCompare(b.category_name, 'es'));
+      categories.sort((a, b) =>
+        a.category_name.localeCompare(b.category_name, 'es')
+      );
 
       const actual_total = categories.reduce((s, c) => s + c.actual, 0);
       const projected_total = categories.reduce((s, c) => s + c.projected, 0);
@@ -195,6 +227,7 @@ export async function GET(request: NextRequest) {
             franchise: card.franchise,
             last_four_digits: card.last_four_digits,
             is_active: card.is_active,
+            cutoff_day: card.cutoff_day,
             created_at: card.created_at,
             updated_at: card.updated_at,
           },
@@ -222,10 +255,20 @@ export async function GET(request: NextRequest) {
         noCardActualMap.get(catId)?.category_name ||
         noCardProjectedMap.get(catId)?.category_name ||
         '';
-      noCardCategories.push({ category_id: catId, category_name, actual, projected });
+      noCardCategories.push({
+        category_id: catId,
+        category_name,
+        actual,
+        projected,
+      });
     }
-    noCardCategories.sort((a, b) => a.category_name.localeCompare(b.category_name, 'es'));
-    const noCardActualTotal = noCardCategories.reduce((s, c) => s + c.actual, 0);
+    noCardCategories.sort((a, b) =>
+      a.category_name.localeCompare(b.category_name, 'es')
+    );
+    const noCardActualTotal = noCardCategories.reduce(
+      (s, c) => s + c.actual,
+      0
+    );
 
     return NextResponse.json({
       period_id: period.id,

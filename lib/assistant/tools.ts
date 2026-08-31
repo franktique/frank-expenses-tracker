@@ -29,7 +29,12 @@ function num(v: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-async function getActivePeriod(): Promise<{ id: string; name: string; month: number; year: number } | null> {
+async function getActivePeriod(): Promise<{
+  id: string;
+  name: string;
+  month: number;
+  year: number;
+} | null> {
   const rows = await sql`
     SELECT id, name, month, year FROM periods WHERE is_open = true LIMIT 1
   `;
@@ -116,7 +121,8 @@ const getOverspendByCategory: ToolDefinition = {
     additionalProperties: false,
   },
   async handler(input) {
-    const periodId = (input.period_id as string) || (await getActivePeriod())?.id;
+    const periodId =
+      (input.period_id as string) || (await getActivePeriod())?.id;
     if (!periodId) return { error: 'No hay periodo activo.' };
 
     const rows = await sql`
@@ -152,7 +158,10 @@ const getOverspendByCategory: ToolDefinition = {
         budgeted: num(r.budgeted),
         spent: num(r.spent),
         overspend: num(r.spent) - num(r.budgeted),
-        overspend_pct: num(r.budgeted) > 0 ? (num(r.spent) - num(r.budgeted)) / num(r.budgeted) : null,
+        overspend_pct:
+          num(r.budgeted) > 0
+            ? (num(r.spent) - num(r.budgeted)) / num(r.budgeted)
+            : null,
       }))
       .filter((r) => r.overspend > 0)
       .sort((a, b) => b.overspend - a.overspend);
@@ -179,8 +188,14 @@ const getCategorySpending: ToolDefinition = {
   inputSchema: {
     type: 'object',
     properties: {
-      period_id: { type: 'string', description: 'ID del periodo. Default: activo.' },
-      category_id: { type: 'string', description: 'Filtrar por categoría específica.' },
+      period_id: {
+        type: 'string',
+        description: 'ID del periodo. Default: activo.',
+      },
+      category_id: {
+        type: 'string',
+        description: 'Filtrar por categoría específica.',
+      },
       payment_method: {
         type: 'string',
         enum: ['cash', 'debit', 'credit'],
@@ -190,7 +205,8 @@ const getCategorySpending: ToolDefinition = {
     additionalProperties: false,
   },
   async handler(input) {
-    const periodId = (input.period_id as string) || (await getActivePeriod())?.id;
+    const periodId =
+      (input.period_id as string) || (await getActivePeriod())?.id;
     if (!periodId) return { error: 'No hay periodo activo.' };
 
     const paymentMethod = (input.payment_method as string) || null;
@@ -252,12 +268,16 @@ const listRecentExpenses: ToolDefinition = {
         description: 'Cantidad a devolver (default 10, máx 50).',
       },
       category_id: { type: 'string', description: 'Filtrar por categoría.' },
-      period_id: { type: 'string', description: 'ID del periodo. Default: activo.' },
+      period_id: {
+        type: 'string',
+        description: 'ID del periodo. Default: activo.',
+      },
     },
     additionalProperties: false,
   },
   async handler(input) {
-    const periodId = (input.period_id as string) || (await getActivePeriod())?.id;
+    const periodId =
+      (input.period_id as string) || (await getActivePeriod())?.id;
     if (!periodId) return { error: 'No hay periodo activo.' };
 
     const limit = Math.min(Math.max(Number(input.limit) || 10, 1), 50);
@@ -341,12 +361,16 @@ const getBudgetExecution: ToolDefinition = {
   inputSchema: {
     type: 'object',
     properties: {
-      period_id: { type: 'string', description: 'ID del periodo. Default: activo.' },
+      period_id: {
+        type: 'string',
+        description: 'ID del periodo. Default: activo.',
+      },
     },
     additionalProperties: false,
   },
   async handler(input) {
-    const periodId = (input.period_id as string) || (await getActivePeriod())?.id;
+    const periodId =
+      (input.period_id as string) || (await getActivePeriod())?.id;
     if (!periodId) return { error: 'No hay periodo activo.' };
 
     const rows = await sql`
@@ -364,9 +388,14 @@ const getBudgetExecution: ToolDefinition = {
       ORDER BY b.default_date ASC
     `;
 
-    const byDate = new Map<string, { date: string; total: number; items: any[] }>();
+    const byDate = new Map<
+      string,
+      { date: string; total: number; items: any[] }
+    >();
     for (const r of rows as any[]) {
-      const date = r.default_date ? String(r.default_date).slice(0, 10) : 'sin_fecha';
+      const date = r.default_date
+        ? String(r.default_date).slice(0, 10)
+        : 'sin_fecha';
       if (!byDate.has(date)) byDate.set(date, { date, total: 0, items: [] });
       const entry = byDate.get(date)!;
       entry.total += num(r.expected_amount);
@@ -381,8 +410,12 @@ const getBudgetExecution: ToolDefinition = {
 
     return {
       period_id: periodId,
-      total_budgeted: num((rows as any[]).reduce((s, r) => s + num(r.expected_amount), 0)),
-      by_date: Array.from(byDate.values()).sort((a, b) => a.date.localeCompare(b.date)),
+      total_budgeted: num(
+        (rows as any[]).reduce((s, r) => s + num(r.expected_amount), 0)
+      ),
+      by_date: Array.from(byDate.values()).sort((a, b) =>
+        a.date.localeCompare(b.date)
+      ),
     };
   },
 };
@@ -469,13 +502,17 @@ const suggestSavings: ToolDefinition = {
         type: 'number',
         description: 'Cantidad objetivo a ahorrar en el periodo.',
       },
-      period_id: { type: 'string', description: 'ID del periodo. Default: activo.' },
+      period_id: {
+        type: 'string',
+        description: 'ID del periodo. Default: activo.',
+      },
     },
     required: ['target_amount'],
     additionalProperties: false,
   },
   async handler(input) {
-    const periodId = (input.period_id as string) || (await getActivePeriod())?.id;
+    const periodId =
+      (input.period_id as string) || (await getActivePeriod())?.id;
     if (!periodId) return { error: 'No hay periodo activo.' };
 
     const target = Number(input.target_amount);
@@ -559,7 +596,9 @@ const suggestSavings: ToolDefinition = {
           spent,
           overspend,
           priority: tipoPriority[tipo] ?? 9,
-          options: options.sort((a, b) => b.potential_savings - a.potential_savings),
+          options: options.sort(
+            (a, b) => b.potential_savings - a.potential_savings
+          ),
         };
       })
       .filter((c) => c.options.length > 0)
@@ -619,12 +658,16 @@ const getCategoryBreakdown: ToolDefinition = {
   inputSchema: {
     type: 'object',
     properties: {
-      period_id: { type: 'string', description: 'ID del periodo. Default: activo.' },
+      period_id: {
+        type: 'string',
+        description: 'ID del periodo. Default: activo.',
+      },
     },
     additionalProperties: false,
   },
   async handler(input) {
-    const periodId = (input.period_id as string) || (await getActivePeriod())?.id;
+    const periodId =
+      (input.period_id as string) || (await getActivePeriod())?.id;
     if (!periodId) return { error: 'No hay periodo activo.' };
 
     const rows = await sql`
@@ -643,7 +686,8 @@ const getCategoryBreakdown: ToolDefinition = {
       period_id: periodId,
       breakdown: (rows as any[]).map((r) => ({
         tipo_gasto: r.tipo_gasto,
-        tipo_gasto_label: TIPO_GASTO_LABELS[r.tipo_gasto as string] || r.tipo_gasto,
+        tipo_gasto_label:
+          TIPO_GASTO_LABELS[r.tipo_gasto as string] || r.tipo_gasto,
         total: num(r.total),
         category_count: Number(r.category_count),
       })),
@@ -691,5 +735,22 @@ export function getToolsAsJsonSchema() {
     name: t.name,
     description: t.description,
     input_schema: t.inputSchema,
+  }));
+}
+
+// Helper that maps the same tools to the OpenAI function-calling format used by
+// DeepSeek / Ollama / LM Studio / OpenAI (`tools` + `function.parameters`).
+export function getToolsForOpenAI() {
+  return TOOLS.map((t) => ({
+    type: 'function' as const,
+    function: {
+      name: t.name,
+      description: t.description,
+      parameters: {
+        type: 'object' as const,
+        properties: t.inputSchema.properties,
+        ...(t.inputSchema.required ? { required: t.inputSchema.required } : {}),
+      },
+    },
   }));
 }

@@ -21,9 +21,10 @@ import type { AssistantMessage, StreamingEvent } from '@/types/assistant';
  *   { "type": "message_end", "payload": { "assistant_message_id": "..." } }
  *   { "type": "error", "payload": { "message": "..." } }
  *
- * `thinking_delta` only appears when the active model/provider supports and
- * returns Claude's extended thinking — see shouldRequestThinking() in
- * lib/assistant/agent.ts. Clients must treat its absence as normal.
+ * `thinking_delta` only appears when the active provider/model emits
+ * reasoning — Claude extended thinking (Anthropic protocol, when enabled) or
+ * `reasoning_content` from reasoning models on the OpenAI protocol. Clients
+ * must treat its absence as normal.
  */
 
 export const runtime = 'nodejs';

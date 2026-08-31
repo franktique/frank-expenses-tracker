@@ -19,6 +19,8 @@ export interface ProviderConfig {
   baseUrl: string;
   apiKey: string;
   model: string;
+  /** Modelo de visión (ej: gpt-4o, claude-3-5-sonnet). Vacío = usar `model`. */
+  visionModel: string;
   enableThinking: boolean;
   maxTokens: number;
   maxToolCalls: number;
@@ -46,6 +48,7 @@ function envFallbackConfig(): ProviderConfig | null {
     baseUrl: process.env.ANTHROPIC_BASE_URL || '',
     apiKey,
     model: process.env.ANTHROPIC_MODEL || DEFAULT_ANTHROPIC_MODEL,
+    visionModel: process.env.ANTHROPIC_VISION_MODEL || '',
     enableThinking: resolveEnvThinking(),
     maxTokens: Number(process.env.ASSISTANT_MAX_TOKENS) || DEFAULT_MAX_TOKENS,
     maxToolCalls:
@@ -61,6 +64,7 @@ function rowToConfig(row: Record<string, unknown>): ProviderConfig {
     baseUrl: (row.base_url as string) || '',
     apiKey: (row.api_key as string) || '',
     model: row.model as string,
+    visionModel: (row.vision_model as string) || '',
     enableThinking: (row.enable_thinking as boolean) === true,
     maxTokens: Number(row.max_tokens) || DEFAULT_MAX_TOKENS,
     maxToolCalls: Number(row.max_tool_calls) || DEFAULT_MAX_TOOL_CALLS,
@@ -77,7 +81,7 @@ function rowToConfig(row: Record<string, unknown>): ProviderConfig {
 export async function getActiveProvider(): Promise<ProviderConfig | null> {
   try {
     const rows = await sql`
-      SELECT id, name, protocol, base_url, api_key, model,
+      SELECT id, name, protocol, base_url, api_key, model, vision_model,
              enable_thinking, max_tokens, max_tool_calls
       FROM ai_providers
       WHERE is_active = true
@@ -113,6 +117,7 @@ export function toClientProvider(row: Record<string, unknown>) {
     has_api_key: !!apiKey,
     api_key_masked: maskApiKey(apiKey),
     model: row.model as string,
+    vision_model: (row.vision_model as string) || '',
     enable_thinking: (row.enable_thinking as boolean) === true,
     max_tokens: Number(row.max_tokens) || DEFAULT_MAX_TOKENS,
     max_tool_calls: Number(row.max_tool_calls) || DEFAULT_MAX_TOOL_CALLS,

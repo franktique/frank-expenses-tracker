@@ -53,6 +53,7 @@ interface FormState {
   base_url: string;
   api_key: string;
   model: string;
+  vision_model: string;
   enable_thinking: boolean;
   max_tokens: string;
   max_tool_calls: string;
@@ -64,6 +65,7 @@ const EMPTY_FORM: FormState = {
   base_url: '',
   api_key: '',
   model: '',
+  vision_model: '',
   enable_thinking: false,
   max_tokens: '4096',
   max_tool_calls: '10',
@@ -128,6 +130,7 @@ export function AiProviderSettings() {
       base_url: p.base_url,
       api_key: '',
       model: p.model,
+      vision_model: p.vision_model || '',
       enable_thinking: p.enable_thinking,
       max_tokens: String(p.max_tokens),
       max_tool_calls: String(p.max_tool_calls),
@@ -151,6 +154,7 @@ export function AiProviderSettings() {
       base_url: form.base_url.trim(),
       api_key: form.api_key.trim(),
       model: form.model.trim(),
+      vision_model: form.vision_model.trim(),
       enable_thinking: form.enable_thinking,
       max_tokens: Number(form.max_tokens) || 4096,
       max_tool_calls: Number(form.max_tool_calls) || 10,
@@ -340,6 +344,9 @@ export function AiProviderSettings() {
                       </div>
                       <p className="truncate text-xs text-muted-foreground">
                         {p.model}
+                        {p.vision_model
+                          ? ` · visión: ${p.vision_model}`
+                          : ''}
                         {p.has_api_key ? ` · key ${p.api_key_masked}` : ''}
                       </p>
                     </div>
@@ -461,6 +468,28 @@ export function AiProviderSettings() {
                       setForm({ ...form, model: e.target.value })
                     }
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="p-vision-model">
+                    Modelo de visión (opcional)
+                  </Label>
+                  <Input
+                    id="p-vision-model"
+                    placeholder={
+                      form.protocol === 'openai'
+                        ? 'gpt-4o, qwen2.5-vl, …'
+                        : 'claude-3-5-sonnet, …'
+                    }
+                    value={form.vision_model}
+                    onChange={(e) =>
+                      setForm({ ...form, vision_model: e.target.value })
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Se usa para escanear recibos desde el móvil. Vacío = se usa
+                    el modelo principal.
+                  </p>
                 </div>
 
                 {form.protocol === 'anthropic' && (

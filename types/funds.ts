@@ -419,6 +419,7 @@ export interface Expense {
     is_active?: boolean; // Credit card active status
   }; // Populated in joins when credit card is associated
   pending?: boolean; // New field for pending status
+  is_verified?: boolean; // Auditoría: false cuando el gasto se creó desde el móvil (escaneo de recibo)
   store_name?: string; // Optional store/market name for price comparison
   category_name?: string; // Populated in joins
   period_name?: string; // Populated in joins
@@ -520,6 +521,7 @@ export const ExpenseSchema = z.object({
     })
     .optional(), // Populated in joins when credit card is associated
   pending: z.boolean().optional(), // New field for pending status
+  is_verified: z.boolean().optional(), // Auditoría: false = creado desde el móvil
 });
 
 // Expense creation schema
@@ -539,6 +541,7 @@ export const CreateExpenseSchema = z.object({
   destination_fund_id: z.string().uuid().optional(),
   credit_card_id: z.string().uuid().nullable().optional(), // Optional credit card field
   pending: z.boolean().optional(), // New field for pending status
+  is_verified: z.boolean().optional(), // Auditoría: el móvil envía false para escaneos
   store_name: z.string().max(255).nullable().optional(),
 });
 
@@ -562,6 +565,7 @@ export const UpdateExpenseSchema = z.object({
   destination_fund_id: z.string().uuid().optional(),
   credit_card_id: z.string().uuid().nullable().optional(), // Optional credit card field for updates
   pending: z.boolean().optional(), // New field for pending status
+  is_verified: z.boolean().optional(), // Auditoría: marcar como verificado
   store_name: z.string().max(255).nullable().optional(),
 });
 

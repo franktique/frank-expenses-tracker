@@ -9,6 +9,8 @@ import {
   List,
   PlusCircle,
   Download,
+  ShieldAlert,
+  ShieldCheck,
 } from 'lucide-react';
 import { ExpenseFormDialog } from '@/components/expense-form-dialog';
 import { Button } from '@/components/ui/button';
@@ -111,6 +113,9 @@ export function ExpensesView() {
   const [creditCardFilter, setCreditCardFilter] = useState<string>(
     searchParams.get('creditCard') || ''
   );
+  const [verificationFilter, setVerificationFilter] = useState<string>(
+    searchParams.get('verification') || ''
+  );
 
   const [editCatSearchValue, setEditCatSearchValue] = useState('');
   const [editCatDebouncedSearch, setEditCatDebouncedSearch] = useState('');
@@ -131,6 +136,7 @@ export function ExpensesView() {
     amount: string;
     creditCardId?: string;
     pending: boolean;
+    isVerified: boolean;
     storeName: string;
   } | null>(null);
   const [editExpenseCreditCard, setEditExpenseCreditCard] =
@@ -279,12 +285,13 @@ export function ExpensesView() {
       editExpense.paymentMethod,
       editExpense.description,
       amount,
-      undefined, // Keep existing source_fund_id from expense record
-      undefined, // No destination fund
+      undefined, // source fund
+      undefined, // destination fund
       editExpenseCreditCard?.id,
       editExpense.pending,
       editExpenseEvent?.id,
-      editExpense.storeName || undefined
+      editExpense.storeName || undefined,
+      editExpense.isVerified
     );
 
     setEditExpense(null);
@@ -307,6 +314,31 @@ export function ExpensesView() {
       toast({
         title: 'Gasto eliminado',
         description: 'El gasto ha sido eliminado exitosamente',
+      });
+    }
+  };
+
+  const markVerified = async (expense: Expense) => {
+    try {
+      const res = await fetch(`/api/expenses/${expense.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_verified: true }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? 'No se pudo verificar el gasto');
+      }
+      toast({
+        title: 'Gasto verificado',
+        description: `"${expense.description}" quedó auditado.`,
+      });
+      await refreshData();
+    } catch (err) {
+      toast({
+        title: 'Error',
+        description: err instanceof Error ? err.message : 'Error desconocido',
+        variant: 'destructive',
       });
     }
   };
@@ -339,12 +371,18 @@ export function ExpensesView() {
         : creditCardFilter === 'none'
           ? !expense.credit_card_id
           : expense.credit_card_id === creditCardFilter;
+    // Filter by verification status (gastos creados desde el móvil)
+    const verificationMatch =
+      verificationFilter === 'unverified'
+        ? expense.is_verified === false
+        : true;
 
     return (
       periodMatch &&
       categoryMatch &&
       paymentMethodMatch &&
-      creditCardMatch
+      creditCardMatch &&
+      verificationMatch
     );
   });
 
@@ -360,7 +398,8 @@ export function ExpensesView() {
               : 'registros'}
             {(categoryFilter !== 'all' && categoryFilter) ||
             (paymentMethodFilter !== 'all' && paymentMethodFilter) ||
-            (creditCardFilter !== 'all' && creditCardFilter)
+            (creditCardFilter !== 'all' && creditCardFilter) ||
+            verificationFilter === 'unverified'
               ? ' con los filtros aplicados'
               : ''}
           </p>
@@ -550,6 +589,34 @@ export function ExpensesView() {
                 </SelectContent>
               </Select>
             </div>
+            <div>
+              <Label htmlFor="verification-filter">Auditoría</Label>
+              <Button
+                id="verification-filter"
+                type="button"
+                variant={
+                  verificationFilter === 'unverified' ? 'default' : 'outline'
+                }
+                className={`mt-1 w-full justify-start ${
+                  verificationFilter === 'unverified'
+                    ? 'bg-amber-500 text-white hover:bg-amber-600'
+                    : ''
+                }`}
+                onClick={() => {
+                  const next =
+                    verificationFilter === 'unverified' ? '' : 'unverified';
+                  setVerificationFilter(next);
+                  updateUrlParams({
+                    verification: next === 'unverified' ? 'unverified' : '',
+                  });
+                }}
+              >
+                <ShieldAlert className="mr-2 h-4 w-4" />
+                {verificationFilter === 'unverified'
+                  ? 'Mostrando solo sin verificar'
+                  : 'Filtrar gastos sin verificar'}
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -586,6 +653,12 @@ export function ExpensesView() {
                       {expense.event && (
                         <span className="block text-xs text-muted-foreground">
                           Evento: {expense.event}
+                        </span>
+                      )}
+                      {expense.is_verified === false && (
+                        <span className="mt-1 inline-flex items-center gap-1 rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-700/10">
+                          <ShieldAlert className="h-3 w-3" />
+                          Sin verificar
                         </span>
                       )}
                     </TableCell>
@@ -628,6 +701,18 @@ export function ExpensesView() {
                       {formatCurrency(expense.amount)}
                     </TableCell>
                     <TableCell className="text-right">
+                      {expense.is_verified === false && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mr-1 border-amber-300 text-amber-700 hover:bg-amber-50"
+                          title="Marcar como verificado (auditoría)"
+                          onClick={() => markVerified(expense as Expense)}
+                        >
+                          <ShieldCheck className="mr-1 h-4 w-4" />
+                          Verificar
+                        </Button>
+                      )}
                       <Button
                         variant="ghost"
                         size="sm"
@@ -659,6 +744,7 @@ export function ExpensesView() {
                             amount: expense.amount.toString(),
                             creditCardId: expense.credit_card_id,
                             pending: expense.pending || false,
+                            isVerified: expense.is_verified !== false,
                             storeName: expense.store_name || '',
                           });
                           // Set the credit card for editing
@@ -934,6 +1020,24 @@ export function ExpensesView() {
                 onCheckedChange={(checked) =>
                   setEditExpense((prev) =>
                     prev ? { ...prev, pending: checked } : null
+                  )
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between rounded-lg border border-amber-200 bg-amber-50/50 p-3">
+              <div className="space-y-0.5">
+                <Label htmlFor="edit-verified">Verificado</Label>
+                <p className="text-sm text-muted-foreground">
+                  Gasto auditado (creado desde el móvil con escaneo de recibo)
+                </p>
+              </div>
+              <Switch
+                id="edit-verified"
+                checked={editExpense?.isVerified ?? true}
+                onCheckedChange={(checked) =>
+                  setEditExpense((prev) =>
+                    prev ? { ...prev, isVerified: checked } : null
                   )
                 }
               />

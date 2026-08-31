@@ -40,6 +40,8 @@ export interface DashboardData {
   totalIncome: number;
   totalExpenses: number;
   budgetSummary: BudgetSummaryItem[];
+  /** Gastos del período activo creados desde el móvil que aún no fueron auditados. */
+  unverified_expenses_count: number;
 }
 
 /**

@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS ai_providers (
   base_url TEXT NOT NULL DEFAULT '',
   api_key TEXT NOT NULL DEFAULT '',
   model TEXT NOT NULL,
+  vision_model TEXT NOT NULL DEFAULT '',
   enable_thinking BOOLEAN NOT NULL DEFAULT false,
   max_tokens INTEGER NOT NULL DEFAULT 4096,
   max_tool_calls INTEGER NOT NULL DEFAULT 10,
@@ -20,6 +21,10 @@ CREATE TABLE IF NOT EXISTS ai_providers (
 
 CREATE INDEX IF NOT EXISTS idx_ai_providers_active
   ON ai_providers(is_active);
+
+-- Idempotent: add vision_model to tables created before this column existed.
+ALTER TABLE ai_providers
+  ADD COLUMN IF NOT EXISTS vision_model TEXT NOT NULL DEFAULT '';
 
 -- Verify the migration
 SELECT

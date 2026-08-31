@@ -104,7 +104,8 @@ export type BudgetContextType = {
     creditCardId?: string,
     pending?: boolean,
     eventId?: number,
-    storeName?: string
+    storeName?: string,
+    isVerified?: boolean
   ) => Promise<void>;
   deleteExpense: (id: string) => Promise<void>;
   addCreditCard: (
@@ -1119,7 +1120,8 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     creditCardId?: string,
     pending?: boolean,
     eventId?: number,
-    storeName?: string
+    storeName?: string,
+    isVerified?: boolean
   ) => {
     try {
       const response = await fetch(`/api/expenses/${id}`, {
@@ -1140,6 +1142,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           credit_card_id: creditCardId,
           pending,
           store_name: storeName !== undefined ? storeName || null : undefined,
+          is_verified: isVerified,
         }),
       });
 

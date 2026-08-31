@@ -416,6 +416,34 @@ export function SimulationBudgetForm({
     }
   }, [categoryOrder, simulationId]);
 
+  // Load filter preferences (hide empty / hide struck) from localStorage on mount
+  useEffect(() => {
+    try {
+      const storageKey = `simulation_${simulationId}_filter_prefs`;
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.hideEmptyCategories === 'boolean') {
+          setHideEmptyCategories(parsed.hideEmptyCategories);
+        }
+        if (typeof parsed.hideStruckCategories === 'boolean') {
+          setHideStruckCategories(parsed.hideStruckCategories);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading filter prefs from localStorage:', error);
+    }
+  }, [simulationId]);
+
+  // Save filter preferences to localStorage whenever they change
+  useEffect(() => {
+    const storageKey = `simulation_${simulationId}_filter_prefs`;
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify({ hideEmptyCategories, hideStruckCategories })
+    );
+  }, [hideEmptyCategories, hideStruckCategories, simulationId]);
+
   // Load excluded categories from localStorage on mount
   useEffect(() => {
     const storageKey = `simulation_${simulationId}_excluded_categories`;

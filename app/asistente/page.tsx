@@ -10,6 +10,7 @@ import { AssistantChatMessage } from '@/components/assistant/assistant-chat-mess
 import { AssistantChatInput } from '@/components/assistant/assistant-chat-input';
 import { AssistantSuggestions } from '@/components/assistant/assistant-suggestions';
 import { AssistantProcessPanel } from '@/components/assistant/assistant-process-panel';
+import { AiProviderSettings } from '@/components/assistant/ai-provider-settings';
 
 function deriveProcessLabel(entries: ProcessEntry[]): string | undefined {
   const last = entries[entries.length - 1];
@@ -56,10 +57,13 @@ export default function AsistentePage() {
             lenguaje natural
           </p>
         </div>
-        <label className="hidden items-center gap-2 text-xs text-muted-foreground md:flex">
-          Ver proceso
-          <Switch checked={showProcess} onCheckedChange={setShowProcess} />
-        </label>
+        <div className="flex items-center gap-3">
+          <label className="hidden items-center gap-2 text-xs text-muted-foreground md:flex">
+            Ver proceso
+            <Switch checked={showProcess} onCheckedChange={setShowProcess} />
+          </label>
+          <AiProviderSettings />
+        </div>
       </div>
 
       <div

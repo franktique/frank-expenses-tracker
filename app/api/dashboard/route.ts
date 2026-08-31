@@ -18,6 +18,7 @@ export async function GET(request: NextRequest) {
         totalIncome: 0,
         totalExpenses: 0,
         budgetSummary: [],
+        unverified_expenses_count: 0,
         fundFilter: fundId,
       });
     }
@@ -158,6 +159,15 @@ export async function GET(request: NextRequest) {
     }
     const budgetSummary = await budgetQuery;
 
+    // Count unverified expenses (created from the mobile scanner) for the KPI
+    const [unverifiedSummary] = await sql`
+      SELECT COUNT(*) as unverified_count
+      FROM expenses
+      WHERE period_id = ${activePeriod.id}
+        AND (is_verified IS NULL OR is_verified = false)
+        AND (pending IS NULL OR pending = false)
+    `;
+
     // Log values for debugging
     console.log('API Dashboard Data:', {
       activePeriodId: activePeriod.id,
@@ -173,12 +183,15 @@ export async function GET(request: NextRequest) {
     // Ensure values are numbers before returning
     const totalIncome = parseFloat(incomeSummary.total_income) || 0;
     const totalExpenses = parseFloat(expenseSummary.total_expenses) || 0;
+    const unverifiedExpensesCount =
+      Number(unverifiedSummary.unverified_count) || 0;
 
     // Type-safe response construction
     const response: DashboardData & { fundFilter?: string | null } = {
       activePeriod,
       totalIncome,
       totalExpenses,
+      unverified_expenses_count: unverifiedExpensesCount,
       budgetSummary: budgetSummary.map(
         (item: any): BudgetSummaryItem => ({
           category_id: item.category_id,

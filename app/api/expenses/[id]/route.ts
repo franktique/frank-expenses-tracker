@@ -99,6 +99,7 @@ export async function PUT(
       destination_fund_id,
       credit_card_id,
       pending,
+      is_verified,
       store_name,
     } = validationResult.data;
 
@@ -120,6 +121,10 @@ export async function PUT(
         ? credit_card_id
         : existingExpense.credit_card_id;
     pending = pending !== undefined ? pending : existingExpense.pending;
+    is_verified =
+      is_verified !== undefined
+        ? is_verified
+        : existingExpense.is_verified ?? true;
 
     // Revert old fund balance changes
     const oldSourceFundId = existingExpense.source_fund_id;
@@ -163,6 +168,7 @@ export async function PUT(
         destination_fund_id = ${destination_fund_id || null},
         credit_card_id = ${credit_card_id || null},
         pending = ${pending || false},
+        is_verified = ${is_verified ?? true},
         store_name = ${storeNameToSave || null}
       WHERE id = ${id}
       RETURNING *

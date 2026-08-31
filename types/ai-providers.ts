@@ -30,6 +30,8 @@ export interface AIProvider {
   base_url: string;
   api_key: string;
   model: string;
+  /** Modelo con capacidades de visión (ej: gpt-4o, claude-3-5-sonnet). Vacío = usar `model`. */
+  vision_model: string;
   enable_thinking: boolean;
   max_tokens: number;
   max_tool_calls: number;
@@ -50,6 +52,7 @@ export interface AIProviderClient {
   has_api_key: boolean;
   api_key_masked: string;
   model: string;
+  vision_model: string;
   enable_thinking: boolean;
   max_tokens: number;
   max_tool_calls: number;
@@ -82,6 +85,11 @@ export const CreateAIProviderSchema = z.object({
     .string()
     .min(1, 'El modelo es obligatorio')
     .max(300, 'El modelo es demasiado largo'),
+  vision_model: z
+    .string()
+    .max(300, 'El modelo de visión es demasiado largo')
+    .optional()
+    .default(''),
   enable_thinking: z.boolean().optional().default(false),
   max_tokens: z.number().int().min(1).max(200000).optional().default(4096),
   max_tool_calls: z.number().int().min(1).max(50).optional().default(10),
@@ -96,6 +104,10 @@ export const UpdateAIProviderSchema = z.object({
   base_url: z.string().max(1000, 'La URL es demasiado larga').optional(),
   api_key: z.string().max(1000, 'La API key es demasiado larga').optional(),
   model: z.string().min(1, 'El modelo es obligatorio').max(300).optional(),
+  vision_model: z
+    .string()
+    .max(300, 'El modelo de visión es demasiado largo')
+    .optional(),
   enable_thinking: z.boolean().optional(),
   max_tokens: z.number().int().min(1).max(200000).optional(),
   max_tool_calls: z.number().int().min(1).max(50).optional(),

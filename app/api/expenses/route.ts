@@ -27,6 +27,7 @@ export async function GET(request: NextRequest) {
           e.destination_fund_id,
           e.credit_card_id,
           e.pending,
+          e.is_verified,
           e.store_name,
           c.name as category_name,
           p.name as period_name,
@@ -64,6 +65,7 @@ export async function GET(request: NextRequest) {
           e.destination_fund_id,
           e.credit_card_id,
           e.pending,
+          e.is_verified,
           e.store_name,
           c.name as category_name,
           p.name as period_name,
@@ -106,6 +108,7 @@ export async function GET(request: NextRequest) {
           e.destination_fund_id,
           e.credit_card_id,
           e.pending,
+          e.is_verified,
           e.store_name,
           c.name as category_name,
           p.name as period_name,
@@ -181,6 +184,7 @@ export async function POST(request: NextRequest) {
       destination_fund_id,
       credit_card_id,
       pending,
+      is_verified,
       store_name,
     } = validationResult.data;
 
@@ -193,14 +197,15 @@ export async function POST(request: NextRequest) {
       dateToSave = date.split('T')[0];
     }
 
-    // Insert the expense (source_fund_id is optional, fondos UI being removed)
+    // Insert the expense (source_fund_id is optional, fondos UI being removed).
+    // `is_verified` defaults to true; the mobile receipt scanner sends false.
     const [newExpense] = await sql`
-      INSERT INTO expenses (category_id, period_id, date, event, event_id, payment_method, description, amount, source_fund_id, destination_fund_id, credit_card_id, pending, store_name)
+      INSERT INTO expenses (category_id, period_id, date, event, event_id, payment_method, description, amount, source_fund_id, destination_fund_id, credit_card_id, pending, is_verified, store_name)
       VALUES (${category_id}, ${period_id}, ${dateToSave}, ${
         event || null
       }, ${event_id ?? null}, ${payment_method}, ${description}, ${amount}, ${
         source_fund_id || null
-      }, ${destination_fund_id || null}, ${credit_card_id || null}, ${pending || false}, ${store_name || null})
+      }, ${destination_fund_id || null}, ${credit_card_id || null}, ${pending || false}, ${is_verified ?? true}, ${store_name || null})
       RETURNING *
     `;
 

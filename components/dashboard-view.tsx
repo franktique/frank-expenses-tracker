@@ -15,6 +15,7 @@ import {
   PieChart,
   PiggyBank,
   PlusCircle,
+  ShieldAlert,
   TrendingUp,
   Wallet,
   CreditCardIcon,
@@ -423,7 +424,12 @@ export function DashboardView() {
     );
   }
 
-  const { totalIncome, totalExpenses, budgetSummary } = dashboardData;
+  const {
+    totalIncome,
+    totalExpenses,
+    budgetSummary,
+    unverified_expenses_count,
+  } = dashboardData;
 
   // Handle excluded categories change
   const handleExcludedCategoriesChange = (categoryIds: string[]) => {
@@ -549,6 +555,26 @@ export function DashboardView() {
                 <div className="text-2xl font-bold">
                   {formatCurrency(filteredTotalExpenses)}
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="cursor-pointer transition-colors hover:border-amber-400"
+              onClick={() => router.push('/gastos?verification=unverified')}
+            >
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">
+                  Sin verificar
+                </CardTitle>
+                <ShieldAlert className="h-4 w-4 text-amber-500" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-amber-500">
+                  {unverified_expenses_count ?? 0}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Gastos del móvil por auditar
+                </p>
               </CardContent>
             </Card>
 

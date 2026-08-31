@@ -14,8 +14,9 @@ import {
 export async function GET() {
   try {
     const rows = await sql`
-      SELECT id, name, protocol, base_url, api_key, model, enable_thinking,
-             max_tokens, max_tool_calls, is_active, created_at, updated_at
+      SELECT id, name, protocol, base_url, api_key, model, vision_model,
+             enable_thinking, max_tokens, max_tool_calls, is_active,
+             created_at, updated_at
       FROM ai_providers
       ORDER BY created_at ASC
     `;
@@ -52,16 +53,17 @@ export async function POST(request: NextRequest) {
 
     const [created] = await sql`
       INSERT INTO ai_providers (
-        id, name, protocol, base_url, api_key, model,
+        id, name, protocol, base_url, api_key, model, vision_model,
         enable_thinking, max_tokens, max_tool_calls, is_active
       )
       VALUES (
         ${id}, ${data.name}, ${data.protocol}, ${data.base_url}, ${data.api_key},
-        ${data.model}, ${data.enable_thinking}, ${data.max_tokens},
-        ${data.max_tool_calls}, false
+        ${data.model}, ${data.vision_model}, ${data.enable_thinking},
+        ${data.max_tokens}, ${data.max_tool_calls}, false
       )
-      RETURNING id, name, protocol, base_url, api_key, model, enable_thinking,
-                max_tokens, max_tool_calls, is_active, created_at, updated_at
+      RETURNING id, name, protocol, base_url, api_key, model, vision_model,
+                enable_thinking, max_tokens, max_tool_calls, is_active,
+                created_at, updated_at
     `;
 
     return NextResponse.json(

@@ -34,8 +34,9 @@ export async function POST(_request: NextRequest, { params }: RouteContext) {
         UPDATE ai_providers
         SET is_active = true, updated_at = NOW()
         WHERE id = ${id}
-        RETURNING id, name, protocol, base_url, api_key, model, enable_thinking,
-                  max_tokens, max_tool_calls, is_active, created_at, updated_at
+        RETURNING id, name, protocol, base_url, api_key, model, vision_model,
+                  enable_thinking, max_tokens, max_tool_calls, is_active,
+                  created_at, updated_at
       `;
       await sql`COMMIT`;
 

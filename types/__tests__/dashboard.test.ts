@@ -15,6 +15,8 @@ describe('Dashboard Types', () => {
     cash_debit_budget: 200,
     expected_amount: 300,
     total_amount: 250,
+    confirmed_amount: 250,
+    pending_amount: 0,
     credit_amount: 150,
     debit_amount: 50,
     cash_amount: 50,
@@ -29,6 +31,7 @@ describe('Dashboard Types', () => {
     totalIncome: 1000,
     totalExpenses: 500,
     budgetSummary: [mockBudgetSummaryItem],
+    unverified_expenses_count: 0,
   };
 
   test('BudgetSummaryItem type should have all required fields', () => {
@@ -102,6 +105,8 @@ describe('Dashboard Types', () => {
       cash_debit_budget: 75,
       expected_amount: 125,
       total_amount: 100,
+      confirmed_amount: 100,
+      pending_amount: 0,
       credit_amount: 60,
       debit_amount: 20,
       cash_amount: 20,

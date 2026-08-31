@@ -33,8 +33,8 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
     }
 
     const [existing] = await sql`
-      SELECT name, protocol, base_url, api_key, model, enable_thinking,
-             max_tokens, max_tool_calls
+      SELECT name, protocol, base_url, api_key, model, vision_model,
+             enable_thinking, max_tokens, max_tool_calls
       FROM ai_providers WHERE id = ${id}
     `;
 
@@ -59,6 +59,7 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
       base_url: data.base_url ?? existing.base_url,
       api_key: apiKey,
       model: data.model ?? existing.model,
+      vision_model: data.vision_model ?? existing.vision_model,
       enable_thinking: data.enable_thinking ?? existing.enable_thinking,
       max_tokens: data.max_tokens ?? existing.max_tokens,
       max_tool_calls: data.max_tool_calls ?? existing.max_tool_calls,
@@ -71,13 +72,15 @@ export async function PATCH(request: NextRequest, { params }: RouteContext) {
           base_url = ${merged.base_url},
           api_key = ${merged.api_key},
           model = ${merged.model},
+          vision_model = ${merged.vision_model},
           enable_thinking = ${merged.enable_thinking},
           max_tokens = ${merged.max_tokens},
           max_tool_calls = ${merged.max_tool_calls},
           updated_at = NOW()
       WHERE id = ${id}
-      RETURNING id, name, protocol, base_url, api_key, model, enable_thinking,
-                max_tokens, max_tool_calls, is_active, created_at, updated_at
+      RETURNING id, name, protocol, base_url, api_key, model, vision_model,
+                enable_thinking, max_tokens, max_tool_calls, is_active,
+                created_at, updated_at
     `;
 
     return NextResponse.json({ provider: toClientProvider(updated as any) });

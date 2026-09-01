@@ -87,18 +87,32 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const startedAt = Date.now();
     const outcome = await analyzeReceiptImage(config, {
       imageBase64: image_base64,
       mimeType: mime_type,
       categories,
       creditCardsLastFour: credit_cards_last_four,
     });
+    const providerMs = Date.now() - startedAt;
+    console.log(
+      `[scan-receipt] proveedor: ${config.name ?? config.protocol}, ` +
+        `imagen: ${Math.round(image_base64.length / 1024)}KB base64, ` +
+        `provider call: ${providerMs}ms`
+    );
 
     if (!outcome.ok) {
       return NextResponse.json({ error: outcome.error }, { status: 502 });
     }
 
-    return NextResponse.json({ ok: true, result: outcome.result });
+    return NextResponse.json({
+      ok: true,
+      result: outcome.result,
+      timing: {
+        provider_ms: providerMs,
+        image_base64_bytes: image_base64.length,
+      },
+    });
   } catch (error) {
     console.error('Error scanning receipt:', error);
     return NextResponse.json(

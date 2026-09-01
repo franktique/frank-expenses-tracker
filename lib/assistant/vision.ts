@@ -6,14 +6,19 @@ import type { ProviderConfig } from './providers';
 /**
  * Vision runner — receipt scanning.
  *
- * Single-shot image + text call against the active provider's vision model
+ * One-shot image(s) + text call against the active provider's vision model
  * (`vision_model` from the provider config, falling back to the main `model`).
  * Unlike the chat runners this does NOT use tool calls: the model is asked to
  * answer with a single JSON object that we validate with zod.
  *
+ * A receipt may be captured as 1..N photos of the SAME long receipt (they can
+ * overlap). All photos are sent in a single message; the prompt instructs the
+ * model to merge them (no duplicated line items, split rows fused back) and
+ * return ONE unified result.
+ *
  * Supported protocols:
- *  - `openai`    — `image_url` content part with a base64 data URL.
- *  - `anthropic` — `image` content block with a base64 source.
+ *  - `openai`    — one `image_url` content part per photo (base64 data URL).
+ *  - `anthropic` — one `image` content block per photo (base64 source).
  */
 
 // ---------------------------------------------------------------------------
@@ -46,10 +51,7 @@ export const ReceiptScanResultSchema = z.object({
   /** Total pagado (monto del gasto). */
   amount: z.number().positive(),
   description: z.string().nullable().optional(),
-  payment_method: z
-    .enum(['cash', 'credit', 'debit'])
-    .nullable()
-    .optional(),
+  payment_method: z.enum(['cash', 'credit', 'debit']).nullable().optional(),
   /** true cuando la factura muestra monto entregado + cambio devuelto (efectivo). */
   cash_change_detected: z.boolean().optional().default(false),
   /** Últimos 4 dígitos de la tarjeta si la factura los muestra (pago con tarjeta). */
@@ -70,10 +72,16 @@ export type SuggestedSubgroup = z.infer<typeof SuggestedSubgroupSchema>;
 // Input
 // ---------------------------------------------------------------------------
 
-export interface ReceiptScanInput {
-  /** Base64 (sin prefijo data:) de la imagen del recibo. */
+/** Una foto del recibo (puede haber varias del mismo recibo largo). */
+export interface ReceiptScanImage {
+  /** Base64 (sin prefijo data:) de la imagen. */
   imageBase64: string;
   mimeType: 'image/jpeg' | 'image/png' | 'image/webp';
+}
+
+export interface ReceiptScanInput {
+  /** Fotos del recibo (1..6). Pueden superponerse; el modelo debe fusionarlas. */
+  images: ReceiptScanImage[];
   /** Categorías de presupuesto disponibles, para que el modelo sugiera una. */
   categories: { id: string; name: string }[];
   /** Últimos 4 dígitos de las tarjetas de crédito activas. */
@@ -91,9 +99,7 @@ export type ReceiptScanOutcome =
 function buildPrompt(input: ReceiptScanInput): string {
   const categoriesBlock =
     input.categories.length > 0
-      ? input.categories
-          .map((c) => `- ${c.id} → ${c.name}`)
-          .join('\n')
+      ? input.categories.map((c) => `- ${c.id} → ${c.name}`).join('\n')
       : '(no se proveyeron categorías)';
 
   const cardsBlock =
@@ -101,7 +107,20 @@ function buildPrompt(input: ReceiptScanInput): string {
       ? input.creditCardsLastFour.join(', ')
       : '(ninguna)';
 
-  return `Eres un extractor de recibos. Analiza la imagen y responde SOLO con JSON válido (sin markdown, sin texto extra).
+  const photoCount = input.images.length;
+  const combineRules =
+    photoCount > 1
+      ? `Recibiste ${photoCount} fotos del MISMO recibo largo. Las fotos pueden superponerse (el mismo texto aparece en varias) o una línea puede quedar cortada entre dos fotos.
+
+Reglas para combinar las fotos (importante):
+- Combiná TODA la información en UNA sola respuesta: un solo recibo, cada dato una sola vez.
+- NO dupliques líneas: si la misma línea aparece en más de una foto, incluirla UNA sola vez, fusionando quantity y amount (ej: "Leche" visible en 2 fotos → {name:"Leche", quantity:2, amount: suma}).
+- Si una línea está cortada entre fotos (el nombre en una foto y el monto en otra), fusionala en una sola línea.
+- store_name, date y payment_method: tomalos de la foto donde se lean mejor (normalmente la primera).
+- amount: es el TOTAL del recibo (suele aparecer en la última foto, donde dice TOTAL). Debe ser consistente con la suma de las líneas fusionadas.`
+      : 'Analiza la imagen del recibo.';
+
+  return `Eres un extractor de recibos. ${combineRules} Respondé SOLO con JSON válido (sin markdown, sin texto extra).
 
 Reglas:
 - store_name: comercio (o null).
@@ -111,7 +130,7 @@ Reglas:
 - payment_method: "cash" si efectivo (dice EFECTIVO o muestra cambio/vueltas); "debit" si dice DÉBITO; "credit" si dice CRÉDITO o muestra marca de tarjeta + últimos 4 dígitos; null si no hay evidencia.
 - cash_change_detected: true solo si se ve monto entregado + cambio devuelto.
 - card_last_four: últimos 4 dígitos de la tarjeta si aparecen; sino null.
-- line_items: líneas del detalle como {name, quantity (o null), unit (o null), amount}. FUSIONA repetidas sumando quantity (ej 2x "Leche" → {name:"Leche", quantity:2, amount: suma}). Ignora descuentos, IVA, subtotales y totales. Máximo 30 líneas.
+- line_items: líneas del detalle como {name, quantity (o null), unit (o null), amount}. FUSIONA repetidas sumando quantity (ej 2x "Leche" → {name:"Leche", quantity:2, amount: suma}). Ignora descuentos, IVA, subtotales y totales. Máximo 60 líneas.
 - suggested_category_id: id de la categoría que mejor calza (lista abajo) o null.
 - suggested_subgroups: subcategorías nuevas necesarias para registrar el detalle, cada una con items [{name, default_unit|null}]. Máximo 4 subgrupos y 15 ítems en total. [] si no hacen falta.
 
@@ -178,7 +197,9 @@ function normalizeNode(node: unknown): unknown {
   if (Array.isArray(node)) return node.map(normalizeNode);
   if (node && typeof node === 'object') {
     const out: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(node as Record<string, unknown>)) {
+    for (const [key, value] of Object.entries(
+      node as Record<string, unknown>
+    )) {
       let v = normalizeNode(value);
       if (NUMBER_KEYS.has(key) && typeof v === 'string') {
         const cleaned = v.replace(/[^\d.,-]/g, '').replace(/\.(?=.*\.)/g, '');
@@ -270,24 +291,34 @@ async function runOpenAIVision(
     ...(config.baseUrl ? { baseURL: config.baseUrl } : {}),
   });
 
+  // Una parte de imagen por foto, intercalada con un rótulo de orden para que
+  // el modelo sepa qué foto está viendo (las fotos se envían en orden).
+  const content: OpenAI.Chat.Completions.ChatCompletionContentPart[] = [
+    { type: 'text', text: prompt },
+  ];
+  input.images.forEach((img, i) => {
+    content.push({
+      type: 'text',
+      text: `Foto ${i + 1} de ${input.images.length}:`,
+    });
+    content.push({
+      type: 'image_url',
+      image_url: {
+        url: `data:${img.mimeType};base64,${img.imageBase64}`,
+        // Auto: deja que el proveedor decida el detalle; reduce tokens de
+        // visión en imágenes grandes (ignorado por endpoints sin soporte).
+        detail: 'auto',
+      },
+    });
+  });
+
   const completion = await client.chat.completions.create({
     model,
     max_tokens: config.maxTokens,
     messages: [
       {
         role: 'user',
-        content: [
-          { type: 'text', text: prompt },
-          {
-            type: 'image_url',
-            image_url: {
-              url: `data:${input.mimeType};base64,${input.imageBase64}`,
-              // Auto: deja que el proveedor decida el detalle; reduce tokens de
-              // visión en imágenes grandes (ignorado por endpoints sin soporte).
-              detail: 'auto',
-            },
-          },
-        ],
+        content,
       },
     ],
   });
@@ -312,23 +343,32 @@ async function runAnthropicVision(
     ...(config.baseUrl ? { baseURL: config.baseUrl } : {}),
   });
 
+  // Un bloque de imagen por foto, intercalado con un rótulo de orden.
+  const content: Anthropic.ContentBlockParam[] = [
+    { type: 'text', text: prompt },
+  ];
+  input.images.forEach((img, i) => {
+    content.push({
+      type: 'text',
+      text: `Foto ${i + 1} de ${input.images.length}:`,
+    });
+    content.push({
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: img.mimeType,
+        data: img.imageBase64,
+      },
+    });
+  });
+
   const response = await client.messages.create({
     model,
     max_tokens: config.maxTokens,
     messages: [
       {
         role: 'user',
-        content: [
-          { type: 'text', text: prompt },
-          {
-            type: 'image',
-            source: {
-              type: 'base64',
-              media_type: input.mimeType,
-              data: input.imageBase64,
-            },
-          },
-        ],
+        content,
       },
     ],
   });

@@ -101,37 +101,27 @@ function buildPrompt(input: ReceiptScanInput): string {
       ? input.creditCardsLastFour.join(', ')
       : '(ninguna)';
 
-  return `Eres un extractor de datos de recibos/facturas. Analiza la imagen y responde SOLO con un objeto JSON válido (sin texto adicional, sin markdown, sin comentarios).
+  return `Eres un extractor de recibos. Analiza la imagen y responde SOLO con JSON válido (sin markdown, sin texto extra).
 
-Reglas de extracción:
-- store_name: nombre del comercio (o null si no se ve).
-- date: fecha de la factura en formato YYYY-MM-DD (usa el año de la factura; null si no se ve).
-- amount: TOTAL pagado, número sin formato (ej: 45250.5). Si la factura muestra un monto entregado y cambio devuelto, amount = monto entregado.
-- description: texto corto que resuma la compra (ej: "Compra en Éxito: mercado, lácteos").
-- payment_method: "cash" si se pagó en efectivo (la factura dice EFECTIVO o muestra monto entregado + cambio devuelto); "debit" si dice DÉBITO o tarjeta débito; "credit" si dice CRÉDITO o muestra una marca de tarjeta de crédito con últimos 4 dígitos; null si no hay evidencia.
-- cash_change_detected: true solo si la factura muestra claramente un monto entregado y un cambio/vueltas devuelto (indica pago en efectivo).
-- card_last_four: últimos 4 dígitos de la tarjeta si aparecen en la factura; null en caso contrario.
-- line_items: cada línea de producto/servicio del detalle de la factura como {name, quantity (cantidad si aparece, sino null), unit (unidad si aparece, sino null), amount (monto de la línea)}. Ignora descuentos, impuestos y totales como líneas.
-- suggested_category_id: el id de la categoría de presupuesto que mejor calza con la compra, según esta lista; null si ninguna calza o si no hay lista:
+Reglas:
+- store_name: comercio (o null).
+- date: fecha "YYYY-MM-DD" (o null).
+- amount: total pagado, número sin formato (ej 45250.5). Si hay monto entregado + cambio, usa el entregado.
+- description: resumen corto (ej "Compra en Éxito: mercado").
+- payment_method: "cash" si efectivo (dice EFECTIVO o muestra cambio/vueltas); "debit" si dice DÉBITO; "credit" si dice CRÉDITO o muestra marca de tarjeta + últimos 4 dígitos; null si no hay evidencia.
+- cash_change_detected: true solo si se ve monto entregado + cambio devuelto.
+- card_last_four: últimos 4 dígitos de la tarjeta si aparecen; sino null.
+- line_items: líneas del detalle como {name, quantity (o null), unit (o null), amount}. FUSIONA repetidas sumando quantity (ej 2x "Leche" → {name:"Leche", quantity:2, amount: suma}). Ignora descuentos, IVA, subtotales y totales. Máximo 30 líneas.
+- suggested_category_id: id de la categoría que mejor calza (lista abajo) o null.
+- suggested_subgroups: subcategorías nuevas necesarias para registrar el detalle, cada una con items [{name, default_unit|null}]. Máximo 4 subgrupos y 15 ítems en total. [] si no hacen falta.
+
+Categorías disponibles:
 ${categoriesBlock}
-- suggested_subgroups: subcategorías (subgrupos) del catálogo de la categoría sugerida que NO existirían y que se necesitarían para registrar el detalle de esta compra. Para cada una, propone sus ítems con nombre y unidad por defecto opcional. Vacío [] si los ítems del recibo se pueden registrar en subgrupos existentes o si no hay necesidad. No inventes subgrupos innecesarios: solo los que el detalle del recibo realmente requiera.
+Tarjetas activas (últimos 4): ${cardsBlock}
+Si card_last_four coincide con una, devolvela igual (la app la pre-selecciona).
 
-Tarjetas de crédito activas (últimos 4): ${cardsBlock}
-Si card_last_four coincide con una de estas, sugierela igual en card_last_four (la app la pre-selecciona).
-
-Formato de respuesta (JSON puro):
-{
-  "store_name": string|null,
-  "date": "YYYY-MM-DD"|null,
-  "amount": number,
-  "description": string|null,
-  "payment_method": "cash"|"debit"|"credit"|null,
-  "cash_change_detected": boolean,
-  "card_last_four": string|null,
-  "line_items": [{"name": string, "quantity": number|null, "unit": string|null, "amount": number}],
-  "suggested_category_id": string|null,
-  "suggested_subgroups": [{"name": string, "items": [{"name": string, "default_unit": string|null}]}]
-}`;
+JSON:
+{"store_name":..., "date":..., "amount":..., "description":..., "payment_method":..., "cash_change_detected":..., "card_last_four":..., "line_items":[...], "suggested_category_id":..., "suggested_subgroups":[...]}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -292,6 +282,9 @@ async function runOpenAIVision(
             type: 'image_url',
             image_url: {
               url: `data:${input.mimeType};base64,${input.imageBase64}`,
+              // Auto: deja que el proveedor decida el detalle; reduce tokens de
+              // visión en imágenes grandes (ignorado por endpoints sin soporte).
+              detail: 'auto',
             },
           },
         ],

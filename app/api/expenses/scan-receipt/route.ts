@@ -5,6 +5,10 @@ import { analyzeReceiptImage } from '@/lib/assistant/vision';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+// Recibos multi-foto le dan al backend hasta 120s (ver SCAN_MULTI_TIMEOUT_MS
+// en la app móvil): sin esto, Vercel corta la función con su timeout default,
+// que es más corto que eso.
+export const maxDuration = 120;
 
 /**
  * POST /api/expenses/scan-receipt

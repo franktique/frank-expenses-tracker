@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   CalendarIcon,
+  Camera,
   Check,
   ChevronsUpDown,
   FileUp,
@@ -13,6 +14,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { ExpenseFormDialog } from '@/components/expense-form-dialog';
+import { ExpenseScanDialog } from '@/components/scan-receipt-dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -97,6 +99,7 @@ export function ExpensesView() {
   const searchParams = useSearchParams();
 
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isScanOpen, setIsScanOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
@@ -106,7 +109,9 @@ export function ExpensesView() {
   const [filterCatSearchValue, setFilterCatSearchValue] = useState('');
   const [filterCatDebouncedSearch, setFilterCatDebouncedSearch] = useState('');
   const [filterCatPopoverOpen, setFilterCatPopoverOpen] = useState(false);
-  const filterCatDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const filterCatDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null
+  );
   const [paymentMethodFilter, setPaymentMethodFilter] = useState<string>(
     searchParams.get('paymentMethod') || ''
   );
@@ -124,7 +129,9 @@ export function ExpensesView() {
 
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailExpense, setDetailExpense] = useState<Expense | null>(null);
-  const [categoryCatalogMap, setCategoryCatalogMap] = useState<Record<string, boolean>>({});
+  const [categoryCatalogMap, setCategoryCatalogMap] = useState<
+    Record<string, boolean>
+  >({});
 
   const [editExpense, setEditExpense] = useState<{
     id: string;
@@ -235,7 +242,8 @@ export function ExpensesView() {
 
   const handleFilterCatSearchChange = (value: string) => {
     setFilterCatSearchValue(value);
-    if (filterCatDebounceRef.current) clearTimeout(filterCatDebounceRef.current);
+    if (filterCatDebounceRef.current)
+      clearTimeout(filterCatDebounceRef.current);
     filterCatDebounceRef.current = setTimeout(
       () => setFilterCatDebouncedSearch(value),
       300
@@ -257,8 +265,7 @@ export function ExpensesView() {
     ) {
       toast({
         title: 'Error',
-        description:
-          'Los campos obligatorios no pueden estar vacíos.',
+        description: 'Los campos obligatorios no pueden estar vacíos.',
         variant: 'destructive',
       });
       return;
@@ -404,7 +411,7 @@ export function ExpensesView() {
               : ''}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap justify-end gap-2">
           <ExportExpensesButton />
           <ExportExpensesExcelButton />
           <Button
@@ -416,6 +423,15 @@ export function ExpensesView() {
             Importar CSV
           </Button>
           <Button
+            componentId="expenses-scan-btn"
+            variant="outline"
+            disabled={!dataLoaded}
+            onClick={() => setIsScanOpen(true)}
+          >
+            <Camera className="mr-2 h-4 w-4" />
+            Escanear recibo
+          </Button>
+          <Button
             componentId="expenses-add-btn"
             disabled={!dataLoaded}
             onClick={() => setIsAddOpen(true)}
@@ -424,6 +440,11 @@ export function ExpensesView() {
             Nuevo Gasto
           </Button>
 
+          <ExpenseScanDialog
+            open={isScanOpen}
+            onOpenChange={setIsScanOpen}
+            onSuccess={handleExpenseAdded}
+          />
           <ExpenseFormDialog
             open={isAddOpen}
             onOpenChange={setIsAddOpen}
@@ -481,9 +502,7 @@ export function ExpensesView() {
                       onValueChange={handleFilterCatSearchChange}
                     />
                     <CommandList>
-                      <CommandEmpty>
-                        No se encontraron categorías.
-                      </CommandEmpty>
+                      <CommandEmpty>No se encontraron categorías.</CommandEmpty>
                       <CommandGroup>
                         <CommandItem
                           value="all"
@@ -498,7 +517,7 @@ export function ExpensesView() {
                           <Check
                             className={cn(
                               'mr-2 h-4 w-4',
-                              (!categoryFilter || categoryFilter === 'all')
+                              !categoryFilter || categoryFilter === 'all'
                                 ? 'opacity-100'
                                 : 'opacity-0'
                             )}
@@ -875,9 +894,7 @@ export function ExpensesView() {
                       onValueChange={handleEditCatSearchChange}
                     />
                     <CommandList>
-                      <CommandEmpty>
-                        No se encontraron categorías.
-                      </CommandEmpty>
+                      <CommandEmpty>No se encontraron categorías.</CommandEmpty>
                       <CommandGroup>
                         {editFilteredCategories.map((category) => (
                           <CommandItem
@@ -1057,7 +1074,9 @@ export function ExpensesView() {
               />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="edit-store-name">Tienda / Comercio (opcional)</Label>
+              <Label htmlFor="edit-store-name">
+                Tienda / Comercio (opcional)
+              </Label>
               <Input
                 id="edit-store-name"
                 placeholder="Ej: Éxito, Carulla..."

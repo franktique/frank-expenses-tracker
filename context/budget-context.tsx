@@ -33,10 +33,7 @@ export type BudgetContextType = {
   connectionErrorDetails: string | null;
   setupDatabase: () => Promise<void>;
   addCategory: (name: string) => Promise<void>;
-  updateCategory: (
-    id: string,
-    name: string
-  ) => Promise<void>;
+  updateCategory: (id: string, name: string) => Promise<void>;
   deleteCategory: (id: string) => Promise<void>;
   addPeriod: (name: string, month: number, year: number) => Promise<void>;
   updatePeriod: (
@@ -89,8 +86,9 @@ export type BudgetContextType = {
     creditCardId?: string,
     pending?: boolean,
     eventId?: number,
-    storeName?: string
-  ) => Promise<void>;
+    storeName?: string,
+    isVerified?: boolean
+  ) => Promise<Expense>;
   updateExpense: (
     id: string,
     categoryId: string,
@@ -1069,8 +1067,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     creditCardId?: string,
     pending?: boolean,
     eventId?: number,
-    storeName?: string
-  ) => {
+    storeName?: string,
+    isVerified?: boolean
+  ): Promise<Expense> => {
     try {
       const response = await fetch('/api/expenses', {
         method: 'POST',
@@ -1091,6 +1090,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
           credit_card_id: creditCardId,
           pending,
           store_name: storeName || null,
+          is_verified: isVerified,
         }),
       });
 
@@ -1099,8 +1099,9 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         throw new Error(`Failed to add expense: ${errorText}`);
       }
 
-      const newExpense = await response.json();
-      setExpenses([...expenses, newExpense]);
+      const newExpense = (await response.json()) as Expense;
+      setExpenses((current) => [...(current ?? []), newExpense]);
+      return newExpense;
     } catch (err) {
       setError((err as Error).message);
       throw err;

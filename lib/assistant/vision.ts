@@ -92,6 +92,14 @@ export type ReceiptScanOutcome =
   | { ok: true; result: ReceiptScanResult }
   | { ok: false; error: string };
 
+/**
+ * Tope de salida para la llamada de visión, independiente del `maxTokens`
+ * configurable del asistente de chat (que suele quedar en 4096 por defecto).
+ * Un recibo largo (60-120 ítems) puede necesitar bastante más que eso para
+ * devolver el JSON completo sin truncarse a mitad de camino.
+ */
+const VISION_MAX_TOKENS = 8192;
+
 // ---------------------------------------------------------------------------
 // Prompt
 // ---------------------------------------------------------------------------
@@ -238,12 +246,23 @@ export async function analyzeReceiptImage(
   const prompt = buildPrompt(input);
 
   let raw: string;
+  let truncated: boolean;
 
   try {
     if (config.protocol === 'openai') {
-      raw = await runOpenAIVision(config, model, prompt, input);
+      ({ text: raw, truncated } = await runOpenAIVision(
+        config,
+        model,
+        prompt,
+        input
+      ));
     } else {
-      raw = await runAnthropicVision(config, model, prompt, input);
+      ({ text: raw, truncated } = await runAnthropicVision(
+        config,
+        model,
+        prompt,
+        input
+      ));
     }
   } catch (err) {
     const message = (err as Error).message;
@@ -263,6 +282,13 @@ export async function analyzeReceiptImage(
 
   const parsed = extractJsonObject(raw);
   if (parsed === null) {
+    if (truncated) {
+      return {
+        ok: false,
+        error:
+          'La respuesta del modelo se truncó por exceder el límite de tokens de salida (recibo con demasiados ítems). Probá escaneando el recibo en menos fotos con menos líneas cada una.',
+      };
+    }
     return {
       ok: false,
       error: `No se pudo interpretar la respuesta del modelo como JSON. Respuesta cruda: ${raw.slice(0, 500)}`,
@@ -271,6 +297,13 @@ export async function analyzeReceiptImage(
 
   const result = validateResult(parsed);
   if (!result) {
+    if (truncated) {
+      return {
+        ok: false,
+        error:
+          'La respuesta del modelo se truncó por exceder el límite de tokens de salida (recibo con demasiados ítems). Probá escaneando el recibo en menos fotos con menos líneas cada una.',
+      };
+    }
     return {
       ok: false,
       error: `La respuesta del modelo no cumple el esquema esperado. Respuesta cruda: ${raw.slice(0, 500)}`,
@@ -285,7 +318,7 @@ async function runOpenAIVision(
   model: string,
   prompt: string,
   input: ReceiptScanInput
-): Promise<string> {
+): Promise<{ text: string; truncated: boolean }> {
   const client = new OpenAI({
     apiKey: config.apiKey || 'not-needed',
     ...(config.baseUrl ? { baseURL: config.baseUrl } : {}),
@@ -314,7 +347,7 @@ async function runOpenAIVision(
 
   const completion = await client.chat.completions.create({
     model,
-    max_tokens: config.maxTokens,
+    max_tokens: VISION_MAX_TOKENS,
     messages: [
       {
         role: 'user',
@@ -323,7 +356,11 @@ async function runOpenAIVision(
     ],
   });
 
-  return completion.choices[0]?.message?.content || '';
+  const choice = completion.choices[0];
+  return {
+    text: choice?.message?.content || '',
+    truncated: choice?.finish_reason === 'length',
+  };
 }
 
 async function runAnthropicVision(
@@ -331,7 +368,7 @@ async function runAnthropicVision(
   model: string,
   prompt: string,
   input: ReceiptScanInput
-): Promise<string> {
+): Promise<{ text: string; truncated: boolean }> {
   if (!config.apiKey) {
     throw new Error(
       'El proveedor activo no tiene API key configurada. Agrégalo en la configuración de proveedores.'
@@ -364,7 +401,7 @@ async function runAnthropicVision(
 
   const response = await client.messages.create({
     model,
-    max_tokens: config.maxTokens,
+    max_tokens: VISION_MAX_TOKENS,
     messages: [
       {
         role: 'user',
@@ -376,5 +413,8 @@ async function runAnthropicVision(
   const textBlocks = response.content.filter(
     (block): block is Anthropic.TextBlock => block.type === 'text'
   );
-  return textBlocks.map((block) => block.text).join('\n');
+  return {
+    text: textBlocks.map((block) => block.text).join('\n'),
+    truncated: response.stop_reason === 'max_tokens',
+  };
 }

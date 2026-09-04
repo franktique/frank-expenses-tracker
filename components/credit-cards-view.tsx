@@ -731,8 +731,8 @@ export function CreditCardsView() {
             Proyección de pago
           </CardTitle>
           <CardDescription>
-            Pago estimado de cada tarjeta según los gastos registrados en su
-            ciclo de corte.
+            Pago estimado de cada tarjeta según los gastos de su ciclo de corte
+            y las cuotas vigentes de sus deudas.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -764,7 +764,7 @@ export function CreditCardsView() {
                           {formatCreditCardDisplay(row.credit_card)}
                         </p>
                         <p className="text-lg font-semibold tabular-nums">
-                          {formatCurrency(row.projected_amount)}
+                          {formatCurrency(row.projected_total)}
                         </p>
                       </div>
                       <p className="text-sm text-muted-foreground">
@@ -776,6 +776,14 @@ export function CreditCardsView() {
                         {getSpanishMonthName(row.next_payment_month ?? 0)}{' '}
                         {row.next_payment_year}.
                       </p>
+                      {row.debt_count > 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          Gastos: {formatCurrency(row.projected_amount)} ·
+                          Cuotas ({row.debt_count}{' '}
+                          {row.debt_count === 1 ? 'deuda' : 'deudas'}):{' '}
+                          {formatCurrency(row.debt_payment)}
+                        </p>
+                      )}
                       {row.expense_count === 0 ? (
                         <p className="text-sm text-muted-foreground">
                           No hay gastos registrados en este ciclo de corte.
@@ -798,6 +806,13 @@ export function CreditCardsView() {
                         para agregar su Fecha de Corte y ver su proyección de
                         pago.
                       </p>
+                      {row.debt_count > 0 && (
+                        <p className="text-sm text-muted-foreground">
+                          Cuotas de deudas ({row.debt_count}{' '}
+                          {row.debt_count === 1 ? 'deuda' : 'deudas'}):{' '}
+                          {formatCurrency(row.debt_payment)}
+                        </p>
+                      )}
                     </>
                   )}
                 </div>
@@ -805,9 +820,15 @@ export function CreditCardsView() {
               <div className="flex items-center justify-between border-t pt-3">
                 <p className="text-sm font-medium">Pago total proyectado</p>
                 <p className="text-lg font-semibold tabular-nums">
-                  {formatCurrency(projectionData.total_projected)}
+                  {formatCurrency(projectionData.total_projected_with_debts)}
                 </p>
               </div>
+              {projectionData.total_debt_payment > 0 && (
+                <p className="text-right text-xs text-muted-foreground">
+                  Gastos: {formatCurrency(projectionData.total_projected)} ·
+                  Cuotas: {formatCurrency(projectionData.total_debt_payment)}
+                </p>
+              )}
             </div>
           )}
         </CardContent>

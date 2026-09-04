@@ -63,13 +63,28 @@ function calcPMT(balance: number, monthlyRate: number, periods: number): number 
 // ============================================================================
 
 /**
+ * The subset of DebtObligation fields the monthly breakdown and next-payment
+ * cuota calculations rely on. Lets API routes call them straight with raw
+ * database rows.
+ */
+export type DebtMonthlyInput = Pick<
+  DebtObligation,
+  | 'saldo_actual'
+  | 'cuotas_pendientes'
+  | 'tasa_interes'
+  | 'tipo_tasa'
+  | 'pago_mensual'
+  | 'valor_seguro'
+>;
+
+/**
  * Calculate the capital, interest, and insurance breakdown for the current
  * period's payment, based on PMT formula (not pago_mensual directly).
  *
  * @param debt - The debt obligation
  * @returns { capital, intereses, seguro, total }
  */
-export function calculateDebtMonthlyBreakdown(debt: DebtObligation): {
+export function calculateDebtMonthlyBreakdown(debt: DebtMonthlyInput): {
   capital: number;
   intereses: number;
   seguro: number;
@@ -129,6 +144,118 @@ export function applyOnePayment(debt: DebtObligation): {
   return {
     saldo_actual: newSaldo,
     cuotas_pendientes: newCuotas,
+  };
+}
+
+// ============================================================================
+// Period Catch-Up
+// ============================================================================
+
+/**
+ * A calendar month identified the same way the `periods` table stores it:
+ * year plus a 0-indexed month (0 = January).
+ */
+export interface PeriodPoint {
+  year: number;
+  month: number; // 0-indexed (0 = January)
+}
+
+const clamp = (value: number, min: number, max: number): number =>
+  Math.min(max, Math.max(min, value));
+
+/**
+ * Signed number of months between two period points. Positive when `to` is
+ * after `from`, negative when it is before.
+ */
+export function monthsBetweenPeriods(
+  from: PeriodPoint,
+  to: PeriodPoint
+): number {
+  return to.year * 12 + to.month - (from.year * 12 + from.month);
+}
+
+/**
+ * Extract the period point (year, 0-indexed month) from a YYYY-MM-DD string
+ * without going through Date, which shifts date-only values under the
+ * app's America/Bogota timezone.
+ */
+function periodPointFromDate(dateString: string): PeriodPoint | null {
+  const match = /^(\d{4})-(\d{2})/.exec(dateString);
+  if (!match) return null;
+  return { year: Number(match[1]), month: Number(match[2]) - 1 };
+}
+
+/**
+ * How many amortization payments a debt is behind the active period.
+ *
+ * Anchored on the last period whose payment was applied
+ * (last_updated_period_id) when known, falling back to the debt's
+ * fecha_inicio: expected remaining cuotas = plazo_original - elapsed months.
+ *
+ * Forward-only: never returns a count that would restore cuotas, and never
+ * exceeds the cuotas actually pending. Returns 0 when the debt has no date
+ * anchor at all (manual management only).
+ *
+ * @param debt - Current debt state
+ * @param lastPeriod - Period of the last applied payment, or null
+ * @param activePeriod - Period to sync up to
+ */
+export function computeCatchUpCount(
+  debt: DebtObligation,
+  lastPeriod: PeriodPoint | null,
+  activePeriod: PeriodPoint
+): number {
+  if (debt.cuotas_pendientes <= 0) return 0;
+
+  let lag: number | null = null;
+
+  if (lastPeriod) {
+    lag = monthsBetweenPeriods(lastPeriod, activePeriod);
+  } else if (debt.fecha_inicio) {
+    const start = periodPointFromDate(debt.fecha_inicio);
+    if (start) {
+      const elapsed = monthsBetweenPeriods(start, activePeriod);
+      const expectedRemaining = clamp(
+        debt.plazo_original - elapsed,
+        0,
+        debt.plazo_original
+      );
+      lag = debt.cuotas_pendientes - expectedRemaining;
+    }
+  }
+
+  if (lag === null) return 0;
+  return clamp(Math.trunc(lag), 0, debt.cuotas_pendientes);
+}
+
+/**
+ * Apply several amortization payments in sequence, stopping early if the
+ * debt reaches a state where applyOnePayment makes no more progress.
+ *
+ * @param debt - Current debt state
+ * @param payments - Number of payments to apply
+ * @returns Updated { saldo_actual, cuotas_pendientes }
+ */
+export function applyCatchUp(
+  debt: DebtObligation,
+  payments: number
+): { saldo_actual: number; cuotas_pendientes: number } {
+  let current = debt;
+
+  for (let i = 0; i < payments; i++) {
+    const next = applyOnePayment(current);
+    if (
+      next.saldo_actual === current.saldo_actual &&
+      next.cuotas_pendientes === current.cuotas_pendientes
+    ) {
+      break;
+    }
+    current = { ...current, ...next };
+  }
+
+  return {
+    saldo_actual: current.saldo_actual,
+    cuotas_pendientes: current.cuotas_pendientes,
   };
 }
 
@@ -379,6 +506,23 @@ export function calculateCreditCardGroupTotals(debts: DebtObligation[]): {
     seguro_mensual: roundCurrency(seguro_mensual),
     pago_mensual_total: roundCurrency(pago_mensual_total),
   };
+}
+
+/**
+ * Cuota a debt contributes to a card's NEXT month payment projection.
+ *
+ * After the cuotas of the active period are accounted for, the next
+ * statement payment (month M+1) still carries an installment only when more
+ * than one cuota remains. The amount is the agreed pago_mensual, falling
+ * back to the theoretical breakdown total when it was not set.
+ *
+ * @param debt - Current debt state
+ * @returns The cuota amount, or 0 when the debt ends with the active period
+ */
+export function getNextPaymentCuota(debt: DebtMonthlyInput): number {
+  if (debt.cuotas_pendientes < 2) return 0;
+  if (debt.pago_mensual > 0) return debt.pago_mensual;
+  return calculateDebtMonthlyBreakdown(debt).total;
 }
 
 /**

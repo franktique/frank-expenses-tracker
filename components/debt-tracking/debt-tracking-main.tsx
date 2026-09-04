@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Plus, ScanSearch, Loader2 } from 'lucide-react';
+import { Plus, ScanSearch, Loader2, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useBudget } from '@/context/budget-context';
@@ -29,6 +29,8 @@ export function DebtTrackingMain() {
   const [detections, setDetections] = useState<CategoryPaymentDetection[]>([]);
   const [detecting, setDetecting] = useState(false);
   const [detectError, setDetectError] = useState<string | null>(null);
+
+  const [syncing, setSyncing] = useState(false);
 
   const fetchDebts = useCallback(async () => {
     setLoading(true);
@@ -155,6 +157,41 @@ export function DebtTrackingMain() {
     }
   }
 
+  async function handleSyncDebts() {
+    if (!activePeriod) {
+      alert('No hay un periodo activo seleccionado');
+      return;
+    }
+    setSyncing(true);
+    try {
+      const res = await fetch('/api/debt-obligations/sync-to-period', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ period_id: activePeriod.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        alert(data.error ?? 'Error al poner al día las deudas');
+        return;
+      }
+      const synced = data.synced ?? [];
+      const applied = synced.reduce(
+        (sum: number, entry: { applied: number }) => sum + entry.applied,
+        0
+      );
+      if (applied > 0) {
+        alert(
+          `Se aplicaron ${applied} ${applied === 1 ? 'cuota' : 'cuotas'} en ${synced.length} ${synced.length === 1 ? 'deuda' : 'deudas'}.`
+        );
+      } else {
+        alert('Todas las deudas están al día con el periodo activo.');
+      }
+      fetchDebts();
+    } finally {
+      setSyncing(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-16">
@@ -201,6 +238,24 @@ export function DebtTrackingMain() {
             <ScanSearch className="h-4 w-4 mr-1" />
           )}
           Detectar pagos del periodo
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleSyncDebts}
+          disabled={syncing || !activePeriod}
+          title={
+            !activePeriod
+              ? 'Selecciona un periodo activo primero'
+              : 'Aplica las cuotas atrasadas hasta el periodo activo según la fecha de cada deuda'
+          }
+        >
+          {syncing ? (
+            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="mr-1 h-4 w-4" />
+          )}
+          Poner al día
         </Button>
         {activePeriod && (
           <span className="text-xs text-muted-foreground">

@@ -191,6 +191,12 @@ export interface CreditCardProjectionRow {
   next_payment_year: number | null;
   projected_amount: number;
   expense_count: number;
+  /** Cuotas del próximo pago de las deudas activas de esta tarjeta */
+  debt_payment: number;
+  /** Deudas activas que aportan una cuota al próximo pago */
+  debt_count: number;
+  /** projected_amount + debt_payment */
+  projected_total: number;
 }
 
 export interface CreditCardProjectionResponse {
@@ -198,6 +204,8 @@ export interface CreditCardProjectionResponse {
   period_name: string | null;
   cards: CreditCardProjectionRow[];
   total_projected: number;
+  total_debt_payment: number;
+  total_projected_with_debts: number;
 }
 
 // API response types

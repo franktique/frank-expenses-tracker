@@ -29,6 +29,9 @@ export async function GET(request: NextRequest) {
           e.pending,
           e.is_verified,
           e.store_name,
+          EXISTS (
+            SELECT 1 FROM expense_details ed WHERE ed.expense_id = e.id
+          ) AS has_details,
           c.name as category_name,
           p.name as period_name,
           sf.name as source_fund_name,
@@ -67,6 +70,9 @@ export async function GET(request: NextRequest) {
           e.pending,
           e.is_verified,
           e.store_name,
+          EXISTS (
+            SELECT 1 FROM expense_details ed WHERE ed.expense_id = e.id
+          ) AS has_details,
           c.name as category_name,
           p.name as period_name,
           sf.name as source_fund_name,
@@ -110,6 +116,9 @@ export async function GET(request: NextRequest) {
           e.pending,
           e.is_verified,
           e.store_name,
+          EXISTS (
+            SELECT 1 FROM expense_details ed WHERE ed.expense_id = e.id
+          ) AS has_details,
           c.name as category_name,
           p.name as period_name,
           sf.name as source_fund_name,
@@ -131,22 +140,24 @@ export async function GET(request: NextRequest) {
     }
 
     // Transform expenses to include credit card info in the expected format
-    const transformedExpenses = expenses.map((expense: Record<string, unknown>) => ({
-      ...expense,
-      credit_card_info: expense.credit_card_bank_name
-        ? {
-            bank_name: expense.credit_card_bank_name,
-            franchise: expense.credit_card_franchise,
-            last_four_digits: expense.credit_card_last_four_digits,
-            is_active: expense.credit_card_is_active,
-          }
-        : undefined,
-      // Remove the individual credit card fields from the response
-      credit_card_bank_name: undefined,
-      credit_card_franchise: undefined,
-      credit_card_last_four_digits: undefined,
-      credit_card_is_active: undefined,
-    }));
+    const transformedExpenses = expenses.map(
+      (expense: Record<string, unknown>) => ({
+        ...expense,
+        credit_card_info: expense.credit_card_bank_name
+          ? {
+              bank_name: expense.credit_card_bank_name,
+              franchise: expense.credit_card_franchise,
+              last_four_digits: expense.credit_card_last_four_digits,
+              is_active: expense.credit_card_is_active,
+            }
+          : undefined,
+        // Remove the individual credit card fields from the response
+        credit_card_bank_name: undefined,
+        credit_card_franchise: undefined,
+        credit_card_last_four_digits: undefined,
+        credit_card_is_active: undefined,
+      })
+    );
 
     return NextResponse.json(transformedExpenses);
   } catch (error) {
@@ -253,6 +264,7 @@ export async function POST(request: NextRequest) {
     // Transform the response to include credit card info in the expected format
     const transformedExpense = {
       ...expenseWithFunds,
+      has_details: false, // A freshly created expense never has details yet
       credit_card_info: expenseWithFunds.credit_card_bank_name
         ? {
             bank_name: expenseWithFunds.credit_card_bank_name,

@@ -105,6 +105,7 @@ export type BudgetContextType = {
     storeName?: string,
     isVerified?: boolean
   ) => Promise<void>;
+  patchExpense: (id: string, patch: Partial<Expense>) => void;
   deleteExpense: (id: string) => Promise<void>;
   addCreditCard: (
     bankName: string,
@@ -1164,6 +1165,17 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Local-only patch of one expense (e.g. has_details / store_name after a
+  // detail save). Deliberately does not hit the API: updateExpense re-runs the
+  // fund-balance logic and refreshData refetches everything.
+  const patchExpense = (id: string, patch: Partial<Expense>) => {
+    setExpenses((current) =>
+      (current || []).map((expense) =>
+        expense.id === id ? { ...expense, ...patch } : expense
+      )
+    );
+  };
+
   const deleteExpense = async (id: string) => {
     try {
       const response = await fetch(`/api/expenses/${id}`, {
@@ -1401,6 +1413,7 @@ export function BudgetProvider({ children }: { children: React.ReactNode }) {
         deleteIncome,
         addExpense,
         updateExpense,
+        patchExpense,
         deleteExpense,
         addCreditCard,
         updateCreditCard,

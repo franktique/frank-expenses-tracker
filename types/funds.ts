@@ -421,6 +421,7 @@ export interface Expense {
   pending?: boolean; // New field for pending status
   is_verified?: boolean; // Auditoría: false cuando el gasto se creó desde el móvil (escaneo de recibo)
   store_name?: string; // Optional store/market name for price comparison
+  has_details?: boolean; // Populated by GET /api/expenses: true when the expense has expense_details rows
   category_name?: string; // Populated in joins
   period_name?: string; // Populated in joins
 }

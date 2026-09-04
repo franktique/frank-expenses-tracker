@@ -7,7 +7,6 @@ import {
   Check,
   ChevronsUpDown,
   FileUp,
-  List,
   PlusCircle,
   Download,
   ShieldAlert,
@@ -15,6 +14,8 @@ import {
 } from 'lucide-react';
 import { ExpenseFormDialog } from '@/components/expense-form-dialog';
 import { ExpenseScanDialog } from '@/components/scan-receipt-dialog';
+import { ExpenseDetailAction } from '@/components/expense-detail-action';
+import { ExpenseDetailScanDialog } from '@/components/expense-detail-scan-dialog';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import {
@@ -87,6 +88,7 @@ export function ExpensesView() {
     activePeriod,
     addExpense,
     updateExpense,
+    patchExpense,
     deleteExpense,
     getCategoryById,
     getPeriodById,
@@ -129,9 +131,10 @@ export function ExpensesView() {
 
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [detailExpense, setDetailExpense] = useState<Expense | null>(null);
-  const [categoryCatalogMap, setCategoryCatalogMap] = useState<
-    Record<string, boolean>
-  >({});
+  const [isDetailScanOpen, setIsDetailScanOpen] = useState(false);
+  const [detailScanExpense, setDetailScanExpense] = useState<Expense | null>(
+    null
+  );
 
   const [editExpense, setEditExpense] = useState<{
     id: string;
@@ -198,17 +201,6 @@ export function ExpensesView() {
 
     fetchCreditCards();
   }, []);
-
-  // Fetch catalog status for all visible category IDs
-  useEffect(() => {
-    if (!expenses || expenses.length === 0) return;
-    const uniqueIds = [...new Set(expenses.map((e) => e.category_id))];
-    if (uniqueIds.length === 0) return;
-    fetch(`/api/categories/catalog-status?ids=${uniqueIds.join(',')}`)
-      .then((r) => (r.ok ? r.json() : {}))
-      .then((data) => setCategoryCatalogMap(data))
-      .catch(() => {});
-  }, [expenses]);
 
   // All categories are available (no fund filter)
   const availableCategories = categories || [];
@@ -348,6 +340,23 @@ export function ExpensesView() {
         variant: 'destructive',
       });
     }
+  };
+
+  // Local, per-expense update after a detail save (scan or manual): flips the
+  // detail button to green without a full refreshData().
+  const handleDetailScanSaved = (info: {
+    hasDetails: boolean;
+    storeName?: string | null;
+  }) => {
+    if (!detailScanExpense) return;
+    const patch: Partial<Expense> = { has_details: info.hasDetails };
+    if (info.storeName) patch.store_name = info.storeName;
+    patchExpense(detailScanExpense.id, patch);
+  };
+
+  const handleManualDetailSaved = (info: { hasDetails: boolean }) => {
+    if (!detailExpense) return;
+    patchExpense(detailExpense.id, { has_details: info.hasDetails });
   };
 
   // Sort expenses by date (oldest first)
@@ -732,23 +741,17 @@ export function ExpensesView() {
                           Verificar
                         </Button>
                       )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        disabled={!categoryCatalogMap[expense.category_id]}
-                        className={
-                          categoryCatalogMap[expense.category_id]
-                            ? 'text-primary'
-                            : 'text-muted-foreground'
-                        }
-                        title="Ver / agregar detalle de ítems"
-                        onClick={() => {
+                      <ExpenseDetailAction
+                        expense={expense as Expense}
+                        onOpenDetail={() => {
                           setDetailExpense(expense as Expense);
                           setIsDetailOpen(true);
                         }}
-                      >
-                        <List className="h-4 w-4" />
-                      </Button>
+                        onScanFromImage={() => {
+                          setDetailScanExpense(expense as Expense);
+                          setIsDetailScanOpen(true);
+                        }}
+                      />
                       <Button
                         variant="ghost"
                         size="sm"
@@ -1140,6 +1143,19 @@ export function ExpensesView() {
             if (!open) setDetailExpense(null);
           }}
           expense={detailExpense}
+          onSuccess={handleManualDetailSaved}
+        />
+      )}
+
+      {detailScanExpense && (
+        <ExpenseDetailScanDialog
+          open={isDetailScanOpen}
+          onOpenChange={(open) => {
+            setIsDetailScanOpen(open);
+            if (!open) setDetailScanExpense(null);
+          }}
+          expense={detailScanExpense}
+          onSaved={handleDetailScanSaved}
         />
       )}
     </div>

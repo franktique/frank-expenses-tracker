@@ -15,7 +15,8 @@ const mockSql = sql as jest.MockedFunction<typeof sql>;
 
 // The sql tagged template receives (strings: string[], ...values). Helper to
 // read the SQL text of a given call.
-const sqlTextOf = (call: unknown[]) => (call[0] as unknown as string[]).join('');
+const sqlTextOf = (call: unknown[]) =>
+  (call[0] as unknown as string[]).join('');
 
 const CATEGORY_ID = '11111111-1111-4111-8111-111111111111';
 const PERIOD_ID = '22222222-2222-4222-8222-222222222222';
@@ -43,6 +44,7 @@ describe('/api/expenses', () => {
         period_name: 'January 2024',
         source_fund_name: 'Source Fund',
         destination_fund_name: 'Destination Fund',
+        has_details: true,
       },
       {
         id: 'expense-2',
@@ -59,6 +61,7 @@ describe('/api/expenses', () => {
         period_name: 'January 2024',
         source_fund_name: 'Source Fund',
         destination_fund_name: null,
+        has_details: false,
       },
     ];
 
@@ -71,11 +74,16 @@ describe('/api/expenses', () => {
 
       expect(response.status).toBe(200);
       expect(data).toEqual(mockExpenses);
+      expect(data[0].has_details).toBe(true);
+      expect(data[1].has_details).toBe(false);
       expect(sqlTextOf(mockSql.mock.calls[0])).toContain(
         'LEFT JOIN funds sf ON e.source_fund_id = sf.id'
       );
       expect(sqlTextOf(mockSql.mock.calls[0])).toContain(
         'LEFT JOIN funds df ON e.destination_fund_id = df.id'
+      );
+      expect(sqlTextOf(mockSql.mock.calls[0])).toContain(
+        'SELECT 1 FROM expense_details ed WHERE ed.expense_id = e.id'
       );
     });
 
@@ -107,6 +115,35 @@ describe('/api/expenses', () => {
       expect(sqlTextOf(mockSql.mock.calls[0])).toContain('EXISTS (');
       expect(sqlTextOf(mockSql.mock.calls[0])).toContain(
         'category_fund_relationships cfr'
+      );
+    });
+
+    it('should probe expense_details in the fund-filtered query too', async () => {
+      mockSql.mockResolvedValueOnce([]);
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/expenses?fund_id=fund-1'
+      );
+      await GET(request);
+
+      expect(sqlTextOf(mockSql.mock.calls[0])).toContain(
+        'SELECT 1 FROM expense_details ed WHERE ed.expense_id = e.id'
+      );
+    });
+
+    it('should probe expense_details in the credit-card-filtered query', async () => {
+      mockSql.mockResolvedValueOnce([mockExpenses[0]]);
+
+      const request = new NextRequest(
+        'http://localhost:3000/api/expenses?credit_card_id=card-1'
+      );
+      const response = await GET(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(200);
+      expect(data[0].has_details).toBe(true);
+      expect(sqlTextOf(mockSql.mock.calls[0])).toContain(
+        'SELECT 1 FROM expense_details ed WHERE ed.expense_id = e.id'
       );
     });
 
@@ -146,7 +183,31 @@ describe('/api/expenses', () => {
       period_name: 'January 2024',
       source_fund_name: 'Source Fund',
       destination_fund_name: 'Destination Fund',
+      has_details: false,
     };
+
+    it('forces has_details to false on the created expense response', async () => {
+      // The POST re-select uses e.* (no has_details column); the transform
+      // must still answer with a stable `false` for the fresh expense.
+      mockSql
+        .mockResolvedValueOnce([mockNewExpense]) // INSERT expense
+        .mockResolvedValueOnce([]) // UPDATE source fund balance
+        .mockResolvedValueOnce([]) // UPDATE destination fund balance
+        .mockResolvedValueOnce([
+          { ...mockExpenseWithFunds, has_details: true },
+        ]); // SELECT expense with funds
+
+      const request = new NextRequest('http://localhost:3000/api/expenses', {
+        method: 'POST',
+        body: JSON.stringify(validExpenseData),
+      });
+
+      const response = await POST(request);
+      const data = await response.json();
+
+      expect(response.status).toBe(201);
+      expect(data.has_details).toBe(false);
+    });
 
     it('should create expense with source fund validation', async () => {
       mockSql

@@ -26,7 +26,12 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { useToast } from '@/components/ui/use-toast';
-import type { Expense, CategorySubgroup, CategoryItem, ExpenseDetail } from '@/types/funds';
+import type {
+  Expense,
+  CategorySubgroup,
+  CategoryItem,
+  ExpenseDetail,
+} from '@/types/funds';
 
 interface ItemFormState {
   amount: string;
@@ -38,7 +43,8 @@ interface ExpenseDetailDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   expense: Expense;
-  onSuccess?: () => void;
+  /** Called after saving; `hasDetails` lets the list recolor the detail button. */
+  onSuccess?: (info: { hasDetails: boolean }) => void;
 }
 
 function formatCurrency(amount: number) {
@@ -93,7 +99,11 @@ export function ExpenseDetailDialog({
       setFormState(initial);
       setActiveItemIds(savedIds);
     } catch (err) {
-      toast({ title: 'Error', description: (err as Error).message, variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: (err as Error).message,
+        variant: 'destructive',
+      });
     } finally {
       setLoading(false);
     }
@@ -126,7 +136,9 @@ export function ExpenseDetailDialog({
     return subgroups
       .map((sg) => ({
         ...sg,
-        items: (sg.items ?? []).filter((item) => !activeItemIds.includes(item.id)),
+        items: (sg.items ?? []).filter(
+          (item) => !activeItemIds.includes(item.id)
+        ),
       }))
       .filter((sg) => sg.items.length > 0);
   }, [subgroups, activeItemIds]);
@@ -149,7 +161,11 @@ export function ExpenseDetailDialog({
     });
   };
 
-  const updateField = (itemId: string, field: keyof ItemFormState, value: string) => {
+  const updateField = (
+    itemId: string,
+    field: keyof ItemFormState,
+    value: string
+  ) => {
     setFormState((prev) => ({
       ...prev,
       [itemId]: { ...prev[itemId], [field]: value },
@@ -199,10 +215,14 @@ export function ExpenseDetailDialog({
       }
 
       toast({ title: 'Detalles guardados correctamente' });
-      onSuccess?.();
+      onSuccess?.({ hasDetails: details.length > 0 });
       onOpenChange(false);
     } catch (err) {
-      toast({ title: 'Error', description: (err as Error).message, variant: 'destructive' });
+      toast({
+        title: 'Error',
+        description: (err as Error).message,
+        variant: 'destructive',
+      });
     } finally {
       setSaving(false);
     }
@@ -212,11 +232,21 @@ export function ExpenseDetailDialog({
 
   // Group active items by their sub-group for display
   const activeBySubgroup = useMemo(() => {
-    const groups: Array<{ subgroupId: string; subgroupName: string; items: CategoryItem[] }> = [];
+    const groups: Array<{
+      subgroupId: string;
+      subgroupName: string;
+      items: CategoryItem[];
+    }> = [];
     for (const sg of subgroups) {
-      const active = (sg.items ?? []).filter((item) => activeItemIds.includes(item.id));
+      const active = (sg.items ?? []).filter((item) =>
+        activeItemIds.includes(item.id)
+      );
       if (active.length > 0) {
-        groups.push({ subgroupId: sg.id, subgroupName: sg.name, items: active });
+        groups.push({
+          subgroupId: sg.id,
+          subgroupName: sg.name,
+          items: active,
+        });
       }
     }
     return groups;
@@ -224,7 +254,7 @@ export function ExpenseDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+      <DialogContent className="flex max-h-[90vh] max-w-2xl flex-col">
         <DialogHeader>
           <DialogTitle>Detalle del gasto</DialogTitle>
           <DialogDescription>
@@ -234,21 +264,32 @@ export function ExpenseDetailDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div className="min-h-0 flex-1 overflow-y-auto">
           {loading ? (
-            <div className="py-8 text-center text-muted-foreground">Cargando...</div>
+            <div className="py-8 text-center text-muted-foreground">
+              Cargando...
+            </div>
           ) : !hasCatalogItems ? (
             <div className="py-8 text-center text-muted-foreground">
-              Esta categoría no tiene ítems definidos. Agrégalos desde la sección de Categorías.
+              Esta categoría no tiene ítems definidos. Agrégalos desde la
+              sección de Categorías.
+              <p className="mt-2 text-xs">
+                También podés cargar el detalle desde una imagen con el botón de
+                detalle de la lista de gastos.
+              </p>
             </div>
           ) : (
             <div className="space-y-4 py-2">
               {/* Column headers — only shown when there are active items */}
               {activeItemIds.length > 0 && (
-                <div className="grid grid-cols-[1fr_100px_90px_80px_28px] gap-2 items-center px-1 pb-1 border-b">
+                <div className="grid grid-cols-[1fr_100px_90px_80px_28px] items-center gap-2 border-b px-1 pb-1">
                   <span className="text-xs text-muted-foreground">Ítem</span>
-                  <span className="text-xs text-muted-foreground">Monto ($)</span>
-                  <span className="text-xs text-muted-foreground">Cantidad</span>
+                  <span className="text-xs text-muted-foreground">
+                    Monto ($)
+                  </span>
+                  <span className="text-xs text-muted-foreground">
+                    Cantidad
+                  </span>
                   <span className="text-xs text-muted-foreground">Unidad</span>
                   <span />
                 </div>
@@ -257,25 +298,31 @@ export function ExpenseDetailDialog({
               {/* Active items grouped by sub-group */}
               {activeBySubgroup.map((group) => (
                 <div key={group.subgroupId}>
-                  <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5 px-1">
+                  <h4 className="mb-1.5 px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     {group.subgroupName}
                   </h4>
                   <div className="space-y-1">
                     {group.items.map((item) => {
-                      const state = formState[item.id] ?? { amount: '', quantity: '', unit: '' };
+                      const state = formState[item.id] ?? {
+                        amount: '',
+                        quantity: '',
+                        unit: '',
+                      };
                       return (
                         <div
                           key={item.id}
-                          className="grid grid-cols-[1fr_100px_90px_80px_28px] gap-2 items-center px-1"
+                          className="grid grid-cols-[1fr_100px_90px_80px_28px] items-center gap-2 px-1"
                         >
-                          <span className="text-sm truncate">{item.name}</span>
+                          <span className="truncate text-sm">{item.name}</span>
                           <Input
                             type="number"
                             min="0"
                             step="any"
                             placeholder="Monto"
                             value={state.amount}
-                            onChange={(e) => updateField(item.id, 'amount', e.target.value)}
+                            onChange={(e) =>
+                              updateField(item.id, 'amount', e.target.value)
+                            }
                             className="h-8 text-sm"
                           />
                           <Input
@@ -284,19 +331,23 @@ export function ExpenseDetailDialog({
                             step="any"
                             placeholder="Cant."
                             value={state.quantity}
-                            onChange={(e) => updateField(item.id, 'quantity', e.target.value)}
+                            onChange={(e) =>
+                              updateField(item.id, 'quantity', e.target.value)
+                            }
                             className="h-8 text-sm"
                           />
                           <Input
                             type="text"
                             placeholder="Unidad"
                             value={state.unit}
-                            onChange={(e) => updateField(item.id, 'unit', e.target.value)}
+                            onChange={(e) =>
+                              updateField(item.id, 'unit', e.target.value)
+                            }
                             className="h-8 text-sm"
                           />
                           <button
                             onClick={() => removeItem(item.id)}
-                            className="h-6 w-6 flex items-center justify-center rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                            className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
                             title="Quitar ítem"
                           >
                             <X className="h-3.5 w-3.5" />
@@ -310,24 +361,21 @@ export function ExpenseDetailDialog({
 
               {/* Empty state */}
               {activeItemIds.length === 0 && (
-                <p className="text-sm text-muted-foreground text-center py-4">
-                  Usa &ldquo;+ Agregar ítem&rdquo; para seleccionar los productos de esta compra.
+                <p className="py-4 text-center text-sm text-muted-foreground">
+                  Usa &ldquo;+ Agregar ítem&rdquo; para seleccionar los
+                  productos de esta compra.
                 </p>
               )}
 
               {/* Item picker */}
               <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full mt-1">
-                    <Plus className="h-4 w-4 mr-1" />
+                  <Button variant="outline" size="sm" className="mt-1 w-full">
+                    <Plus className="mr-1 h-4 w-4" />
                     Agregar ítem
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent
-                  className="w-72 p-0"
-                  align="start"
-                  side="top"
-                >
+                <PopoverContent className="w-72 p-0" align="start" side="top">
                   <Command>
                     <CommandInput placeholder="Buscar ítem..." />
                     <CommandList>
@@ -364,9 +412,12 @@ export function ExpenseDetailDialog({
         </div>
 
         {hasCatalogItems && !loading && (
-          <div className="border-t pt-3 mt-2">
-            <div className={`text-sm font-medium text-right mb-3 ${totalColor}`}>
-              Total ingresado: {formatCurrency(totalEntered)} / {formatCurrency(expenseAmount)}
+          <div className="mt-2 border-t pt-3">
+            <div
+              className={`mb-3 text-right text-sm font-medium ${totalColor}`}
+            >
+              Total ingresado: {formatCurrency(totalEntered)} /{' '}
+              {formatCurrency(expenseAmount)}
               {!isValid && totalEntered > 0 && (
                 <span className="ml-2 text-xs">
                   {isOver
@@ -379,7 +430,10 @@ export function ExpenseDetailDialog({
               <Button variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button onClick={handleSave} disabled={saving || activeItemIds.length === 0}>
+              <Button
+                onClick={handleSave}
+                disabled={saving || activeItemIds.length === 0}
+              >
                 {saving ? 'Guardando...' : 'Guardar'}
               </Button>
             </DialogFooter>

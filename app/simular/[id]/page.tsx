@@ -18,7 +18,15 @@ import { SimulationBreadcrumb } from '@/components/simulation-breadcrumb';
 import { SimulationNavigation } from '@/components/simulation-navigation';
 import { SimulationQuickActions } from '@/components/simulation-quick-actions';
 import { PeriodSelectorDialog } from '@/components/period-selector-dialog';
-import { ArrowLeft, Settings, BarChart3, Loader2, Copy } from 'lucide-react';
+import {
+  ArrowLeft,
+  Settings,
+  BarChart3,
+  Loader2,
+  Copy,
+  Sparkles,
+} from 'lucide-react';
+import { useAssistant } from '@/context/assistant-context';
 
 // Types
 type Simulation = {
@@ -34,8 +42,16 @@ export default function SimulationConfigPage() {
   const router = useRouter();
   const params = useParams();
   const { toast } = useToast();
+  const { openPanel, setPageContext } = useAssistant();
 
   const simulationId = parseInt(params.id as string);
+
+  // Scope the AI assistant to this simulation while the page is mounted.
+  useEffect(() => {
+    if (isNaN(simulationId)) return;
+    setPageContext({ simulationId });
+    return () => setPageContext(null);
+  }, [simulationId, setPageContext]);
 
   // State
   const [simulation, setSimulation] = useState<Simulation | null>(null);
@@ -278,7 +294,16 @@ export default function SimulationConfigPage() {
             )}
           </div>
         </div>
-        <div className="text-sm text-muted-foreground">
+        <div className="flex items-center gap-3 text-sm text-muted-foreground">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1"
+            onClick={openPanel}
+          >
+            <Sparkles className="h-4 w-4" />
+            Analizar con IA
+          </Button>
           {simulation.budget_count > 0 ? (
             <span className="text-green-600">
               {simulation.budget_count} categorías configuradas

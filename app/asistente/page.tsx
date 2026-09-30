@@ -117,7 +117,11 @@ export default function AsistentePage() {
                 {messages.map((m) => (
                   <AssistantChatMessage
                     key={m.id}
-                    message={{ role: m.role, content: m.content }}
+                    message={{
+                      role: m.role,
+                      content: m.content,
+                      tool_data: m.tool_data,
+                    }}
                   />
                 ))}
                 {isStreaming && streamingText && (

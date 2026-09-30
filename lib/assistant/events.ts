@@ -13,8 +13,15 @@ export type AssistantTurnEvent =
   | { type: 'final'; text: string }
   | { type: 'error'; message: string };
 
+/** Page the user is on when sending a message; scopes tools and prompt. */
+export interface AssistantPageContext {
+  simulationId?: number;
+  simulationName?: string;
+}
+
 export interface TurnInput {
   history: AssistantMessage[];
   userMessage: string;
   abortController?: AbortController;
+  context?: AssistantPageContext;
 }

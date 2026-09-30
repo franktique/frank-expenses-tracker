@@ -26,6 +26,7 @@ export function AssistantPanel() {
     clearError,
     sendMessage,
     startNewConversation,
+    pageContext,
   } = useAssistant();
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -37,7 +38,8 @@ export function AssistantPanel() {
     el.scrollTop = el.scrollHeight;
   }, [messages, streamingText, error]);
 
-  const showSuggestions = messages.length === 0 && !streamingText && !isStreaming;
+  const showSuggestions =
+    messages.length === 0 && !streamingText && !isStreaming;
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && closePanel()}>
@@ -82,29 +84,36 @@ export function AssistantPanel() {
           </div>
         )}
 
-        <div
-          ref={scrollRef}
-          className="flex-1 space-y-4 overflow-y-auto p-3"
-        >
+        <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto p-3">
           {showSuggestions ? (
             <div className="flex h-full flex-col justify-center">
               <div className="mb-4 text-center">
                 <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <Sparkles className="h-6 w-6" />
                 </div>
-                <h3 className="text-sm font-semibold">Hola, ¿en qué puedo ayudarte?</h3>
+                <h3 className="text-sm font-semibold">
+                  Hola, ¿en qué puedo ayudarte?
+                </h3>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Puedo analizar tus datos financieros y darte respuestas accionables.
+                  Puedo analizar tus datos financieros y darte respuestas
+                  accionables.
                 </p>
               </div>
-              <AssistantSuggestions onPick={(prompt) => sendMessage(prompt)} />
+              <AssistantSuggestions
+                mode={pageContext?.simulationId ? 'simulation' : 'general'}
+                onPick={(prompt) => sendMessage(prompt)}
+              />
             </div>
           ) : (
             <>
               {messages.map((m) => (
                 <AssistantChatMessage
                   key={m.id}
-                  message={{ role: m.role, content: m.content }}
+                  message={{
+                    role: m.role,
+                    content: m.content,
+                    tool_data: m.tool_data,
+                  }}
                 />
               ))}
               {isStreaming && streamingText && (

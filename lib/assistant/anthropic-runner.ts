@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { dispatchTool, getToolsAsJsonSchema } from './tools';
-import { ASSISTANT_SYSTEM_PROMPT } from './system-prompt';
+import { buildSystemPrompt } from './system-prompt';
+import { buildSimulationTools } from './tools-simulation';
 import type { AssistantMessage } from '@/types/assistant';
 import type { AssistantTurnEvent, TurnInput } from './events';
 import type { ProviderConfig } from './providers';
@@ -38,7 +39,7 @@ function isAbort(err: unknown): boolean {
 
 export async function* runAnthropicTurn(
   config: ProviderConfig,
-  { history, userMessage, abortController }: TurnInput
+  { history, userMessage, abortController, context }: TurnInput
 ): AsyncGenerator<AssistantTurnEvent> {
   if (!config.apiKey) {
     yield {
@@ -55,7 +56,11 @@ export async function* runAnthropicTurn(
   });
 
   const messages = buildMessages(history, userMessage);
-  const tools = getToolsAsJsonSchema();
+  const extraTools = context?.simulationId
+    ? buildSimulationTools(context.simulationId)
+    : [];
+  const tools = getToolsAsJsonSchema(extraTools);
+  const systemPrompt = buildSystemPrompt(context);
   let assistantText = '';
   let turns = 0;
 
@@ -67,7 +72,7 @@ export async function* runAnthropicTurn(
         {
           model: config.model,
           max_tokens: config.maxTokens,
-          system: ASSISTANT_SYSTEM_PROMPT,
+          system: systemPrompt,
           messages,
           tools: tools as Anthropic.Tool[],
           ...(config.enableThinking
@@ -122,7 +127,8 @@ export async function* runAnthropicTurn(
 
         const dispatched = await dispatchTool(
           block.name,
-          block.input as Record<string, unknown>
+          block.input as Record<string, unknown>,
+          extraTools
         );
         const output = dispatched.ok
           ? dispatched.result

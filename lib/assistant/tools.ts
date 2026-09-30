@@ -1,4 +1,13 @@
 import { sql } from '@/lib/db';
+import {
+  getActivePeriod,
+  num,
+  TIPO_GASTO_LABELS,
+  type ToolDefinition,
+} from '@/lib/assistant/tool-utils';
+import { CATALOG_TOOLS } from '@/lib/assistant/tools-catalog';
+
+export type { ToolDefinition };
 
 /**
  * Assistant tool definitions.
@@ -10,43 +19,6 @@ import { sql } from '@/lib/db';
  * Claude Agent SDK (which could wrap them via `tool()` if subprocess mode is
  * ever needed).
  */
-
-export interface ToolDefinition {
-  name: string;
-  description: string;
-  inputSchema: {
-    type: 'object';
-    properties: Record<string, unknown>;
-    required?: string[];
-    additionalProperties?: boolean;
-  };
-  handler: (input: Record<string, unknown>) => Promise<unknown>;
-}
-
-function num(v: unknown): number {
-  if (v === null || v === undefined) return 0;
-  const n = typeof v === 'string' ? parseFloat(v) : (v as number);
-  return Number.isFinite(n) ? n : 0;
-}
-
-async function getActivePeriod(): Promise<{
-  id: string;
-  name: string;
-  month: number;
-  year: number;
-} | null> {
-  const rows = await sql`
-    SELECT id, name, month, year FROM periods WHERE is_open = true LIMIT 1
-  `;
-  return (rows[0] as any) || null;
-}
-
-const TIPO_GASTO_LABELS: Record<string, string> = {
-  F: 'Fijo',
-  V: 'Variable',
-  SF: 'Semi Fijo',
-  E: 'Eventual',
-};
 
 // ----------------------------------------------------------------------------
 // Tool: get_active_period_summary
@@ -286,14 +258,14 @@ const listRecentExpenses: ToolDefinition = {
     const rows = await sql`
       SELECT
         e.id, e.amount, e.payment_method, e.date, e.description, e.store_name,
-        e.pending, e.created_at,
+        e.pending,
         c.name AS category_name,
         c.tipo_gasto
       FROM expenses e
       JOIN categories c ON c.id = e.category_id
       WHERE e.period_id = ${periodId}
         AND (${categoryId}::text IS NULL OR e.category_id = ${categoryId})
-      ORDER BY e.created_at DESC
+      ORDER BY e.date DESC, e.id DESC
       LIMIT ${limit}
     `;
 
@@ -709,17 +681,23 @@ export const TOOLS: ToolDefinition[] = [
   getSpendingHistory,
   suggestSavings,
   getCategoryBreakdown,
+  ...CATALOG_TOOLS,
 ];
 
 export const TOOLS_BY_NAME: Record<string, ToolDefinition> = Object.fromEntries(
   TOOLS.map((t) => [t.name, t])
 );
 
+/**
+ * `extraTools` are per-turn, context-bound tools (e.g. simulation-scoped tools).
+ * They are intentionally kept out of `TOOLS`, which is also served over MCP.
+ */
 export async function dispatchTool(
   name: string,
-  input: Record<string, unknown>
+  input: Record<string, unknown>,
+  extraTools: ToolDefinition[] = []
 ): Promise<{ ok: true; result: unknown } | { ok: false; error: string }> {
-  const tool = TOOLS_BY_NAME[name];
+  const tool = extraTools.find((t) => t.name === name) ?? TOOLS_BY_NAME[name];
   if (!tool) return { ok: false, error: `Herramienta desconocida: ${name}` };
   try {
     const result = await tool.handler(input || {});
@@ -730,8 +708,8 @@ export async function dispatchTool(
 }
 
 // Helper exported for tests / consumers that need just the schemas.
-export function getToolsAsJsonSchema() {
-  return TOOLS.map((t) => ({
+export function getToolsAsJsonSchema(extraTools: ToolDefinition[] = []) {
+  return [...TOOLS, ...extraTools].map((t) => ({
     name: t.name,
     description: t.description,
     input_schema: t.inputSchema,
@@ -740,8 +718,8 @@ export function getToolsAsJsonSchema() {
 
 // Helper that maps the same tools to the OpenAI function-calling format used by
 // DeepSeek / Ollama / LM Studio / OpenAI (`tools` + `function.parameters`).
-export function getToolsForOpenAI() {
-  return TOOLS.map((t) => ({
+export function getToolsForOpenAI(extraTools: ToolDefinition[] = []) {
+  return [...TOOLS, ...extraTools].map((t) => ({
     type: 'function' as const,
     function: {
       name: t.name,

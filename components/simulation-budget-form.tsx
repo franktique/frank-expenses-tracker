@@ -246,6 +246,8 @@ export function SimulationBudgetForm({
   const [isTemplateManagerOpen, setIsTemplateManagerOpen] = useState(false);
 
   // Load categories and existing budget data
+  const [reloadToken, setReloadToken] = useState(0);
+
   useEffect(() => {
     const loadData = async () => {
       setIsLoading(true);
@@ -354,7 +356,20 @@ export function SimulationBudgetForm({
     };
 
     loadData();
-  }, [simulationId, toast]);
+  }, [simulationId, toast, reloadToken]);
+
+  // Reload budgets when the AI assistant applies an approved savings proposal.
+  useEffect(() => {
+    const onUpdated = (e: Event) => {
+      const detail = (e as CustomEvent<{ simulationId?: number }>).detail;
+      if (Number(detail?.simulationId) === Number(simulationId)) {
+        setReloadToken((t) => t + 1);
+      }
+    };
+    window.addEventListener('simulation-budgets-updated', onUpdated);
+    return () =>
+      window.removeEventListener('simulation-budgets-updated', onUpdated);
+  }, [simulationId]);
 
   // Simple validation state
   const [hasErrors, setHasErrors] = useState(false);

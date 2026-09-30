@@ -25,6 +25,11 @@ export type ProcessEntry =
       output: unknown;
     };
 
+/** Page the user is on; sent with each message so the agent can scope itself. */
+export interface AssistantPageContext {
+  simulationId?: number;
+}
+
 const SHOW_PROCESS_STORAGE_KEY = 'assistant_show_process_panel';
 
 interface AssistantContextValue {
@@ -57,6 +62,10 @@ interface AssistantContextValue {
   showProcess: boolean;
   setShowProcess: (value: boolean) => void;
 
+  // Page context (e.g. the simulation being viewed)
+  pageContext: AssistantPageContext | null;
+  setPageContext: (ctx: AssistantPageContext | null) => void;
+
   // Errors
   error: string | null;
   clearError: () => void;
@@ -82,7 +91,16 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
   const [processEntries, setProcessEntries] = useState<ProcessEntry[]>([]);
   const [showProcess, setShowProcessState] = useState(false);
 
+  const [pageContext, setPageContextState] =
+    useState<AssistantPageContext | null>(null);
+  const pageContextRef = useRef<AssistantPageContext | null>(null);
+
   const abortRef = useRef<AbortController | null>(null);
+
+  const setPageContext = useCallback((ctx: AssistantPageContext | null) => {
+    pageContextRef.current = ctx;
+    setPageContextState(ctx);
+  }, []);
 
   // Hydrate the process-panel toggle from localStorage after mount to avoid
   // an SSR/CSR hydration mismatch.
@@ -252,7 +270,12 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ content: trimmed }),
+            body: JSON.stringify({
+              content: trimmed,
+              ...(pageContextRef.current
+                ? { context: pageContextRef.current }
+                : {}),
+            }),
             signal: controller.signal,
           }
         );
@@ -340,7 +363,11 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
                     conversation_id: conversationId!,
                     role: 'assistant',
                     content: accumulatedAssistant,
-                    tool_data: null,
+                    tool_data: Array.isArray(event.payload?.proposals)
+                      ? event.payload.proposals.length > 0
+                        ? { proposals: event.payload.proposals }
+                        : null
+                      : null,
                     created_at: new Date().toISOString(),
                   };
                   setMessages((prev) => [...prev, finalMessage]);
@@ -394,6 +421,8 @@ export function AssistantProvider({ children }: { children: React.ReactNode }) {
     processEntries,
     showProcess,
     setShowProcess,
+    pageContext,
+    setPageContext,
     error,
     clearError,
   };

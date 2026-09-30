@@ -1,7 +1,8 @@
 import OpenAI from 'openai';
 import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import { dispatchTool, getToolsForOpenAI } from './tools';
-import { ASSISTANT_SYSTEM_PROMPT } from './system-prompt';
+import { buildSystemPrompt } from './system-prompt';
+import { buildSimulationTools } from './tools-simulation';
 import type { AssistantMessage } from '@/types/assistant';
 import type { AssistantTurnEvent, TurnInput } from './events';
 import type { ProviderConfig } from './providers';
@@ -35,10 +36,11 @@ type StreamDelta = {
 
 function buildMessages(
   history: AssistantMessage[],
-  userMessage: string
+  userMessage: string,
+  systemPrompt: string
 ): ChatCompletionMessageParam[] {
   const messages: ChatCompletionMessageParam[] = [
-    { role: 'system', content: ASSISTANT_SYSTEM_PROMPT },
+    { role: 'system', content: systemPrompt },
   ];
 
   for (const msg of history) {
@@ -71,7 +73,7 @@ function isAbort(err: unknown): boolean {
 
 export async function* runOpenAITurn(
   config: ProviderConfig,
-  { history, userMessage, abortController }: TurnInput
+  { history, userMessage, abortController, context }: TurnInput
 ): AsyncGenerator<AssistantTurnEvent> {
   const client = new OpenAI({
     // Local runtimes (Ollama/LM Studio) ignore the key but the SDK requires a
@@ -80,8 +82,15 @@ export async function* runOpenAITurn(
     ...(config.baseUrl ? { baseURL: config.baseUrl } : {}),
   });
 
-  const messages = buildMessages(history, userMessage);
-  const tools = getToolsForOpenAI();
+  const extraTools = context?.simulationId
+    ? buildSimulationTools(context.simulationId)
+    : [];
+  const messages = buildMessages(
+    history,
+    userMessage,
+    buildSystemPrompt(context)
+  );
+  const tools = getToolsForOpenAI(extraTools);
   let assistantText = '';
   let turns = 0;
 
@@ -155,7 +164,7 @@ export async function* runOpenAITurn(
           const input = parseArguments(tc.arguments);
           yield { type: 'tool_call', tool: tc.name, input };
 
-          const dispatched = await dispatchTool(tc.name, input);
+          const dispatched = await dispatchTool(tc.name, input, extraTools);
           const output = dispatched.ok
             ? dispatched.result
             : { error: dispatched.error };

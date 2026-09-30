@@ -16,7 +16,8 @@ const SUGGESTIONS = [
   {
     icon: PieChart,
     label: '¿Cómo va mi presupuesto?',
-    prompt: '¿Cómo va mi presupuesto para este periodo? Dime ingresos, gastos y balance.',
+    prompt:
+      '¿Cómo va mi presupuesto para este periodo? Dime ingresos, gastos y balance.',
   },
   {
     icon: Sparkles,
@@ -25,18 +26,48 @@ const SUGGESTIONS = [
   },
 ];
 
+const SIMULATION_SUGGESTIONS = [
+  {
+    icon: PieChart,
+    label: 'Analiza esta simulación',
+    prompt:
+      'Analiza esta simulación: ¿cómo queda el balance y qué categorías ves desbalanceadas?',
+  },
+  {
+    icon: TrendingDown,
+    label: 'Compárala con mi gasto real',
+    prompt:
+      'Compara los montos de esta simulación con mi gasto real de los últimos meses. ¿Dónde hay holgura?',
+  },
+  {
+    icon: Wallet,
+    label: 'Propón ahorro en efectivo y crédito',
+    prompt:
+      'Propón cambios en Ahorro Efectivo y Ahorro Crédito para esta simulación, priorizando categorías variables.',
+  },
+  {
+    icon: Sparkles,
+    label: '¿Qué pasa si ahorro $500.000 más?',
+    prompt:
+      '¿De qué categorías de esta simulación podría sacar $500.000 más de ahorro? Muéstrame una propuesta.',
+  },
+];
+
 export function AssistantSuggestions({
   onPick,
+  mode = 'general',
 }: {
   onPick: (prompt: string) => void;
+  mode?: 'general' | 'simulation';
 }) {
+  const items = mode === 'simulation' ? SIMULATION_SUGGESTIONS : SUGGESTIONS;
   return (
     <div className="flex flex-col gap-2 py-2">
       <p className="px-1 text-xs font-medium text-muted-foreground">
         Sugerencias para empezar
       </p>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {SUGGESTIONS.map((s) => (
+        {items.map((s) => (
           <button
             key={s.label}
             type="button"

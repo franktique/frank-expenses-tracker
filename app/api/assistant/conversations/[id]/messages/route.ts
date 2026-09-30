@@ -1,12 +1,13 @@
 import { NextRequest } from 'next/server';
 import { sql } from '@/lib/db';
 import { runAssistantTurn } from '@/lib/assistant/agent';
+import { PROPOSE_SAVINGS_TOOL_NAME } from '@/lib/assistant/tools-simulation';
 import type { AssistantMessage, StreamingEvent } from '@/types/assistant';
 
 /**
  * POST /api/assistant/conversations/[id]/messages
  *
- * Body: { content: string }
+ * Body: { content: string, context?: { simulationId?: number } }
  *
  * Appends the user message to the conversation, runs the agent, and streams
  * events back as newline-delimited JSON (NDJSON). On completion, the final
@@ -41,7 +42,7 @@ function sendEvent(encoder: TextEncoder, event: StreamingEvent): Uint8Array {
 export async function POST(request: NextRequest, { params }: RouteContext) {
   const { id: conversationId } = await params;
 
-  let body: { content?: string };
+  let body: { content?: string; context?: { simulationId?: unknown } };
   try {
     body = await request.json();
   } catch {
@@ -51,6 +52,22 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
   const content = (body?.content || '').trim();
   if (!content) {
     return Response.json({ error: 'content requerido' }, { status: 400 });
+  }
+
+  // Optional page context: the simulation the user is viewing. Resolved
+  // server-side so the client cannot scope tools to a nonexistent simulation.
+  let context: { simulationId?: number; simulationName?: string } | undefined;
+  const rawSimulationId = Number(body?.context?.simulationId);
+  if (Number.isInteger(rawSimulationId) && rawSimulationId > 0) {
+    const [simulation] = await sql`
+      SELECT id, name FROM simulations WHERE id = ${rawSimulationId}
+    `;
+    if (simulation) {
+      context = {
+        simulationId: rawSimulationId,
+        simulationName: (simulation as any).name,
+      };
+    }
   }
 
   // Verify conversation exists
@@ -99,11 +116,13 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
       controller.enqueue(sendEvent(encoder, { type: 'message_start' }));
 
       let assistantText = '';
+      const proposals: unknown[] = [];
       try {
         for await (const event of runAssistantTurn({
           history: history.slice(0, -1), // exclude the just-added user message; agent adds it itself
           userMessage: content,
           abortController,
+          context,
         })) {
           if (event.type === 'text_delta') {
             assistantText += event.text;
@@ -128,6 +147,13 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
               })
             );
           } else if (event.type === 'tool_result') {
+            if (
+              event.tool === PROPOSE_SAVINGS_TOOL_NAME &&
+              event.ok &&
+              (event.output as any)?.changes?.length > 0
+            ) {
+              proposals.push(event.output);
+            }
             controller.enqueue(
               sendEvent(encoder, {
                 type: 'tool_result',
@@ -153,9 +179,11 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
         // Persist the assistant message
         const assistantMessageId = crypto.randomUUID();
         if (assistantText.trim()) {
+          const toolData =
+            proposals.length > 0 ? JSON.stringify({ proposals }) : null;
           await sql`
-            INSERT INTO assistant_messages (id, conversation_id, role, content)
-            VALUES (${assistantMessageId}, ${conversationId}, 'assistant', ${assistantText})
+            INSERT INTO assistant_messages (id, conversation_id, role, content, tool_data)
+            VALUES (${assistantMessageId}, ${conversationId}, 'assistant', ${assistantText}, ${toolData}::jsonb)
           `;
           await sql`
             UPDATE assistant_conversations SET updated_at = NOW() WHERE id = ${conversationId}
@@ -163,7 +191,10 @@ export async function POST(request: NextRequest, { params }: RouteContext) {
           controller.enqueue(
             sendEvent(encoder, {
               type: 'message_end',
-              payload: { assistant_message_id: assistantMessageId },
+              payload: {
+                assistant_message_id: assistantMessageId,
+                proposals,
+              },
             })
           );
         } else {

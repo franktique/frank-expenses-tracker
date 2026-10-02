@@ -204,7 +204,16 @@ export function EventsManagement() {
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key)!.push(expense);
     }
-    return Array.from(groups.entries()).sort(([a], [b]) => a.localeCompare(b, 'es'));
+    return Array.from(groups.entries())
+      .map(
+        ([name, items]) =>
+          [
+            name,
+            items,
+            items.reduce((sum, e) => sum + Number(e.amount), 0),
+          ] as [string, EventExpense[], number]
+      )
+      .sort(([a], [b]) => a.localeCompare(b, 'es'));
   }, [sortedExpenses]);
 
   const categoryChartData = useMemo(() => {
@@ -933,13 +942,17 @@ export function EventsManagement() {
                                           </TableRow>
                                         ))
                                       ) : (
-                                        groupedExpenses.map(([categoryName, expenses]) => (
+                                        groupedExpenses.map(([categoryName, expenses, subtotal]) => (
                                           <React.Fragment key={categoryName}>
                                             <TableRow className="bg-primary/15">
-                                              <TableCell colSpan={6} className="font-semibold text-primary">
+                                              <TableCell colSpan={2} className="font-semibold text-primary">
                                                 {categoryName}{' '}
                                                 <Badge className="ml-1 bg-primary/20 text-primary hover:bg-primary/30">{expenses.length}</Badge>
                                               </TableCell>
+                                              <TableCell className="text-right font-semibold text-primary">
+                                                {new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(subtotal)}
+                                              </TableCell>
+                                              <TableCell colSpan={3} />
                                             </TableRow>
                                             {expenses.map((expense) => (
                                               <TableRow key={expense.id}>

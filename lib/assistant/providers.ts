@@ -28,7 +28,8 @@ export interface ProviderConfig {
 
 export const DEFAULT_MAX_TOKENS = 4096;
 export const DEFAULT_MAX_TOOL_CALLS = 10;
-export const DEFAULT_ANTHROPIC_MODEL = 'claude-sonnet-4-6';
+export const DEFAULT_ANTHROPIC_MODEL = 'claude-sonnet-5-5';
+export const DEFAULT_ANTHROPIC_VISION_MODEL = 'claude-sonnet-5-5';
 
 function resolveEnvThinking(): boolean {
   const override = process.env.ASSISTANT_ENABLE_THINKING;

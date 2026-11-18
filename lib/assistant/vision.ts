@@ -95,10 +95,11 @@ export type ReceiptScanOutcome =
 /**
  * Tope de salida para la llamada de visión, independiente del `maxTokens`
  * configurable del asistente de chat (que suele quedar en 4096 por defecto).
- * Un recibo largo (60-120 ítems) puede necesitar bastante más que eso para
- * devolver el JSON completo sin truncarse a mitad de camino.
+ * Un recibo largo (60-120 ítems) ronda 3-6K tokens de JSON. Con modelos que
+ * piensan por defecto (Sonnet 5.x) el razonamiento también consume este tope,
+ * por eso 16000: holgura sin entrar en el rango que exige streaming.
  */
-const VISION_MAX_TOKENS = 8192;
+const VISION_MAX_TOKENS = 16000;
 
 // ---------------------------------------------------------------------------
 // Prompt

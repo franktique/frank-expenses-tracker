@@ -46,6 +46,10 @@ import type {
   AIProviderProtocol,
 } from '@/types/ai-providers';
 import { AI_PROVIDER_PROTOCOL_LABELS } from '@/types/ai-providers';
+import type { DiscoveredModel } from '@/app/api/ai-providers/models/route';
+
+const DEFAULT_CLAUDE_MODEL = 'claude-sonnet-5-5';
+const SAME_AS_CHAT = '__same__';
 
 interface FormState {
   name: string;
@@ -64,7 +68,7 @@ const EMPTY_FORM: FormState = {
   protocol: 'anthropic',
   base_url: '',
   api_key: '',
-  model: '',
+  model: DEFAULT_CLAUDE_MODEL,
   vision_model: '',
   enable_thinking: false,
   max_tokens: '4096',
@@ -78,6 +82,15 @@ const BASE_URL_HINTS: Record<AIProviderProtocol, string> = {
     'DeepSeek: https://api.deepseek.com · Ollama: http://localhost:11434/v1 · LM Studio: http://localhost:1234/v1',
 };
 
+/** Keep the saved value selectable even if the API no longer lists it. */
+function withCurrent(list: DiscoveredModel[], current: string) {
+  if (!current || list.some((m) => m.id === current)) return list;
+  return [
+    { id: current, display_name: current, vision: null, max_tokens: null },
+    ...list,
+  ];
+}
+
 export function AiProviderSettings() {
   const { toast } = useToast();
   const [open, setOpen] = useState(false);
@@ -87,6 +100,8 @@ export function AiProviderSettings() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
+  const [models, setModels] = useState<DiscoveredModel[]>([]);
+  const [loadingModels, setLoadingModels] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AIProviderClient | null>(
     null
   );
@@ -120,22 +135,61 @@ export function AiProviderSettings() {
   const resetForm = useCallback(() => {
     setForm(EMPTY_FORM);
     setEditingId(null);
+    setModels([]);
   }, []);
 
-  const startEdit = useCallback((p: AIProviderClient) => {
-    setEditingId(p.id);
-    setForm({
-      name: p.name,
-      protocol: p.protocol,
-      base_url: p.base_url,
-      api_key: '',
-      model: p.model,
-      vision_model: p.vision_model || '',
-      enable_thinking: p.enable_thinking,
-      max_tokens: String(p.max_tokens),
-      max_tool_calls: String(p.max_tool_calls),
-    });
-  }, []);
+  const loadModels = useCallback(
+    async (f: FormState, providerId: string | null) => {
+      if (f.protocol !== 'anthropic') return;
+      if (!f.api_key.trim() && !providerId) return;
+      setLoadingModels(true);
+      try {
+        const res = await fetch('/api/ai-providers/models', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            base_url: f.base_url.trim(),
+            api_key: f.api_key.trim(),
+            provider_id: providerId ?? undefined,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!data.ok) throw new Error(data.error ?? 'Error desconocido');
+        setModels(data.models as DiscoveredModel[]);
+      } catch (err) {
+        setModels([]);
+        toast({
+          title: 'No se pudieron listar los modelos',
+          description: err instanceof Error ? err.message : 'Error desconocido',
+          variant: 'destructive',
+        });
+      } finally {
+        setLoadingModels(false);
+      }
+    },
+    [toast]
+  );
+
+  const startEdit = useCallback(
+    (p: AIProviderClient) => {
+      setEditingId(p.id);
+      const next: FormState = {
+        name: p.name,
+        protocol: p.protocol,
+        base_url: p.base_url,
+        api_key: '',
+        model: p.model,
+        vision_model: p.vision_model || '',
+        enable_thinking: p.enable_thinking,
+        max_tokens: String(p.max_tokens),
+        max_tool_calls: String(p.max_tool_calls),
+      };
+      setForm(next);
+      setModels([]);
+      if (p.protocol === 'anthropic' && p.has_api_key) loadModels(next, p.id);
+    },
+    [loadModels]
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -344,9 +398,7 @@ export function AiProviderSettings() {
                       </div>
                       <p className="truncate text-xs text-muted-foreground">
                         {p.model}
-                        {p.vision_model
-                          ? ` · visión: ${p.vision_model}`
-                          : ''}
+                        {p.vision_model ? ` · visión: ${p.vision_model}` : ''}
                         {p.has_api_key ? ` · key ${p.api_key_masked}` : ''}
                       </p>
                     </div>
@@ -454,41 +506,110 @@ export function AiProviderSettings() {
                   />
                 </div>
 
+                {form.protocol === 'anthropic' && (
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs text-muted-foreground">
+                      {models.length > 0
+                        ? `${models.length} modelos disponibles`
+                        : 'Carga los modelos que ofrece la API con tu key'}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={loadingModels}
+                      onClick={() => loadModels(form, editingId)}
+                    >
+                      {loadingModels && (
+                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                      )}
+                      {models.length > 0 ? 'Recargar' : 'Cargar modelos'}
+                    </Button>
+                  </div>
+                )}
+
                 <div className="space-y-2">
-                  <Label htmlFor="p-model">Modelo *</Label>
-                  <Input
-                    id="p-model"
-                    placeholder={
-                      form.protocol === 'openai'
-                        ? 'deepseek-chat, qwen2.5, …'
-                        : 'claude-sonnet-4-6, kimi-k3, …'
-                    }
-                    value={form.model}
-                    onChange={(e) =>
-                      setForm({ ...form, model: e.target.value })
-                    }
-                  />
+                  <Label htmlFor="p-model">Modelo de chat *</Label>
+                  {models.length > 0 ? (
+                    <Select
+                      value={form.model}
+                      onValueChange={(v) => setForm({ ...form, model: v })}
+                    >
+                      <SelectTrigger id="p-model">
+                        <SelectValue placeholder="Elige un modelo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {withCurrent(models, form.model).map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            {m.display_name} ({m.id})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id="p-model"
+                      placeholder={
+                        form.protocol === 'openai'
+                          ? 'deepseek-chat, qwen2.5, …'
+                          : DEFAULT_CLAUDE_MODEL
+                      }
+                      value={form.model}
+                      onChange={(e) =>
+                        setForm({ ...form, model: e.target.value })
+                      }
+                    />
+                  )}
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="p-vision-model">
                     Modelo de visión (opcional)
                   </Label>
-                  <Input
-                    id="p-vision-model"
-                    placeholder={
-                      form.protocol === 'openai'
-                        ? 'gpt-4o, qwen2.5-vl, …'
-                        : 'claude-3-5-sonnet, …'
-                    }
-                    value={form.vision_model}
-                    onChange={(e) =>
-                      setForm({ ...form, vision_model: e.target.value })
-                    }
-                  />
+                  {models.length > 0 ? (
+                    <Select
+                      value={form.vision_model || SAME_AS_CHAT}
+                      onValueChange={(v) =>
+                        setForm({
+                          ...form,
+                          vision_model: v === SAME_AS_CHAT ? '' : v,
+                        })
+                      }
+                    >
+                      <SelectTrigger id="p-vision-model">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={SAME_AS_CHAT}>
+                          Igual que el modelo de chat
+                        </SelectItem>
+                        {withCurrent(
+                          models.filter((m) => m.vision !== false),
+                          form.vision_model
+                        ).map((m) => (
+                          <SelectItem key={m.id} value={m.id}>
+                            {m.display_name} ({m.id})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      id="p-vision-model"
+                      placeholder={
+                        form.protocol === 'openai'
+                          ? 'gpt-4o, qwen2.5-vl, …'
+                          : DEFAULT_CLAUDE_MODEL
+                      }
+                      value={form.vision_model}
+                      onChange={(e) =>
+                        setForm({ ...form, vision_model: e.target.value })
+                      }
+                    />
+                  )}
                   <p className="text-xs text-muted-foreground">
-                    Se usa para escanear recibos desde el móvil. Vacío = se usa
-                    el modelo principal.
+                    Se usa para escanear recibos. Solo se listan modelos con
+                    capacidad de visión. Vacío = se usa el modelo de chat.
                   </p>
                 </div>
 

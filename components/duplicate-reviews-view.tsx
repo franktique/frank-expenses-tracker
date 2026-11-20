@@ -59,6 +59,12 @@ const FIELD_ROWS: {
   { field: 'store_name', label: 'Tienda', value: (e) => e.store_name ?? '—' },
 ];
 
+const RESOLVED_TOAST = {
+  apply: 'Cambios aplicados',
+  dismiss: 'Revisión descartada',
+  create: 'Guardado como gasto nuevo',
+} as const;
+
 const detailsTotal = (lines: ReviewDetailLine[]) =>
   lines.reduce((sum, l) => sum + l.amount, 0);
 
@@ -116,7 +122,10 @@ function ReviewCard({
     });
 
   const resolve = async (
-    body: { action: 'dismiss' } | { action: 'apply'; fields: ResolvableField[] }
+    body:
+      | { action: 'dismiss' }
+      | { action: 'create' }
+      | { action: 'apply'; fields: ResolvableField[] }
   ) => {
     setBusy(true);
     try {
@@ -129,10 +138,7 @@ function ReviewCard({
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error ?? 'No se pudo resolver la revisión');
       }
-      toast({
-        title:
-          body.action === 'apply' ? 'Cambios aplicados' : 'Revisión descartada',
-      });
+      toast({ title: RESOLVED_TOAST[body.action] });
       onResolved();
     } catch (error) {
       toast({
@@ -161,7 +167,8 @@ function ReviewCard({
         <CardDescription>
           Escaneado desde el móvil el{' '}
           {new Date(review.created_at).toLocaleString('es-CO')}. Marcá qué datos
-          del escaneo querés llevar al gasto existente.
+          del escaneo querés llevar al gasto existente, o guardalo como gasto
+          nuevo si no es el mismo.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -247,7 +254,14 @@ function ReviewCard({
             disabled={busy}
             onClick={() => resolve({ action: 'dismiss' })}
           >
-            Descartar (no es el mismo gasto)
+            Descartar escaneo
+          </Button>
+          <Button
+            variant="secondary"
+            disabled={busy}
+            onClick={() => resolve({ action: 'create' })}
+          >
+            Guardar como gasto nuevo
           </Button>
           <Button
             disabled={busy || selected.size === 0}

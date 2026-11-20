@@ -22,6 +22,7 @@ import {
   Receipt,
   HandCoins,
   ChevronRight,
+  CopyCheck,
   PanelLeftClose,
   PanelLeft,
 } from 'lucide-react';
@@ -237,6 +238,18 @@ export function AppSidebar() {
               <Link href="/gastos">
                 <Receipt className="h-4 w-4" />
                 <span>Gastos</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              isActive={isActive('/duplicados')}
+              tooltip="Posibles duplicados"
+            >
+              <Link href="/duplicados">
+                <CopyCheck className="h-4 w-4" />
+                <span>Posibles duplicados</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

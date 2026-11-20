@@ -46,6 +46,8 @@ export const ResolveDuplicateReviewSchema = z.discriminatedUnion('action', [
     fields: z.array(z.enum(RESOLVABLE_FIELDS)).min(1),
   }),
   z.object({ action: z.literal('dismiss') }),
+  /** No era duplicado: se registra lo escaneado como un gasto nuevo. */
+  z.object({ action: z.literal('create') }),
 ]);
 
 export type ProposedExpense = z.infer<typeof ProposedExpenseSchema>;

@@ -13,6 +13,7 @@ import {
 } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
+import { useBudget } from '@/context/budget-context';
 import { PAYMENT_METHOD_LABELS, type PaymentMethod } from '@/types/estudios';
 import type {
   DuplicateReview,
@@ -107,6 +108,7 @@ function ReviewCard({
   onResolved: () => void;
 }) {
   const { toast } = useToast();
+  const { refreshData } = useBudget();
   const { existing, proposed } = review;
   const [selected, setSelected] = useState<Set<ResolvableField>>(
     () => new Set(existing.details.length === 0 ? ['details'] : [])
@@ -140,6 +142,9 @@ function ReviewCard({
       }
       toast({ title: RESOLVED_TOAST[body.action] });
       onResolved();
+      // 'create' y 'apply' tocan la tabla expenses: sin esto, la vista de
+      // gastos (ya montada en otra pestaña) sigue mostrando el estado viejo.
+      if (body.action !== 'dismiss') void refreshData();
     } catch (error) {
       toast({
         title: 'Error',
